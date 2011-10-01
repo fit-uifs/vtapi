@@ -84,6 +84,7 @@ Logger::~Logger() {
 }
 
 
+
 /* ************************************************************************** */
 Connector::Connector(const String& connectionInfo, Logger* logger) {
     this->logger = logger;
@@ -136,6 +137,15 @@ bool Connector::connected() {
 }
 
 
+Logger* Connector::getLogger() {
+    return logger;
+}
+
+PGconn* Connector::getConnection() {           // connection
+    return conn;
+}
+
+
 Connector::~Connector() {
 }
 
@@ -146,7 +156,13 @@ Connector::~Connector() {
 Commons::Commons(const Commons& orig) {
     logger    = orig.logger;
     connector = orig.connector;
-    isDoom    = 1 + orig.isDoom;
+    isDoom    = 1 + orig.isDoom; // won't destroy the connector and logger
+}
+
+Commons::Commons(Connector& other) {
+    logger    = other.getLogger();
+    connector = &other;
+    isDoom    = 1; // won't destroy the connector and logger
 }
 
 Commons::Commons(const String& connStr) {
@@ -171,6 +187,13 @@ Commons::~Commons() {
 }
 
 
+Connector* Commons::getConnector() {
+    return connector;
+}
+
+Logger* Commons::getLogger() {
+
+}
 
 
 

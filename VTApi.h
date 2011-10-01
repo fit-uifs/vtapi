@@ -17,21 +17,26 @@
 #include <opencv2/core/core.hpp>
 
 
+// virtual definition
+class Dataset;
+class Sequence;
+class Interval;
+
 
 /**
  * KeyValues storage class
  */
-class KeyValues : Commons {
+class KeyValues : public Commons {
 public:
-    KeyValues(const Commons& other);
+    KeyValues(const Commons& orig);
     KeyValues(const KeyValues& orig);
     virtual ~KeyValues();
 
     /**
      * The most used function of the VTApi - nextRow or simply next
-     * @return
+     * @return this or null
      */
-    bool next();
+    KeyValues* next();
 
     long getRowActual();
     long getRowNumber();
@@ -45,21 +50,32 @@ public:
     int getInt(int pos);
     int* getIntA(String key, size_t& lenght);
     int* getIntA(int pos, size_t& lenght);
+    std::vector<int> getIntV(int pos);
 
     float getFloat(String key);
     float getFloat(int pos);
-    float* getIntA(String key, size_t& lenght);
-    float* getIntA(int pos, size_t& lenght);
+    float* getFloatA(String key, size_t& lenght);
+    float* getFloatA(int pos, size_t& lenght);
 
     // setters
-    
+
     bool setString(String key, String value);
     bool setInt(String key, String value);
     bool setIntA(String key, int* value, size_t size);
     bool setFloat(String key, String value);
     bool setFloatA(String key, float_t value, size_t size);
 
-private:
+protected:
+    // this should be overriden (type) where possible
+    KeyValues* parent;
+    // maintain a list of all possible elements
+    std::map<String,String> keys;
+    // TODO: discuss map, recursion etc.
+
+    int position;       // initialized to -1 by default
+    // this should be it here or should it be there?
+    PGresult* res;
+
     // Inherited from Commons:
     // Connector* connector; // this was most probably inherited
     // Logger* logger;
@@ -71,12 +87,17 @@ private:
 /**
  *
  */
-class Interval : KeyValues {
+class Dataset : public KeyValues {
 public:
-    Interval(const KeyValues& other);
-    Interval(const Interval& orig);
-    virtual ~Interval();
-private:
+    Dataset(const KeyValues& orig);
+    Dataset(const Dataset& orig);
+    virtual ~Dataset();
+
+    String getName();
+    String getLocation();
+
+    Sequence* newSequence();
+protected:
 
 };
 
@@ -84,17 +105,23 @@ private:
 /**
  * A Sequence class manages videos and images
  */
-class Sequence : KeyValues {
+class Sequence : public KeyValues {
 public:
-    Sequence(const KeyValues& other);
+    Sequence(const KeyValues& orig);
     Sequence(const Sequence& orig);
     virtual ~Sequence();
 
-    bool openVideo(const String& name);
-    bool openImage(const String& name);
+    String getName();
+    String getLocation();
+
+    Interval* newInterval();
+
     cv::Mat getImage();
 
-private:
+protected:
+    bool openVideo(const String& name);
+    bool openImage(const String& name);
+
     String file_name_video;
     String file_name_image;
 
@@ -102,21 +129,15 @@ private:
 
 
 /**
- *
+ * Interval is equivalent to an interval of images
  */
-class Dataset : KeyValues {
+class Interval : public KeyValues {
 public:
-    Dataset(const KeyValues& other);
-    Dataset(const Dataset& orig);
-    virtual ~Dataset();
+    Interval(const KeyValues& orig);
+    Interval(const Interval& orig);
+    virtual ~Interval();
 
-    String nextDataset();
-    Sequence getSequences();
-
-    String getDsName();
-    String getDsLocation();
-
-private:
+protected:
 
 };
 
@@ -124,36 +145,64 @@ private:
 /**
  *
  */
-class Process : KeyValues {
+class Process : public KeyValues {
 public:
-    Process(const KeyValues& other);
+    Process(const Dataset& orig);
     Process(const Process& orig);
     virtual ~Process();
 
-    String nextProcess();
-
-private:
+protected:
 
 };
 
 
 /**
  * VTApi class manages Commons and processes args[]
+ * This is how to begin
+ *
+ * TODO: include http://www.gnu.org/s/gengetopt/gengetopt.html
+ *       special interest to the configuration files is needed
  */
-class VTApi : Commons {
+class VTApi : public Commons {
 public:
+    /**
+     * Constructor recomended (in the future)
+     * @param argc
+     * @param argv
+     */
     VTApi(int argc, char** argv);
     VTApi(const String& connStr);
-    VTApi(const Commons& other);
+    VTApi(const Commons& orig);
     VTApi(const VTApi& orig);
     virtual ~VTApi();
 
+
+    /**
+     * An command-line driven api interface (just basic so far)
+     * @param argc
+     * @param argv
+     * @return
+     */
     int main(int argc, char** argv);
 
+    /**
+     * Use this function instead of main(int, char**) only in case constructor was
+     * VTApi(int argc, char** argv);
+     *
+     * @param name
+     * @return
+     */
+    int run();
+
+
+    /**
+     * This is how to continue...
+     * @return
+     */
+    Dataset* newDataset();
     Dataset* newDataset(String name);
 
-
-private:
+protected:
 
 };
 

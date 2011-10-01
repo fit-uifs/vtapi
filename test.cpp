@@ -6,11 +6,13 @@
  */
 
 #include <cstdlib>
+#include <iostream>
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 #include "commons.h"
+#include "VTApi.h"
 
 using namespace std;
 using namespace cv;
@@ -20,8 +22,46 @@ using namespace cv;
  */
 int main(int argc, char** argv) {
 
-    Connector connector(CONNINFO, new Logger());
-    connector.connected();
+    // OpenCV GUI
+    // namedWindow("VTApi", 1);
+
+    // PostreSQL connection
+    // Connector connector(CONNINFO, new Logger());
+
+    VTApi* vtapi = new VTApi(Commons(CONNINFO));
+    
+    Dataset* dataset = vtapi->newDataset();  // "public"
+    if (!dataset->next()) vtapi->getLogger()->log("Well, there is no such parameter.");
+
+    Sequence* sequence = dataset->newSequence();
+    // while all media
+    while (sequence->next()) {
+
+        std::cout << sequence->getLocation();
+/*
+        // in case of images / frames... we can
+        cv::Mat* mat = null;
+
+        while (mat = sequence->getNextMat()) {
+            imshow("VTApi", mat);
+            if(waitKey(100) >= 0) break;
+        }
+
+        delete mat;
+*/
+    }
+
+    delete sequence;
+    delete dataset;
+    delete vtapi;
+
+
+
+
+
+
+
+
 
 /*
     VideoCapture cap("/home/chmelarp/Projects/VidTeAPI/video/Megamind.avi");

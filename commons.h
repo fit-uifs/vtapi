@@ -36,7 +36,7 @@ typedef std::string String;
  * Error codes 10-30.
  *
  * @param
- */
+ *//***************************************************************************/
 class Logger {
 public:
     Logger();
@@ -50,7 +50,7 @@ public:
 
     String timestamp();
 
-private:
+protected:
     String logFilename;
     std::ofstream logStream;
 
@@ -74,7 +74,7 @@ private:
  * Error codes 50-70.
  *
  * @param orig
- */
+ *//***************************************************************************/
 class Connector {
 public:
     Connector(const Connector& orig);
@@ -100,11 +100,45 @@ public:
      */
     bool connected();
 
-private:
+    Logger* getLogger();
+    PGconn* getConnection();           // connection
+
+protected:
     String conninfo;   // connection info
     PGconn* conn;           // connection
     Logger* logger;         // logger
 };
+
+
+
+/**
+ * This is a class where queries will be constructed (but it may be KeyValues as well)
+ * TODO: discuss and use libpqtypes
+ *
+ *//***************************************************************************/
+class Select {
+public:
+    void field(String);
+    void condition(String);
+    void order(String);
+
+    // discuss the use
+    bool execute();
+
+protected:
+    // this should be some vectors
+    String select;
+    String from;
+    String where;
+    String groupby;
+    String orderby;
+    int limit;
+    int offset;
+
+    // this should be it here or should it be there?
+    PGresult* res;
+};
+
 
 
 
@@ -114,7 +148,7 @@ private:
  * This class is inherited by many and many other classes, but it manages just single resources,
  * thus there may bee a doom if someone destroys the original ones. Well, destructor should only happen
  * when isDoom is false, which is set by the only constructor: Commons(String connStr); .
- */
+ *//***************************************************************************/
 class Commons {
 public:
     /**
@@ -123,6 +157,13 @@ public:
      * @param orig
      */
     Commons(const Commons& orig); // hmm, much better
+
+    /**
+     * This is OK for most of applications if there are some Commons or derived classes.
+     * The default constructor should never exist - Commons();
+     * @param orig
+     */
+    Commons(Connector& other); // hmm, much better
 
     /** 
      * A default API startup constructor
@@ -140,7 +181,12 @@ public:
     // this is different from comunism, which has been destroyed already
     virtual ~Commons();
 
-private:
+
+
+    Connector* getConnector();
+    Logger* getLogger();
+
+protected:
     Connector* connector; // this was most probably inherited
     Logger* logger;
 
@@ -148,4 +194,3 @@ private:
 };
 
 #endif	/* INTERNALS_H */
-
