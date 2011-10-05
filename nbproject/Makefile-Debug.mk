@@ -33,13 +33,13 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/_ext/1185971108/vtapi.o \
-	${OBJECTDIR}/_ext/1185971108/commons.o \
-	${OBJECTDIR}/_ext/1185971108/dataset.o \
-	${OBJECTDIR}/_ext/1185971108/sequence.o \
-	${OBJECTDIR}/_ext/1185971108/keyvalues.o \
+	${OBJECTDIR}/sequence.o \
+	${OBJECTDIR}/commons.o \
+	${OBJECTDIR}/interval.o \
+	${OBJECTDIR}/vtapi.o \
+	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/test.o \
-	${OBJECTDIR}/_ext/1185971108/interval.o
+	${OBJECTDIR}/dataset.o
 
 
 # C Compiler Flags
@@ -66,40 +66,40 @@ dist/Debug/GNU-Linux-x86/vtapi: ${OBJECTFILES}
 	${MKDIR} -p dist/Debug/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/vtapi ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/_ext/1185971108/vtapi.o: /home/chmelarp/Projects/VidTeAPI/vtapi/vtapi.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1185971108
+${OBJECTDIR}/sequence.o: sequence.cpp 
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1185971108/vtapi.o /home/chmelarp/Projects/VidTeAPI/vtapi/vtapi.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/sequence.o sequence.cpp
 
-${OBJECTDIR}/_ext/1185971108/commons.o: /home/chmelarp/Projects/VidTeAPI/vtapi/commons.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1185971108
+${OBJECTDIR}/commons.o: commons.cpp 
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1185971108/commons.o /home/chmelarp/Projects/VidTeAPI/vtapi/commons.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/commons.o commons.cpp
 
-${OBJECTDIR}/_ext/1185971108/dataset.o: /home/chmelarp/Projects/VidTeAPI/vtapi/dataset.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1185971108
+${OBJECTDIR}/interval.o: interval.cpp 
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1185971108/dataset.o /home/chmelarp/Projects/VidTeAPI/vtapi/dataset.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
 
-${OBJECTDIR}/_ext/1185971108/sequence.o: /home/chmelarp/Projects/VidTeAPI/vtapi/sequence.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1185971108
+${OBJECTDIR}/vtapi.o: vtapi.cpp 
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1185971108/sequence.o /home/chmelarp/Projects/VidTeAPI/vtapi/sequence.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
 
-${OBJECTDIR}/_ext/1185971108/keyvalues.o: /home/chmelarp/Projects/VidTeAPI/vtapi/keyvalues.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1185971108
+${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1185971108/keyvalues.o /home/chmelarp/Projects/VidTeAPI/vtapi/keyvalues.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
 
 ${OBJECTDIR}/test.o: test.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/test.o test.cpp
 
-${OBJECTDIR}/_ext/1185971108/interval.o: /home/chmelarp/Projects/VidTeAPI/vtapi/interval.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1185971108
+${OBJECTDIR}/dataset.o: dataset.cpp 
+	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1185971108/interval.o /home/chmelarp/Projects/VidTeAPI/vtapi/interval.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
 
 # Subprojects
 .build-subprojects:
