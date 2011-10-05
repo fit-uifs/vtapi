@@ -36,5 +36,5 @@ String Dataset::getLocation() {
 }
 
 Sequence* Dataset::newSequence() {
-    return new Sequence(*this);
+    return (new Sequence(*this));
 }

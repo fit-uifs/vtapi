@@ -39,13 +39,18 @@ typedef std::string String;
  *//***************************************************************************/
 class Logger {
 public:
-    Logger();
-    Logger(const Logger& orig);
-    Logger(const String& filename);
+    Logger(const String& filename = "");
     virtual ~Logger();
 
     void log(const String& message);
     void debug(const String& message);
+
+    /**
+     * This causes a serious death
+     * @param meassage
+     */
+    void error(const String& meassage);
+
     void write(const String& message);
 
     String timestamp();
@@ -54,14 +59,6 @@ protected:
     String logFilename;
     std::ofstream logStream;
 
-    /**
-     * I need this, because of stupidity of some C++ developers. See
-     * http://stackoverflow.com/questions/308276/c-call-constructor-from-constructor
-     * Not even = works (first it is duplicite, then none)... shame to C++/GCC.
-     *
-     * @param filename
-     */
-    void constructor(const String& filename);
 };
 
 
@@ -84,7 +81,8 @@ public:
      * @param connectionInfo
      * @param logger
      */
-    Connector(const String& connectionInfo, Logger* logger);
+    Connector(const String& connectionInfo, Logger* logger = NULL);
+
     virtual ~Connector();
 
     /**
@@ -165,22 +163,15 @@ public:
      */
     Commons(Connector& other); // hmm, much better
 
-    /** 
-     * A default API startup constructor
-     * This construtors should not cause any doom
-     */
-    Commons(const String& connStr); // finally - do something
-
     /**
      * A custom API startup constructor
      * This construtors should not cause any doom
      */
-    Commons(const String& connStr, const String& logFilename);
+    Commons(const String& connStr, const String& logFilename = "");
 
     // this constructor is close to doom as capitalism;
     // this is different from comunism, which has been destroyed already
     virtual ~Commons();
-
 
 
     Connector* getConnector();
@@ -190,7 +181,7 @@ protected:
     Connector* connector; // this was most probably inherited
     Logger* logger;
 
-    bool isDoom; // every derived class will have +1 = (true :)
+    bool doom; // every derived class will have +1 = (true :)
 };
 
 #endif	/* INTERNALS_H */

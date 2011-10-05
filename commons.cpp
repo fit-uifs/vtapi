@@ -15,16 +15,7 @@
 
 /* ************************************************************************** */
 
-// Default constructor - cerr output
-Logger::Logger() {
-    constructor("");
-};
-
 Logger::Logger(const String& filename) {
-    constructor(filename);
-}
-
-void Logger::constructor(const String& filename) {
     logFilename = filename;
 
     if (!logFilename.empty()) {
@@ -68,6 +59,17 @@ void Logger::debug(const String& logline) {
 #endif
 }
 
+void Logger::error(const String& logline) {
+    logStream << timestamp() << ": ERROR! " << logline << std::endl;
+
+#ifdef _DEBUG
+    logStream.flush();
+#endif
+
+    exit(1);
+}
+
+
 String Logger::timestamp() {
     time_t timer;
     time(&timer);
@@ -87,8 +89,11 @@ Logger::~Logger() {
 
 /* ************************************************************************** */
 Connector::Connector(const String& connectionInfo, Logger* logger) {
-    this->logger = logger;
-    reconnect(connectionInfo);
+    if (logger) this->logger = logger;
+    else logger = new Logger();
+
+    conn = NULL;
+    if (!reconnect(connectionInfo)) logger->error("51: The connection couldn't been established.");
 }
 
 /**
@@ -97,14 +102,17 @@ Connector::Connector(const String& connectionInfo, Logger* logger) {
  * @return success
  */
 bool Connector::reconnect(const String& connectionInfo) {
+     PQfinish(conn);
+
     conninfo = connectionInfo;
     conn = PQconnectdb(conninfo.c_str());
 
-    PQinitTypes(conn);  // libpqtypes ... http://libpqtypes.esilo.com/
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log("ERROR 50! " + String(PQerrorMessage(conn)));
+        logger->log("ERROR! 55: " + String(PQerrorMessage(conn)));
         return false;
     }
+
+    PQinitTypes(conn);  // libpqtypes ... http://libpqtypes.esilo.com/
 
     return true; // success
 }
@@ -113,9 +121,8 @@ bool Connector::reconnect(const String& connectionInfo) {
 bool Connector::connected() {
     bool success = false;
 
-    PQinitTypes(conn);
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log("ERROR 55! " + String(PQerrorMessage(conn)));
+        logger->log("ERROR! 55: " + String(PQerrorMessage(conn)));
         return success = false;
     }
 
@@ -127,7 +134,8 @@ bool Connector::connected() {
                           0, &text);    // 0th text field
 
     if(!success) {
-        logger->log(String("ERROR 56! ") +  PQgeterror());
+        logger->log(String("ERROR! 56: ") +  PQgeterror());
+        PQfinish(conn);
     } else {
         logger->log(text);
     }
@@ -145,8 +153,8 @@ PGconn* Connector::getConnection() {           // connection
     return conn;
 }
 
-
 Connector::~Connector() {
+    PQfinish(conn);
 }
 
 
@@ -156,23 +164,23 @@ Connector::~Connector() {
 Commons::Commons(const Commons& orig) {
     logger    = orig.logger;
     connector = orig.connector;
-    isDoom    = 1 + orig.isDoom; // won't destroy the connector and logger
+    doom      = true;       // won't destroy the connector and logger
 }
 
-Commons::Commons(Connector& other) {
-    logger    = other.getLogger();
-    connector = &other;
-    isDoom    = 1; // won't destroy the connector and logger
+Commons::Commons(Connector& orig) {
+    logger    = orig.getLogger();
+    connector = &orig;
+    doom      = true;       // won't destroy the connector and logger
 }
 
-Commons::Commons(const String& connStr) {
-    Commons(connStr, "");
-}
+// Commons::Commons(const String& connStr) {
+//     Commons(connStr, "");   // TODO: different constructor, please
+// }
 
 Commons::Commons(const String& connStr, const String& logFilename) {
     logger    = new Logger(logFilename);
     connector = new Connector(connStr, logger);
-    isDoom    = false; // finally, we can destroy the above objects without any DOOM :D
+    doom    = false;        // finally, we can destroy the above objects without any DOOM :D
 }
 
 
@@ -180,7 +188,7 @@ Commons::Commons(const String& connStr, const String& logFilename) {
  * This is a doom destructor, which should never happen :)
  */
 Commons::~Commons() {
-    if (!isDoom) {
+    if (!doom) {
         destruct(connector);        // the doom is very close     !!!!!
         destruct(logger);           // you shouldn't debug these lines!
     }

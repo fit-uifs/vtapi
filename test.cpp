@@ -25,13 +25,21 @@ int main(int argc, char** argv) {
     // OpenCV GUI
     // namedWindow("VTApi", 1);
 
-    // PostreSQL connection
-    // Connector connector(CONNINFO, new Logger());
+    // FIXME:
+    // The ANSI C++ specification (section 18.7.3) states that the first argument
+    // in a variable argument lists cannot be a reference.
+    // Doing so is undefined behaviour.
 
-    VTApi* vtapi = new VTApi(Commons(CONNINFO));
-    
-    Dataset* dataset = vtapi->newDataset();  // "public"
-    if (!dataset->next()) vtapi->getLogger()->log("Well, there is no such parameter.");
+    // Logger* logger = new Logger();
+
+    // PostreSQL connection
+    // Connector* connector = new Connector(CONNINFO); // , logger
+    // Commons* commons = new Commons(*connector);
+
+    VTApi* vtapi = new VTApi(CONNINFO);
+
+    Dataset* dataset = vtapi->newDataset();     // "public"
+    if (!dataset->next()) vtapi->getLogger()->error("Well, there is no such parameter.");
 
     Sequence* sequence = dataset->newSequence();
     // while all media
@@ -54,12 +62,6 @@ int main(int argc, char** argv) {
     delete sequence;
     delete dataset;
     delete vtapi;
-
-
-
-
-
-
 
 
 

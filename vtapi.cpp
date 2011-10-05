@@ -21,7 +21,7 @@ VTApi::~VTApi() {
 
 
 Dataset* VTApi::newDataset() {
-
+    return (new Dataset(*this));
 };
 
 Dataset* VTApi::newDataset(String name) {
