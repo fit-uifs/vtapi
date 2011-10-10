@@ -9,7 +9,6 @@
 #define	INTERNALS_H
 
 #include "postgresql/libpqtypes.h"
-#include "settings.h"
 
 #include <fstream>
 #include "cli_settings.h"
@@ -50,7 +49,7 @@ public:
      * This causes a serious death
      * @param meassage
      */
-    void error(const String& meassage);
+    void error(const String& message);
 
     void write(const String& message);
 
@@ -174,7 +173,7 @@ public:
     /**
      * And a shorter one...
      */
-    Commons(const gengetopt_args_info& args_info);
+    Commons(const gengetopt_args_info& args_info, const String& logFilename = "");
 
     // this constructor is close to doom as capitalism;
     // this is different from comunism, which has been destroyed already

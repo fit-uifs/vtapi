@@ -8,14 +8,13 @@
       <itemPath>VTApi.h</itemPath>
       <itemPath>cli_settings.h</itemPath>
       <itemPath>commons.h</itemPath>
-      <itemPath>settings.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
-      <itemPath>/home/chmelarp/Projects/VidTeAPI/vtapi/vtapi.conf</itemPath>
-      <itemPath>/home/chmelarp/Projects/VidTeAPI/vtapi/vtapi.ggo</itemPath>
+      <itemPath>vtapi.conf</itemPath>
+      <itemPath>vtapi.ggo</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
