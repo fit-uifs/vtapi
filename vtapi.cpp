@@ -14,61 +14,50 @@
 
 using namespace std;
 
-VTApi::VTApi(const String& connStr) : Commons(connStr) {
-};
+VTApi::VTApi(int argc, char** argv) {
 
-VTApi::VTApi(const VTApi& orig) : Commons(orig) {
+    gengetopt_args_info args_info;
+    struct cmdline_parser_params *cli_params;
+
+    /* Initialize parser parameters structure */
+    cli_params = cmdline_parser_params_create();
+    /* Hold check for required arguments until config file is parsed */
+    cli_params->check_required = 0;
+
+    /* Parse cmdline first */
+    if (cmdline_parser_ext (argc, argv, &args_info, cli_params) != 0) {
+        cmdline_parser_free (&args_info);
+        free (cli_params);
+        exit(1);
+    }
+
+    /* Get the rest of arguments from config file, don't override cmdline */
+    cli_params->initialize = 0;
+    cli_params->override = 0;
+    cli_params->check_required = 1;
+
+    /* Parse config file */
+    if (cmdline_parser_config_file
+        (args_info.config_arg, &args_info, cli_params) != 0) {
+        cmdline_parser_free (&args_info);
+        free (cli_params);
+        exit(1);
+    }
+
+    // TODO: fill commons with args (logger, connector, user, password, location)
+    //  eventually dataset/sequence/... from cmdline
+    commons = new Commons(args_info));
+    
+
 }
-
-VTApi::VTApi(const Commons& orig) : Commons(orig) {
-}
-
-//VTApi::VTApi(int argc, char** argv) : Commons() {
-//
-//    gengetopt_args_info args_info;
-//    struct cmdline_parser_params *cli_params;
-//
-//    /* Initialize parser parameters structure */
-//    cli_params = cmdline_parser_params_create();
-//    /* Hold check for required arguments until config file is parsed */
-//    cli_params->check_required = 0;
-//
-//    /* Parse cmdline first */
-//    if (cmdline_parser_ext (argc, argv, &args_info, cli_params) != 0) {
-//        cmdline_parser_free (&args_info);
-//        free (cli_params);
-//        exit(1);
-//    }
-//
-//    /* Get the rest of arguments from config file, don't override cmdline */
-//    cli_params->initialize = 0;
-//    cli_params->override = 0;
-//    cli_params->check_required = 1;
-//
-//    /* Parse config file */
-//    if (cmdline_parser_config_file
-//        (args_info.config_arg, &args_info, cli_params) != 0) {
-//        cmdline_parser_free (&args_info);
-//        free (cli_params);
-//        exit(1);
-//    }
-//
-//    TODO: fill commons with args (logger, connector, user, password, location)
-//      eventually dataset/sequence/... from cmdline
-//    
-//
-//}
 
 VTApi::~VTApi() {
 }
 
 
-Dataset* VTApi::newDataset() {
-    return (new Dataset(*this));
-};
-
-Dataset* VTApi::newDataset(String name) {
-    // TODO: this
+Dataset* VTApi::newDataset(const String& name) {
+    if (name.empty()) return (new Dataset(*commons));
+    // TODO: else
 };
 
 
@@ -89,7 +78,7 @@ int VTApi::run() {
         if (command.compare("query") == 0) {
             //TODO: where to execute general query
             PGresult* res;
-            res = PQexecf(getConnector()->getConnection(), line.substr(pos,string::npos).c_str());
+            res = PQexecf(commons->getConnector()->getConnection(), line.substr(pos,string::npos).c_str());
 
             PQprint(stdout, res, NULL);
             

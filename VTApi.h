@@ -164,7 +164,7 @@ protected:
  * TODO: include http://www.gnu.org/s/gengetopt/gengetopt.html
  *       special interest to the configuration files is needed
  */
-class VTApi : public Commons {
+class VTApi {
 public:
     /**
      * Constructor recomended (in the future)
@@ -172,7 +172,7 @@ public:
      * @param argv
      */
     VTApi(int argc, char** argv);
-    VTApi(const String& connStr);
+    VTApi(const String& connStr, const String& location, const String& user, const String& password);
     VTApi(const Commons& orig);
     VTApi(const VTApi& orig);
     virtual ~VTApi();
@@ -200,8 +200,9 @@ public:
      * This is how to continue...
      * @return
      */
-    Dataset* newDataset();
-    Dataset* newDataset(String name);
+    Dataset* newDataset(const String& name = "");
+
+    Commons* commons;
     
 protected:
 

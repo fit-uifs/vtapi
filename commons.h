@@ -168,7 +168,12 @@ public:
      * This construtors should not cause any doom
      */
     Commons(const String& connStr, const String& logFilename = "");
+    Commons(const String connStr, const String location, const String user, const String password, const String logFilename = "");
 
+    /**
+     * And a shorter one...
+     */
+    Commonst(const gengetopt_args_info& args_info);
 
     // this constructor is close to doom as capitalism;
     // this is different from comunism, which has been destroyed already
