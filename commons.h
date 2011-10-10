@@ -169,6 +169,7 @@ public:
      */
     Commons(const String& connStr, const String& logFilename = "");
 
+
     // this constructor is close to doom as capitalism;
     // this is different from comunism, which has been destroyed already
     virtual ~Commons();

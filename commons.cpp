@@ -183,7 +183,7 @@ Commons::Commons(const String& connStr, const String& logFilename) {
     doom    = false;        // finally, we can destroy the above objects without any DOOM :D
 }
 
-
+Commons::Commons() {}
 /**
  * This is a doom destructor, which should never happen :)
  */

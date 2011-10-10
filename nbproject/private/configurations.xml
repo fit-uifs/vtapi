@@ -5,14 +5,14 @@
   <confs>
     <conf name="Debug" type="1">
       <gizmo_options version="3">
-        <configurationname>GizmoSimple</configurationname>
+        <profileOnRun>false</profileOnRun>
       </gizmo_options>
       <runprofile version="6">
         <args></args>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
-        <console-type>0</console-type>
-        <terminal-type>0</terminal-type>
+        <console-type>1</console-type>
+        <terminal-type>1</terminal-type>
         <remove-instrumentation>0</remove-instrumentation>
         <environment>
         </environment>
@@ -20,7 +20,6 @@
     </conf>
     <conf name="Release" type="1">
       <gizmo_options version="3">
-        <configurationname>GizmoSimple</configurationname>
       </gizmo_options>
       <runprofile version="6">
         <args></args>

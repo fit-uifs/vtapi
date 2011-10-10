@@ -23,6 +23,7 @@ KeyValues* KeyValues::next() {
     // TODO: zatim to skonci po konci resultsetu, ale melo by zjistit, jestli je
     // to na konci nebo neni a spachat kdyztak dalsi dotaz (limit, offset)
     if (res && position < PQntuples(res)) position++;
+
 }
 
 String KeyValues::getString(String key) {

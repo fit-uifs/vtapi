@@ -1,0 +1,67 @@
+# File: vtapi.ggo
+# Gengetopt configuration file for command line parsing in VTApi project
+# Author: Vojtěch Fröml
+
+# Program name, version and usage
+package "VTApi"
+version "0.1"
+usage "vtapi [OPTIONS] ..."
+
+# Default gengetopt arguments
+args "--conf-parser --file-name=cli_settings --c-extension=cpp --no-handle-error" # -u"
+
+option "verbose" v "Verbose output mode - write used SQL commands etc."
+    optional
+
+text "\nConfig arguments\n"
+
+option "config" - "Config file location"
+    string typestr="FILENAME" default="./vtapi.conf"
+    optional
+option "user" u "User name"
+    string
+    required
+option "password" p "User password"
+    string
+    optional dependon="user"
+option "location" l "Path to data files"
+    string typestr="filename"
+    optional
+option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. password..\""
+    string
+    required
+option "format" f "Input/output format"
+    string values="standard","csv","binary","sparse" default="standard"
+    optional
+option "read" r "Read input"
+    string typestr="FILENAME"
+    optional
+option "write" w "Write output"
+    string typestr="FILENAME"
+    optional
+
+text "\nWorkload specification (WHERE clause)\n"
+text "Explicitly specify WHERE clause, ex.: --where=\"features is NULL\"\n"
+text "or set datasets/sequences/... to work with\n"
+
+option "where" W "Specify WHERE clause"
+    string typestr="SQLSTRING"
+    optional multiple
+option "dataset" D "Set dataset to use"
+    string
+    optional multiple
+option "sequence" S "Set sequence to use"
+    string
+    optional multiple
+option "interval" I "Set interval to use"
+    string
+    optional multiple
+option "method" M "Set method to use"
+    string
+    optional multiple
+option "process" P "Set process to use"
+    string
+    optional multiple
+option "selection" E "Set selection to use"
+    string
+    optional multiple

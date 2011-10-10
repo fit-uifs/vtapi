@@ -6,6 +6,7 @@
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
       <itemPath>VTApi.h</itemPath>
+      <itemPath>cli_settings.h</itemPath>
       <itemPath>commons.h</itemPath>
       <itemPath>settings.h</itemPath>
     </logicalFolder>
@@ -18,12 +19,13 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <itemPath>cli_settings.cpp</itemPath>
       <itemPath>commons.cpp</itemPath>
       <itemPath>dataset.cpp</itemPath>
       <itemPath>interval.cpp</itemPath>
       <itemPath>keyvalues.cpp</itemPath>
+      <itemPath>main.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>
-      <itemPath>test.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"

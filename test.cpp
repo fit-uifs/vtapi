@@ -11,6 +11,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+#include "cli_settings.h"
 #include "commons.h"
 #include "VTApi.h"
 
@@ -35,6 +36,20 @@ int main(int argc, char** argv) {
     // PostreSQL connection
     // Connector* connector = new Connector(CONNINFO); // , logger
     // Commons* commons = new Commons(*connector);
+
+    gengetopt_args_info args_info;
+
+    if (cmdline_parser (argc, argv, &args_info) != 0) exit(1) ;
+
+    /* nepojmenovane argumenty */
+//    for (unsigned i = 0; i < args_info.inputs_num; i++)
+//        cout << args_info.inputs[i] << endl;
+/*
+    if (args_info.par1_given)
+        cout << "parametr 1: " << args_info.par1_arg << endl;
+*/
+    cmdline_parser_free (&args_info);
+
 
     VTApi* vtapi = new VTApi(CONNINFO);
 
@@ -81,9 +96,8 @@ int main(int argc, char** argv) {
         if(waitKey(30) >= 0) break;
     }
 
- *
- *
- */    return 0;
+*/
+     return 0;
 }
 
 

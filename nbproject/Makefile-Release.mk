@@ -17,8 +17,8 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=
-AS=as
+FC=gfortran
+AS=
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86
@@ -37,8 +37,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/vtapi.o \
+	${OBJECTDIR}/main.o \
+	${OBJECTDIR}/cli_settings.o \
 	${OBJECTDIR}/keyvalues.o \
-	${OBJECTDIR}/test.o \
 	${OBJECTDIR}/dataset.o
 
 
@@ -86,15 +87,20 @@ ${OBJECTDIR}/vtapi.o: vtapi.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
 
+${OBJECTDIR}/main.o: main.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+
+${OBJECTDIR}/cli_settings.o: cli_settings.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_settings.o cli_settings.cpp
+
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
-
-${OBJECTDIR}/test.o: test.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/test.o test.cpp
 
 ${OBJECTDIR}/dataset.o: dataset.cpp 
 	${MKDIR} -p ${OBJECTDIR}

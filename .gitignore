@@ -3,3 +3,4 @@
 *.[oa]
 build/*
 dist/Debug/*
+doc/*

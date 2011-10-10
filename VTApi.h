@@ -65,6 +65,7 @@ public:
     bool setFloat(String key, String value);
     bool setFloatA(String key, float_t value, size_t size);
 
+
 protected:
     // this should be overriden (type) where possible
     KeyValues* parent;
@@ -201,7 +202,7 @@ public:
      */
     Dataset* newDataset();
     Dataset* newDataset(String name);
-
+    
 protected:
 
 };
