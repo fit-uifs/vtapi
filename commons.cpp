@@ -188,7 +188,10 @@ Commons::Commons(const String& connStr, const String& logFilename) {
  * And a shorter one...
  */
 Commons::Commons(const gengetopt_args_info& args_info) {
-    
+    logger    = new Logger("");
+    String* connStr = new String(args_info.connection_arg);
+    connector = new Connector(*connStr, logger);
+    doom    = false;        // finally, we can destroy the above objects without any DOOM :D
 }
 
 /**
