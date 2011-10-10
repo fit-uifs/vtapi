@@ -17,8 +17,8 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=
-AS=as
+FC=gfortran
+AS=
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86

@@ -19,24 +19,24 @@ VTApi::VTApi(int argc, char** argv) {
     gengetopt_args_info args_info;
     struct cmdline_parser_params *cli_params;
 
-    /* Initialize parser parameters structure */
+    // Initialize parser parameters structure
     cli_params = cmdline_parser_params_create();
-    /* Hold check for required arguments until config file is parsed */
+    // Hold check for required arguments until config file is parsed
     cli_params->check_required = 0;
 
-    /* Parse cmdline first */
+    // Parse cmdline first
     if (cmdline_parser_ext (argc, argv, &args_info, cli_params) != 0) {
         cmdline_parser_free (&args_info);
         free (cli_params);
         exit(1);
     }
 
-    /* Get the rest of arguments from config file, don't override cmdline */
+    // Get the rest of arguments from config file, don't override cmdline
     cli_params->initialize = 0;
     cli_params->override = 0;
     cli_params->check_required = 1;
 
-    /* Parse config file */
+    // Parse config file
     if (cmdline_parser_config_file
         (args_info.config_arg, &args_info, cli_params) != 0) {
         cmdline_parser_free (&args_info);
@@ -47,8 +47,10 @@ VTApi::VTApi(int argc, char** argv) {
     // TODO: fill commons with args (logger, connector, user, password, location)
     //  eventually dataset/sequence/... from cmdline
     commons = new Commons(args_info);
-    
 
+    // TODO: free args_info somewhere
+    // cmdline_parser_free (&args_info);
+    free (cli_params);
 }
 
 VTApi::~VTApi() {
@@ -70,6 +72,8 @@ int VTApi::run() {
     String line, command;
     size_t pos;
 
+    cout << "commands: query, select, insert, update, delete, show, exit" << endl;
+
     while (1) {
         getline(cin, line);
         pos = line.find(' ');
@@ -78,11 +82,15 @@ int VTApi::run() {
         if (command.compare("query") == 0) {
             //TODO: where to execute general query
             PGresult* res;
+            PQprintOpt opt = {0};
+
             res = PQexecf(commons->getConnector()->getConnection(), line.substr(pos,string::npos).c_str());
 
-            PQprint(stdout, res, NULL);
+            opt.header    = 1;
+            opt.align     = 1;
+            opt.fieldSep  = "|";
+            PQprint(stdout, res, &opt);
             
-
             PQclear(res);
             
         }

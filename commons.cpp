@@ -187,8 +187,10 @@ Commons::Commons(const String& connStr, const String& logFilename) {
 /**
  * And a shorter one...
  */
-Commons::Commons(const gengetopt_args_info& args_info) {
-    
+Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename) {
+    logger = new Logger(logFilename);
+    connector = new Connector(args_info.connection_arg, logger);
+    doom = false;
 }
 
 /**
