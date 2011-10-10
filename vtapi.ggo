@@ -27,7 +27,7 @@ option "password" p "User password"
 option "location" l "Path to data files"
     string typestr="filename"
     optional
-option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. password..\""
+option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. password=..\""
     string
     required
 option "format" f "Input/output format"

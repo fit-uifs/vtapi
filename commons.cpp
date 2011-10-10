@@ -183,6 +183,14 @@ Commons::Commons(const String& connStr, const String& logFilename) {
     doom    = false;        // finally, we can destroy the above objects without any DOOM :D
 }
 
+
+/**
+ * And a shorter one...
+ */
+Commons::Commons(const gengetopt_args_info& args_info) {
+    
+}
+
 /**
  * This is a doom destructor, which should never happen :)
  */

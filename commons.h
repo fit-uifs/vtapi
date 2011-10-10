@@ -12,6 +12,7 @@
 #include "settings.h"
 
 #include <fstream>
+#include "cli_settings.h"
 
 #include <string>
 typedef std::string String;
@@ -173,7 +174,7 @@ public:
     /**
      * And a shorter one...
      */
-    Commonst(const gengetopt_args_info& args_info);
+    Commons(const gengetopt_args_info& args_info);
 
     // this constructor is close to doom as capitalism;
     // this is different from comunism, which has been destroyed already

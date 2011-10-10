@@ -46,7 +46,7 @@ VTApi::VTApi(int argc, char** argv) {
 
     // TODO: fill commons with args (logger, connector, user, password, location)
     //  eventually dataset/sequence/... from cmdline
-    commons = new Commons(args_info));
+    commons = new Commons(args_info);
     
 
 }
