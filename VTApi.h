@@ -9,7 +9,6 @@
 #define	VTAPI_H
 
 // first, include internal classes
-#include "settings.h"
 #include "commons.h"
 
 // next, libraries - OpenCV, (libpq and) libpqtypes
