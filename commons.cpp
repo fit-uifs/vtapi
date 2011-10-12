@@ -207,7 +207,7 @@ Commons::~Commons() {
 
 Connector* Commons::getConnector() {
     return connector;
-}
+} 
 
 Logger* Commons::getLogger() {
 
