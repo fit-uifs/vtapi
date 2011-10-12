@@ -103,3 +103,21 @@ int VTApi::run() {
 
     return 0;
 }
+
+void VTApi::testKeyValues() {
+    Dataset* dataset = newDataset();
+    Sequence* sequence = dataset->newSequence();
+    size_t velikost;
+
+    sequence->next();
+    cout << "Sekvence [getInt: seqnum]: " << sequence->getInt("seqnum") << endl;
+    cout << "Sekvence [getString: seqlocation]: " << sequence->getString("seqlocation") << endl;
+    cout << "Sekvence [getString: seqname]: " << sequence->getString("seqname") << endl;
+    Interval* interval = sequence->newInterval();
+    std::vector<int> pole = interval->getIntV(4);
+    cout << "Intervaly [getIntV: #4] - velikost pole " << velikost << ":" << endl;
+
+    for (int i = 0; i < pole.size(); i++) {
+        cout << i << ": " << pole[i] << endl;
+    }
+}

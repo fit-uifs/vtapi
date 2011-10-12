@@ -48,14 +48,14 @@ public:
 
     int getInt(String key);
     int getInt(int pos);
-    int* getIntA(String key, size_t& lenght);
-    int* getIntA(int pos, size_t& lenght);
+    int* getIntA(String key, size_t& size);
+    int* getIntA(int pos, size_t& size);
     std::vector<int> getIntV(int pos);
 
     float getFloat(String key);
     float getFloat(int pos);
-    float* getFloatA(String key, size_t& lenght);
-    float* getFloatA(int pos, size_t& lenght);
+    float* getFloatA(String key, size_t& size);
+    float* getFloatA(int pos, size_t& size);
 
     // setters
 
@@ -194,6 +194,11 @@ public:
      * @return
      */
     int run();
+
+    /**
+     * For testing KeyValues
+     */
+    void testKeyValues();
 
 
     /**
