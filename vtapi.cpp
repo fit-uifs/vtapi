@@ -69,6 +69,8 @@ int VTApi::run() {
     Dataset* dataset = newDataset();
     Sequence* sequence = dataset->newSequence();
 
+//    this->testKeyValues();
+
     String line, command;
     size_t pos;
 
@@ -113,10 +115,25 @@ int VTApi::run() {
 }
 
 void VTApi::testKeyValues() {
+    cout << "========== BEGIN OF TESTING PART ==========" << endl;
     Dataset* dataset = newDataset();
+    dataset->next();
     Sequence* sequence = dataset->newSequence();
     size_t velikost;
+    Method* method = new Method(*dataset);
+    method->next();
+    method->getOutputData();
 
+    cout << endl;
+
+    Process* process = new Process(*dataset);
+    process->printProcesses();
+
+    cout << "=========== END OF TESTING PART ===========" << endl;
+
+//    Method* method = new Method();
+//    method->next();
+/*
     sequence->next();
     cout << "Sekvence [getInt: seqnum]: " << sequence->getInt("seqnum") << endl;
     cout << "Sekvence [getString: seqlocation]: " << sequence->getString("seqlocation") << endl;
@@ -128,4 +145,5 @@ void VTApi::testKeyValues() {
     for (int i = 0; i < pole.size(); i++) {
         cout << i << ": " << pole[i] << endl;
     }
+ */
 }
