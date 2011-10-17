@@ -143,6 +143,41 @@ protected:
 
 
 /**
+ */
+class MethodKeys : public KeyValues {
+public:
+    MethodKeys(const Dataset& orig);
+    MethodKeys(const Dataset& orig, const String& methodName, const String& inout);
+    MethodKeys(const MethodKeys& orig);
+    virtual ~MethodKeys();
+
+    void getMethodKeyData(const String& methodName, const String& inout);
+    int getMethodKeyDataSize();
+
+    String getKeyname();
+    String getTypname();
+};
+
+/**
+ */
+class Method : public KeyValues {
+private:
+    MethodKeys* methodkeys;
+
+public:
+    Method(const Dataset& orig);
+    Method(const Method& orig);
+    virtual ~Method();
+
+    String getMtname();
+
+    void getInputData();
+    void getOutputData();
+private:
+    void printData(const String& inout);
+};
+
+/**
  *
  */
 class Process : public KeyValues {
@@ -151,8 +186,11 @@ public:
     Process(const Process& orig);
     virtual ~Process();
 
-protected:
-
+    String getPrsname();
+    String getInputs();
+    String getOutputs();
+    
+    void printProcesses();
 };
 
 

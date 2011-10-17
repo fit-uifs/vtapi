@@ -59,9 +59,14 @@ String KeyValues::getString(String key) {
     if (PQgetf(res, position, "#text", key.c_str(), &value)) {}
     else if (PQgetf(res, position, "#name", key.c_str(), &value)) {}
     else if (PQgetf(res, position, "#varchar", key.c_str(), &value)) {}
-    else if (PQgetf(res, position, "#varchar", key.c_str(), &value)) {}
+    else if (PQgetf(res, position, "#bytea", key.c_str(), &value)) {}
+    else if (PQgetf(res, position, "#bpchar", key.c_str(), &value)) {}
     else {
         cerr << PQgeterror() << endl;
+    }
+
+    if (value == NULL) {
+        value = (PGtext) "";
     }
     
     return (String) value;
@@ -73,14 +78,19 @@ String KeyValues::getString(String key) {
  * @return string value
  */
 String KeyValues::getString(int pos) {
-    PGtext value;
+    PGtext value = (PGtext) "";
 
     if (PQgetf(res, position, "%text", pos, &value)) {}
     else if (PQgetf(res, position, "%name", pos, &value)) {}
     else if (PQgetf(res, position, "%varchar", pos, &value)) {}
-    else if (PQgetf(res, position, "%varchar", pos, &value)) {}
+    else if (PQgetf(res, position, "%regtype", pos, &value)) {}
+    else if (PQgetf(res, position, "%bytea", pos, &value)) {}
     else {
         cerr << PQgeterror() << endl;
+    }
+
+    if (value == NULL) {
+        value = (PGtext) "";
     }
 
     return (String) value;
