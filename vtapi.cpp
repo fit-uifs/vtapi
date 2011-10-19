@@ -206,7 +206,7 @@ int VTApi::run() {
             delete testDataset;
         }
         else cout << "commands: query, select, insert,"
-                "update, delete, show, exit" << endl;
+                "update, delete, show, test, exit" << endl;
         }
 
     }
