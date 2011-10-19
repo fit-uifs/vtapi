@@ -243,6 +243,7 @@ int VTApi::run() {
         else if (command.compare("delete") == 0) cout << "todo" << endl;
         else if (command.compare("show") == 0) cout << "todo" << endl;
         else if (command.compare("test") == 0) {
+
             Dataset* testDataset = newDataset();
             Test* test = new Test(*testDataset);
             test->testAll();

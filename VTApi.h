@@ -201,7 +201,7 @@ public:
 class Test {
     Dataset* dataset;
 public:
-    Test(const Dataset& orig);
+    Test(Dataset& orig);
     virtual ~Test();
     
     void testDataset();

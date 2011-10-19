@@ -14,8 +14,8 @@ using namespace std;
 
 
 
-Test::Test(const Dataset& orig) {
-    *dataset = orig;
+Test::Test(Dataset& orig) {
+    dataset = &orig;
 }
 
 Test::~Test() {
