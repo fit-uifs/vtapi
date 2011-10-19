@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <time.h>
 
 #include "cli_settings.h"
 #include "VTApi.h"
@@ -94,6 +95,7 @@ int VTApi::run() {
 
     Dataset* dataset = newDataset();
     Sequence* sequence = dataset->newSequence();
+    Process* process = new Process(*dataset);
 
     String line, command;
 
@@ -127,10 +129,10 @@ int VTApi::run() {
         // dataset | sequence | interval | method | process | selection
         // data specific command (select, insert..)
         // insert dataset ... loc=..
-        // insert sequence ... [loc=.. type=..]
+        // insert sequence ... num=.. [loc=.. type=..]
         // insert interval into ... t1=.. t2=.. [loc= tags=.. svm=..]
         // insert method ... --
-        // insert process ... of [mtname] in=.. out=..
+        // insert process ... method=.. in=.. out=..
         // insert selection ... --
         else {
 
@@ -144,28 +146,47 @@ int VTApi::run() {
         }
 
         // TODO: insert class?
+        // TODO: set all with PQPutf (to do in keyvalues)
         // TODO: insert into which dataset?
         else if (command.compare("insert") == 0) {
 
-            //PGtimestamp created;
             String input, name;
+
+            PGtimestamp created;
+//            time_t rawtime;
+//            struct tm * timeinfo;
+//
+//            time ( &rawtime );
+//            timeinfo = localtime ( &rawtime );
+//
+//            created.date.isbc  = 0;
+//            created.date.year  = timeinfo->tm_year;
+//            created.date.mon   = timeinfo->tm_mon;
+//            created.date.mday  = timeinfo->tm_mday;
+//            created.time.hour  = timeinfo->tm_hour;
+//            created.time.min   = timeinfo->tm_min;
+//            created.time.sec   = timeinfo->tm_sec;
+//            created.time.usec  = 0;
+
             input = getWord(line, "");
 
 
             // insert sequence
             if (input.compare("sequence") == 0) {
-                String location, type;
+                String location, type, seqnum;
                 name = getWord(line, "");
+                seqnum = getWord(line,"num=");
                 location = getWord(line, "loc=");
                 type = getWord(line, "type=");
 //
 //                PGregisterType seqtype = {"seqtype=public.seqtype", NULL, NULL};
 //                PQregisterTypes(commons->getConnector()->getConnection(), PQT_USERDEFINED, &seqtype, 1, 0);
-                // TODO: how get type, unique number
+                // TODO: how get type seqtype, unique number, timestamp
+
                 PGresult *res = PQexecf(commons->getConnector()->getConnection(),
                     "INSERT INTO public.sequences (seqname, seqlocation, seqtyp, seqnum) "
-                        "VALUES (%text, %text, \'images\', 10)",
-                    name.c_str(), location.c_str());
+                        "VALUES (%name, %varchar, \'images\', %int4)",
+                    name.c_str(), location.c_str(), atoi(seqnum.c_str()));
                 if(!res)
                     cout << "ERROR: " << PQgeterror() << endl;
                 PQclear(res);
@@ -184,8 +205,31 @@ int VTApi::run() {
                 // TODO: other columns
                 PGresult *res = PQexecf(commons->getConnector()->getConnection(),
                     "INSERT INTO public.intervals (seqname, t1, t2, imglocation) "
-                        "VALUES (%text, %int4, %int4, %varchar)",
+                        "VALUES (%name, %int4, %int4, %varchar)",
                     into.c_str(), atoi(t1.c_str()), atoi(t2.c_str()), location.c_str());
+                if(!res)
+                    cout << "ERROR: " << PQgeterror() << endl;
+                PQclear(res);
+
+
+            }
+            // insert process
+            if (input.compare("process") == 0) {
+                String mtname, in, out;
+                name = getWord(line, "");
+                getWord(line, "of");
+                mtname = getWord(line, "");
+                in = getWord(line, "in=");
+                out = getWord(line, "out=");
+
+//                PGregisterType regclass = {"regclass=pg_catalog.regclass", NULL, NULL};
+//                PQregisterTypes(commons->getConnector()->getConnection(), PQT_USERDEFINED, &regclass, 1, 0);
+
+                // TODO: get type regclass
+                PGresult *res = PQexecf(commons->getConnector()->getConnection(),
+                    "INSERT INTO public.processes (prsname, mtname, inputs, outputs) "
+                        "VALUES (%name, %name, %varchar, %varchar)",
+                    name.c_str(), mtname.c_str(), in.c_str(), out.c_str());
                 if(!res)
                     cout << "ERROR: " << PQgeterror() << endl;
                 PQclear(res);
@@ -213,8 +257,10 @@ int VTApi::run() {
 
 
     /* Deallocate memory */
+    delete process;
     delete sequence;
     delete dataset;
+
 
     return 0;
 }

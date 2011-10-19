@@ -26,7 +26,11 @@
       <itemPath>interval.cpp</itemPath>
       <itemPath>keyvalues.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
+      <itemPath>method.cpp</itemPath>
+      <itemPath>methodkeys.cpp</itemPath>
+      <itemPath>process.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>
+      <itemPath>test.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
