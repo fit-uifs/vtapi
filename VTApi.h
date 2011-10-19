@@ -267,7 +267,7 @@ public:
     Commons* commons;
     
 protected:
-
+    String getWord(String& line, const String& prefix);
 };
 
 #endif	/* VTAPI_H */

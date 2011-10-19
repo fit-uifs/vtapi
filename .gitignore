@@ -3,6 +3,5 @@
 *.[oa]
 build/*
 dist/Debug/*
-doc/*
 vtapi.conf
 nbproject/*
