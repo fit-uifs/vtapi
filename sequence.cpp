@@ -22,23 +22,11 @@ Sequence::~Sequence() {
 
 
 String Sequence::getName() {
-    PGtext text = NULL;                 // char*
-    if(res) {
-        PQgetf(res, position, "#text", "seqname", &text); // get formated text value from tuple at position
-    }
-
-    if (!text) logger->error("111: Sequence name is NULL");
-    return String(text);
+    return this->getString("seqname");
 }
 
 String Sequence::getLocation() {
-    PGtext text = NULL;                // char*
-    if(res) {
-        PQgetf(res, position, "#text", "imglocation", &text); // get formated text value from tuple at position
-    }
-
-    if (!text) logger->error("112: Sequence location is NULL");
-    return String(text);
+    return this->getString("seqlocation");
 }
 
 Interval* Sequence::newInterval() {

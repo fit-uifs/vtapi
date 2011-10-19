@@ -31,8 +31,13 @@ KeyValues::~KeyValues() {
 KeyValues* KeyValues::next() {
     // TODO: zatim to skonci po konci resultsetu, ale melo by zjistit, jestli je
     // to na konci nebo neni a spachat kdyztak dalsi dotaz (limit, offset)
-    if (res && position < PQntuples(res)) position++;
+    if (res && position < PQntuples(res) - 1) {
+        position++;
+    }
+}
 
+KeyValues* KeyValues::rewind() {
+    position = -1;
 }
 
 
@@ -140,7 +145,7 @@ int* KeyValues::getIntA(String key, size_t& size) {
     PGarray tmp;
     int* values;
 
-    if (! PQgetf(res, 0, "#int4[]", key.c_str(), &tmp)) {
+    if (! PQgetf(res, position, "#int4[]", key.c_str(), &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -166,7 +171,7 @@ int* KeyValues::getIntA(int pos, size_t& size) {
     PGarray tmp;
     int* values;
 
-    if (! PQgetf(res, 0, "%int4[]", pos, &tmp)) {
+    if (! PQgetf(res, position, "%int4[]", pos, &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -192,7 +197,7 @@ std::vector<int> KeyValues::getIntV(int pos) {
     PGint4 value;
     std::vector<int> values;
 
-    if (! PQgetf(res, 0, "%int4[]", pos, &tmp)) {
+    if (! PQgetf(res, position, "%int4[]", pos, &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -251,7 +256,7 @@ float* KeyValues::getFloatA(String key, size_t& size) {
     PGarray tmp;
     float* values;
 
-    if (! PQgetf(res, 0, "#float4[]", key.c_str(), &tmp)) {
+    if (! PQgetf(res, position, "#float4[]", key.c_str(), &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -277,7 +282,7 @@ float* KeyValues::getFloatA(int pos, size_t& size) {
     PGarray tmp;
     float* values;
 
-    if (! PQgetf(res, 0, "%float4[]", pos, &tmp)) {
+    if (! PQgetf(res, position, "%float4[]", pos, &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 

@@ -36,6 +36,7 @@ public:
      * @return this or null
      */
     KeyValues* next();
+    KeyValues* rewind();
 
     long getRowActual();
     long getRowNumber();
@@ -64,6 +65,7 @@ public:
     bool setFloat(String key, String value);
     bool setFloatA(String key, float_t value, size_t size);
 
+//    void test(const KeyValues& orig);
 
 protected:
     // this should be overriden (type) where possible
@@ -95,6 +97,8 @@ public:
 
     String getName();
     String getLocation();
+
+    int getSize();
 
     Sequence* newSequence();
 protected:
@@ -191,6 +195,22 @@ public:
     String getOutputs();
     
     void printProcesses();
+};
+
+
+class Test {
+    Dataset* dataset;
+public:
+    Test(const Dataset& orig);
+    virtual ~Test();
+    
+    void testDataset();
+    void testSequece();
+    void testInterval();
+    void testKeyValues();
+    void testMethod();
+    void testProcess();
+    void testAll();
 };
 
 

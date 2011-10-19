@@ -102,6 +102,13 @@ int VTApi::run() {
         else if (command.compare("update") == 0) cout << "todo" << endl;
         else if (command.compare("delete") == 0) cout << "todo" << endl;
         else if (command.compare("show") == 0) cout << "todo" << endl;
+        else if (command.compare("test") == 0) {
+            Dataset* testDataset = newDataset();
+            Test* test = new Test(*testDataset);
+            test->testAll();
+            delete test;
+            delete testDataset;
+        }
         else if (command.compare("exit") == 0) break;
 
     }
@@ -114,10 +121,15 @@ int VTApi::run() {
     return 0;
 }
 
+/*
 void VTApi::testKeyValues() {
     cout << "========== BEGIN OF TESTING PART ==========" << endl;
     Dataset* dataset = newDataset();
+    cout << "DSC: " << dataset->getSize() << endl;
+//    cout << "DSN1: " << dataset->getName() << endl;
     dataset->next();
+    cout << "DSN2: " << dataset->getName() << endl;
+    return;
     Sequence* sequence = dataset->newSequence();
     size_t velikost;
     Method* method = new Method(*dataset);
@@ -133,7 +145,7 @@ void VTApi::testKeyValues() {
 
 //    Method* method = new Method();
 //    method->next();
-/*
+
     sequence->next();
     cout << "Sekvence [getInt: seqnum]: " << sequence->getInt("seqnum") << endl;
     cout << "Sekvence [getString: seqlocation]: " << sequence->getString("seqlocation") << endl;
@@ -145,5 +157,6 @@ void VTApi::testKeyValues() {
     for (int i = 0; i < pole.size(); i++) {
         cout << i << ": " << pole[i] << endl;
     }
- */
-}
+  
+}*/
+

@@ -6,6 +6,8 @@
  */
 
 #include "VTApi.h"
+#include <cstdio>
+#include <iostream>
 
 Dataset::Dataset(const KeyValues& orig) : KeyValues(orig) {
     // FIXME: tohle by se melo poslat KeyValues, at si to zpracuji
@@ -20,19 +22,25 @@ Dataset::~Dataset() {
 }
 
 String Dataset::getName() {
-    PGtext text;                        // char* .. not necessarily initialized
+/*    PGtext text;                        // char* .. not necessarily initialized
     if(res) {
         PQgetf(res, position, "#text", "dsname", &text); // get formated text value from tuple at position
     }
-    return String(text);
+    return String(text);*/
+    return this->getString("dsname");
 }
 
 String Dataset::getLocation() {
-    PGtext text;                        // char* .. not necessarily initialized
+/*    PGtext text;                        // char* .. not necessarily initialized
     if(res) {
         PQgetf(res, position, "#text", "dslocation", &text); // get formated text value from tuple at position
     }
-    return String(text);
+    return String(text);*/
+    return this->getString("dslocation");
+}
+
+int Dataset::getSize() {
+    return PQntuples(res);
 }
 
 Sequence* Dataset::newSequence() {
