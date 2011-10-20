@@ -12,7 +12,6 @@
                    displayName="Resource Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
-      <itemPath>cli_settings.cpp</itemPath>
       <itemPath>cli_settings.h</itemPath>
       <itemPath>vtapi.conf</itemPath>
       <itemPath>vtapi.ggo</itemPath>
@@ -21,6 +20,7 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <itemPath>cli_settings.cpp</itemPath>
       <itemPath>commons.cpp</itemPath>
       <itemPath>dataset.cpp</itemPath>
       <itemPath>interval.cpp</itemPath>
