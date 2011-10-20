@@ -140,6 +140,15 @@ protected:
 
 /**
  * This is a class to construct and execute INSERT queries.
+ *
+ * Command syntax: (array values are comma-separated)
+ * insert dataset name=.. location=..
+ * insert sequence name=.. seqnum=.. [location=.. seqtype=..]
+ * insert interval sequence=... t1=.. t2=.. [location=.. tags=.. svm=..]
+ * insert method name=.. [key= type= inout=..]*
+ * insert process name=.. method=.. inputs=.. outputs=..
+ * insert selection name=.. --
+ *
  */
 class Insert {
 public:
@@ -160,9 +169,8 @@ public:
     /**
      * Add arguments to insert query in string form
      * @param param argument in 'key=value' format, eg.: 'name=process1'
-     * @return Success value
      */
-    bool addParam(String param);
+    void addParam(String param);
     /**
      * Clears query arguments
      */

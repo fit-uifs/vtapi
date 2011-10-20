@@ -63,18 +63,16 @@ Dataset* VTApi::newDataset(const String& name) {
 
 
 int VTApi::run() {
-
-
     Dataset* dataset = newDataset();
     Sequence* sequence = dataset->newSequence();
     Interval* interval = sequence->newInterval();
     Process* process = new Process(*dataset);
     Insert* insert = new Insert(commons->getConnector());
 
-    dataset->next(); // first dataset (public)
     String line, command;
-
     cout << "commands: query, select, insert, update, delete, show, test, exit" << endl;
+
+    dataset->next(); // first dataset (public)
 
     // command cycle
     while (1) {

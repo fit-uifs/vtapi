@@ -17,3 +17,22 @@ Interval::Interval(const Interval& orig) : KeyValues(orig) {
 Interval::~Interval() {
 }
 
+String Interval::getSequence() {
+    return this->getString("seqname");
+}
+
+String Interval::getLocation() {
+    return this->getString("imglocation");
+}
+
+int Interval::getStartTime() {
+    return this->getInt("t1");
+}
+
+int Interval::getEndTime() {
+    return this->getInt("t2");
+}
+
+std::vector<int> Interval::getTags() {
+    return this->getIntV("tags");
+}

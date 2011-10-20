@@ -51,6 +51,7 @@ public:
     int* getIntA(String key, size_t& size);
     int* getIntA(int pos, size_t& size);
     std::vector<int> getIntV(int pos);
+    std::vector<int> getIntV(String key);
 
     float getFloat(String key);
     float getFloat(int pos);
@@ -143,6 +144,12 @@ public:
     Interval(const Interval& orig);
     virtual ~Interval();
 
+    String getSequence();
+    int getStartTime();
+    int getEndTime();
+    String getLocation();
+    std::vector<int> getTags();
+
 protected:
 
 };
@@ -202,12 +209,14 @@ public:
 
 class Test {
     Dataset* dataset;
+    Sequence* sequence;
+    Interval* interval;
 public:
     Test(Dataset& orig);
     virtual ~Test();
     
     void testDataset();
-    void testSequece();
+    void testSequence();
     void testInterval();
     void testKeyValues();
     void testMethod();
