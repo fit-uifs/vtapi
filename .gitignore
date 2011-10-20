@@ -2,6 +2,6 @@
 *.log
 *.[oa]
 build/*
+dist/*
 dist/Debug/*
-vtapi.conf
-nbproject/*
+
