@@ -14,6 +14,7 @@
 #include "cli_settings.h"
 
 #include <string>
+#include <vector>
 typedef std::string String;
 
 #define BUFFERSize 255
@@ -137,6 +138,62 @@ protected:
     PGresult* res;
 };
 
+/**
+ * This is a class to construct and execute INSERT queries.
+ */
+class Insert {
+public:
+    enum InsertType {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
+
+    Insert(Connector* conn);
+    ~Insert();
+    /**
+     * Set dataset (schema) on which the insert is executed
+     * @param dsname Name of the dataset
+     */
+    void setDataset(String dsname);
+    /**
+     * Set what to insert into dataset
+     * @param newtype {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION}
+     */
+    void setType(InsertType newtype);
+    /**
+     * Add arguments to insert query in string form
+     * @param param argument in 'key=value' format, eg.: 'name=process1'
+     * @return Success value
+     */
+    bool addParam(String param);
+    /**
+     * Clears query arguments
+     */
+    void clear();
+    /**
+     * Executes query
+     * @return Success value
+     */
+    bool execute();
+  
+protected:
+    Connector* connector;
+    String dataset;
+    InsertType type;
+    std::vector<String> params;
+
+    /**
+     * Gets value of argument from param vector
+     * @param pname Argument key
+     * @return Argument value
+     */
+    String getParam(String pname);
+    /**
+     * Fills PGarray structure with array of int arguments in string form
+     * @param arrayParam Comma-separated string of values
+     * @param arr Array structure to fill
+     */
+    void getIntArray(String arrayParam, PGarray* arr);
+    PGtimestamp getTimestamp();
+    
+};
 
 
 

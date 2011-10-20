@@ -6,8 +6,7 @@
  */
 
 #include "VTApi.h"
-#include <cstdio>
-#include <iostream>
+
 
 Dataset::Dataset(const KeyValues& orig) : KeyValues(orig) {
     // FIXME: tohle by se melo poslat KeyValues, at si to zpracuji

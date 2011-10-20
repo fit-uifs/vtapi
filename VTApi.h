@@ -65,6 +65,7 @@ public:
     bool setFloat(String key, String value);
     bool setFloatA(String key, float_t value, size_t size);
 
+
 //    void test(const KeyValues& orig);
 
 protected:
@@ -83,6 +84,7 @@ protected:
     // Logger* logger;
 
     // bool isDoom;         // true
+
 };
 
 
@@ -267,7 +269,7 @@ public:
     Commons* commons;
     
 protected:
-    String getWord(String& line, const String& prefix);
+    String getWord(String& line);
 };
 
 #endif	/* VTAPI_H */
