@@ -111,35 +111,6 @@ protected:
 
 
 /**
- * This is a class where queries will be constructed (but it may be KeyValues as well)
- * TODO: discuss and use libpqtypes
- *
- *//***************************************************************************/
-class Select {
-public:
-    void field(String);
-    void condition(String);
-    void order(String);
-
-    // discuss the use
-    bool execute();
-
-protected:
-    // this should be some vectors
-    String select;
-    String from;
-    String where;
-    String groupby;
-    String orderby;
-    int limit;
-    int offset;
-
-    // this should be it here or should it be there?
-    PGresult* res;
-};
-
-
-/**
  * This is common predecessor to each object in the VTApi - manages connection, logging and error handling.
  *
  * This class is inherited by many and many other classes, but it manages just single resources,

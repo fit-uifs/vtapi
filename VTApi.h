@@ -22,136 +22,36 @@ class Sequence;
 class Interval;
 
 
+
+
+
 /**
- * KeyValues storage class
- */
-class KeyValues : public Commons {
+ * This is a class where queries will be constructed
+ * Mechanism: TBD
+ * TODO: discuss and use libpqtypes
+ *
+ *//***************************************************************************/
+class Select {
 public:
-    KeyValues(const Commons& orig);
-    KeyValues(const KeyValues& orig);
-    virtual ~KeyValues();
+    void field(String);
+    void condition(String);
+    void order(String);
 
-    /**
-     * The most used function of the VTApi - nextRow or simply next
-     * @return this or null
-     */
-    KeyValues* next();
-    KeyValues* rewind();
-
-    long getRowActual();
-    long getRowNumber();
-
-    // getters
-
-    String getString(String key);
-    String getString(int pos);
-
-    int getInt(String key);
-    int getInt(int pos);
-    int* getIntA(String key, size_t& size);
-    int* getIntA(int pos, size_t& size);
-    std::vector<int> getIntV(int pos);
-    std::vector<int> getIntV(String key);
-
-    float getFloat(String key);
-    float getFloat(int pos);
-    float* getFloatA(String key, size_t& size);
-    float* getFloatA(int pos, size_t& size);
-
-    // setters
-
-    bool setString(String key, String value);
-    bool setInt(String key, String value);
-    bool setIntA(String key, int* value, size_t size);
-    bool setFloat(String key, String value);
-    bool setFloatA(String key, float_t value, size_t size);
-
-
-//    void test(const KeyValues& orig);
+    // discuss the use
+    bool execute();
 
 protected:
-    // this should be overriden (type) where possible
-    KeyValues* parent;
-    // maintain a list of all possible elements
-    std::map<String,String> keys;
-    // TODO: discuss map, recursion etc.
+    // this should be some vectors
+    String select;
+    String from;
+    String where;
+    String groupby;
+    String orderby;
+    int limit;
+    int offset;
 
-    int position;       // initialized to -1 by default
     // this should be it here or should it be there?
     PGresult* res;
-
-    // Inherited from Commons:
-    // Connector* connector; // this was most probably inherited
-    // Logger* logger;
-
-    // bool isDoom;         // true
-
-};
-
-
-/**
- *
- */
-class Dataset : public KeyValues {
-public:
-    Dataset(const KeyValues& orig);
-    Dataset(const Dataset& orig);
-    virtual ~Dataset();
-
-    String getName();
-    String getLocation();
-
-    int getSize();
-
-    Sequence* newSequence();
-protected:
-
-};
-
-
-/**
- * A Sequence class manages videos and images
- */
-class Sequence : public KeyValues {
-public:
-    Sequence(const KeyValues& orig);
-    Sequence(const Sequence& orig);
-    virtual ~Sequence();
-
-    String getName();
-    String getLocation();
-
-    Interval* newInterval();
-
-    cv::Mat getImage();
-
-protected:
-    bool openVideo(const String& name);
-    bool openImage(const String& name);
-
-    String file_name_video;
-    String file_name_image;
-
-};
-
-
-/**
- * Interval is equivalent to an interval of images
- */
-class Interval : public KeyValues {
-public:
-    Interval(const KeyValues& orig);
-    Interval(const Interval& orig);
-    virtual ~Interval();
-
-    String getSequence();
-    int getStartTime();
-    int getEndTime();
-    String getLocation();
-    std::vector<int> getTags();
-
-protected:
-
 };
 
 /**
@@ -234,6 +134,166 @@ protected:
 
 
 /**
+ * KeyValues storage class
+ */
+class KeyValues : public Commons {
+public:
+    KeyValues(const Commons& orig);
+    KeyValues(const KeyValues& orig);
+    virtual ~KeyValues();
+
+    /**
+     * Select is (to be) pre-filled byt the constructor
+     */
+    Select* select;
+
+    /**
+     * The most used function of the VTApi - next (row)
+     * @return this or null
+     */
+    KeyValues* next();
+    KeyValues* rewind();
+
+    long getRowActual();
+    long getRowNumber();
+
+    // getters (Select)
+
+    String getString(String key);
+    String getString(int pos);
+
+    int getInt(String key);
+    int getInt(int pos);
+    int* getIntA(String key, size_t& size);
+    int* getIntA(int pos, size_t& size);
+    std::vector<int> getIntV(int pos);
+    std::vector<int> getIntV(String key);
+
+    float getFloat(String key);
+    float getFloat(int pos);
+    float* getFloatA(String key, size_t& size);
+    float* getFloatA(int pos, size_t& size);
+
+    // setters (Update)
+    // TODO: overit jestli a jak funguje... jako UPDATE?
+
+    bool setString(String key, String value);
+    bool setInt(String key, String value);
+    bool setInt(String key, int value);
+    bool setIntA(String key, int* value, size_t size);
+    bool setFloat(String key, String value);
+    bool setFloat(String key, float value);
+    bool setFloatA(String key, float_t value, size_t size);
+
+    // adders (Insert)
+    // TODO: implement
+
+    bool addString(String key, String value);
+    bool addInt(String key, String value);
+    bool addInt(String key, int value);
+    bool addIntA(String key, int* value, size_t size);
+    bool addFloat(String key, String value);
+    bool addFloat(String key, float value);
+    bool addFloatA(String key, float_t value, size_t size);
+
+
+    // TODO: u kazde tridy add vytvori objekt te tridy se stejnymi keys, ale bez hodnot a ty se naplni jako set
+
+//    void test(const KeyValues& orig);
+
+protected:
+    // this should be overriden (type) where possible
+    // TODO: is it necessary???
+    KeyValues* parent;
+    // maintain a list of all possible elements
+    std::map<String,String> keys;
+    // TODO: discuss map, recursion etc.
+
+    int position;       // initialized to -1 by default
+    // this should be it here or should it be there?
+    PGresult* res;
+
+    // Inherited from Commons:
+    // Connector* connector; // this was most probably inherited
+    // Logger* logger;
+
+    // bool isDoom;         // true
+
+};
+
+
+/**
+ *
+ */
+class Dataset : public KeyValues {
+public:
+    Dataset(const KeyValues& orig);
+    Dataset(const Dataset& orig);
+    virtual ~Dataset();
+
+    String getName();
+    String getLocation();
+
+    int getSize();
+
+    Sequence* newSequence();
+protected:
+
+};
+
+
+/**
+ * A Sequence class manages videos and images
+ */
+class Sequence : public KeyValues {
+public:
+    Sequence(const KeyValues& orig);
+    Sequence(const Sequence& orig);
+    virtual ~Sequence();
+
+    String getName();
+    String getLocation();
+
+    bool add(String name="");
+
+    Interval* newInterval();
+
+    cv::Mat getImage();
+
+protected:
+    bool openVideo(const String& name);
+    bool openImage(const String& name);
+
+    String file_name_video;
+    String file_name_image;
+
+};
+
+
+/**
+ * Interval is equivalent to an interval of images
+ */
+class Interval : public KeyValues {
+public:
+    Interval(const KeyValues& orig);
+    Interval(const Interval& orig);
+    virtual ~Interval();
+
+    String getSequence();
+    int getStartTime();
+    int getEndTime();
+    String getLocation();
+    std::vector<int> getTags();
+
+    bool add(String name="");
+
+protected:
+
+};
+
+
+/**
+ * // TODO: zvazit jestli nechat + komentar nutny
  */
 class MethodKeys : public KeyValues {
 public:
@@ -280,6 +340,8 @@ public:
     String getPrsname();
     String getInputs();
     String getOutputs();
+
+    bool add(String name="");
     
     void printProcesses();
 };
@@ -348,11 +410,16 @@ public:
 
 
     /**
-     * This is how to continue...
+     * This is how to continue after creating the API class...
      * @return
      */
     Dataset* newDataset(const String& name = "");
+    Method* newMethod(const String& name = "");
+    Process* newProcess(const String& name = "");
 
+    /**
+     * Commons are common objects to the project.
+     */
     Commons* commons;
     
 protected:

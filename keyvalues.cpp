@@ -30,6 +30,9 @@ KeyValues::~KeyValues() {
 
 
 KeyValues* KeyValues::next() {
+    // TODO: pouzit tridu Select, tu si naplni kazda podtrida sama
+    // TODO: naplnena podtrida Select spusti execute ZDE kdyz position == -1
+
     // TODO: zatim to skonci po konci resultsetu, ale melo by zjistit, jestli je
     // to na konci nebo neni a spachat kdyztak dalsi dotaz (limit, offset)
     if (res && position < PQntuples(res) - 1) {
