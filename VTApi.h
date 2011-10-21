@@ -154,6 +154,84 @@ protected:
 
 };
 
+/**
+ * This is a class to construct and execute INSERT queries.
+ *
+ * Command syntax: (array values are comma-separated)
+ * insert dataset name=.. location=..
+ * insert sequence name=.. seqnum=.. [location=.. seqtype=..]
+ * insert interval sequence=... t1=.. t2=.. [location=.. tags=.. svm=..]
+ * insert method name=.. [key= type= inout=..]*
+ * insert process name=.. method=.. inputs=.. outputs=..
+ * insert selection name=.. --
+ *
+ */
+class Insert {
+public:
+    enum InsertType {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
+
+    Insert(Dataset* ds);
+    ~Insert();
+    /**
+     * Set dataset (schema) on which the insert is executed
+     * @param dsname Name of the dataset
+     */
+    void setDataset(Dataset* newdataset);
+    /**
+     * Set what to insert into dataset
+     * @param newtype {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION}
+     */
+    void setType(InsertType newtype);
+    /**
+     * Add arguments to insert query in string form
+     * @param param argument in 'key=value' format, eg.: 'name=process1'
+     */
+    void addParam(String param);
+    /**
+     * Clears query arguments
+     */
+    void clear();
+    /**
+     * Executes query
+     * @return Success value
+     */
+    bool execute();
+
+protected:
+    Connector* connector;
+    Dataset* dataset;
+    InsertType type;
+    std::vector<String> params;
+
+    /**
+     * Gets value of argument from param vector
+     * @param pname Argument key
+     * @return Argument value
+     */
+    String getParam(String pname);
+    /**
+     * Fills PGarray structure with array of int arguments in string form
+     * @param arrayParam Comma-separated string of values
+     * @param arr Array structure to fill
+     */
+    void getIntArray(String arrayParam, PGarray* arr);
+    /**
+     * Fills PGarray structure with array of float arguments in string form
+     * @param arrayParam Comma-separated string of values
+     * @param arr Array structure to fill
+     */
+    void getFloatArray(String arrayParam, PGarray* arr);
+    /**
+     * Checks whether interval location points to existing file
+     * @param seqname Name of the sequence containing interval
+     * @param intlocation Interval filename
+     * @return
+     */
+    bool checkLocation(String seqname, String intlocation);
+    PGtimestamp getTimestamp();
+
+};
+
 
 /**
  */

@@ -67,7 +67,7 @@ int VTApi::run() {
     Sequence* sequence = dataset->newSequence();
     Interval* interval = sequence->newInterval();
     Process* process = new Process(*dataset);
-    Insert* insert = new Insert(commons->getConnector());
+    Insert* insert = new Insert(dataset);
 
     String line, command;
     cout << "commands: query, select, insert, update, delete, show, test, exit" << endl;
@@ -109,7 +109,7 @@ int VTApi::run() {
             input = getWord(line);
 
             insert->clear();
-            insert->setDataset(dataset->getName());
+            insert->setDataset(dataset);
             while (!line.empty()) insert->addParam(getWord(line));
 
             if (!input.compare("dataset")) insert->setType(Insert::DATASET);
