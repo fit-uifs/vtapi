@@ -98,8 +98,6 @@ public:
     String getName();
     String getLocation();
 
-    int getSize();
-
     Sequence* newSequence();
 protected:
 

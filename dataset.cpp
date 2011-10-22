@@ -9,6 +9,8 @@
 #include <cstdio>
 #include <iostream>
 
+
+
 Dataset::Dataset(const KeyValues& orig) : KeyValues(orig) {
     // FIXME: tohle by se melo poslat KeyValues, at si to zpracuji
     res = PQexecf(getConnector()->getConnection(), "SELECT * FROM public.datasets;");
@@ -21,28 +23,31 @@ Dataset::Dataset(const Dataset& orig) : KeyValues(orig) {
 Dataset::~Dataset() {
 }
 
+
+
+/**
+ * Get name of current dataset
+ * @return name name of current dataset
+ */
 String Dataset::getName() {
-/*    PGtext text;                        // char* .. not necessarily initialized
-    if(res) {
-        PQgetf(res, position, "#text", "dsname", &text); // get formated text value from tuple at position
-    }
-    return String(text);*/
     return this->getString("dsname");
 }
 
+/**
+ * Get location of current dataset
+ * @return location of current dataset
+ */
 String Dataset::getLocation() {
-/*    PGtext text;                        // char* .. not necessarily initialized
-    if(res) {
-        PQgetf(res, position, "#text", "dslocation", &text); // get formated text value from tuple at position
-    }
-    return String(text);*/
     return this->getString("dslocation");
 }
 
-int Dataset::getSize() {
-    return PQntuples(res);
-}
 
+
+
+/**
+ * Create new sequence for current dataset
+ * @return pointer to new sequence
+ */
 Sequence* Dataset::newSequence() {
     return (new Sequence(*this));
 }

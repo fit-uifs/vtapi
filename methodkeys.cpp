@@ -19,9 +19,8 @@ MethodKeys::MethodKeys(const MethodKeys& orig) : KeyValues(orig) {
 
 MethodKeys::~MethodKeys() {
 }
-/*select MK.keyname, PT.*
-from public.methods_keys MK
-join pg_catalog.pg_type PT ON MK.typname::oid = PT.oid*/
+
+
 void MethodKeys::getMethodKeyData(const String& methodName, const String& inout) {
       res = PQexecf(getConnector()->getConnection(), String(" SELECT MK.keyname, PT.typname "
                                                             " FROM public.methods_keys MK "
