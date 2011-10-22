@@ -22,6 +22,117 @@ class Sequence;
 class Interval;
 
 
+
+
+
+/**
+ * This is a class where queries will be constructed
+ * Mechanism: TBD
+ * TODO: discuss and use libpqtypes
+ *
+ *//***************************************************************************/
+class Select {
+public:
+    void field(String);
+    void condition(String);
+    void order(String);
+
+    // discuss the use
+    bool execute();
+
+protected:
+    // this should be some vectors
+    String select;
+    String from;
+    String where;
+    String groupby;
+    String orderby;
+    int limit;
+    int offset;
+
+    // this should be it here or should it be there?
+    PGresult* res;
+};
+
+/**
+ * This is a class to construct and execute INSERT queries.
+ *
+ * Command syntax: (array values are comma-separated)
+ * insert dataset name=.. location=..
+ * insert sequence name=.. seqnum=.. [location=.. seqtype=..]
+ * insert interval sequence=... t1=.. t2=.. [location=.. tags=.. svm=..]
+ * insert method name=.. [key= type= inout=..]*
+ * insert process name=.. method=.. inputs=.. outputs=..
+ * insert selection name=.. --
+ *
+ */
+class Insert {
+public:
+    enum InsertType {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
+
+    Insert(Dataset* ds);
+    ~Insert();
+    /**
+     * Set dataset (schema) on which the insert is executed
+     * @param dsname Name of the dataset
+     */
+    void setDataset(Dataset* newdataset);
+    /**
+     * Set what to insert into dataset
+     * @param newtype {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION}
+     */
+    void setType(InsertType newtype);
+    /**
+     * Add arguments to insert query in string form
+     * @param param argument in 'key=value' format, eg.: 'name=process1'
+     */
+    void addParam(String param);
+    /**
+     * Clears query arguments
+     */
+    void clear();
+    /**
+     * Executes query
+     * @return Success value
+     */
+    bool execute();
+
+protected:
+    Connector* connector;
+    Dataset* dataset;
+    InsertType type;
+    std::vector<String> params;
+
+    /**
+     * Gets value of argument from param vector
+     * @param pname Argument key
+     * @return Argument value
+     */
+    String getParam(String pname);
+    /**
+     * Fills PGarray structure with array of int arguments in string form
+     * @param arrayParam Comma-separated string of values
+     * @param arr Array structure to fill
+     */
+    void getIntArray(String arrayParam, PGarray* arr);
+    /**
+     * Fills PGarray structure with array of float arguments in string form
+     * @param arrayParam Comma-separated string of values
+     * @param arr Array structure to fill
+     */
+    void getFloatArray(String arrayParam, PGarray* arr);
+    /**
+     * Checks whether interval location points to existing file
+     * @param seqname Name of the sequence containing interval
+     * @param intlocation Interval filename
+     * @return
+     */
+    bool checkLocation(String seqname, String intlocation);
+    PGtimestamp getTimestamp();
+
+};
+
+
 /**
  * KeyValues storage class
  */
@@ -32,7 +143,12 @@ public:
     virtual ~KeyValues();
 
     /**
-     * The most used function of the VTApi - nextRow or simply next
+     * Select is (to be) pre-filled byt the constructor
+     */
+    Select* select;
+
+    /**
+     * The most used function of the VTApi - next (row)
      * @return this or null
      */
     KeyValues* next();
@@ -41,7 +157,7 @@ public:
     long getRowActual();
     long getRowNumber();
 
-    // getters
+    // getters (Select)
 
     String getString(String key);
     String getString(int pos);
@@ -51,24 +167,43 @@ public:
     int* getIntA(String key, size_t& size);
     int* getIntA(int pos, size_t& size);
     std::vector<int> getIntV(int pos);
+    std::vector<int> getIntV(String key);
 
     float getFloat(String key);
     float getFloat(int pos);
     float* getFloatA(String key, size_t& size);
     float* getFloatA(int pos, size_t& size);
 
-    // setters
+    // setters (Update)
+    // TODO: overit jestli a jak funguje... jako UPDATE?
 
     bool setString(String key, String value);
     bool setInt(String key, String value);
+    bool setInt(String key, int value);
     bool setIntA(String key, int* value, size_t size);
     bool setFloat(String key, String value);
+    bool setFloat(String key, float value);
     bool setFloatA(String key, float_t value, size_t size);
+
+    // adders (Insert)
+    // TODO: implement
+
+    bool addString(String key, String value);
+    bool addInt(String key, String value);
+    bool addInt(String key, int value);
+    bool addIntA(String key, int* value, size_t size);
+    bool addFloat(String key, String value);
+    bool addFloat(String key, float value);
+    bool addFloatA(String key, float_t value, size_t size);
+
+
+    // TODO: u kazde tridy add vytvori objekt te tridy se stejnymi keys, ale bez hodnot a ty se naplni jako set
 
 //    void test(const KeyValues& orig);
 
 protected:
     // this should be overriden (type) where possible
+    // TODO: is it necessary???
     KeyValues* parent;
     // maintain a list of all possible elements
     std::map<String,String> keys;
@@ -83,6 +218,7 @@ protected:
     // Logger* logger;
 
     // bool isDoom;         // true
+
 };
 
 
@@ -116,6 +252,8 @@ public:
     String getName();
     String getLocation();
 
+    bool add(String name="");
+
     Interval* newInterval();
 
     cv::Mat getImage();
@@ -139,12 +277,21 @@ public:
     Interval(const Interval& orig);
     virtual ~Interval();
 
+    String getSequence();
+    int getStartTime();
+    int getEndTime();
+    String getLocation();
+    std::vector<int> getTags();
+
+    bool add(String name="");
+
 protected:
 
 };
 
 
 /**
+ * // TODO: zvazit jestli nechat + komentar nutny
  */
 class MethodKeys : public KeyValues {
 public:
@@ -191,6 +338,8 @@ public:
     String getPrsname();
     String getInputs();
     String getOutputs();
+
+    bool add(String name="");
     
     void printProcesses();
 };
@@ -198,12 +347,14 @@ public:
 
 class Test {
     Dataset* dataset;
+    Sequence* sequence;
+    Interval* interval;
 public:
-    Test(const Dataset& orig);
+    Test(Dataset& orig);
     virtual ~Test();
     
     void testDataset();
-    void testSequece();
+    void testSequence();
     void testInterval();
     void testKeyValues();
     void testMethod();
@@ -257,15 +408,20 @@ public:
 
 
     /**
-     * This is how to continue...
+     * This is how to continue after creating the API class...
      * @return
      */
     Dataset* newDataset(const String& name = "");
+    Method* newMethod(const String& name = "");
+    Process* newProcess(const String& name = "");
 
+    /**
+     * Commons are common objects to the project.
+     */
     Commons* commons;
     
 protected:
-    String getWord(String& line, const String& prefix);
+    String getWord(String& line);
 };
 
 #endif	/* VTAPI_H */

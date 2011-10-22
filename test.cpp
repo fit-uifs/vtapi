@@ -14,8 +14,10 @@ using namespace std;
 
 
 
-Test::Test(const Dataset& orig) {
-    *dataset = orig;
+Test::Test(Dataset& orig) {
+    dataset = &orig;
+    sequence = dataset->newSequence();
+    interval = sequence->newInterval();
 }
 
 Test::~Test() {
@@ -31,9 +33,7 @@ void Test::testDataset() {
     cout << endl;
 }
 
-void Test::testSequece() {
-    Sequence* sequence = dataset->newSequence();
-
+void Test::testSequence() {
     cout << "========== SEQUENCE ==========" << endl;
     cout << left;
     cout << setw(20) << "Name" << setw(30) << "Location" << endl;
@@ -45,13 +45,24 @@ void Test::testSequece() {
 }
 
 void Test::testInterval() {
-/*    cout << "========== SEQUENCE ==========" << endl;
+    cout << "========== INTERVAL ==========" << endl;
     cout << left;
-    cout << setw(20) << "Name" << setw(30) << "Location" << endl;
-    while (dataset->next()) {
-        cout << setw(20) << dataset->getName() << setw(30) << dataset->getLocation() << endl;
+    cout << setw(20) << "Sequence" << setw(8) << "Start" << setw(8) << "End" <<
+        setw(20) << "Location" << setw(10) << "Tags" << endl;
+    while (interval->next()) {
+        vector<int> tags;
+        std::stringstream tagStr;
+        tags = interval->getTags();
+        cout << setw(20) << interval->getSequence() << setw(8) << interval->getStartTime() <<
+                setw(8) << interval->getEndTime() << setw(20) << interval->getLocation() << setw(10);
+        for (int i = 0; i < tags.size(); i++) {
+            tagStr << tags.at(i);
+            if (i < tags.size() - 1) tagStr << ",";
+            else cout << tagStr.str() << endl;
+        }
+
     }
-    cout << endl;*/
+    cout << endl;
 }
 
 void Test::testKeyValues() {
@@ -80,7 +91,8 @@ void Test::testProcess() {
 
 void Test::testAll() {
     this->testDataset();
-    this->testSequece();
+    this->testSequence();
+    this->testInterval();
     this->testMethod();
     this->testProcess();
 }

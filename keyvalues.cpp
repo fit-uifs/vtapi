@@ -24,11 +24,15 @@ KeyValues::KeyValues(const KeyValues& orig) : Commons(orig),
 }
 
 KeyValues::~KeyValues() {
+    if (res) PQclear(res);
 }
 
 
 
 KeyValues* KeyValues::next() {
+    // TODO: pouzit tridu Select, tu si naplni kazda podtrida sama
+    // TODO: naplnena podtrida Select spusti execute ZDE kdyz position == -1
+
     // TODO: zatim to skonci po konci resultsetu, ale melo by zjistit, jestli je
     // to na konci nebo neni a spachat kdyztak dalsi dotaz (limit, offset)
     if (res && position < PQntuples(res) - 1) {
@@ -212,6 +216,30 @@ std::vector<int> KeyValues::getIntV(int pos) {
     return values;
 }
 
+/**
+ * Get vector of integer values specified by column key
+ * @param pos index of column
+ * @return  array of integer values
+ */
+std::vector<int> KeyValues::getIntV(String key) {
+    PGarray tmp;
+    PGint4 value;
+    std::vector<int> values;
+
+    if (! PQgetf(res, position, "#int4[]", key.c_str(), &tmp)) {
+        cerr << "Error" << PQgeterror() << endl;
+    }
+
+    for (int i = 0; i < PQntuples(tmp.res); i++) {
+        if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
+            cerr << PQgeterror() << endl;
+        }
+        values.push_back(value);
+    }
+    PQclear(tmp.res);
+
+    return values;
+}
 
 
 /**

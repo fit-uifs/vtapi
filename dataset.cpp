@@ -6,9 +6,6 @@
  */
 
 #include "VTApi.h"
-#include <cstdio>
-#include <iostream>
-
 
 
 Dataset::Dataset(const KeyValues& orig) : KeyValues(orig) {

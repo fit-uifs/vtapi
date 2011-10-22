@@ -44,12 +44,10 @@ VTApi::VTApi(int argc, char** argv) {
         exit(1);
     }
 
-    // TODO: fill commons with args (logger, connector, user, password, location)
-    //  eventually dataset/sequence/... from cmdline
+    // Create commons class to store connection etc.
     commons = new Commons(args_info);
 
-    // TODO: free args_info somewhere
-    // cmdline_parser_free (&args_info);
+    cmdline_parser_free (&args_info);
     free (cli_params);
 }
 
@@ -62,161 +60,132 @@ Dataset* VTApi::newDataset(const String& name) {
     // TODO: else
 };
 
-String VTApi::getWord(String& line, const String& prefix) {
-    String word;
-    size_t pos, nextPos = string::npos;
 
-    if (line.empty()) return "";
-    // TODO: zadani slova v uvozovkach?
-    
-    if (!prefix.empty()) {
-        if (line.find(prefix, 0) == 0)
-            line = line.substr(prefix.length(), string::npos);
-        else return "";
-    }
-    pos = line.find_first_of(" \t\n");
-    word = line.substr(0, pos);
-
-    if (pos != string::npos)
-        nextPos = line.find_first_not_of(" \t\n", pos);
-    if (nextPos != string::npos)
-        {
-
-            line = line.substr(nextPos,string::npos);
-        }
-    else line.clear();
-    return word;
-
-}
 
 int VTApi::run() {
-
-
     Dataset* dataset = newDataset();
     Sequence* sequence = dataset->newSequence();
+    Interval* interval = sequence->newInterval();
+    Process* process = new Process(*dataset);
+    Insert* insert = new Insert(dataset);
 
     String line, command;
-
     cout << "commands: query, select, insert, update, delete, show, test, exit" << endl;
 
+    dataset->next(); // first dataset (public)
+
+    // command cycle
     while (1) {
-        cout << "vtapi> ";
+        // get command
         getline(cin, line);
-        command = getWord(line, "");
+        if (cin.fail()) break;
+        command = getWord(line);
 
         // exit
         if (command.compare("exit") == 0) break;
-        //general query
+        // general query (here?)
         else if (command.compare("query") == 0) {
-            //TODO: where to execute general query
-            PGresult* res;
+            PGresult *res = PQexecf(commons->getConnector()->getConnection(),
+                line.c_str());
             PQprintOpt opt = {0};
-
-            res = PQexecf(commons->getConnector()->getConnection(), line.c_str());
-
             opt.header    = 1;
             opt.align     = 1;
-            opt.fieldSep  = "|";
+            opt.fieldSep  = (char *) "|";
             PQprint(stdout, res, &opt);
-
             if(!res)
                     cout << "ERROR: " << PQgeterror() << endl;
-            PQclear(res);
-            
+            PQclear(res);           
         }
-        // dataset | sequence | interval | method | process | selection
-        // data specific command (select, insert..)
-        // insert dataset ... loc=..
-        // insert sequence ... [loc=.. type=..]
-        // insert interval into ... t1=.. t2=.. [loc= tags=.. svm=..]
-        // insert method ... --
-        // insert process ... of [mtname] in=.. out=..
-        // insert selection ... --
-        else {
-
-
-        if (command.compare("select") == 0) {
+        // select
+        else if (command.compare("select") == 0) {
             String what;
-            what = getWord(line, "");
+            what = getWord(line);
             cout << "todo" << endl;
-            //if (what.compare("sequence")) dataset->select
-
         }
-
-        // TODO: insert class?
-        // TODO: insert into which dataset?
+        // insert
         else if (command.compare("insert") == 0) {
 
-            //PGtimestamp created;
             String input, name;
-            input = getWord(line, "");
+            input = getWord(line);
 
+            insert->clear();
+            insert->setDataset(dataset);
+            while (!line.empty()) insert->addParam(getWord(line));
 
-            // insert sequence
-            if (input.compare("sequence") == 0) {
-                String location, type;
-                name = getWord(line, "");
-                location = getWord(line, "loc=");
-                type = getWord(line, "type=");
-//
-//                PGregisterType seqtype = {"seqtype=public.seqtype", NULL, NULL};
-//                PQregisterTypes(commons->getConnector()->getConnection(), PQT_USERDEFINED, &seqtype, 1, 0);
-                // TODO: how get type, unique number
-                PGresult *res = PQexecf(commons->getConnector()->getConnection(),
-                    "INSERT INTO public.sequences (seqname, seqlocation, seqtyp, seqnum) "
-                        "VALUES (%text, %text, \'images\', 10)",
-                    name.c_str(), location.c_str());
-                if(!res)
-                    cout << "ERROR: " << PQgeterror() << endl;
-                PQclear(res);
+            if (!input.compare("dataset")) insert->setType(Insert::DATASET);
+            else if (!input.compare("sequence")) insert->setType(Insert::SEQUENCE);
+            else if (!input.compare("interval")) insert->setType(Insert::INTERVAL);
+            else if (!input.compare("process")) insert->setType(Insert::PROCESS);
+            else if (!input.compare("method")) insert->setType(Insert::METHOD);
 
-
-            }
-            // insert interval
-            if (input.compare("interval") == 0) {
-                String into, location, t1, t2;
-                getWord(line, "into");
-                into = getWord(line, "");
-                t1 = getWord(line, "t1=");
-                t2 = getWord(line, "t2=");
-                location = getWord(line, "loc=");
-
-                // TODO: other columns
-                PGresult *res = PQexecf(commons->getConnector()->getConnection(),
-                    "INSERT INTO public.intervals (seqname, t1, t2, imglocation) "
-                        "VALUES (%text, %int4, %int4, %varchar)",
-                    into.c_str(), atoi(t1.c_str()), atoi(t2.c_str()), location.c_str());
-                if(!res)
-                    cout << "ERROR: " << PQgeterror() << endl;
-                PQclear(res);
-
-
-            }
-
-
+            insert->execute();
         }
+        // TODO: commands
         else if (command.compare("update") == 0) cout << "todo" << endl;
         else if (command.compare("delete") == 0) cout << "todo" << endl;
         else if (command.compare("show") == 0) cout << "todo" << endl;
+        // test
         else if (command.compare("test") == 0) {
+
             Dataset* testDataset = newDataset();
             Test* test = new Test(*testDataset);
             test->testAll();
             delete test;
             delete testDataset;
         }
-        else cout << "commands: query, select, insert,"
-                "update, delete, show, test, exit" << endl;
-        }
-
+        else cout << "ERROR: unknown command: " << command << endl;
     }
 
-
     /* Deallocate memory */
+    delete insert;
+    delete process;
+    delete interval;
     delete sequence;
     delete dataset;
 
     return 0;
+}
+
+/**
+ * Cut first word from input command line
+ * @param line input line
+ * @return word
+ */
+String VTApi::getWord(String& line) {
+    String word;
+    size_t startPos = 0, pos, endPos = string::npos;
+
+    if (line.empty()) return "";
+
+    // word end is whitespace, skip quoted part
+        pos = line.find_first_of(" \t\n\"", startPos);
+        if (pos != string::npos && line.at(pos) == '\"'){
+            if (pos + 1 >= line.length()) {
+                line.clear();
+                return "";
+            }
+            endPos = line.find('\"', pos + 1);
+            if (endPos == string::npos)
+                word = line.substr(pos + 1, string::npos);
+            else {
+                word = line.substr(pos + 1, endPos - pos - 1);
+                endPos++;
+            }
+        }
+        else {
+            endPos = pos;
+            word = line.substr(0, endPos);
+        }
+
+    // cut line
+    if (endPos != string::npos && endPos < line.length()){
+        endPos = line.find_first_not_of(" \t\n", endPos);
+        line = line.substr(endPos, string::npos);
+    }
+    else
+        line.clear();
+
+    return word;
 }
 
 /*
