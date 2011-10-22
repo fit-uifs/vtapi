@@ -41,9 +41,6 @@ String Dataset::getLocation() {
     return this->getString("dslocation");
 }
 
-
-
-
 /**
  * Create new sequence for current dataset
  * @return pointer to new sequence
