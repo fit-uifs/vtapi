@@ -36,10 +36,15 @@ OBJECTFILES= \
 	${OBJECTDIR}/sequence.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/interval.o \
+	${OBJECTDIR}/method.o \
+	${OBJECTDIR}/insert.o \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/cli_settings.o \
 	${OBJECTDIR}/keyvalues.o \
+	${OBJECTDIR}/process.o \
+	${OBJECTDIR}/methodkeys.o \
+	${OBJECTDIR}/test.o \
 	${OBJECTDIR}/dataset.o
 
 
@@ -82,6 +87,16 @@ ${OBJECTDIR}/interval.o: interval.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
 
+${OBJECTDIR}/method.o: method.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
+
+${OBJECTDIR}/insert.o: insert.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/insert.o insert.cpp
+
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -101,6 +116,21 @@ ${OBJECTDIR}/keyvalues.o: keyvalues.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
+
+${OBJECTDIR}/process.o: process.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/process.o process.cpp
+
+${OBJECTDIR}/methodkeys.o: methodkeys.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/methodkeys.o methodkeys.cpp
+
+${OBJECTDIR}/test.o: test.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/test.o test.cpp
 
 ${OBJECTDIR}/dataset.o: dataset.cpp 
 	${MKDIR} -p ${OBJECTDIR}
