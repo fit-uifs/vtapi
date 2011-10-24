@@ -29,7 +29,7 @@ void MethodKeys::getMethodKeyData(const String& methodName, const String& inout)
                                                             " WHERE mtname = '" + methodName + "' "
                                                             " AND inout = '" + inout + "' "
                                                            ).c_str());
-      this->rewind();
+// FIXME:      this->rewind();
 }
 
 int MethodKeys::getMethodKeyDataSize() {

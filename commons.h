@@ -153,6 +153,11 @@ public:
     Connector* getConnector();
     Logger* getLogger();
 
+    // TODO: Vojta
+    void print(const String& format="");
+    void read(const String& format="");
+
+
 protected:
     Connector* connector; // this was most probably inherited
     Logger* logger;

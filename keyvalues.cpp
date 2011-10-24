@@ -14,13 +14,10 @@ using namespace std;
 
 
 
-KeyValues::KeyValues(const Commons& orig) : Commons(orig),
-        position(-1), res(NULL), parent(NULL) {
+KeyValues::KeyValues(const Commons& orig) : Commons(orig), res(NULL), position(-1) {
 }
 
-KeyValues::KeyValues(const KeyValues& orig) : Commons(orig),
-        position(-1), res(NULL), parent(NULL) {
-        // FIXME: tohle taky ne: position(orig.position), res(orig.res), parent(orig.parent) {
+KeyValues::KeyValues(const KeyValues& orig) : Commons(orig), res(NULL), position(-1) {
 }
 
 KeyValues::~KeyValues() {
@@ -39,11 +36,6 @@ KeyValues* KeyValues::next() {
         position++;
     }
 }
-
-KeyValues* KeyValues::rewind() {
-    position = -1;
-}
-
 
 
 long KeyValues::getRowActual() {

@@ -152,7 +152,6 @@ public:
      * @return this or null
      */
     KeyValues* next();
-    KeyValues* rewind();
 
     long getRowActual();
     long getRowNumber();
@@ -202,9 +201,6 @@ public:
 //    void test(const KeyValues& orig);
 
 protected:
-    // this should be overriden (type) where possible
-    // TODO: is it necessary???
-    KeyValues* parent;
     // maintain a list of all possible elements
     std::map<String,String> keys;
     // TODO: discuss map, recursion etc.
@@ -281,7 +277,6 @@ public:
     int getStartTime();
     int getEndTime();
     String getLocation();
-    std::vector<int> getTags();
 
     bool add(String name="");
 
@@ -296,10 +291,15 @@ protected:
 class MethodKeys : public KeyValues {
 public:
     MethodKeys(const Dataset& orig);
-    MethodKeys(const Dataset& orig, const String& methodName, const String& inout);
+    MethodKeys(const Dataset& orig, const String& methodName, const String& inout = "");
     MethodKeys(const MethodKeys& orig);
     virtual ~MethodKeys();
 
+    /**
+     * TODO: 
+     * @param methodName
+     * @param inout
+     */
     void getMethodKeyData(const String& methodName, const String& inout);
     int getMethodKeyDataSize();
 

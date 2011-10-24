@@ -32,7 +32,3 @@ int Interval::getStartTime() {
 int Interval::getEndTime() {
     return this->getInt("t2");
 }
-
-std::vector<int> Interval::getTags() {
-    return this->getIntV("tags");
-}

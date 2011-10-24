@@ -13,6 +13,8 @@
 using namespace std;
 
 
+// TODO: toto neni dobre... melo to byt ve forme how-to + testovat vsechny featury,
+// ne jen tady tech par na vypis vsech hodnot
 
 Test::Test(Dataset& orig) {
     dataset = &orig;
@@ -24,6 +26,8 @@ Test::~Test() {
 }
 
 void Test::testDataset() {
+    // using this->dataset
+
     cout << "========== DATASET ==========" << endl;
     cout << left;
     cout << setw(20) << "Name" << setw(30) << "Location" << endl;
@@ -50,16 +54,8 @@ void Test::testInterval() {
     cout << setw(20) << "Sequence" << setw(8) << "Start" << setw(8) << "End" <<
         setw(20) << "Location" << setw(10) << "Tags" << endl;
     while (interval->next()) {
-        vector<int> tags;
-        std::stringstream tagStr;
-        tags = interval->getTags();
         cout << setw(20) << interval->getSequence() << setw(8) << interval->getStartTime() <<
                 setw(8) << interval->getEndTime() << setw(20) << interval->getLocation() << setw(10);
-        for (int i = 0; i < tags.size(); i++) {
-            tagStr << tags.at(i);
-            if (i < tags.size() - 1) tagStr << ",";
-            else cout << tagStr.str() << endl;
-        }
 
     }
     cout << endl;

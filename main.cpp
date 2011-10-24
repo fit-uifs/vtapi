@@ -18,10 +18,12 @@
 using namespace std;
 
 /**
- * 
+ * The CLI main function
+ * You can follow the
+ *
  * @param argc
  * @param argv
- * @return 
+ * @return sucess
  */
 int main(int argc, char** argv) {
 

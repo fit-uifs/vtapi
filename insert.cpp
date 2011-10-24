@@ -35,6 +35,7 @@ void Insert::addParam(String param){
 
 String Insert::getParam(String pname) {
 
+    // P3k: hmm... neni neco efektivnejsiho?
     pname.append("=");
     for (int i = 0; i < this->params.size(); i++) {
         if (this->params.at(i).find(pname) == 0) {

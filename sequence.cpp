@@ -9,9 +9,7 @@
 
 Sequence::Sequence(const KeyValues& orig) : KeyValues(orig) {
     // FIXME: tohle by se melo poslat KeyValues, at si to zpracuji
-    // ivolf: parent->getString prostě nejede
-    res = PQexecf(getConnector()->getConnection(), String("SELECT * FROM public.sequences;").c_str());
-    // res = PQexecf(getConnector()->getConnection(), String("SELECT * FROM "+ parent->getString("dsname") +".sequences;").c_str());
+    res = PQexecf(getConnector()->getConnection(), String("SELECT * FROM "+ getString("dsname") +".sequences;").c_str());
 }
 
 Sequence::Sequence(const Sequence& orig) : KeyValues(orig) {
