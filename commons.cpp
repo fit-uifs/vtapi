@@ -24,7 +24,7 @@ Logger::Logger(const String& filename) {
 
         if (logStream.fail()) {
             logFilename = ""; // just cerr??? logger failures cannot be logged :)
-            std::cerr << timestamp() << ": ERROR 10! Logger cannot open the file specified, trying stderr instead." << std::endl;
+            std::cerr << timestamp() << ": ERROR 101! Logger cannot open the file specified, trying stderr instead." << std::endl;
         }
     }
 
@@ -69,6 +69,17 @@ void Logger::error(const String& logline) {
     exit(1);
 }
 
+void Logger::error(int errno, const String& logline) {
+    logStream << timestamp() << ": ERROR " << errno << "! "<< logline << std::endl;
+
+#ifdef _DEBUG
+    logStream.flush();
+#endif
+
+    exit(1);
+}
+
+
 
 String Logger::timestamp() {
     time_t timer;
@@ -93,7 +104,7 @@ Connector::Connector(const String& connectionInfo, Logger* logger) {
     else logger = new Logger();
 
     conn = NULL;
-    if (!reconnect(connectionInfo)) logger->error("51: The connection couldn't been established.");
+    if (!reconnect(connectionInfo)) logger->error("201: The connection couldn't been established.");
 }
 
 /**
@@ -108,7 +119,7 @@ bool Connector::reconnect(const String& connectionInfo) {
     conn = PQconnectdb(conninfo.c_str());
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log("ERROR! 55: " + String(PQerrorMessage(conn)));
+        logger->log(202, PQerrorMessage(conn));
         return false;
     }
 
@@ -122,7 +133,7 @@ bool Connector::connected() {
     bool success = false;
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log("ERROR! 55: " + String(PQerrorMessage(conn)));
+        logger->log(205, PQerrorMessage(conn));
         return success = false;
     }
 
@@ -134,7 +145,7 @@ bool Connector::connected() {
                           0, &text);    // 0th text field
 
     if(!success) {
-        logger->log(String("ERROR! 56: ") +  PQgeterror());
+        logger->log(206, PQgeterror());
         PQfinish(conn);
     } else {
         logger->log(text);
@@ -164,6 +175,8 @@ Connector::~Connector() {
 Commons::Commons(const Commons& orig) {
     logger    = orig.logger;
     connector = orig.connector;
+    dataset   = orig.dataset;
+    // TODO: Vojta: naplnit dalsima z konfiguraku
     doom      = true;       // won't destroy the connector and logger
 }
 
@@ -173,31 +186,24 @@ Commons::Commons(Connector& orig) {
     doom      = true;       // won't destroy the connector and logger
 }
 
-// Commons::Commons(const String& connStr) {
-//     Commons(connStr, "");   // TODO: different constructor, please
-// }
-
 Commons::Commons(const String& connStr, const String& logFilename) {
     logger    = new Logger(logFilename);
     connector = new Connector(connStr, logger);
-    doom    = false;        // finally, we can destroy the above objects without any DOOM :D
+    doom      = false;        // finally, we can destroy the above objects without any DOOM :D
 }
 
-
 /**
- * And a shorter one...
+ * The most best ever of all VTAPI Commons constructors that should be always used
  */
-/*
-Commons::Commons(const gengetopt_args_info& args_info) {
-    logger    = new Logger("");
-    String* connStr = new String(args_info.connection_arg);
-    connector = new Connector(*connStr, logger);
-    doom    = false;        // finally, we can destroy the above objects without any DOOM :D
-*/
 Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename) {
-    logger = new Logger(logFilename);
+    logger    = new Logger(logFilename);
     connector = new Connector(args_info.connection_arg, logger);
-    doom = false;
+
+    // FIXME: proc je mozna nastevit vice datasetu?
+    // char ** dataset_arg; v cli_settings.h
+    dataset   = args_info.dataset_arg[0];
+    // TODO: Vojta: naplnit dalsima z konfiguraku
+    doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 }
 
 /**
@@ -210,14 +216,32 @@ Commons::~Commons() {
     }
 }
 
-
 Connector* Commons::getConnector() {
     return connector;
 } 
 
 Logger* Commons::getLogger() {
+    return logger;
+}
 
+String Commons::getDataset() {
+    return (this->dataset);
+}
+
+String Commons::setDataset(const String& dataset) {
+    this->dataset = dataset;
+    return (this->dataset);
 }
 
 
 
+// FIXME: Vojta: formaty atp. - a mels blbe umisteny ten !res, ne?
+void Commons::print(PGresult* res, const String& format) {
+    if(!res) logger->error(159, "There is no result set to print.\n" + String(PQgeterror()));
+
+    PQprintOpt opt = {0};
+    opt.header    = 1;
+    opt.align     = 1;
+    opt.fieldSep  = (char *) "|";
+    PQprint(stdout, res, &opt);
+}

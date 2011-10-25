@@ -34,7 +34,7 @@ typedef std::string String;
  * 2011-09-30 19:34:20: Testing the logging first.
  *
  * Programmers may use also write (just it) and a conditional debug log.
- * Error codes 10-30.
+ * Error codes 10*
  *
  * @param
  *//***************************************************************************/
@@ -50,6 +50,7 @@ public:
      * This causes a serious death
      * @param meassage
      */
+    void error(int errno, const String& logline);
     void error(const String& message);
 
     void write(const String& message);
@@ -69,7 +70,7 @@ protected:
  *   Connector("host=localhost port=5432 dbname=db user=postgres password='secret'", new Logger());
  * The class requires a Logger too.
  *
- * Error codes 50-70.
+ * Error codes 20*
  *
  * @param orig
  *//***************************************************************************/
@@ -116,6 +117,8 @@ protected:
  * This class is inherited by many and many other classes, but it manages just single resources,
  * thus there may bee a doom if someone destroys the original ones. Well, destructor should only happen
  * when isDoom is false, which is set by the only constructor: Commons(String connStr); .
+ *
+ * Error codes 15*
  *//***************************************************************************/
 class Commons {
 public:
@@ -154,14 +157,18 @@ public:
     Logger* getLogger();
 
     // TODO: Vojta
-    void print(const String& format="");
+    void print(PGresult* res, const String& format="");
     void read(const String& format="");
+
+    String getDataset();
+    String setDataset(const String& dataset);
 
 
 protected:
     Connector* connector; // this was most probably inherited
     Logger* logger;
 
+    String dataset;
     bool doom; // every derived class will have +1 = (true :)
 };
 

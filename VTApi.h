@@ -28,7 +28,8 @@ class Interval;
 /**
  * This is a class where queries will be constructed
  * Mechanism: TBD
- * TODO: discuss and use libpqtypes
+ *
+ * Errors 21*
  *
  *//***************************************************************************/
 class Select {
@@ -135,6 +136,8 @@ protected:
 
 /**
  * KeyValues storage class
+ *
+ * Errors 50*
  */
 class KeyValues : public Commons {
 public:

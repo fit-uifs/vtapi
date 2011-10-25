@@ -85,16 +85,11 @@ int VTApi::run() {
         if (command.compare("exit") == 0) break;
         // general query (here?)
         else if (command.compare("query") == 0) {
+            // TODO: print
             PGresult *res = PQexecf(commons->getConnector()->getConnection(),
                 line.c_str());
-            PQprintOpt opt = {0};
-            opt.header    = 1;
-            opt.align     = 1;
-            opt.fieldSep  = (char *) "|";
-            PQprint(stdout, res, &opt);
-            if(!res)
-                    cout << "ERROR: " << PQgeterror() << endl;
-            PQclear(res);           
+            commons->print(res);
+            PQclear(res);
         }
         // select
         else if (command.compare("select") == 0) {
