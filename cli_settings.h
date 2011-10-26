@@ -119,6 +119,8 @@ struct gengetopt_args_info
   unsigned int process_given ;	/**< @brief Whether process was given.  */
   unsigned int selection_given ;	/**< @brief Whether selection was given.  */
 
+  char **inputs ; /**< @brief unamed options (options without names) */
+  unsigned inputs_num ; /**< @brief unamed options number */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

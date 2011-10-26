@@ -47,6 +47,9 @@ VTApi::VTApi(int argc, char** argv) {
     
     // Create commons class to store connection etc.
     commons = new Commons(args_info);
+    // Construct command entered through arguments
+    for (int i = 0; i < args_info.inputs_num; i++)
+        cmdline.append(args_info.inputs[i]).append(" ");
 
     cmdline_parser_free (&args_info);
     free (cli_params);
@@ -70,7 +73,8 @@ int VTApi::run() {
     Process* process = new Process(*dataset);
     Insert* insert = new Insert(dataset);
 
-    String line, command;
+    String line = cmdline;
+    String command;
     cout << "commands: query, select, insert, update, delete, show, test, exit" << endl;
 
     dataset->next(); // first dataset (public)
@@ -78,7 +82,7 @@ int VTApi::run() {
     // command cycle
     while (1) {
         // get command
-        getline(cin, line);
+        if (line.empty()) getline(cin, line);
         if (cin.fail()) break;
         command = getWord(line);
 
@@ -91,7 +95,7 @@ int VTApi::run() {
             commons->print(res);
             PQclear(res);
         }
-        // select
+        // TODO: select
         else if (command.compare("select") == 0) {
             String what;
             what = getWord(line);
@@ -129,6 +133,8 @@ int VTApi::run() {
             delete testDataset;
         }
         else cout << "ERROR: unknown command: " << command << endl;
+
+        line.clear();
     }
 
     /* Deallocate memory */
@@ -171,7 +177,6 @@ String VTApi::getWord(String& line) {
             endPos = pos;
             word = line.substr(0, endPos);
         }
-
     // cut line
     if (endPos != string::npos && endPos < line.length()){
         endPos = line.find_first_not_of(" \t\n", endPos);

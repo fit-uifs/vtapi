@@ -8,7 +8,7 @@ version "0.1"
 usage "vtapi [OPTIONS] ..."
 
 # Default gengetopt arguments
-args "--conf-parser --file-name=cli_settings --c-extension=cpp --no-handle-error" # -u"
+args "--conf-parser --file-name=cli_settings --c-extension=cpp --no-handle-error -u"
 
 option "verbose" v "Verbose output mode - write used SQL commands etc."
     optional

@@ -424,7 +424,13 @@ public:
     Commons* commons;
     
 protected:
+    /**
+     * Command entered through program arguments
+     */
+    String cmdline;
+
     String getWord(String& line);
+
 };
 
 #endif	/* VTAPI_H */
