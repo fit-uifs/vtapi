@@ -168,6 +168,7 @@ protected:
     Connector* connector; // this was most probably inherited
     Logger* logger;
 
+    bool verbose;
     String user;
     String format;
 

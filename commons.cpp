@@ -175,6 +175,7 @@ Connector::~Connector() {
 Commons::Commons(const Commons& orig) {
     logger    = orig.logger;
     connector = orig.connector;
+    verbose   = orig.verbose;
     user      = orig.user;
     format    = orig.format;
     dataset   = orig.dataset;
@@ -205,6 +206,7 @@ Commons::Commons(const String& connStr, const String& logFilename) {
 Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename) {
     logger    = new Logger(logFilename);
     connector = new Connector(args_info.connection_arg, logger);
+    verbose   = args_info.verbose_given;
 
     user      = String(args_info.user_arg);
     format    = String(args_info.format_arg);

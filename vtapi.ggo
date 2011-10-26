@@ -13,8 +13,7 @@ args "--conf-parser --file-name=cli_settings --c-extension=cpp --no-handle-error
 option "verbose" v "Verbose output mode - write used SQL commands etc."
     optional
 
-text "\nConfig arguments\n"
-
+section "Config arguments"
 option "config" - "Config file location"
     string typestr="FILENAME" default="./vtapi.conf"
     optional
@@ -40,11 +39,8 @@ option "write" w "Write output"
     string typestr="FILENAME"
     optional
 
-text "\nWorkload specification (WHERE clause)\n"
-text "Explicitly specify WHERE clause, ex.: --where=\"features is NULL\"\n"
-text "or set datasets/sequences/... to work with\n"
-
-option "where" W "Specify WHERE clause"
+section "Context specification (WHERE clause)"
+option "where" W "explicit WHERE, ex.: --where=\"features is NULL\""
     string typestr="SQLSTRING"
     optional multiple
 option "dataset" D "Set dataset to use"

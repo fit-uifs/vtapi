@@ -84,7 +84,7 @@ int VTApi::run() {
 
         // exit
         if (command.compare("exit") == 0) break;
-        // general query (here?)
+        // general query
         else if (command.compare("query") == 0) {
             PGresult *res = PQexecf(commons->getConnector()->getConnection(),
                 line.c_str());
