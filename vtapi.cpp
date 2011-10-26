@@ -43,7 +43,8 @@ VTApi::VTApi(int argc, char** argv) {
         free (cli_params);
         exit(1);
     }
-
+    // TODO: user authentization here
+    
     // Create commons class to store connection etc.
     commons = new Commons(args_info);
 
@@ -85,7 +86,6 @@ int VTApi::run() {
         if (command.compare("exit") == 0) break;
         // general query (here?)
         else if (command.compare("query") == 0) {
-            // TODO: print
             PGresult *res = PQexecf(commons->getConnector()->getConnection(),
                 line.c_str());
             commons->print(res);
@@ -100,7 +100,7 @@ int VTApi::run() {
         // insert
         else if (command.compare("insert") == 0) {
 
-            String input, name;
+            String input;
             input = getWord(line);
 
             insert->clear();
@@ -175,7 +175,8 @@ String VTApi::getWord(String& line) {
     // cut line
     if (endPos != string::npos && endPos < line.length()){
         endPos = line.find_first_not_of(" \t\n", endPos);
-        line = line.substr(endPos, string::npos);
+        if (endPos != string::npos) line = line.substr(endPos, string::npos);
+        else line.clear();
     }
     else
         line.clear();

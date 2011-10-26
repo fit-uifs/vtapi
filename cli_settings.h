@@ -52,9 +52,9 @@ struct gengetopt_args_info
   char * location_arg;	/**< @brief Path to data files.  */
   char * location_orig;	/**< @brief Path to data files original value given at command line.  */
   const char *location_help; /**< @brief Path to data files help description.  */
-  char * connection_arg;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password..\".  */
-  char * connection_orig;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password..\" original value given at command line.  */
-  const char *connection_help; /**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password..\" help description.  */
+  char * connection_arg;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\".  */
+  char * connection_orig;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" original value given at command line.  */
+  const char *connection_help; /**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" help description.  */
   char * format_arg;	/**< @brief Input/output format (default='standard').  */
   char * format_orig;	/**< @brief Input/output format original value given at command line.  */
   const char *format_help; /**< @brief Input/output format help description.  */

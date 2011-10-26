@@ -40,8 +40,8 @@ const char *gengetopt_args_info_help[] = {
   "  -u, --user=STRING        User name",
   "  -p, --password=STRING    User password",
   "  -l, --location=filename  Path to data files",
-  "  -c, --connection=STRING  Connection string \"host=.. port=.. dbname=.. \n                             user=.. password..\"",
-  "  -f, --format=STRING      Input/output format  (possible values=\"standard\", \n                             \"csv\", \"binary\", \"sparse\" \n                             default=`standard')",
+  "  -c, --connection=STRING  Connection string \"host=.. port=.. dbname=.. \n                             user=.. password=..\"",
+  "  -f, --format=STRING      Input/output format  (possible values=\"standard\", \n                             \"csv\", \"binary\", \"sparse\", \"html\" \n                             default=`standard')",
   "  -r, --read=FILENAME      Read input",
   "  -w, --write=FILENAME     Write output",
   "\nWorkload specification (WHERE clause)\nExplicitly specify WHERE clause, ex.: --where=\"features is NULL\"\nor set datasets/sequences/... to work with\n",
@@ -95,7 +95,7 @@ free_cmd_list(void)
 }
 
 
-const char *cmdline_parser_format_values[] = {"standard", "csv", "binary", "sparse", 0}; /*< Possible values for format. */
+const char *cmdline_parser_format_values[] = {"standard", "csv", "binary", "sparse", "html", 0}; /*< Possible values for format. */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -1089,7 +1089,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'c':	/* Connection string \"host=.. port=.. dbname=.. user=.. password..\".  */
+        case 'c':	/* Connection string \"host=.. port=.. dbname=.. user=.. password=..\".  */
         
         
           if (update_arg( (void *)&(args_info->connection_arg), 

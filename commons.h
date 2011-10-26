@@ -156,8 +156,8 @@ public:
     Connector* getConnector();
     Logger* getLogger();
 
-    // TODO: Vojta
-    void print(PGresult* res, const String& format="");
+    void print(PGresult* res);
+    void print(PGresult* res, const String& format);
     void read(const String& format="");
 
     String getDataset();
@@ -168,7 +168,16 @@ protected:
     Connector* connector; // this was most probably inherited
     Logger* logger;
 
+    String user;
+    String format;
+
     String dataset;
+    String sequence;
+    String interval;
+    String method;
+    String process;
+    String selection;
+
     bool doom; // every derived class will have +1 = (true :)
 };
 

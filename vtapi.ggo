@@ -31,7 +31,7 @@ option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. pas
     string
     required
 option "format" f "Input/output format"
-    string values="standard","csv","binary","sparse","html" default="standard"
+    string values="standard","csv", "html", "binary","sparse","html" default="standard"
     optional
 option "read" r "Read input"
     string typestr="FILENAME"
