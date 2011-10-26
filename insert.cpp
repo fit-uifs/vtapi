@@ -29,21 +29,31 @@ void Insert::setType(InsertType newtype){
     this->type = newtype;
 }
 
-void Insert::addParam(String param){
-    this->params.push_back(param);
+int Insert::addParam(String param){
+    size_t pos = param.find('=');
+    pair<map<String,String>::iterator,bool> ret;
+    
+    if (pos != string::npos && pos < param.length()-1) {
+        ret = this->params.insert(pair<String,String>
+                (param.substr(0,pos), param.substr(pos+1, string::npos)));
+        // key already existed
+        if (!ret.second) return -1;
+        else return 0;
+    }
+    else return -1;
+}
+
+int Insert::addParam(String key, String value) {
+    pair<map<String,String>::iterator,bool> ret;
+
+    ret = this->params.insert(pair<String, String> (key, value));
+    // key already existed
+    if (!ret.second) return -1;
+    else return 0;
 }
 
 String Insert::getParam(String pname) {
-
-    // P3k: hmm... neni neco efektivnejsiho?
-    pname.append("=");
-    for (int i = 0; i < this->params.size(); i++) {
-        if (this->params.at(i).find(pname) == 0) {
-            return this->params.at(i).substr(pname.length(), string::npos);
-            break;
-        }
-    }
-    return "";
+    return this->params[pname];
 }
 
 void Insert::getIntArray(String arrayParam, PGarray* arr) {
