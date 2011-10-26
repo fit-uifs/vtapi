@@ -120,6 +120,7 @@ bool Insert::execute() {
     PGarray arr;
     PGparam *param = PQparamCreate(this->connector->getConnection());
     bool queryOK = true;
+    PGtimestamp timestamp = getTimestamp();
 
     if (this->type == NONE) {
         this->connector->getLogger()->write("Error: insert command incomplete\n");
@@ -132,9 +133,10 @@ bool Insert::execute() {
         PQputf(param, "%name", getParam("name").c_str());
         PQputf(param, "%int4", atoi(getParam("seqnum").c_str()));
         PQputf(param, "%varchar", getParam("location").c_str());
+        PQputf(param, "%timestamp", &timestamp);
         query << "INSERT INTO " << this->dataset->getName() << ".sequences " <<
-            "(seqname, seqnum, seqlocation, seqtyp) VALUES ($1, $2, $3, \'" <<
-            getParam("seqtype") << "\')";       
+            "(seqname, seqnum, seqlocation, seqtyp, created) VALUES ($1, $2, $3, \'" <<
+            getParam("seqtype") << "\', $4)";
     }
     // insert interval
     else if (this->type == INTERVAL) {
@@ -148,8 +150,9 @@ bool Insert::execute() {
         getFloatArray(getParam("svm"), &arr);
         PQputf(param, "%float4[]", &arr);
         PQparamClear(arr.param);
+        PQputf(param, "%timestamp", &timestamp);
         query << "INSERT INTO " << this->dataset->getName() << ".intervals " <<
-            "(seqname, t1, t2, imglocation, tags, svm) VALUES ($1, $2, $3, $4, $5, $6)";
+            "(seqname, t1, t2, imglocation, tags, svm) VALUES ($1, $2, $3, $4, $5, $6, $7)";
         queryOK = checkLocation(getParam("sequence"), getParam("location"));
     }
     // insert process
@@ -158,8 +161,9 @@ bool Insert::execute() {
         PQputf(param, "%name", atoi(getParam("method").c_str()));
         PQputf(param, "%varchar", getParam("inputs").c_str());
         PQputf(param, "%varchar", getParam("outputs").c_str());
+        PQputf(param, "%timestamp", &timestamp);
         query << "INSERT INTO " << this->dataset->getName() << ".processes " <<
-            "(prsname, mtname, inputs, outputs) VALUES ($1, $2, $3, $4)";
+            "(prsname, mtname, inputs, outputs, created) VALUES ($1, $2, $3, $4, $5)";
     }
 
     if (queryOK) {
@@ -181,20 +185,20 @@ void Insert::clear(){
 }
 
 PGtimestamp Insert::getTimestamp() {
-//    PGtimestamp created;
-//    time_t rawtime;
-//    struct tm * timeinfo;
-//
-//    time ( &rawtime );
-//    timeinfo = localtime ( &rawtime );
-//
-//    created.date.isbc  = 0;
-//    created.date.year  = timeinfo->tm_year;
-//    created.date.mon   = timeinfo->tm_mon;
-//    created.date.mday  = timeinfo->tm_mday;
-//    created.time.hour  = timeinfo->tm_hour;
-//    created.time.min   = timeinfo->tm_min;
-//    created.time.sec   = timeinfo->tm_sec;
-//    created.time.usec  = 0;
+    PGtimestamp timestamp;
+    time_t rawtime;
+    struct tm * timeinfo;
+
+    time (&rawtime);
+    timeinfo = localtime (&rawtime);
+    timestamp.date.isbc  = 0;
+    timestamp.date.year  = timeinfo->tm_year + 1900;
+    timestamp.date.mon   = timeinfo->tm_mon;
+    timestamp.date.mday  = timeinfo->tm_mday;
+    timestamp.time.hour  = timeinfo->tm_hour;
+    timestamp.time.min   = timeinfo->tm_min;
+    timestamp.time.sec   = timeinfo->tm_sec;
+    timestamp.time.usec  = 0;
+    return timestamp;
 }
 
