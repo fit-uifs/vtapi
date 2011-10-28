@@ -56,8 +56,7 @@ VTApi::~VTApi() {
 
 
 Dataset* VTApi::newDataset(const String& name) {
-    if (name.empty()) return (new Dataset(*commons));
-    // TODO: else
+    return (new Dataset(*commons, name));
 };
 
 

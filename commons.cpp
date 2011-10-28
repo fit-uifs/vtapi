@@ -79,6 +79,13 @@ void Logger::error(int errno, const String& logline) {
     exit(1);
 }
 
+void Logger::warning(int errno, const String& logline) {
+    logStream << timestamp() << ": WARNING " << errno << ". "<< logline << std::endl;
+
+#ifdef _DEBUG
+    logStream.flush();
+#endif
+}
 
 
 String Logger::timestamp() {
@@ -119,7 +126,7 @@ bool Connector::reconnect(const String& connectionInfo) {
     conn = PQconnectdb(conninfo.c_str());
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log(202, PQerrorMessage(conn));
+        logger->error(202, PQerrorMessage(conn));
         return false;
     }
 
@@ -133,7 +140,7 @@ bool Connector::connected() {
     bool success = false;
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log(205, PQerrorMessage(conn));
+        logger->error(205, PQerrorMessage(conn));
         return success = false;
     }
 
@@ -145,7 +152,7 @@ bool Connector::connected() {
                           0, &text);    // 0th text field
 
     if(!success) {
-        logger->log(206, PQgeterror());
+        logger->error(206, PQgeterror());
         PQfinish(conn);
     } else {
         logger->log(text);

@@ -15,7 +15,7 @@ using namespace std;
 Insert::Insert(Dataset* ds){
     this->connector = ds->getConnector();
     this->dataset = ds;
-    this->type = NONE;
+    this->type = GENERIC;
 }
 Insert::~Insert() {
     this->params.clear();
@@ -111,7 +111,7 @@ bool Insert::execute() {
     PGparam *param = PQparamCreate(this->connector->getConnection());
     bool queryOK = true;
 
-    if (this->type == NONE) {
+    if (this->type == GENERIC) {
         this->connector->getLogger()->write("Error: insert command incomplete\n");
         return 0;
     }
@@ -167,7 +167,7 @@ bool Insert::execute() {
 void Insert::clear(){
 
     this->params.clear();
-    this->type = NONE;
+    this->type = GENERIC;
 }
 
 PGtimestamp Insert::getTimestamp() {

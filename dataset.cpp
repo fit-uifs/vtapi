@@ -8,9 +8,22 @@
 #include "VTApi.h"
 
 
-Dataset::Dataset(const KeyValues& orig) : KeyValues(orig) {
-    // FIXME: tohle by se melo poslat KeyValues, at si to zpracuji
-    res = PQexecf(getConnector()->getConnection(), "SELECT * FROM public.datasets;");
+Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
+    this->select = new Select(orig);
+    this->select->from("public.datasets", "*");
+
+    // set the dataset name
+    if (!name.empty()) {
+        this->dataset = name;
+    }
+    if (this->dataset.empty()) {
+        this->logger->warning(303, "The dataset is not specified");
+    }
+    else {
+        this->select->whereString("public.datasets", "dsname", this->dataset);
+    }
+
+    // res = PQexecf(getConnector()->getConnection(), "SELECT * FROM public.datasets;");
 }
 
 Dataset::Dataset(const Dataset& orig) : KeyValues(orig) {

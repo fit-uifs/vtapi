@@ -13,11 +13,14 @@
 #include <fstream>
 #include "cli_settings.h"
 
-#include <string>
 #include <vector>
-typedef std::string String;
+#include <string>
 
+typedef std::string String;
 #define BUFFERSize 255
+
+// TODO: deprecated
+enum QueryType {GENERIC, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
 
 // be nice while destructing
 #define destruct(v) if (v) { free(v); (v) = NULL; }
@@ -43,6 +46,10 @@ public:
     Logger(const String& filename = "");
     virtual ~Logger();
 
+    /**
+     * Log function
+     * @param message
+     */
     void log(const String& message);
     void debug(const String& message);
 
@@ -53,6 +60,16 @@ public:
     void error(int errno, const String& logline);
     void error(const String& message);
 
+    /**
+     * This is just a warning
+     * @param message
+     */
+    void warning(int errno, const String& logline);
+
+    /**
+     * This is to write to the standard error log
+     * @param message
+     */
     void write(const String& message);
 
     String timestamp();

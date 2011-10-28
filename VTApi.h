@@ -10,6 +10,7 @@
 
 // first, include internal classes
 #include "commons.h"
+#include <map>
 
 // next, libraries - OpenCV, (libpq and) libpqtypes
 #include "postgresql/libpqtypes.h"
@@ -32,27 +33,61 @@ class Interval;
  * Errors 21*
  *
  *//***************************************************************************/
-class Select {
+class Select : public Commons {
 public:
-    void field(String);
-    void condition(String);
-    void order(String);
+    Select(const Commons& commons, QueryType type = GENERIC);
+   
+    /**
+     * This expands the query, so you can check it before the execution
+     * @return
+     */
+    String getQuery();
 
-    // discuss the use
-    bool execute();
+    bool prepareQuery();
+    bool executeQuery();
 
-protected:
-    // this should be some vectors
-    String select;
-    String from;
-    String where;
+    // this is a tuple table and column name
+    // TODO: this->from["intervals"] = "*";
+    // FIXME: AS
+    std::multimap<String, String> fromList;
+
+    /**
+     * This is to specify the from clause and the select (column) list
+     *
+     * select->from("public.datasets", "*");
+     *
+     * @param table
+     * @param column
+     * @return
+     */
+    bool from(const String& table, const String& column);
+
+    // FIXME: these tuples of WHERE should be tripples/quadruples including type
+    // TODO: this->whereString["features"] = "NULL";
+    // std::multimap<String, String> whereString;
+    // std::multimap<String, int> whereInt;
+    // std::multimap<String, float> whereFloat;
+
+    /**
+     *
+     * @param column
+     * @param value
+     * @return
+     */
+    bool whereString(const String& table, const String& column, const String& value);
+    String where;   // FIXME: see above :(
     String groupby;
     String orderby;
+    
+// protected:
+    String query;
+
+    QueryType type;
+    PGresult* res;
+    int pos;
+
     int limit;
     int offset;
-
-    // this should be it here or should it be there?
-    PGresult* res;
 };
 
 /**
@@ -60,7 +95,7 @@ protected:
  *
  * Command syntax: (array values are comma-separated)
  * insert dataset name=.. location=..
- * insert sequence name=.. seqnum=.. [location=.. seqtype=..]
+ * insert sequence name=.. [seqnum=.. location=.. seqtype=..]
  * insert interval sequence=... t1=.. t2=.. [location=.. tags=.. svm=..]
  * insert method name=.. [key= type= inout=..]*
  * insert process name=.. method=.. inputs=.. outputs=..
@@ -69,7 +104,7 @@ protected:
  */
 class Insert {
 public:
-    enum InsertType {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
+    enum InsertType {GENERIC, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
 
     Insert(Dataset* ds);
     ~Insert();
@@ -149,6 +184,7 @@ public:
      * Select is (to be) pre-filled byt the constructor
      */
     Select* select;
+    Insert* insert;
 
     /**
      * The most used function of the VTApi - next (row)
@@ -222,11 +258,23 @@ protected:
 
 
 /**
+ * This class should always be on the path of your programm...
  *
+ * Error codes 30*
  */
 class Dataset : public KeyValues {
 public:
-    Dataset(const KeyValues& orig);
+    /**
+     * This is the recommended constructor.
+     *
+     * WARNING: you can ommit the @name only in these cases:
+     *          1) Don't know the name -> use next
+     *          2) The dataset is in your vtapi.conf
+     *
+     * @param orig
+     * @param name
+     */
+    Dataset(const KeyValues& orig, const String& name = "");
     Dataset(const Dataset& orig);
     virtual ~Dataset();
 
