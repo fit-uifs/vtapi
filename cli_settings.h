@@ -52,9 +52,9 @@ struct gengetopt_args_info
   char * location_arg;	/**< @brief Path to data files.  */
   char * location_orig;	/**< @brief Path to data files original value given at command line.  */
   const char *location_help; /**< @brief Path to data files help description.  */
-  char * connection_arg;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password..\".  */
-  char * connection_orig;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password..\" original value given at command line.  */
-  const char *connection_help; /**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password..\" help description.  */
+  char * connection_arg;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\".  */
+  char * connection_orig;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" original value given at command line.  */
+  const char *connection_help; /**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" help description.  */
   char * format_arg;	/**< @brief Input/output format (default='standard').  */
   char * format_orig;	/**< @brief Input/output format original value given at command line.  */
   const char *format_help; /**< @brief Input/output format help description.  */
@@ -64,11 +64,11 @@ struct gengetopt_args_info
   char * write_arg;	/**< @brief Write output.  */
   char * write_orig;	/**< @brief Write output original value given at command line.  */
   const char *write_help; /**< @brief Write output help description.  */
-  char ** where_arg;	/**< @brief Specify WHERE clause.  */
-  char ** where_orig;	/**< @brief Specify WHERE clause original value given at command line.  */
-  unsigned int where_min; /**< @brief Specify WHERE clause's minimum occurreces */
-  unsigned int where_max; /**< @brief Specify WHERE clause's maximum occurreces */
-  const char *where_help; /**< @brief Specify WHERE clause help description.  */
+  char ** where_arg;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\".  */
+  char ** where_orig;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\" original value given at command line.  */
+  unsigned int where_min; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\"'s minimum occurreces */
+  unsigned int where_max; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\"'s maximum occurreces */
+  const char *where_help; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\" help description.  */
   char ** dataset_arg;	/**< @brief Set dataset to use.  */
   char ** dataset_orig;	/**< @brief Set dataset to use original value given at command line.  */
   unsigned int dataset_min; /**< @brief Set dataset to use's minimum occurreces */
@@ -119,6 +119,8 @@ struct gengetopt_args_info
   unsigned int process_given ;	/**< @brief Whether process was given.  */
   unsigned int selection_given ;	/**< @brief Whether selection was given.  */
 
+  char **inputs ; /**< @brief unamed options (options without names) */
+  unsigned inputs_num ; /**< @brief unamed options number */
 } ;
 
 /** @brief The additional parameters to pass to parser functions */

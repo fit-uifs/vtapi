@@ -121,8 +121,16 @@ public:
     /**
      * Add arguments to insert query in string form
      * @param param argument in 'key=value' format, eg.: 'name=process1'
+     * @return returns 0 on success, -1 if argument already exists or format is wrong
      */
-    void addParam(String param);
+    int addParam(String param);
+    /**
+     * Add arguments to insert query in key/value form
+     * @param key argument name, eg.: 'name'
+     * @param value argument value, eg.: 'process1'
+     * @return returns 0 on success, -1 if argument already exists
+     */
+    int addParam(String key, String value);
     /**
      * Clears query arguments
      */
@@ -137,10 +145,10 @@ protected:
     Connector* connector;
     Dataset* dataset;
     InsertType type;
-    std::vector<String> params;
+    std::map<String,String> params;
 
     /**
-     * Gets value of argument from param vector
+     * Gets value of argument from params map
      * @param pname Argument key
      * @return Argument value
      */
@@ -472,7 +480,13 @@ public:
     Commons* commons;
     
 protected:
+    /**
+     * Command entered through program arguments
+     */
+    String cmdline;
+
     String getWord(String& line);
+
 };
 
 #endif	/* VTAPI_H */

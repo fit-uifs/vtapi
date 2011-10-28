@@ -182,8 +182,16 @@ Connector::~Connector() {
 Commons::Commons(const Commons& orig) {
     logger    = orig.logger;
     connector = orig.connector;
+    verbose   = orig.verbose;
+    user      = orig.user;
+    format    = orig.format;
     dataset   = orig.dataset;
-    // TODO: Vojta: naplnit dalsima z konfiguraku
+    sequence  = orig.sequence;
+    interval  = orig.interval;
+    method    = orig.method;
+    process   = orig.process;
+    selection = orig.selection;
+
     doom      = true;       // won't destroy the connector and logger
 }
 
@@ -205,11 +213,19 @@ Commons::Commons(const String& connStr, const String& logFilename) {
 Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename) {
     logger    = new Logger(logFilename);
     connector = new Connector(args_info.connection_arg, logger);
+    verbose   = args_info.verbose_given;
 
-    // FIXME: proc je mozna nastevit vice datasetu?
-    // char ** dataset_arg; v cli_settings.h
-    dataset   = args_info.dataset_arg[0];
-    // TODO: Vojta: naplnit dalsima z konfiguraku
+    user      = String(args_info.user_arg);
+    format    = String(args_info.format_arg);
+    // FIXME: proc je mozna nastavit vice datasetu? (i vseho ostatniho)
+    // protoze jsem to tak dal ve vtapi.ggo (argument je multiple) --Vojta
+    dataset   = String(args_info.dataset_arg[0]);
+    sequence  = String(args_info.sequence_arg[0]);
+    interval  = String(args_info.interval_arg[0]);
+    method    = String(args_info.method_arg[0]);
+    process   = String(args_info.process_arg[0]);
+    selection = String(args_info.selection_arg[0]);
+
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 }
 
@@ -241,14 +257,32 @@ String Commons::setDataset(const String& dataset) {
 }
 
 
+void Commons::print(PGresult* res) {
+    print(res, this->format);
+}
 
-// FIXME: Vojta: formaty atp. - a mels blbe umisteny ten !res, ne?
 void Commons::print(PGresult* res, const String& format) {
     if(!res) logger->error(159, "There is no result set to print.\n" + String(PQgeterror()));
-
     PQprintOpt opt = {0};
-    opt.header    = 1;
-    opt.align     = 1;
-    opt.fieldSep  = (char *) "|";
+    if (format.compare("standard") == 0) {
+        opt.header    = 1;
+        opt.align     = 1;
+        opt.fieldSep  = (char *) "|";
+    }
+    else if (format.compare("csv") == 0) {
+        opt.fieldSep  = (char *) ",";
+    }
+    else if (format.compare("html") == 0) {
+        opt.html3    = 1;
+        //opt.caption  = (char *) "";
+        //opt.tableOpt = (char *) ""
+        opt.fieldSep = (char *) "";
+    }
+    // TODO: eventuelne dalsi formaty (binary, sparse)
+    else {
+        opt.fieldSep  = (char *) "";
+        printf ("print format not implemented\n");
+    }
+
     PQprint(stdout, res, &opt);
 }

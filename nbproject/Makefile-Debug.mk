@@ -17,8 +17,8 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=
-AS=as
+FC=gfortran
+AS=
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86
@@ -45,8 +45,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/methodkeys.o \
 	${OBJECTDIR}/test.o \
-	${OBJECTDIR}/dataset.o \
-	${OBJECTDIR}/select.o
+	${OBJECTDIR}/dataset.o
 
 
 # C Compiler Flags
@@ -137,11 +136,6 @@ ${OBJECTDIR}/dataset.o: dataset.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
-
-${OBJECTDIR}/select.o: select.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/select.o select.cpp
 
 # Subprojects
 .build-subprojects:

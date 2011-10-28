@@ -43,9 +43,13 @@ VTApi::VTApi(int argc, char** argv) {
         free (cli_params);
         exit(1);
     }
-
+    // TODO: user authentization here
+    
     // Create commons class to store connection etc.
     commons = new Commons(args_info);
+    // Construct command entered through arguments
+    for (int i = 0; i < args_info.inputs_num; i++)
+        cmdline.append(args_info.inputs[i]).append(" ");
 
     cmdline_parser_free (&args_info);
     free (cli_params);
@@ -68,7 +72,8 @@ int VTApi::run() {
     Process* process = new Process(*dataset);
     Insert* insert = new Insert(dataset);
 
-    String line, command;
+    String line = cmdline;
+    String command;
     cout << "commands: query, select, insert, update, delete, show, test, exit" << endl;
 
     dataset->next(); // first dataset (public)
@@ -76,21 +81,20 @@ int VTApi::run() {
     // command cycle
     while (1) {
         // get command
-        getline(cin, line);
+        if (line.empty()) getline(cin, line);
         if (cin.fail()) break;
         command = getWord(line);
 
         // exit
         if (command.compare("exit") == 0) break;
-        // general query (here?)
+        // general query
         else if (command.compare("query") == 0) {
-            // TODO: print
             PGresult *res = PQexecf(commons->getConnector()->getConnection(),
                 line.c_str());
             commons->print(res);
             PQclear(res);
         }
-        // select
+        // TODO: select
         else if (command.compare("select") == 0) {
             String what;
             what = getWord(line);
@@ -99,7 +103,7 @@ int VTApi::run() {
         // insert
         else if (command.compare("insert") == 0) {
 
-            String input, name;
+            String input;
             input = getWord(line);
 
             insert->clear();
@@ -128,6 +132,8 @@ int VTApi::run() {
             delete testDataset;
         }
         else cout << "ERROR: unknown command: " << command << endl;
+
+        line.clear();
     }
 
     /* Deallocate memory */
@@ -170,11 +176,11 @@ String VTApi::getWord(String& line) {
             endPos = pos;
             word = line.substr(0, endPos);
         }
-
     // cut line
     if (endPos != string::npos && endPos < line.length()){
         endPos = line.find_first_not_of(" \t\n", endPos);
-        line = line.substr(endPos, string::npos);
+        if (endPos != string::npos) line = line.substr(endPos, string::npos);
+        else line.clear();
     }
     else
         line.clear();

@@ -8,13 +8,12 @@ version "0.1"
 usage "vtapi [OPTIONS] ..."
 
 # Default gengetopt arguments
-args "--conf-parser --file-name=cli_settings --c-extension=cpp --no-handle-error" # -u"
+args "--conf-parser --file-name=cli_settings --c-extension=cpp --no-handle-error -u"
 
 option "verbose" v "Verbose output mode - write used SQL commands etc."
     optional
 
-text "\nConfig arguments\n"
-
+section "Config arguments"
 option "config" - "Config file location"
     string typestr="FILENAME" default="./vtapi.conf"
     optional
@@ -31,7 +30,7 @@ option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. pas
     string
     required
 option "format" f "Input/output format"
-    string values="standard","csv","binary","sparse","html" default="standard"
+    string values="standard","csv", "html", "binary","sparse","html" default="standard"
     optional
 option "read" r "Read input"
     string typestr="FILENAME"
@@ -40,11 +39,8 @@ option "write" w "Write output"
     string typestr="FILENAME"
     optional
 
-text "\nWorkload specification (WHERE clause)\n"
-text "Explicitly specify WHERE clause, ex.: --where=\"features is NULL\"\n"
-text "or set datasets/sequences/... to work with\n"
-
-option "where" W "Specify WHERE clause"
+section "Context specification (WHERE clause)"
+option "where" W "explicit WHERE, ex.: --where=\"features is NULL\""
     string typestr="SQLSTRING"
     optional multiple
 option "dataset" D "Set dataset to use"
