@@ -495,7 +495,7 @@ protected:
      * Command entered through program arguments
      */
     String cmdline;
-
+    bool interact;
     String getWord(String& line);
 
 };

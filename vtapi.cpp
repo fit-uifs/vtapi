@@ -50,9 +50,10 @@ VTApi::VTApi(int argc, char** argv) {
     // Construct command entered through arguments
     for (int i = 0; i < args_info.inputs_num; i++)
         cmdline.append(args_info.inputs[i]).append(" ");
-
     cmdline_parser_free (&args_info);
     free (cli_params);
+    // Interactive mode
+    interact = true;
 }
 
 VTApi::~VTApi() {
@@ -77,14 +78,16 @@ int VTApi::run() {
     cout << "commands: query, select, insert, update, delete, show, test, exit" << endl;
 
     // command cycle
-    while (1) {
+    while (interact) {
         // get command
         if (line.empty()) getline(cin, line);
+        else interact = false;
+        // EOF detected
         if (cin.fail()) break;
         command = getWord(line);
 
         // exit
-        if (command.compare("exit") == 0) break;
+        if (command.compare("exit") == 0) interact = false;
         // general query
         else if (command.compare("query") == 0) {
             PGresult *res = PQexecf(commons->getConnector()->getConn(),
