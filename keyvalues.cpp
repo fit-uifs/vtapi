@@ -47,12 +47,12 @@ KeyValues* KeyValues::next() {
     return NULL;
 }
 
-/*
+
 void KeyValues::print() {
-    if (select && select->res && position > -1) ((Commons*)this)->print(select->res, position);
+    if (select && select->res && position > -1) this->printRes(select->res, position);
     else warning(502, "There is nothing to print (see other errors)");
 }
-*/
+
 
 /**
  * Get string value specified by column key

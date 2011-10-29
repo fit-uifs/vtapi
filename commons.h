@@ -8,13 +8,14 @@
 #ifndef INTERNALS_H
 #define	INTERNALS_H
 
-#include "postgresql/libpqtypes.h"
-
 #include <fstream>
+#include <vector>
+#include <sstream>
+#include <string>
+
+#include "postgresql/libpqtypes.h"
 #include "cli_settings.h"
 
-#include <vector>
-#include <string>
 
 typedef std::string String;
 #define BUFFERSize 255
@@ -201,5 +202,20 @@ protected:
 
     bool doom; // every derived class will have +1 = (true :)
 };
+
+
+/**
+ * A generic function to convert any numeric type to string
+ * (any numeric type, e.g. int, float, double, etc.)
+ * @param t
+ * @return string
+ */
+template <class T>
+inline String toString(const T& t) {
+    std::stringstream strstr;
+    strstr << t;
+    return strstr.str();
+};
+
 
 #endif	/* INTERNALS_H */

@@ -11,7 +11,6 @@
 #include "postgresql/vt-print.h"
 
 #include <iostream>
-#include <sstream>
 #include <fstream>
 #include <stdlib.h>
 
@@ -232,9 +231,7 @@ void Commons::error(const String& logline) {
 }
 
 void Commons::error(int errno, const String& logline) {
-    std::stringstream strstr;
-    strstr << "ERROR " << errno << "! " << logline;
-    logger->log(strstr.str());
+    logger->log("ERROR " + toString(errno) + "! " + logline);
     exit(1);
 }
 
@@ -243,9 +240,7 @@ void Commons::warning(const String& logline) {
 }
 
 void Commons::warning(int errno, const String& logline) {
-    std::stringstream strstr;
-    strstr << "WARNING " << errno << ": " << logline;
-    logger->log(strstr.str());
+    logger->log("WARNING " + toString(errno) + ": " + logline);
 }
 
 
@@ -297,4 +292,5 @@ void Commons::printRes(PGresult* res, int pTuple, const String& format) {
 
     vtPQprint(stdout, res, &opt, pTuple);
 }
+
 

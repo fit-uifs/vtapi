@@ -207,7 +207,7 @@ public:
     // get a list of all possible columns
     std::map<String,String> getKeys();
 
-//    void print();
+    void print();
 
     // getters (Select)
     String getString(String key);

@@ -1,4 +1,6 @@
 
+#include <stdlib.h>
+#include <string.h>
 #include "vt-print.h"
 
 #define bool int
@@ -487,7 +489,7 @@ vtPQprint(FILE *fout, const PGresult *res, const PQprintOpt *po, const int pTupl
 								   fieldNotNum, fs_len, res);
 
 /* P3k: added an ability to print a single tuple only */
-                        if (pTuple > 0) {
+                        if (pTuple > -1) {
                 		output_row(fout, po, nFields, fields,
 						   fieldNotNum, fieldMax, border, pTuple);
                         }

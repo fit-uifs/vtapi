@@ -175,14 +175,18 @@ String VTApi::getWord(String& line) {
 
 
 void VTApi::test() {
-    cout << "========== Dataset ===========" << endl;
+    cout << "Testing generic functions:" << endl;
+    cout << "  32156(.7) toString: " << toString(32156) << " " <<  toString(32156.7) << endl;
+    cout << endl;
+
+    cout << "Testing  Dataset" << endl;
     Dataset* dataset = this->newDataset();
     dataset->next();
     dataset->printRes(dataset->select->res);
     // FIXME: jaktoze to nebere dedicnost???
 
     cout << endl;
-    cout << "========== Sequence ==========" << endl;
+    cout << "Testing Sequence" << endl;
     cout << "Using dataset " << dataset->getDataset() << endl;
 
     Sequence* sequence = dataset->newSequence();
@@ -190,13 +194,13 @@ void VTApi::test() {
     sequence->printRes(sequence->select->res);
 
     cout << endl;
-    cout << "========== Interval ==========" << endl;
+    cout << "Testing Interval" << endl;
     cout << "Using sequence " << sequence->getSequence() << endl;
 
     Interval* interval = sequence->newInterval();
     interval->select->limit = 10;
     interval->next();
-    // interval->print();
+    interval->print();
 }
 
 /*

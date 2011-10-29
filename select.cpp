@@ -79,7 +79,10 @@ String Select::getQuery() {
        query += "\n  ORDER BY " + orderby;
    }
 
-   // TODO Tomas: LIMIT and OFFSET
+   if (limit > 0) {
+       query += "\n  LIMIT " + toString(limit);
+   }
+   // TODO Tomas: OFFSET
 
    query += ";";
    return (query);
