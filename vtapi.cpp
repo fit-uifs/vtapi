@@ -95,11 +95,65 @@ int VTApi::run() {
             commons->printRes(res);
             PQclear(res);
         }
-        // TODO: select
+        // select
         else if (command.compare("select") == 0) {
-            String what;
-            what = getWord(line);
-            cout << "todo" << endl;
+            Dataset* ds = this->newDataset();
+
+            String input;
+            // what to select
+            input = getWord(line);
+            std::map<String,String> params;
+            // get select params
+            while (!line.empty()) params.insert(createParam(getWord(line)));
+
+            if (!input.compare("dataset")) {
+                ds->select->where.clear();
+                ds->select->whereString("dsname", params["name"]);
+                ds->select->whereString("dslocation", params["location"]);
+                ds->next();
+                ds->print();
+            }
+            else if (!input.compare("sequence")) {
+                Sequence* seq = ds->newSequence();
+                seq->select->where.clear();
+                seq->select->whereString("seqname", params["name"]);
+                // TODO: whereInt
+                //seq->select->whereInt("seqnum", atoi(params["seqnum"]));
+                seq->select->whereString("seqlocation", params["location"]);
+                seq->select->whereString("seqtyp", params["seqtype"]);
+                seq->next();
+                seq->print();
+            }
+            else if (!input.compare("interval")) {
+                Interval* in = ds->newSequence()->newInterval();
+                in->select->where.clear();
+                in->select->whereString("seqname", params["sequence"]);
+                // TODO: whereInt
+                //in->select->whereInt(t1, params["t1"]);
+                //in->select->whereInt(t1, params["t1"]);
+                in->select->whereString("imglocation", params["location"]);
+                in->next();
+                in->print();
+            }
+            else if (!input.compare("process")) {
+                Process* pr = new Process(*ds);
+                pr->select->where.clear();
+                pr->select->whereString("prsname", params["name"]);
+                pr->select->whereString("mtname", params["method"]);
+                pr->select->whereString("inputs", params["inputs"]);
+                pr->select->whereString("outputs", params["outputs"]);
+                pr->next();
+                pr->print();
+            }
+            else if (!input.compare("method")) {
+                Method* me = new Method(*ds);
+                //TODO: methodkeys not implemented yet
+                me->select->where.clear();
+                me->select->whereString("mtname", params["name"]);
+                me->next();
+                me->print();
+            }
+
         }
         // insert
         else if (command.compare("insert") == 0) {
@@ -108,7 +162,7 @@ int VTApi::run() {
             input = getWord(line);
 
             Insert* insert = new Insert(new Dataset(*this->commons));
-            while (!line.empty()) insert->addParam(getWord(line));
+            while (!line.empty()) insert->addParam(createParam(getWord(line)));
 
             if (!input.compare("dataset")) insert->setType(Insert::DATASET);
             else if (!input.compare("sequence")) insert->setType(Insert::SEQUENCE);
@@ -133,7 +187,20 @@ int VTApi::run() {
 
     return 0;
 }
+/**
+ * Creates key/value pair from string in key=value format
+ * @param word Input string
+ * @return Key,Value pair
+ */
+std::pair<String,String> VTApi::createParam(String word) {
+    size_t pos = word.find('=');
 
+    if (pos != string::npos && pos < word.length()-1)
+        return pair<String,String>
+                (word.substr(0,pos), word.substr(pos+1, string::npos));
+    else
+        return pair<String,String>("","");
+}
 /**
  * Cut first word from input command line
  * @param line input line

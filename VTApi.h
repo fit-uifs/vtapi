@@ -126,16 +126,16 @@ public:
      */
     void setType(InsertType newtype);
     /**
-     * Add arguments to insert query in string form
-     * @param param argument in 'key=value' format, eg.: 'name=process1'
-     * @return returns 0 on success, -1 if argument already exists or format is wrong
+     * Adds argument to insert query in pair <Key,Value> form
+     * @param param pair of argument key and value
+     * @return 0 on success, -1 if key/value is empty or key already exists
      */
-    int addParam(String param);
+    int addParam(std::pair<String,String> param);
     /**
-     * Add arguments to insert query in key/value form
+     * Adds argument to insert query
      * @param key argument name, eg.: 'name'
      * @param value argument value, eg.: 'process1'
-     * @return returns 0 on success, -1 if argument already exists
+     * @return 0 on success, -1 if key/value is empty or key already exists
      */
     int addParam(String key, String value);
     /**
@@ -491,12 +491,11 @@ public:
     Commons* commons;
     
 protected:
-    /**
-     * Command entered through program arguments
-     */
-    String cmdline;
+
     bool interact;
+    String cmdline;    
     String getWord(String& line);
+    std::pair<String,String> createParam(String word);
 
 };
 
