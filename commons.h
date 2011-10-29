@@ -19,9 +19,6 @@
 typedef std::string String;
 #define BUFFERSize 255
 
-// TODO: deprecated
-enum QueryType {GENERIC, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
-
 // be nice while destructing
 #define destruct(v) if (v) { free(v); (v) = NULL; }
 #define boolStr(b) ((b) ? "true" : "false")
@@ -52,19 +49,6 @@ public:
      */
     void log(const String& message);
     void debug(const String& message);
-
-    /**
-     * This causes a serious death
-     * @param meassage
-     */
-    void error(int errno, const String& logline);
-    void error(const String& message);
-
-    /**
-     * This is just a warning
-     * @param message
-     */
-    void warning(int errno, const String& logline);
 
     /**
      * This is to write to the standard error log
@@ -118,10 +102,10 @@ public:
     bool connected();
 
     Logger* getLogger();
-    PGconn* getConnection();           // connection
+    PGconn* getConn();      // connection
 
-protected:
-    String conninfo;   // connection info
+// protected:
+    String  conninfo;       // connection info
     PGconn* conn;           // connection
     Logger* logger;         // logger
 };
@@ -169,17 +153,31 @@ public:
     // this is different from comunism, which has been destroyed already
     virtual ~Commons();
 
+    /**
+     * This causes a serious death
+     * @param meassage
+     */
+    void error(int errno, const String& logline);
+    void error(const String& message);
 
+    /**
+     * This is just a warning
+     * @param message
+     */
+    void warning(int errno, const String& logline);
+    void warning(const String& message);
+
+    // this is to print the results
+    void printRes(PGresult* res, const String& format);
+    void printRes(PGresult* res, int pTuple = -1, const String& format = "");
+    void read(const String& format="");
+
+    // some functions that may be usefull
     Connector* getConnector();
     Logger* getLogger();
 
-    void print(PGresult* res);
-    void print(PGresult* res, const String& format);
-    void read(const String& format="");
-
     String getDataset();
-    String setDataset(const String& dataset);
-
+    String getSequence();
 
 protected:
     Connector* connector; // this was most probably inherited
@@ -190,10 +188,15 @@ protected:
     String format;
 
     String dataset;
+    String datasetLocation;
+
     String sequence;
+    String sequenceLocation;
+
     String interval;
     String method;
     String process;
+
     String selection;
 
     bool doom; // every derived class will have +1 = (true :)

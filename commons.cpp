@@ -8,7 +8,10 @@
 #include "commons.h"
 
 #include "postgresql/libpqtypes.h"
+#include "postgresql/vt-print.h"
+
 #include <iostream>
+#include <sstream>
 #include <fstream>
 #include <stdlib.h>
 
@@ -59,35 +62,6 @@ void Logger::debug(const String& logline) {
 #endif
 }
 
-void Logger::error(const String& logline) {
-    logStream << timestamp() << ": ERROR! " << logline << std::endl;
-
-#ifdef _DEBUG
-    logStream.flush();
-#endif
-
-    exit(1);
-}
-
-void Logger::error(int errno, const String& logline) {
-    logStream << timestamp() << ": ERROR " << errno << "! "<< logline << std::endl;
-
-#ifdef _DEBUG
-    logStream.flush();
-#endif
-
-    exit(1);
-}
-
-void Logger::warning(int errno, const String& logline) {
-    logStream << timestamp() << ": WARNING " << errno << ". "<< logline << std::endl;
-
-#ifdef _DEBUG
-    logStream.flush();
-#endif
-}
-
-
 String Logger::timestamp() {
     time_t timer;
     time(&timer);
@@ -111,7 +85,10 @@ Connector::Connector(const String& connectionInfo, Logger* logger) {
     else logger = new Logger();
 
     conn = NULL;
-    if (!reconnect(connectionInfo)) logger->error("201: The connection couldn't been established.");
+    if (!reconnect(connectionInfo)) {
+        logger->log("ERROR 201! The connection couldn't been established.");
+        exit(1);
+    }
 }
 
 /**
@@ -126,7 +103,7 @@ bool Connector::reconnect(const String& connectionInfo) {
     conn = PQconnectdb(conninfo.c_str());
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->error(202, PQerrorMessage(conn));
+        logger->log("WARNING 202:" + String(PQerrorMessage(conn)));
         return false;
     }
 
@@ -140,7 +117,7 @@ bool Connector::connected() {
     bool success = false;
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->error(205, PQerrorMessage(conn));
+        logger->log("WARNING 205!" + String(PQerrorMessage(conn)));
         return success = false;
     }
 
@@ -152,7 +129,7 @@ bool Connector::connected() {
                           0, &text);    // 0th text field
 
     if(!success) {
-        logger->error(206, PQgeterror());
+        logger->log("WARNING 206!" + String(PQgeterror()));
         PQfinish(conn);
     } else {
         logger->log(text);
@@ -167,7 +144,7 @@ Logger* Connector::getLogger() {
     return logger;
 }
 
-PGconn* Connector::getConnection() {           // connection
+PGconn* Connector::getConn() {           // connection
     return conn;
 }
 
@@ -219,6 +196,7 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
     format    = String(args_info.format_arg);
     // FIXME: proc je mozna nastavit vice datasetu? (i vseho ostatniho)
     // protoze jsem to tak dal ve vtapi.ggo (argument je multiple) --Vojta
+    // FIXME Vojta: hmm a ma to vyznam? mohlo by to nekoho mast, kdyz to dal nepouzivame... resp. budem?
     dataset   = String(args_info.dataset_arg[0]);
     sequence  = String(args_info.sequence_arg[0]);
     interval  = String(args_info.interval_arg[0]);
@@ -247,32 +225,65 @@ Logger* Commons::getLogger() {
     return logger;
 }
 
+
+void Commons::error(const String& logline) {
+    logger->log("ERROR! " + logline);
+    exit(1);
+}
+
+void Commons::error(int errno, const String& logline) {
+    std::stringstream strstr;
+    strstr << "ERROR " << errno << "! " << logline;
+    logger->log(strstr.str());
+    exit(1);
+}
+
+void Commons::warning(const String& logline) {
+    logger->log("ERROR! " + logline);
+}
+
+void Commons::warning(int errno, const String& logline) {
+    std::stringstream strstr;
+    strstr << "WARNING " << errno << ": " << logline;
+    logger->log(strstr.str());
+}
+
+
+
 String Commons::getDataset() {
-    return (this->dataset);
+    if (dataset.empty()) warning(153, "No dataset specified");
+    return (dataset);
 }
 
-String Commons::setDataset(const String& dataset) {
-    this->dataset = dataset;
-    return (this->dataset);
+String Commons::getSequence() {
+    if (sequence.empty()) warning(153, "No sequence specified");
+    return (sequence);
 }
 
-
-void Commons::print(PGresult* res) {
-    print(res, this->format);
+void Commons::printRes(PGresult* res, const String& format) {
+    printRes(res, -1, format);
 }
 
-void Commons::print(PGresult* res, const String& format) {
-    if(!res) logger->error(159, "There is no result set to print.\n" + String(PQgeterror()));
+void Commons::printRes(PGresult* res, int pTuple, const String& format) {
+    if(!res) {
+        warning(158, "No result set to print.\n" + String(PQgeterror()));
+        return;
+    }
+
+    String f;
+    if (!format.empty()) f = format;
+    else f = this->format;
+
     PQprintOpt opt = {0};
-    if (format.compare("standard") == 0) {
+    if (f.compare("standard") == 0) {
         opt.header    = 1;
         opt.align     = 1;
         opt.fieldSep  = (char *) "|";
     }
-    else if (format.compare("csv") == 0) {
+    else if (f.compare("csv") == 0) {
         opt.fieldSep  = (char *) ",";
     }
-    else if (format.compare("html") == 0) {
+    else if (f.compare("html") == 0) {
         opt.html3    = 1;
         //opt.caption  = (char *) "";
         //opt.tableOpt = (char *) ""
@@ -281,8 +292,9 @@ void Commons::print(PGresult* res, const String& format) {
     // TODO: eventuelne dalsi formaty (binary, sparse)
     else {
         opt.fieldSep  = (char *) "";
-        printf ("print format not implemented\n");
+        warning(159, "Print format not implemented " + f);
     }
 
-    PQprint(stdout, res, &opt);
+    vtPQprint(stdout, res, &opt, pTuple);
 }
+

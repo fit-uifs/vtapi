@@ -35,7 +35,8 @@ class Interval;
  *//***************************************************************************/
 class Select : public Commons {
 public:
-    Select(const Commons& commons, QueryType type = GENERIC);
+    Select(const Commons& commons, const String& queryString = "", PGparam *param = NULL);
+    ~Select();
    
     /**
      * This expands the query, so you can check it before the execution
@@ -43,18 +44,13 @@ public:
      */
     String getQuery();
 
-    bool prepareQuery();
-    bool executeQuery();
-
-    // this is a tuple table and column name
-    // TODO: this->from["intervals"] = "*";
-    // FIXME: AS
-    std::multimap<String, String> fromList;
+    bool prepare();
+    bool execute();
 
     /**
      * This is to specify the from clause and the select (column) list
-     *
-     * select->from("public.datasets", "*");
+     * It may be called more times as:
+     * @code select->from("public.datasets", "*");
      *
      * @param table
      * @param column
@@ -69,25 +65,36 @@ public:
     // std::multimap<String, float> whereFloat;
 
     /**
+     * This is a persistent function to add where clauses
+     * It can be called more times as:
      *
      * @param column
      * @param value
      * @return
      */
-    bool whereString(const String& table, const String& column, const String& value);
+    bool whereString(const String& column, const String& value, const String& table = "");
+    bool whereInt(const String& column, const int value, const String& table = "");
+    bool whereFloat(const String& column, const float value, const String& table = "");
+
     String where;   // FIXME: see above :(
+
     String groupby;
     String orderby;
     
-// protected:
-    String query;
-
-    QueryType type;
     PGresult* res;
-    int pos;
 
     int limit;
     int offset;
+
+    // this is a tuple table and column name
+    // TODO: this->from["intervals"] = "*";
+    // FIXME: AS
+    std::multimap<String, String> fromList;
+
+    // this is for direct queries
+    // TODO Tomas: implement
+    String queryString;
+    PGparam *param;
 };
 
 /**
@@ -180,6 +187,9 @@ protected:
 /**
  * KeyValues storage class
  *
+ * // FIXME Tomas: predelej ty hromady "cerr << " ... >>
+ * // dej tam error nebo warning podle toho jestli koncis nebo ne
+ *
  * Errors 50*
  */
 class KeyValues : public Commons {
@@ -189,22 +199,17 @@ public:
     virtual ~KeyValues();
 
     /**
-     * Select is (to be) pre-filled byt the constructor
-     */
-    Select* select;
-    Insert* insert;
-
-    /**
      * The most used function of the VTApi - next (row)
      * @return this or null
      */
     KeyValues* next();
 
-    long getRowActual();
-    long getRowNumber();
+    // get a list of all possible columns
+    std::map<String,String> getKeys();
+
+//    void print();
 
     // getters (Select)
-
     String getString(String key);
     String getString(int pos);
 
@@ -233,7 +238,6 @@ public:
 
     // adders (Insert)
     // TODO: implement
-
     bool addString(String key, String value);
     bool addInt(String key, String value);
     bool addInt(String key, int value);
@@ -243,25 +247,16 @@ public:
     bool addFloatA(String key, float_t value, size_t size);
 
 
-    // TODO: u kazde tridy add vytvori objekt te tridy se stejnymi keys, ale bez hodnot a ty se naplni jako set
+    // TODO Tomas: u kazde tridy add vytvori objekt te tridy se stejnymi keys, ale bez hodnot a ty se naplni jako set
 
-//    void test(const KeyValues& orig);
-
-protected:
-    // maintain a list of all possible elements
-    std::map<String,String> keys;
-    // TODO: discuss map, recursion etc.
-
+    /**
+     * Select is (to be) pre-filled byt the constructor
+     */
+    Select* select;
+    Insert* insert;
     int position;       // initialized to -1 by default
-    // this should be it here or should it be there?
-    PGresult* res;
 
-    // Inherited from Commons:
-    // Connector* connector; // this was most probably inherited
-    // Logger* logger;
-
-    // bool isDoom;         // true
-
+    // some other inherited from Commons
 };
 
 
@@ -286,10 +281,16 @@ public:
     Dataset(const Dataset& orig);
     virtual ~Dataset();
 
+    /**
+     * Over-loading next();
+     * @return
+     */
+    KeyValues* next();
+
     String getName();
     String getLocation();
 
-    Sequence* newSequence();
+    Sequence* newSequence(const String& name = "");
 protected:
 
 };
@@ -297,12 +298,16 @@ protected:
 
 /**
  * A Sequence class manages videos and images
+ *
+ * Error codes 31*
  */
 class Sequence : public KeyValues {
 public:
-    Sequence(const KeyValues& orig);
+    Sequence(const KeyValues& orig, const String& seqname = "");
     Sequence(const Sequence& orig);
     virtual ~Sequence();
+
+    KeyValues* next();
 
     String getName();
     String getLocation();
@@ -325,16 +330,37 @@ protected:
 
 /**
  * Interval is equivalent to an interval of images
+ *
+ * Error codes 32*
  */
 class Interval : public KeyValues {
 public:
-    Interval(const KeyValues& orig);
+    Interval(const KeyValues& orig, const String& selection = "intervals");
     Interval(const Interval& orig);
     virtual ~Interval();
 
     String getSequence();
     int getStartTime();
     int getEndTime();
+
+    bool add(String name="");
+
+protected:
+
+};
+
+/**
+ * This represents images
+ *
+ * Error codes 329*
+ */
+class Image : public Interval {
+public:
+    Image(const KeyValues& orig, const String& selection = "intervals");
+    Image(const Interval& orig);
+    virtual ~Image();
+
+    int getTime();
     String getLocation();
 
     bool add(String name="");
@@ -344,8 +370,12 @@ protected:
 };
 
 
+
+
 /**
  * // TODO: zvazit jestli nechat + komentar nutny
+ * // TODO: zvazeno, odstanit a nahradit
+ * map<String, String> methodKeys;
  */
 class MethodKeys : public KeyValues {
 public:
@@ -403,25 +433,6 @@ public:
     void printProcesses();
 };
 
-
-class Test {
-    Dataset* dataset;
-    Sequence* sequence;
-    Interval* interval;
-public:
-    Test(Dataset& orig);
-    virtual ~Test();
-    
-    void testDataset();
-    void testSequence();
-    void testInterval();
-    void testKeyValues();
-    void testMethod();
-    void testProcess();
-    void testAll();
-};
-
-
 /**
  * VTApi class manages Commons and processes args[]
  * This is how to begin
@@ -461,9 +472,9 @@ public:
     int run();
 
     /**
-     * For testing KeyValues
+     * For testing and learning purposes
      */
-    void testKeyValues();
+    void test();
 
 
     /**

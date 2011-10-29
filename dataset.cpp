@@ -9,21 +9,17 @@
 
 
 Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
-    this->select = new Select(orig);
-    this->select->from("public.datasets", "*");
-
     // set the dataset name
     if (!name.empty()) {
-        this->dataset = name;
+        dataset = name;
     }
-    if (this->dataset.empty()) {
-        this->logger->warning(303, "The dataset is not specified");
-    }
-    else {
-        this->select->whereString("public.datasets", "dsname", this->dataset);
+    if (dataset.empty()) {
+        warning(303, "No dataset specified");
     }
 
-    // res = PQexecf(getConnector()->getConnection(), "SELECT * FROM public.datasets;");
+    select = new Select(*this);
+    select->from("public.datasets", "*");
+    select->whereString("dsname", this->dataset);
 }
 
 Dataset::Dataset(const Dataset& orig) : KeyValues(orig) {
@@ -33,7 +29,15 @@ Dataset::Dataset(const Dataset& orig) : KeyValues(orig) {
 Dataset::~Dataset() {
 }
 
+KeyValues* Dataset::next() {
+    KeyValues* kv = ((KeyValues*)this)->next();
+    if (kv) {
+        this->dataset = this->getName();
+        this->datasetLocation = this->getLocation();
+    }
 
+    return kv;
+}
 
 /**
  * Get name of current dataset
@@ -55,6 +59,6 @@ String Dataset::getLocation() {
  * Create new sequence for current dataset
  * @return pointer to new sequence
  */
-Sequence* Dataset::newSequence() {
-    return (new Sequence(*this));
+Sequence* Dataset::newSequence(const String& name) {
+    return (new Sequence(*this, name));
 }

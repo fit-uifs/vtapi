@@ -61,7 +61,7 @@ void Insert::getIntArray(String arrayParam, PGarray* arr) {
     size_t startPos = 0, endPos = string::npos;
     int tag;
     arr->ndims = 0;
-    arr->param = PQparamCreate(this->connector->getConnection());
+    arr->param = PQparamCreate(this->connector->getConn());
 
     while (startPos < arrayParam.length()) {
         endPos = arrayParam.find(',', startPos);
@@ -77,7 +77,7 @@ void Insert::getFloatArray(String arrayParam, PGarray* arr) {
     size_t startPos = 0, endPos = string::npos;
     float svm;
     arr->ndims = 0;
-    arr->param = PQparamCreate(this->connector->getConnection());
+    arr->param = PQparamCreate(this->connector->getConn());
 
     while (startPos < arrayParam.length()) {
         endPos = arrayParam.find(',', startPos);
@@ -95,7 +95,7 @@ bool Insert::checkLocation(String seqname, String intlocation) {
     PGtext seqlocation = (PGtext) "";
 
     // get sequence location
-    res = PQexec(this->connector->getConnection(),
+    res = PQexec(this->connector->getConn(),
         String("SELECT seqlocation FROM " + this->dataset->getName() +
             ".sequences WHERE seqname=\'" + seqname.c_str() + "\';").c_str());
     if(!res) {
@@ -118,7 +118,7 @@ bool Insert::execute() {
     stringstream query;
     PGresult *res;
     PGarray arr;
-    PGparam *param = PQparamCreate(this->connector->getConnection());
+    PGparam *param = PQparamCreate(this->connector->getConn());
     bool queryOK = true;
     PGtimestamp timestamp = getTimestamp();
 
@@ -167,7 +167,7 @@ bool Insert::execute() {
     }
 
     if (queryOK) {
-        res = PQparamExec(this->connector->getConnection(), param, query.str().c_str(), 1);
+        res = PQparamExec(this->connector->getConn(), param, query.str().c_str(), 1);
         if(!res)
             this->connector->getLogger()->write(PQgeterror());
         else PQclear(res);

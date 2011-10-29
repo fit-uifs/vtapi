@@ -66,17 +66,15 @@ Dataset* VTApi::newDataset(const String& name) {
 
 
 int VTApi::run() {
-    Dataset* dataset = newDataset();
+/*  TODO: co je tohle za blbost? proc by se to melo dotazovat na vsechna data???
     Sequence* sequence = dataset->newSequence();
     Interval* interval = sequence->newInterval();
     Process* process = new Process(*dataset);
     Insert* insert = new Insert(dataset);
-
+*/
     String line = cmdline;
     String command;
     cout << "commands: query, select, insert, update, delete, show, test, exit" << endl;
-
-    dataset->next(); // first dataset (public)
 
     // command cycle
     while (1) {
@@ -89,9 +87,9 @@ int VTApi::run() {
         if (command.compare("exit") == 0) break;
         // general query
         else if (command.compare("query") == 0) {
-            PGresult *res = PQexecf(commons->getConnector()->getConnection(),
+            PGresult *res = PQexecf(commons->getConnector()->getConn(),
                 line.c_str());
-            commons->print(res);
+            commons->printRes(res);
             PQclear(res);
         }
         // TODO: select
@@ -106,8 +104,7 @@ int VTApi::run() {
             String input;
             input = getWord(line);
 
-            insert->clear();
-            insert->setDataset(dataset);
+            Insert* insert = new Insert(new Dataset(*this->commons));
             while (!line.empty()) insert->addParam(getWord(line));
 
             if (!input.compare("dataset")) insert->setType(Insert::DATASET);
@@ -124,24 +121,12 @@ int VTApi::run() {
         else if (command.compare("show") == 0) cout << "todo" << endl;
         // test
         else if (command.compare("test") == 0) {
-
-            Dataset* testDataset = newDataset();
-            Test* test = new Test(*testDataset);
-            test->testAll();
-            delete test;
-            delete testDataset;
+            this->test();
         }
         else cout << "ERROR: unknown command: " << command << endl;
 
         line.clear();
     }
-
-    /* Deallocate memory */
-    delete insert;
-    delete process;
-    delete interval;
-    delete sequence;
-    delete dataset;
 
     return 0;
 }
@@ -186,6 +171,32 @@ String VTApi::getWord(String& line) {
         line.clear();
 
     return word;
+}
+
+
+void VTApi::test() {
+    cout << "========== Dataset ===========" << endl;
+    Dataset* dataset = this->newDataset();
+    dataset->next();
+    dataset->printRes(dataset->select->res);
+    // FIXME: jaktoze to nebere dedicnost???
+
+    cout << endl;
+    cout << "========== Sequence ==========" << endl;
+    cout << "Using dataset " << dataset->getDataset() << endl;
+
+    Sequence* sequence = dataset->newSequence();
+    sequence->next();
+    sequence->printRes(sequence->select->res);
+
+    cout << endl;
+    cout << "========== Interval ==========" << endl;
+    cout << "Using sequence " << sequence->getSequence() << endl;
+
+    Interval* interval = sequence->newInterval();
+    interval->select->limit = 10;
+    interval->next();
+    // interval->print();
 }
 
 /*

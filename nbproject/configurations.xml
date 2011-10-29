@@ -5,6 +5,13 @@
                    displayName="Header Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="postgresql"
+                     projectFiles="true"
+                     kind="SOURCE_LOGICAL_FOLDER">
+        <itemPath>postgresql/libpqtypes.h</itemPath>
+        <itemPath>postgresql/vt-print.h</itemPath>
+      </logicalFolder>
       <itemPath>VTApi.h</itemPath>
       <itemPath>commons.h</itemPath>
     </logicalFolder>
@@ -21,6 +28,12 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f1"
+                     displayName="postgresql"
+                     projectFiles="true"
+                     kind="SOURCE_LOGICAL_FOLDER">
+        <itemPath>postgresql/vt-print.c</itemPath>
+      </logicalFolder>
       <itemPath>commons.cpp</itemPath>
       <itemPath>dataset.cpp</itemPath>
       <itemPath>insert.cpp</itemPath>
@@ -30,8 +43,8 @@
       <itemPath>method.cpp</itemPath>
       <itemPath>methodkeys.cpp</itemPath>
       <itemPath>process.cpp</itemPath>
+      <itemPath>select.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>
-      <itemPath>test.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -66,6 +79,21 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
@@ -87,6 +115,21 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <folder path="TestFiles/f1">
+        <cTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </cTool>
+        <ccTool>
+          <incDir>
+            <pElem>.</pElem>
+          </incDir>
+        </ccTool>
+        <linkerTool>
+          <output>${TESTDIR}/TestFiles/f1</output>
+        </linkerTool>
+      </folder>
     </conf>
   </confs>
 </configurationDescriptor>

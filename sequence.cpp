@@ -7,15 +7,26 @@
 
 #include "VTApi.h"
 
-Sequence::Sequence(const KeyValues& orig) : KeyValues(orig) {
-    // FIXME: tohle by se melo poslat KeyValues, at si to zpracuji
-    res = PQexecf(getConnector()->getConnection(), String("SELECT * FROM "+ getString("dsname") +".sequences;").c_str());
-}
+Sequence::Sequence(const KeyValues& orig, const String& name) : KeyValues(orig) {
+    if (!name.empty()) this->sequence = name;
 
-Sequence::Sequence(const Sequence& orig) : KeyValues(orig) {
+    select = new Select(*this);
+    select->from("sequences", "*");
+    select->whereString("seqname", this->sequence);
+    // res = PQexecf(connector->getConn(), String("SELECT * FROM "+ getString("dsname") +".sequences;").c_str());
 }
 
 Sequence::~Sequence() {
+}
+
+KeyValues* Sequence::next() {
+    KeyValues* kv = ((KeyValues*)this)->next();
+    if (kv) {
+        this->sequence = this->getName();
+        this->sequenceLocation = this->getLocation();
+    }
+
+    return kv;
 }
 
 

@@ -9,44 +9,91 @@
 #include <iostream>
 
 // Select::Select() { }
-Select::Select(const Commons& commons, QueryType type)
-       : Commons(commons), res(NULL), pos(-1), type(type) {
+Select::Select(const Commons& commons, const String& queryString, PGparam* param)
+       : Commons(commons), res(NULL), limit(0), offset(0), param(NULL) {
 }
+
+Select::~Select() {
+    PQclear(res);
+}
+
 
 bool Select::from(const String& table, const String& column) {
-    // pokud je nalezena . znamena to, ze uz je tam dataset... 
-    // jinak ho tam pridam, ale az pri sestaveni dotazu radeji
-    // String dsTable = table;
-    // if (dsTable.find(".") == String.npos) dsTable = this->dataset + "." + table;
-        
-    this->fromList.insert( std::pair<String, String>(table, column) );
+    fromList.insert( std::pair<String, String>(table, column) );
     return true;
 }
 
-bool Select::whereString(const String& table, const String& column, const String& value) {
+// FIXME: tohle se musi predelat jakoze struktura, ktera vyuziva fromList
+bool Select::whereString(const String& column, const String& value, const String& table) {
+    if (value.empty()) return false;
+
     if (value.compare("NULL") == 0) {
-        this->where += column + " IS NULL ";
+        where += column + " IS NULL ";
     }
     else {
-        this->where += column + " = " + value + " ";
+        // FIXME: buffer overflow!! use params!
+        where += column + " = \'" + value + "\' AND ";
     }
     return true;
 }
 
+// FIXME: vyuzit params a zauvozovkovat nazvy
 String Select::getQuery() {
-   this->query = "SELECT ";
+    if (!queryString.empty()) return queryString; // in case of a direct query
 
-   String tmp = "\nFROM ";
+   String query = "SELECT ";
+   String tmpStr = "\n  FROM ";
+
+   // make the SELECT and FROM statement
    for (std::multimap<String, String>::iterator ii=fromList.begin(); ii!=fromList.end(); ++ii)
    {
-       this->query += (*ii).first + ", ";
-       tmp += (*ii).second + ", ";
-       std::cout << (*ii).first << ": " << (*ii).second << std::endl;
+       // FIXME: kde se to proboha otocilo???
+       String tmpTable = (*ii).first;
+       if (tmpTable.find(".") == String::npos) tmpTable = this->getDataset() + "." + tmpTable;
+
+       query += tmpTable + "." + (*ii).second;
+       if ((*ii).second.compare("*") != 0) query += " AS " + (*ii).second + ", ";
+       else query += ", ";
+
+       tmpStr += tmpTable + ", ";
    }
 
-   // TODO: poresit separatory
-   this->query += tmp;
+   // if there are some fields
+   if (query.length() < 10 || tmpStr.length() < 9)
+       error(201, "Select::getQuery():\n" + query + "\n" + tmpStr);
 
-   return (this->query);
+   query.erase(query.length()-2);
+   query += tmpStr.erase(tmpStr.length()-2);
 
+   // FIXME: the rest should be done as above + using params...
+   if (!where.empty()) {
+       tmpStr = "\n  WHERE " + where;
+       query += tmpStr.erase(tmpStr.length()-5);
+   }
+
+   if (!groupby.empty()) {
+       query += "\n  GROUP BY " + groupby;
+   }
+
+   if (!orderby.empty()) {
+       query += "\n  ORDER BY " + orderby;
+   }
+
+   // TODO Tomas: LIMIT and OFFSET
+
+   query += ";";
+   return (query);
 }
+
+// TODO: zvazit pouziti statement
+bool Select::execute() {
+    String query = this->getQuery();
+    
+    if (verbose) logger->debug(query);
+    res = PQparamExec(connector->getConn(), param, query.c_str(), 1);
+    // TODO: use params in the getQuery next time
+
+    if (!res) error(200, "Select::execute():\n" + String(PQgeterror()));
+    return (res);
+}
+

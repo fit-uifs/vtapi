@@ -14,44 +14,45 @@ using namespace std;
 
 
 
-KeyValues::KeyValues(const Commons& orig) : Commons(orig), res(NULL), position(-1) {
+KeyValues::KeyValues(const Commons& orig) 
+          : Commons(orig), select(NULL), insert(NULL), position(-1) {
 }
 
-KeyValues::KeyValues(const KeyValues& orig) : Commons(orig), res(NULL), position(-1) {
+KeyValues::KeyValues(const KeyValues& orig) 
+          : Commons(orig), select(orig.select), insert(orig.insert), position(orig.position) {
 }
 
 KeyValues::~KeyValues() {
-    if (res) PQclear(res);
+    destruct(select);
+    destruct(insert);
 }
 
-
-
 KeyValues* KeyValues::next() {
-    // TODO: pouzit tridu Select, tu si naplni kazda podtrida sama
-    // TODO: naplnena podtrida Select spusti execute ZDE kdyz position == -1
-    if (position = -1) {
-        if (!select) this->logger->error(0, "There is no select class");
-        if (res) PQclear(res);
+    // tridu Select, tu si naplni kazda podtrida sama
+    // naplnena podtrida Select spusti execute ZDE kdyz position == -1
+    if (!select) error(501, "There is no select class");
 
+    if (position = -1) {
+        if (select->res) PQclear(select->res);
+        select->execute();
     }
 
     // TODO: zatim to skonci po konci resultsetu, ale melo by zjistit, jestli je
     // to na konci nebo neni a spachat kdyztak dalsi dotaz (limit, offset)
-    if (res && position < PQntuples(res) - 1) {
+    if (select->res && (position < PQntuples(select->res) - 1)) {
         position++;
+        return this;
     }
+
+    return NULL;
 }
 
-
-long KeyValues::getRowActual() {
-
+/*
+void KeyValues::print() {
+    if (select && select->res && position > -1) ((Commons*)this)->print(select->res, position);
+    else warning(502, "There is nothing to print (see other errors)");
 }
-
-long KeyValues::getRowNumber() {
-
-}
-
-
+*/
 
 /**
  * Get string value specified by column key
@@ -62,11 +63,11 @@ String KeyValues::getString(String key) {
     PGtext value;
 
     // Several data types are other representation of string, so we must catch all of them
-    if (PQgetf(res, position, "#text", key.c_str(), &value)) {}
-    else if (PQgetf(res, position, "#name", key.c_str(), &value)) {}
-    else if (PQgetf(res, position, "#varchar", key.c_str(), &value)) {}
-    else if (PQgetf(res, position, "#bytea", key.c_str(), &value)) {}
-    else if (PQgetf(res, position, "#bpchar", key.c_str(), &value)) {}
+    if (PQgetf(select->res, position, "#text", key.c_str(), &value)) {}
+    else if (PQgetf(select->res, position, "#name", key.c_str(), &value)) {}
+    else if (PQgetf(select->res, position, "#varchar", key.c_str(), &value)) {}
+    else if (PQgetf(select->res, position, "#bytea", key.c_str(), &value)) {}
+    else if (PQgetf(select->res, position, "#bpchar", key.c_str(), &value)) {}
     else {
         cerr << PQgeterror() << endl;
     }
@@ -86,11 +87,11 @@ String KeyValues::getString(String key) {
 String KeyValues::getString(int pos) {
     PGtext value = (PGtext) "";
 
-    if (PQgetf(res, position, "%text", pos, &value)) {}
-    else if (PQgetf(res, position, "%name", pos, &value)) {}
-    else if (PQgetf(res, position, "%varchar", pos, &value)) {}
-    else if (PQgetf(res, position, "%regtype", pos, &value)) {}
-    else if (PQgetf(res, position, "%bytea", pos, &value)) {}
+    if (PQgetf(select->res, position, "%text", pos, &value)) {}
+    else if (PQgetf(select->res, position, "%name", pos, &value)) {}
+    else if (PQgetf(select->res, position, "%varchar", pos, &value)) {}
+    else if (PQgetf(select->res, position, "%regtype", pos, &value)) {}
+    else if (PQgetf(select->res, position, "%bytea", pos, &value)) {}
     else {
         cerr << PQgeterror() << endl;
     }
@@ -112,7 +113,7 @@ String KeyValues::getString(int pos) {
 int KeyValues::getInt(String key) {
     PGint4 value;
 
-    if (! PQgetf(res, position, "#int4", key.c_str(), &value)) {
+    if (! PQgetf(select->res, position, "#int4", key.c_str(), &value)) {
         cerr << PQgeterror() << endl;
 //        value = 0; // maybe some logging or exception for logging?
     }
@@ -128,7 +129,7 @@ int KeyValues::getInt(String key) {
 int KeyValues::getInt(int pos) {
     PGint4 value;
 
-    if (! PQgetf(res, position, "%int4", pos, &value)) {
+    if (! PQgetf(select->res, position, "%int4", pos, &value)) {
         cerr << PQgeterror() << endl;
 //        value = 0; // maybe some logging or exception for logging?
     }
@@ -146,7 +147,7 @@ int* KeyValues::getIntA(String key, size_t& size) {
     PGarray tmp;
     int* values;
 
-    if (! PQgetf(res, position, "#int4[]", key.c_str(), &tmp)) {
+    if (! PQgetf(select->res, position, "#int4[]", key.c_str(), &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -172,7 +173,7 @@ int* KeyValues::getIntA(int pos, size_t& size) {
     PGarray tmp;
     int* values;
 
-    if (! PQgetf(res, position, "%int4[]", pos, &tmp)) {
+    if (! PQgetf(select->res, position, "%int4[]", pos, &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -198,7 +199,7 @@ std::vector<int> KeyValues::getIntV(int pos) {
     PGint4 value;
     std::vector<int> values;
 
-    if (! PQgetf(res, position, "%int4[]", pos, &tmp)) {
+    if (! PQgetf(select->res, position, "%int4[]", pos, &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -223,7 +224,7 @@ std::vector<int> KeyValues::getIntV(String key) {
     PGint4 value;
     std::vector<int> values;
 
-    if (! PQgetf(res, position, "#int4[]", key.c_str(), &tmp)) {
+    if (! PQgetf(select->res, position, "#int4[]", key.c_str(), &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -247,7 +248,7 @@ std::vector<int> KeyValues::getIntV(String key) {
 float KeyValues::getFloat(String key) {
     PGfloat4 value;
 
-    if (! PQgetf(res, position, "#float4", key.c_str(), &value)) {
+    if (! PQgetf(select->res, position, "#float4", key.c_str(), &value)) {
         cerr << PQgeterror() << endl;
 //        value = 0; // maybe some logging or exception for logging?
     }
@@ -263,7 +264,7 @@ float KeyValues::getFloat(String key) {
 float KeyValues::getFloat(int pos) {
     PGfloat4 value;
 
-    if (! PQgetf(res, position, "%float4", pos, &value)) {
+    if (! PQgetf(select->res, position, "%float4", pos, &value)) {
         cerr << PQgeterror() << endl;
 //        value = 0; // maybe some logging or exception for logging?
     }
@@ -281,7 +282,7 @@ float* KeyValues::getFloatA(String key, size_t& size) {
     PGarray tmp;
     float* values;
 
-    if (! PQgetf(res, position, "#float4[]", key.c_str(), &tmp)) {
+    if (! PQgetf(select->res, position, "#float4[]", key.c_str(), &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 
@@ -307,7 +308,7 @@ float* KeyValues::getFloatA(int pos, size_t& size) {
     PGarray tmp;
     float* values;
 
-    if (! PQgetf(res, position, "%float4[]", pos, &tmp)) {
+    if (! PQgetf(select->res, position, "%float4[]", pos, &tmp)) {
         cerr << "Error" << PQgeterror() << endl;
     }
 

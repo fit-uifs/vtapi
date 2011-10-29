@@ -17,8 +17,8 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=gfortran
-AS=
+FC=
+AS=as
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86
@@ -44,8 +44,9 @@ OBJECTFILES= \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/methodkeys.o \
-	${OBJECTDIR}/test.o \
-	${OBJECTDIR}/dataset.o
+	${OBJECTDIR}/postgresql/vt-print.o \
+	${OBJECTDIR}/dataset.o \
+	${OBJECTDIR}/select.o
 
 
 # C Compiler Flags
@@ -127,15 +128,20 @@ ${OBJECTDIR}/methodkeys.o: methodkeys.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/methodkeys.o methodkeys.cpp
 
-${OBJECTDIR}/test.o: test.cpp 
-	${MKDIR} -p ${OBJECTDIR}
+${OBJECTDIR}/postgresql/vt-print.o: postgresql/vt-print.c 
+	${MKDIR} -p ${OBJECTDIR}/postgresql
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/test.o test.cpp
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/postgresql/vt-print.o postgresql/vt-print.c
 
 ${OBJECTDIR}/dataset.o: dataset.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
+
+${OBJECTDIR}/select.o: select.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/select.o select.cpp
 
 # Subprojects
 .build-subprojects:
