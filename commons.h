@@ -27,6 +27,8 @@ typedef std::string String;
 #define destructall(v) if (v) { delete[](v); (v) = NULL; }
 #define boolStr(b) ((b) ? "true" : "false")
 
+// format: 0=text, 1=binary
+#define PGF 1
 
 /**
  * Standard logger

@@ -24,7 +24,8 @@ class Interval;
 
 
 /**
- * Just for the feeling (and vectors, of course)
+ * This is to represent the keys and fields in queries
+ * ... just for the feeling (and vectors, of course)
  * You can use size=-1 for for NULL :)
  */
 class TKey {
@@ -45,7 +46,7 @@ public:
 
 /**
  * A generic class for storing a single keyvalue type
- * It uses std::copy (memcpy) to maintain the object data
+ * It uses std::copy (memcpy) to maintain the object data (except pointer targets)
  * WARNING: use PDOs only ... @see http://en.wikipedia.org/wiki/Plain_old_data_structure
  * WARNING: if you use pointers, you shouldn't free them
  * You can use size=-1 for NULL :)
@@ -88,6 +89,8 @@ public:
 
 /**
  * This is a virtual query class
+ * // TODO: It will be used for delayed queries
+ * @see http://libpqtypes.esilo.com/
  *
  * Error codes 20*
  */ // ********************************************************************** //
@@ -161,9 +164,9 @@ public:
      * @param value
      * @return
      */
-    bool whereString(const String& column, const String& value, const String& table = "");
-    bool whereInt(const String& column, const int value, const String& table = "");
-    bool whereFloat(const String& column, const float value, const String& table = "");
+    bool whereString(const String& key, const String& value, const String& table = "");
+    bool whereInt(const String& key, const int value, const String& table = "");
+    bool whereFloat(const String& key, const float value, const String& table = "");
     String where;   // FIXME: see above :(
 
     String groupby;
@@ -193,11 +196,16 @@ public:
      * @return success
      */
     bool into(const String& table);
+    String intoTable;
 
     bool keyValue(const TKey& key);
-    bool keyValueString();
-    bool keyValueInt();
-    bool keyValueFloat();
+    // TODO:
+    bool valueString(const String& key, const String& value);
+    bool valueStringA(const String& key, const String* values, const int size);
+    bool valueInt(const String& key, const int& value);
+    bool valueIntA(const String& key, const int* values, const int size);
+    bool valueFloat(const String& key, const float& value);
+    bool valueFloatA(const String& key, const float* values, const int size);
 
     /**
      * This expands the query, so you can check it before the execution
@@ -208,6 +216,7 @@ public:
     bool prepare();
     bool execute();
 
+    PGresult* res;
 };
 
 
@@ -377,7 +386,7 @@ public:
      * Select is (to be) pre-filled byt the constructor
      */
     Select* select;
-    CLIInsert* insert;
+    Insert* insert;
     int position;       // initialized to -1 by default
 
     // some other inherited from Commons

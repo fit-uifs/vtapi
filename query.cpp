@@ -12,6 +12,7 @@
 
 Query::Query(const Commons& commons, const String& query, PGparam* param)
       : Commons(commons), queryString(query), param(param) {
+    if (!param) param = PQparamCreate(connector->conn);
 }
 
 Query::~Query() {
@@ -66,7 +67,7 @@ bool Select::whereString(const String& column, const String& value, const String
 
 // FIXME: vyuzit params a zauvozovkovat nazvy
 String Select::getQuery() {
-    if (!queryString.empty()) return queryString; // in case of a direct query
+    if (fromList.empty()) return queryString; // in case of a direct query
 
    String query = "SELECT ";
    String tmpStr = "\n  FROM ";
@@ -122,10 +123,47 @@ bool Select::execute() {
     String query = this->getQuery();
     
     if (verbose) logger->debug(query);
-    res = PQparamExec(connector->getConn(), param, query.c_str(), 1);
+    res = PQparamExec(connector->getConn(), param, query.c_str(), PGF);
     // TODO: use params in the getQuery next time
 
-    if (!res) error(200, "Select::execute():\n" + String(PQgeterror()));
+    if (!res) error(210, "Select::execute():\n" + String(PQgeterror()));
     return (res);
 }
 
+
+
+// ************************************************************************** //
+// Insert::Insert() { }
+Insert::Insert(const Commons& commons, const String& queryString, PGparam* param)
+       : Query(commons, queryString, param) {
+}
+
+Insert::~Insert() {
+    PQclear(res);
+}
+
+bool Insert::into(const String& table) {
+    intoTable = table;      // we can handle only a single table/view at the moment
+    // TODO: check if table exists to return true???
+    return true;
+}
+
+bool Insert::keyValue(const TKey& key) {
+    keyValues.push_back(key);
+    return true;
+}
+
+String Insert::getQuery() {
+    warning(201, "Query is a virtual class... probably won't get what wanted");
+    return queryString;
+}
+
+bool Insert::prepare() {
+    warning(201, "Query is a virtual class... probably won't get what wanted");
+    return false;
+}
+
+bool Insert::execute() {
+    warning(201, "Query is a virtual class... probably won't get what wanted");
+    return false;
+}

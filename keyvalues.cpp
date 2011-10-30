@@ -349,6 +349,24 @@ float* KeyValues::getFloatA(int pos, size_t& size) {
 }
 
 
+
+
+
+// ************************************************************************** //
+// TKeyValue(const String& type, const String& key, const T& value, const String& from = "")
+// TKeyValue (const String& type, const String& key, const T* values, const int size, const String& from = "")
+
+
+
+
+
+
+
+
+
+
+
+
 // !!!!!! TODO SETS TODO !!!!!!!
 // TODO: mozna by se dalo premyslet o PQsetvalue
 

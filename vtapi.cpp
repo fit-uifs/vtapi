@@ -284,6 +284,8 @@ void VTApi::test() {
     sequence->next();
     sequence->printRes(sequence->select->res);
 
+    sequence->add("just_a_test_sequence");
+
     cout << endl;
     cout << "TESTING Interval" << endl;
     cout << "USING sequence " << sequence->getSequence() << endl;
@@ -293,6 +295,7 @@ void VTApi::test() {
     interval->next();
     cout << "// FIXME: PQprint is deprecated" << endl;
     interval->print();
+
 }
 
 /*

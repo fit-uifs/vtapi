@@ -37,7 +37,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/method.o \
-	${OBJECTDIR}/insert.o \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/cli_settings.o \
@@ -93,11 +92,6 @@ ${OBJECTDIR}/method.o: method.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
-
-${OBJECTDIR}/insert.o: insert.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/insert.o insert.cpp
 
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}
