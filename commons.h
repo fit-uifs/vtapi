@@ -159,14 +159,14 @@ public:
      * This causes a serious death
      * @param meassage
      */
-    void error(int errno, const String& logline);
+    void error(int errnum, const String& logline);
     void error(const String& message);
 
     /**
      * This is just a warning
      * @param message
      */
-    void warning(int errno, const String& logline);
+    void warning(int errnum, const String& logline);
     void warning(const String& message);
 
     // this is to print the results

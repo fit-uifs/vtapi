@@ -230,8 +230,8 @@ void Commons::error(const String& logline) {
     exit(1);
 }
 
-void Commons::error(int errno, const String& logline) {
-    logger->log("ERROR " + toString(errno) + "! " + logline);
+void Commons::error(int errnum, const String& logline) {
+    logger->log("ERROR " + toString(errnum) + "! " + logline);
     exit(1);
 }
 
@@ -239,8 +239,8 @@ void Commons::warning(const String& logline) {
     logger->log("ERROR! " + logline);
 }
 
-void Commons::warning(int errno, const String& logline) {
-    logger->log("WARNING " + toString(errno) + ": " + logline);
+void Commons::warning(int errnum, const String& logline) {
+    logger->log("WARNING " + toString(errnum) + ": " + logline);
 }
 
 
