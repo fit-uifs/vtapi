@@ -151,7 +151,7 @@ int VTApi::run() {
                 me->select->where.clear();
                 me->select->whereString("mtname", params["name"]);
                 me->next();
-                me->print();
+                me->printAll();
             }
 
         }
@@ -162,7 +162,7 @@ int VTApi::run() {
             input = getWord(line);
 
             CLIInsert* insert = new CLIInsert(new Dataset(*this->commons));
-            while (!line.empty()) insert->addParam(getWord(line));
+            while (!line.empty()) insert->addParam(createParam(getWord(line)));
 
             if (!input.compare("dataset")) insert->setType(CLIInsert::DATASET);
             else if (!input.compare("sequence")) insert->setType(CLIInsert::SEQUENCE);

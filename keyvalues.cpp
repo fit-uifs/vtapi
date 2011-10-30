@@ -53,6 +53,10 @@ void KeyValues::print() {
     else warning(502, "There is nothing to print (see other errors)");
 }
 
+void KeyValues::printAll() {
+    if (select && select->res) this->printRes(select->res);
+    else warning(503, "There is nothing to print (see other errors)");
+}
 
 /**
  * Get string value specified by column key

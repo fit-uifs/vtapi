@@ -21,7 +21,7 @@ Method::Method(const Dataset& orig) : KeyValues(orig) {
     methodkeys = new MethodKeys(orig);
     
     select = new Select(*this);
-    select->from("methods", "*");
+    select->from("public.methods", "*");
 }
 
 Method::Method(const Method& orig) : KeyValues(orig) {

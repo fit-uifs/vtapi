@@ -29,13 +29,11 @@ void CLIInsert::setType(InsertType newtype){
     this->type = newtype;
 }
 
-int CLIInsert::addParam(String param){
-    size_t pos = param.find('=');
+int CLIInsert::addParam(pair<String,String> param) {
     pair<map<String,String>::iterator,bool> ret;
-    
-    if (pos != string::npos && pos < param.length()-1) {
-        ret = this->params.insert(pair<String,String>
-                (param.substr(0,pos), param.substr(pos+1, string::npos)));
+
+    if (!param.first.empty() && !param.second.empty()) {
+	ret = this->params.insert(param);
         // key already existed
         if (!ret.second) return -1;
         else return 0;
@@ -44,12 +42,7 @@ int CLIInsert::addParam(String param){
 }
 
 int CLIInsert::addParam(String key, String value) {
-    pair<map<String,String>::iterator,bool> ret;
-
-    ret = this->params.insert(pair<String, String> (key, value));
-    // key already existed
-    if (!ret.second) return -1;
-    else return 0;
+    return this->addParam(pair<String, String> (key, value));
 }
 
 String CLIInsert::getParam(String pname) {
@@ -127,7 +120,7 @@ bool CLIInsert::execute() {
         return 0;
     }
 
-    //TODO: datasets/methods/selections + timestamp
+    //TODO: datasets/methods/selections
     // insert sequence
     if (this->type == SEQUENCE) {
         PQputf(param, "%name", getParam("name").c_str());
