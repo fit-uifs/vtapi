@@ -12,12 +12,12 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <set>
 #include <sstream>
 #include <string>
 
 #include "postgresql/libpqtypes.h"
 #include "cli_settings.h"
-
 
 typedef std::string String;
 #define BUFFERSize 255
@@ -180,7 +180,9 @@ public:
 
     String getDataset();
     String getSequence();
-
+    String getSelection();
+    std::set<String> dscontext;
+    
 protected:
     Connector* connector; // this was most probably inherited
     Logger* logger;
@@ -188,6 +190,7 @@ protected:
     bool verbose;
     String user;
     String format;
+
 
     String dataset;
     String datasetLocation;

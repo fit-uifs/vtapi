@@ -18,7 +18,9 @@ CC=gcc
 CCC=g++
 CXX=g++
 FC=
+
 AS=as
+
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86
@@ -40,13 +42,13 @@ OBJECTFILES= \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/cli_settings.o \
-	${OBJECTDIR}/cli_insert.o \
 	${OBJECTDIR}/keyvalues.o \
+	${OBJECTDIR}/cli_insert.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/methodkeys.o \
+	${OBJECTDIR}/query.o \
 	${OBJECTDIR}/postgresql/vt-print.o \
-	${OBJECTDIR}/dataset.o \
-	${OBJECTDIR}/select.o
+	${OBJECTDIR}/dataset.o
 
 
 # C Compiler Flags
@@ -108,15 +110,15 @@ ${OBJECTDIR}/cli_settings.o: cli_settings.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_settings.o cli_settings.cpp
 
-${OBJECTDIR}/cli_insert.o: cli_insert.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_insert.o cli_insert.cpp
-
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
+
+${OBJECTDIR}/cli_insert.o: cli_insert.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_insert.o cli_insert.cpp
 
 ${OBJECTDIR}/process.o: process.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -128,6 +130,11 @@ ${OBJECTDIR}/methodkeys.o: methodkeys.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/methodkeys.o methodkeys.cpp
 
+${OBJECTDIR}/query.o: query.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/query.o query.cpp
+
 ${OBJECTDIR}/postgresql/vt-print.o: postgresql/vt-print.c 
 	${MKDIR} -p ${OBJECTDIR}/postgresql
 	${RM} $@.d
@@ -137,11 +144,6 @@ ${OBJECTDIR}/dataset.o: dataset.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
-
-${OBJECTDIR}/select.o: select.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/select.o select.cpp
 
 # Subprojects
 .build-subprojects:
