@@ -14,6 +14,23 @@ using namespace std;
 
 
 
+
+// ************************************************************************** //
+String TKey::print() {
+    String ret = "TKey type=" + type + ", key=" + key + ", size=" + toString(size) + ", from=" + from + "\n";
+    std::cout << ret;
+    return (ret);
+}
+
+
+// FIXME: tohle kdyz dam sem, tak je to v haji - proc?
+// template <class T>
+// String TKeyValue<T>::print() {};
+// ************************************************************************** //
+
+
+
+
 KeyValues::KeyValues(const Commons& orig) 
           : Commons(orig), select(NULL), insert(NULL), position(-1) {
 }
@@ -30,7 +47,7 @@ KeyValues::~KeyValues() {
 KeyValues* KeyValues::next() {
     // tridu Select, tu si naplni kazda podtrida sama
     // naplnena podtrida Select spusti execute ZDE kdyz position == -1
-    if (!select) error(501, "There is no select class");
+    if (!select) error(301, "There is no select class");
 
     if (position = -1) {
         if (select->res) PQclear(select->res);
@@ -50,12 +67,12 @@ KeyValues* KeyValues::next() {
 
 void KeyValues::print() {
     if (select && select->res && position > -1) this->printRes(select->res, position);
-    else warning(502, "There is nothing to print (see other errors)");
+    else warning(302, "There is nothing to print (see other errors)");
 }
 
 void KeyValues::printAll() {
     if (select && select->res) this->printRes(select->res);
-    else warning(503, "There is nothing to print (see other errors)");
+    else warning(303, "There is nothing to print (see other errors)");
 }
 
 /**
@@ -384,11 +401,3 @@ bool KeyValues::setFloatA(String key, float_t value, size_t size) {
     error("TODO");
 }
 
-
-
-// ************************************************************************** //
-String TKey::print() {
-    String ret = "TKey type=" + type + ", key=" + key + ", from=" + from + "\n";
-    std::cout << ret;
-    return (ret);
-}

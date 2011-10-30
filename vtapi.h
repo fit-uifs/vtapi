@@ -17,32 +17,125 @@
 #include <opencv2/core/core.hpp>
 
 
-// virtual definition
+// virtual definitions
 class Dataset;
 class Sequence;
 class Interval;
 
 
 /**
- * This is a class where queries will be constructed
+ * Just for the feeling (and vectors, of course)
+ * You can use size=-1 for for NULL :)
+ */
+class TKey {
+public:
+    String type;
+    String key;
+    int size;       // you can use -1 for NULL :)
+    String from;
+
+
+    TKey() : size(-1) {};
+    TKey(const String& type, const String& key, const int size, const String& from = "")
+            : type(type), key(key), from(from), size(size) {};
+
+    String print();
+};
+
+
+/**
+ * A generic class for storing a single keyvalue type
+ * It uses std::copy (memcpy) to maintain the object data
+ * WARNING: use PDOs only ... @see http://en.wikipedia.org/wiki/Plain_old_data_structure
+ * WARNING: if you use pointers, you shouldn't free them
+ * You can use size=-1 for NULL :)
+ *
+ * @see http://www.cplusplus.com/doc/tutorial/templates/
+ * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
+ * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
+ */
+template <class T>
+class TKeyValue : public TKey {
+public:
+    /** This attribute is there for validation */
+    String typein;
+    T* values;
+
+    TKeyValue() : TKey(), values(NULL) {};
+    TKeyValue(const String& type, const String& key, const T& value, const String& from = "")
+            : TKey(type, key, 1, from) {
+        values = new T[1];
+        values[0] = value;
+        typein = typeid(this->values).name();
+    }
+    TKeyValue (const String& type, const String& key, const T* values, const int size, const String& from = "")
+            : TKey(type, key, size, from) {
+        this->values = new T[this->size];
+        std::copy(values, values+size, this->values);
+        // memcpy(this->values, values, size*sizeof(values));
+        typein = typeid(values).name();
+    }
+
+    ~TKeyValue () {
+        destructall(values);
+    }
+
+    String print();
+};
+
+
+
+
+/**
+ * This is a virtual query class
+ *
+ * Error codes 20*
+ */ // ********************************************************************** //
+class Query : public Commons {
+public:
+    Query(const Commons& commons, const String& query = "", PGparam *param = NULL);
+    ~Query();
+
+    /**
+     * This expands the query, so you can check it before the execution
+     * @return
+     */
+    virtual String getQuery();
+
+    virtual bool prepare();
+    virtual bool execute();
+
+    /**
+     * This is for (direct) queries
+     */
+    std::vector<TKey> keyValues;
+
+    String queryString;
+    PGparam* param;
+};
+
+/**
+ * This is a class where queries are (to be) constructed
  * Mechanism: TBD
  *
  * Errors 21*
  *
- *//***************************************************************************/
-class Select : public Commons {
+ */// *********************************************************************** //
+class Select : public Query {
 public:
     Select(const Commons& commons, const String& queryString = "", PGparam *param = NULL);
     ~Select();
-   
+
     /**
      * This expands the query, so you can check it before the execution
      * @return
      */
     String getQuery();
 
-    bool prepare();
+    // TODO: necessary?
+    bool prepare() {};
     bool execute();
+    // TODO Tomas: implement
 
     /**
      * This is to specify the from clause and the select (column) list
@@ -54,6 +147,10 @@ public:
      * @return
      */
     bool from(const String& table, const String& column);
+    // this is a tuple table and column name
+    // TODO: this->from["intervals"] = "*";
+    // FIXME: AS
+    std::multimap<String, String> fromList;
 
     // FIXME: use TKeyValue instead
     /**
@@ -67,27 +164,53 @@ public:
     bool whereString(const String& column, const String& value, const String& table = "");
     bool whereInt(const String& column, const int value, const String& table = "");
     bool whereFloat(const String& column, const float value, const String& table = "");
-
     String where;   // FIXME: see above :(
 
     String groupby;
     String orderby;
-    
+
     PGresult* res;
 
     int limit;
     int offset;
-
-    // this is a tuple table and column name
-    // TODO: this->from["intervals"] = "*";
-    // FIXME: AS
-    std::multimap<String, String> fromList;
-
-    // this is for direct queries
-    // TODO Tomas: implement
-    String queryString;
-    PGparam *param;
 };
+
+/**
+ * This is a class where queries are (to be) constructed
+ * Mechanism: TBD
+ *
+ * Error codes 22*
+ *
+ */// *********************************************************************** //
+class Insert : public Query {
+public:
+    Insert(const Commons& commons, const String& insertString = "", PGparam *param = NULL);
+    ~Insert();
+
+    /**
+     * This is to specify the (single) table to be inserted in
+     * @param table
+     * @return success
+     */
+    bool into(const String& table);
+
+    bool keyValue(const TKey& key);
+    bool keyValueString();
+    bool keyValueInt();
+    bool keyValueFloat();
+
+    /**
+     * This expands the query, so you can check it before the execution
+     * @return
+     */
+    String getQuery();
+
+    bool prepare();
+    bool execute();
+
+};
+
+
 
 /**
  * This is a class to construct and execute INSERT queries.
@@ -190,7 +313,7 @@ protected:
  * // FIXME Tomas: predelej ty hromady "cerr << " ... >>
  * // dej tam error nebo warning podle toho jestli koncis nebo ne
  *
- * Errors 50*
+ * Errors 30*
  */
 class KeyValues : public Commons {
 public:
@@ -264,7 +387,7 @@ public:
 /**
  * This class should always be on the path of your programm...
  *
- * Error codes 30*
+ * Error codes 31*
  */
 class Dataset : public KeyValues {
 public:
@@ -300,7 +423,7 @@ protected:
 /**
  * A Sequence class manages videos and images
  *
- * Error codes 31*
+ * Error codes 32*
  */
 class Sequence : public KeyValues {
 public:
@@ -332,7 +455,7 @@ protected:
 /**
  * Interval is equivalent to an interval of images
  *
- * Error codes 32*
+ * Error codes 33*
  */
 class Interval : public KeyValues {
 public:
@@ -353,7 +476,7 @@ protected:
 /**
  * This represents images
  *
- * Error codes 329*
+ * Error codes 339*
  */
 class Image : public Interval {
 public:
@@ -375,8 +498,7 @@ protected:
 
 /**
  * // TODO: zvazit jestli nechat + komentar nutny
- * // TODO: zvazeno, odstanit a nahradit
- * map<String, String> methodKeys;
+ * // TODO: zvazeno, odstanit a nahradit: vector<TKey> methodKeys;
  */
 class MethodKeys : public KeyValues {
 public:
@@ -398,6 +520,8 @@ public:
 };
 
 /**
+ *
+ * Error codes 35*
  */
 class Method : public KeyValues {
 private:
@@ -418,6 +542,7 @@ private:
 
 /**
  *
+ * Error codes 36*
  */
 class Process : public KeyValues {
 public:
@@ -431,7 +556,7 @@ public:
 
     bool add(String name="");
     
-    void printProcesses();
+// TODO:    void print();
 };
 
 /**
@@ -440,6 +565,8 @@ public:
  *
  * TODO: include http://www.gnu.org/s/gengetopt/gengetopt.html
  *       special interest to the configuration files is needed
+ *
+ * Error codes 60*
  */
 class VTApi {
 public:
@@ -501,6 +628,25 @@ protected:
     String getWord(String& line);
     std::pair<String,String> createParam(String word);
 };
+
+
+
+// FIXME: tohle kdyz dam jinam, tak je to v haji - proc?
+template <class T>
+String TKeyValue<T>::print() {
+    String ret = "TKeyValue<" + String(typeid(values).name()) + "> type=" + type +
+            ", key=" + key + ", from=" + from + ", size=" + toString(size) + ", values=\n";
+    if (values && size > 0) {
+        for(int i=0; i < size; ++i) {
+            ret += toString(values[i]) + ", ";
+        }
+    }
+    else ret += "NULL  ";
+    ret = ret.erase(ret.length()-2) + "\n";
+
+    std::cout << ret;
+    return (ret);
+}
 
 #endif	/* VTAPI_H */
 
