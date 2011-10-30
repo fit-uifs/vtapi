@@ -293,4 +293,3 @@ void Commons::printRes(PGresult* res, int pTuple, const String& format) {
     vtPQprint(stdout, res, &opt, pTuple);
 }
 
-

@@ -62,6 +62,9 @@ void KeyValues::print() {
 String KeyValues::getString(String key) {
     PGtext value;
 
+    // FIXME Tomas: a neni lepsi zjistit (PQftype), co to vlastne je a pak pouzit spravnou funkci???
+    // jak jinak by to ty libpqtypes zjistily... ?
+
     // Several data types are other representation of string, so we must catch all of them
     if (PQgetf(select->res, position, "#text", key.c_str(), &value)) {}
     else if (PQgetf(select->res, position, "#name", key.c_str(), &value)) {}
@@ -326,6 +329,10 @@ float* KeyValues::getFloatA(int pos, size_t& size) {
 
 
 // !!!!!! TODO SETS TODO !!!!!!!
+// TODO: mozna by se dalo premyslet o PQsetvalue
+
+// FIXME Tomas: to nize ma byt pokus o (sebe)vrazdu?
+
 /**
  * Set string value specified by column key
  * @param key column key
@@ -370,5 +377,14 @@ bool KeyValues::setFloat(String key, String value) {
 }
 
 bool KeyValues::setFloatA(String key, float_t value, size_t size) {
+    error("TODO");
+}
 
+
+
+// ************************************************************************** //
+String TKey::print() {
+    String ret = "TKey type=" + type + ", key=" + key + ", from=" + from + "\n";
+    std::cout << ret;
+    return (ret);
 }

@@ -23,9 +23,6 @@ class Sequence;
 class Interval;
 
 
-
-
-
 /**
  * This is a class where queries will be constructed
  * Mechanism: TBD

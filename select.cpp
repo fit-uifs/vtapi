@@ -32,7 +32,7 @@ bool Select::whereString(const String& column, const String& value, const String
     }
     else {
         // FIXME: buffer overflow!! use params!
-        where += column + " = \'" + value + "\' AND ";
+        where += column + " = " + String(PQescapeLiteral(connector->conn, value.c_str(), value.length())) + " AND ";
     }
     return true;
 }
@@ -82,8 +82,10 @@ String Select::getQuery() {
    if (limit > 0) {
        query += "\n  LIMIT " + toString(limit);
    }
-   // TODO Tomas: OFFSET
 
+   if (offset > 0) {
+       query += "\n  OFFSET " + toString(offset);
+   }
    query += ";";
    return (query);
 }

@@ -8,6 +8,8 @@
 #ifndef INTERNALS_H
 #define	INTERNALS_H
 
+#include <typeinfo>
+#include <iostream>
 #include <fstream>
 #include <vector>
 #include <sstream>
@@ -21,10 +23,9 @@ typedef std::string String;
 #define BUFFERSize 255
 
 // be nice while destructing
-#define destruct(v) if (v) { free(v); (v) = NULL; }
+#define destruct(v) if (v) { delete(v); (v) = NULL; }
+#define destructall(v) if (v) { delete[](v); (v) = NULL; }
 #define boolStr(b) ((b) ? "true" : "false")
-
-
 
 
 /**
@@ -204,6 +205,7 @@ protected:
 };
 
 
+
 /**
  * A generic function to convert any numeric type to string
  * (any numeric type, e.g. int, float, double, etc.)
@@ -217,5 +219,79 @@ inline String toString(const T& t) {
     return strstr.str();
 };
 
+
+/**
+ * Just for the feeling (and vectors, of course)
+ */
+class TKey {
+public:
+    String type;
+    String key;
+    String from;
+
+    TKey() {};
+    TKey(const String& type, const String& key, const String& from = "")
+            : type(type), key(key), from(from) {};
+
+    String print();
+};
+
+/**
+ * A generic class for storing a single keyvalue type
+ * It uses memcopy to maintain the object data - you can delete yours
+ * WARNING: use PDOs only ... @see http://en.wikipedia.org/wiki/Plain_old_data_structure
+ *
+ * @see http://www.cplusplus.com/doc/tutorial/templates/
+ * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
+ * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
+ */
+template <class T>
+class TKeyValue : public TKey {
+protected:
+    /** This attribute is there for validation */
+    String typein;
+
+public:
+    int size;
+    T* values;
+
+    TKeyValue() : TKey(), size(0), values(NULL) {};
+    TKeyValue(const String& type, const String& key, const T& value, const String& from = "")
+            : TKey(type, key, from), size(1) {
+        values = new T[1];
+        values[0] = value;
+        typein = typeid(this->values).name();
+    }
+    TKeyValue (const String& type, const String& key, const T* values, const size_t size, const String& from = "")
+            : TKey(type, key, size, from), size(size) {
+        this->values = new T[this->size];
+        memcpy(this->values, values, size*sizeof(values));
+        typein = typeid(values).name();
+    }
+
+    ~TKeyValue () {
+        destructall(values);
+    }
+
+    String print();
+};
+
+
+// FIXME: tohle kdyz dam jinam, tak je to v haji - proc?
+template <class T>
+String TKeyValue<T>::print() {
+    String ret = "TKeyValue<" + String(typeid(values).name()) + "> type=" + type +
+            ", key=" + key + ", from=" + from + ", size=" + toString(size) + ", values=\n";
+    if (values && size > 0) {
+        for(int i=0; i < size; ++i) {
+            ret += toString(values[i]) + ", ";
+        }
+    }
+    else ret += "NULL  ";
+    ret = ret.erase(ret.length()-2) + "\n";
+
+    std::cout << ret;
+    return (ret);
+}
 
 #endif	/* INTERNALS_H */

@@ -27,6 +27,9 @@ extern "C" {
  * This function should probably be removed sometime since psql
  * doesn't use it anymore. It is unclear to what extent this is used
  * by external clients, however.
+ *
+ * TODO Vojta? Tiskne to spatne, obcas nic... see test;
+ * TODO Vojta? Asi bychom meli udelat vlastni, aby tam byly videt i ty typy
  */
 void
 vtPQprint(FILE *fout, const PGresult *res, const PQprintOpt *po, const int pTuple);

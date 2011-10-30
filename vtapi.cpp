@@ -175,31 +175,43 @@ String VTApi::getWord(String& line) {
 
 
 void VTApi::test() {
-    cout << "Testing generic functions:" << endl;
-    cout << "  32156(.7) toString: " << toString(32156) << " " <<  toString(32156.7) << endl;
+    cout << "TESTING generic classes:" << endl;
+    TKeyValue<float> tkvf ("float", "number", 32156.7, "test");
+    cout << "TKeyValue<float> tkvf (32156.7) ... typeid: " << typeid(tkvf).name() << endl;
+    tkvf.print();
+
+    cout << "std::vector<TKey*> ..." << endl;
+    std::vector<TKey*> v;
+    v.push_back(&tkvf);
+    TKey* kv2 = new  TKeyValue<String> ("varchar", "string", "whatever", "test");
+    v.push_back(kv2);
+    for (int i = 0; i < v.size(); ++i) (v[i])->print();
+    cout << "static_cast< TKeyValue<float>* >(v[0]);" << endl;
+    TKeyValue<float>* tkfc = static_cast< TKeyValue<float>* >(v[0]);
+    tkfc->print();
     cout << endl;
 
-    cout << "Testing  Dataset" << endl;
+    cout << "TESTING  Dataset" << endl;
     Dataset* dataset = this->newDataset();
     dataset->next();
     dataset->printRes(dataset->select->res);
-    // FIXME: jaktoze to nebere dedicnost???
 
     cout << endl;
-    cout << "Testing Sequence" << endl;
-    cout << "Using dataset " << dataset->getDataset() << endl;
+    cout << "TESTING Sequence" << endl;
+    cout << "USING dataset " << dataset->getDataset() << endl;
 
     Sequence* sequence = dataset->newSequence();
     sequence->next();
     sequence->printRes(sequence->select->res);
 
     cout << endl;
-    cout << "Testing Interval" << endl;
-    cout << "Using sequence " << sequence->getSequence() << endl;
-
+    cout << "TESTING Interval" << endl;
+    cout << "USING sequence " << sequence->getSequence() << endl;
+    
     Interval* interval = sequence->newInterval();
     interval->select->limit = 10;
     interval->next();
+    cout << "// FIXME: PQprint is deprecated" << endl;
     interval->print();
 }
 

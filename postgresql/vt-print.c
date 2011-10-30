@@ -397,7 +397,7 @@ vtPQprint(FILE *fout, const PGresult *res, const PQprintOpt *po, const int pTupl
 					fout = stdout;
 			}
 		}
-
+// TODO Vojta: just like P3k below (for the standard format)
 		if (!po->expanded && (po->align || po->html3))
 		{
 			if (!(fields = (char **) calloc(nFields * (nTups + 1), sizeof(char *))))
@@ -505,7 +505,13 @@ vtPQprint(FILE *fout, const PGresult *res, const PQprintOpt *po, const int pTupl
 				free(border);
 		}
 		if (po->header && !po->html3)
-			fprintf(fout, "(%d row%s)\n\n", PQntuples(res),
+/* P3k: added an ability to print a single tuple only */
+                    if (pTuple > -1) {
+                        fprintf(fout, "(1 of %d row%s)\n\n", PQntuples(res),
+					(PQntuples(res) == 1) ? "" : "s");                    }
+                    else
+/* P3k: until here */
+                        fprintf(fout, "(%d row%s)\n\n", PQntuples(res),
 					(PQntuples(res) == 1) ? "" : "s");
 		free(fieldMax);
 		free(fieldNotNum);
