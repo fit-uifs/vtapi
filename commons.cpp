@@ -168,6 +168,7 @@ Commons::Commons(const Commons& orig) {
     process   = orig.process;
     selection = orig.selection;
 
+    dscontext = orig.dscontext;
     doom      = true;       // won't destroy the connector and logger
 }
 
@@ -196,13 +197,18 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
     // FIXME: proc je mozna nastavit vice datasetu? (i vseho ostatniho)
     // protoze jsem to tak dal ve vtapi.ggo (argument je multiple) --Vojta
     // FIXME Vojta: hmm a ma to vyznam? mohlo by to nekoho mast, kdyz to dal nepouzivame... resp. budem?
+    // takto to ma pouziti jako omezeni kontextu pro selecty atp. -- Vojta
+    // pak bude asi zbytecne plnit tyhle promenne dataset, sequence tady v konstruktoru...
+    for (int i = 0; i < args_info.dataset_given; i++)
+        dscontext.insert(String(args_info.dataset_arg[i]));
+/*
     dataset   = String(args_info.dataset_arg[0]);
     sequence  = String(args_info.sequence_arg[0]);
     interval  = String(args_info.interval_arg[0]);
     method    = String(args_info.method_arg[0]);
     process   = String(args_info.process_arg[0]);
     selection = String(args_info.selection_arg[0]);
-
+*/
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 }
 
@@ -230,8 +236,8 @@ void Commons::error(const String& logline) {
     exit(1);
 }
 
-void Commons::error(int errno, const String& logline) {
-    logger->log("ERROR " + toString(errno) + "! " + logline);
+void Commons::error(int errnum, const String& logline) {
+    logger->log("ERROR " + toString(errnum) + "! " + logline);
     exit(1);
 }
 
@@ -239,8 +245,8 @@ void Commons::warning(const String& logline) {
     logger->log("ERROR! " + logline);
 }
 
-void Commons::warning(int errno, const String& logline) {
-    logger->log("WARNING " + toString(errno) + ": " + logline);
+void Commons::warning(int errnum, const String& logline) {
+    logger->log("WARNING " + toString(errnum) + ": " + logline);
 }
 
 
@@ -253,6 +259,10 @@ String Commons::getDataset() {
 String Commons::getSequence() {
     if (sequence.empty()) warning(153, "No sequence specified");
     return (sequence);
+}
+String Commons::getSelection() {
+    if (selection.empty()) warning(155, "No selection specified");
+    return selection;
 }
 
 void Commons::printRes(PGresult* res, const String& format) {

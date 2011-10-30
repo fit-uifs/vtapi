@@ -635,6 +635,7 @@ protected:
 
     bool interact;
     String getWord(String& line);
+    String getCSV(String& word);
     std::pair<String,String> createParam(String word);
 };
 

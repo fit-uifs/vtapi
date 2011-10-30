@@ -97,21 +97,31 @@ int VTApi::run() {
         }
         // select
         else if (command.compare("select") == 0) {
-            Dataset* ds = this->newDataset();
+            Dataset* ds = this->newDataset("sel");
+            std::set<String>::iterator dsit;
 
             String input;
             // what to select
             input = getWord(line);
             std::map<String,String> params;
-            // get select params
-            while (!line.empty()) params.insert(createParam(getWord(line)));
-
+            // get select params and dataset context
+            while (!line.empty()) {
+                std::pair<String,String> param = createParam(getWord(line));
+                if (param.first.compare("datasets") == 0) {
+                    while (!param.second.empty())
+                        ds->dscontext.insert(getCSV(param.second));
+                }
+                else params.insert(param);
+            }
+            // no datasets specified
+            if (ds->dscontext.empty()) commons->warning(303, "No datasets specified");
+            // insert dataset
             if (!input.compare("dataset")) {
                 ds->select->where.clear();
                 ds->select->whereString("dsname", params["name"]);
                 ds->select->whereString("dslocation", params["location"]);
                 ds->next();
-                ds->print();
+                ds->printAll();
             }
             else if (!input.compare("sequence")) {
                 Sequence* seq = ds->newSequence();
@@ -121,8 +131,14 @@ int VTApi::run() {
                 //seq->select->whereInt("seqnum", atoi(params["seqnum"]));
                 seq->select->whereString("seqlocation", params["location"]);
                 seq->select->whereString("seqtyp", params["seqtype"]);
-                seq->next();
-                seq->print();
+                // TODO: join tables, don't iterate?
+                for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
+                    seq->position = -1;
+                    seq->select->fromList.clear();
+                    seq->select->from(String((*dsit) + ".sequences"), "*");
+                    seq->next();
+                    seq->printAll();
+                }
             }
             else if (!input.compare("interval")) {
                 Interval* in = ds->newSequence()->newInterval();
@@ -132,8 +148,15 @@ int VTApi::run() {
                 //in->select->whereInt(t1, params["t1"]);
                 //in->select->whereInt(t1, params["t1"]);
                 in->select->whereString("imglocation", params["location"]);
-                in->next();
-                in->print();
+                // TODO: join tables, don't iterate?
+                for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
+                    in->position = -1;
+                    in->select->fromList.clear();
+                    in->select->from(String((*dsit) + "." + in->getSelection()), "*");
+                    in->next();
+                    in->printAll();
+                }
+                
             }
             else if (!input.compare("process")) {
                 Process* pr = new Process(*ds);
@@ -142,16 +165,28 @@ int VTApi::run() {
                 pr->select->whereString("mtname", params["method"]);
                 pr->select->whereString("inputs", params["inputs"]);
                 pr->select->whereString("outputs", params["outputs"]);
-                pr->next();
-                pr->print();
+                // TODO: join tables, don't iterate?
+                for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
+                    pr->position = -1;
+                    pr->select->fromList.clear();
+                    pr->select->from(String((*dsit) + ".processes"), "*");
+                    pr->next();
+                    pr->printAll();
+                }
             }
             else if (!input.compare("method")) {
                 Method* me = new Method(*ds);
                 //TODO: methodkeys not implemented yet
                 me->select->where.clear();
                 me->select->whereString("mtname", params["name"]);
-                me->next();
-                me->printAll();
+                // TODO: join tables, don't iterate?
+                for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
+                    me->position = -1;
+                    me->select->fromList.clear();
+                    me->select->from(String((*dsit) + ".methods"), "*");
+                    me->next();
+                    me->printAll();
+                }
             }
 
         }
@@ -180,7 +215,7 @@ int VTApi::run() {
         else if (command.compare("test") == 0) {
             this->test();
         }
-        else cout << "ERROR: unknown command: " << command << endl;
+        else commons->warning("Unknown command");
 
         line.clear();
     }
@@ -242,7 +277,21 @@ String VTApi::getWord(String& line) {
 
     return word;
 }
+/**
+ * Cuts first comma-separated value from string
+ * @param word CSV string
+ * @return first CSV
+ */
+String VTApi::getCSV(String& word) {
+    String csv;
+    size_t pos = word.find(",", 0);
 
+    csv = word.substr(0, pos);
+    if (pos != string::npos && pos+1 < word.length())
+        word = word.substr(pos+1, string::npos);
+    else word.clear();
+    return csv;
+}
 
 
 
