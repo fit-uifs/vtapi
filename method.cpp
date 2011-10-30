@@ -19,6 +19,9 @@ Method::Method(const Dataset& orig) : KeyValues(orig) {
     //    res = PQexecf(getConnector()->getConn(), String("SELECT * FROM public.methods;").c_str());
     //      res = PQexecf(getConnector()->getConnection(), String("SELECT * FROM public.methods_keys WHERE mtname = '" + methodName + "'"));
     methodkeys = new MethodKeys(orig);
+    
+    select = new Select(*this);
+    select->from("methods", "*");
 }
 
 Method::Method(const Method& orig) : KeyValues(orig) {

@@ -22,6 +22,8 @@ Process::Process(const Dataset& orig) : KeyValues(orig) {
                                                             " LEFT JOIN pg_catalog.pg_class PA2 ON P.outputs::regclass = PA2.relfilenode "
                                                            ).c_str());
  */
+    select = new Select(*this);
+    select->from("processes", "*");
 }
 
 Process::Process(const Process& orig) : KeyValues(orig) {
