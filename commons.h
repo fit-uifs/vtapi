@@ -241,6 +241,8 @@ public:
  * It uses memcopy to maintain the object data - you can delete yours
  * WARNING: use PDOs only ... @see http://en.wikipedia.org/wiki/Plain_old_data_structure
  *
+ * You can use size=0 for NULL :)
+ *
  * @see http://www.cplusplus.com/doc/tutorial/templates/
  * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
  * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
@@ -252,7 +254,7 @@ protected:
     String typein;
 
 public:
-    int size;
+    int size;       // you can use 0 or less for NULL :)
     T* values;
 
     TKeyValue() : TKey(), size(0), values(NULL) {};

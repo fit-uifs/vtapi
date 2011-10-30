@@ -12,8 +12,8 @@
         <itemPath>postgresql/libpqtypes.h</itemPath>
         <itemPath>postgresql/vt-print.h</itemPath>
       </logicalFolder>
-      <itemPath>VTApi.h</itemPath>
       <itemPath>commons.h</itemPath>
+      <itemPath>vtapi.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -34,6 +34,7 @@
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>postgresql/vt-print.c</itemPath>
       </logicalFolder>
+      <itemPath>cli_insert.cpp</itemPath>
       <itemPath>commons.cpp</itemPath>
       <itemPath>dataset.cpp</itemPath>
       <itemPath>insert.cpp</itemPath>

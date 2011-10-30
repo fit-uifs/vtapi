@@ -5,7 +5,7 @@
  * Created on 29. září 2011, 10:54
  */
 
-#include "VTApi.h"
+#include "vtapi.h"
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>

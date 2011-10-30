@@ -41,6 +41,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/cli_settings.o \
+	${OBJECTDIR}/cli_insert.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/methodkeys.o \
@@ -112,6 +113,11 @@ ${OBJECTDIR}/cli_settings.o: cli_settings.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_settings.o cli_settings.cpp
+
+${OBJECTDIR}/cli_insert.o: cli_insert.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_insert.o cli_insert.cpp
 
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}

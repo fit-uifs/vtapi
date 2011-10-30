@@ -5,7 +5,7 @@
  * Created on 29. září 2011, 10:53
  */
 
-#include "VTApi.h"
+#include "vtapi.h"
 
 Sequence::Sequence(const KeyValues& orig, const String& name) : KeyValues(orig) {
     if (!name.empty()) this->sequence = name;

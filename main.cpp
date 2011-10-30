@@ -13,7 +13,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 #include "cli_settings.h"
-#include "VTApi.h"
+#include "vtapi.h"
 
 using namespace std;
 

@@ -5,7 +5,7 @@
  * Created on 29. září 2011, 10:52
  */
 
-#include "VTApi.h"
+#include "vtapi.h"
 #include "postgresql/libpqtypes.h"
 #include <cstdlib>
 #include <iostream>

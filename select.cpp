@@ -5,7 +5,7 @@
  * Created on 18. October 2011, 9:50
  */
 
-#include "VTApi.h"
+#include "vtapi.h"
 #include <iostream>
 
 // Select::Select() { }
@@ -17,13 +17,13 @@ Select::~Select() {
     PQclear(res);
 }
 
-
+// FIXME: tohle se musi predelat na TKey
 bool Select::from(const String& table, const String& column) {
     fromList.insert( std::pair<String, String>(table, column) );
     return true;
 }
 
-// FIXME: tohle se musi predelat jakoze struktura, ktera vyuziva fromList
+// FIXME: tohle se musi predelat na TKeyValue
 bool Select::whereString(const String& column, const String& value, const String& table) {
     if (value.empty()) return false;
 

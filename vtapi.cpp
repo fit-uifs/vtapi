@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include "cli_settings.h"
-#include "VTApi.h"
+#include "vtapi.h"
 
 
 using namespace std;
@@ -104,14 +104,14 @@ int VTApi::run() {
             String input;
             input = getWord(line);
 
-            Insert* insert = new Insert(new Dataset(*this->commons));
+            CLIInsert* insert = new CLIInsert(new Dataset(*this->commons));
             while (!line.empty()) insert->addParam(getWord(line));
 
-            if (!input.compare("dataset")) insert->setType(Insert::DATASET);
-            else if (!input.compare("sequence")) insert->setType(Insert::SEQUENCE);
-            else if (!input.compare("interval")) insert->setType(Insert::INTERVAL);
-            else if (!input.compare("process")) insert->setType(Insert::PROCESS);
-            else if (!input.compare("method")) insert->setType(Insert::METHOD);
+            if (!input.compare("dataset")) insert->setType(CLIInsert::DATASET);
+            else if (!input.compare("sequence")) insert->setType(CLIInsert::SEQUENCE);
+            else if (!input.compare("interval")) insert->setType(CLIInsert::INTERVAL);
+            else if (!input.compare("process")) insert->setType(CLIInsert::PROCESS);
+            else if (!input.compare("method")) insert->setType(CLIInsert::METHOD);
 
             insert->execute();
         }

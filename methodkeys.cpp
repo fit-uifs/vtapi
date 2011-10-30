@@ -6,8 +6,8 @@
  */
 
 
-// TODO Tomas: odstranit tento soubor, konzultace nutna
-#include "VTApi.h"
+// TODO Tomas: odstranit tento soubor, predelat na TKey
+#include "vtapi.h"
 
 MethodKeys::MethodKeys(const Dataset& orig) : KeyValues(orig) {
 }
