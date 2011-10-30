@@ -1,5 +1,5 @@
 /*
- * File:   select.cpp
+ * File:   query.cpp
  * Author: chmelarp
  *
  * Created on 18. October 2011, 9:50
@@ -8,9 +8,36 @@
 #include "vtapi.h"
 #include <iostream>
 
+
+
+Query::Query(const Commons& commons, const String& query, PGparam* param)
+      : Commons(commons), queryString(query), param(param) {
+}
+
+Query::~Query() {
+    PQparamClear(param);
+}
+
+String Query::getQuery() {
+    warning(201, "Query is a virtual class... probably won't get what wanted");
+    return queryString;
+}
+
+bool Query::prepare() {
+    warning(201, "Query is a virtual class... probably won't get what wanted");
+    return false;
+}
+
+bool Query::execute() {
+    warning(201, "Query is a virtual class... probably won't get what wanted");
+    return false;
+}
+
+
+// ************************************************************************** //
 // Select::Select() { }
 Select::Select(const Commons& commons, const String& queryString, PGparam* param)
-       : Commons(commons), res(NULL), limit(0), offset(0), param(NULL) {
+       : Query(commons, queryString, param), res(NULL), limit(0), offset(0) {
 }
 
 Select::~Select() {

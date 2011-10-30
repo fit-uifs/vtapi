@@ -85,7 +85,7 @@ Connector::Connector(const String& connectionInfo, Logger* logger) {
 
     conn = NULL;
     if (!reconnect(connectionInfo)) {
-        logger->log("ERROR 201! The connection couldn't been established.");
+        logger->log("ERROR 121! The connection couldn't been established.");
         exit(1);
     }
 }
@@ -102,7 +102,7 @@ bool Connector::reconnect(const String& connectionInfo) {
     conn = PQconnectdb(conninfo.c_str());
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log("WARNING 202:" + String(PQerrorMessage(conn)));
+        logger->log("WARNING 122:" + String(PQerrorMessage(conn)));
         return false;
     }
 
@@ -116,7 +116,7 @@ bool Connector::connected() {
     bool success = false;
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log("WARNING 205!" + String(PQerrorMessage(conn)));
+        logger->log("WARNING 125!" + String(PQerrorMessage(conn)));
         return success = false;
     }
 
@@ -128,7 +128,7 @@ bool Connector::connected() {
                           0, &text);    // 0th text field
 
     if(!success) {
-        logger->log("WARNING 206!" + String(PQgeterror()));
+        logger->log("WARNING 126!" + String(PQgeterror()));
         PQfinish(conn);
     } else {
         logger->log(text);
@@ -236,8 +236,8 @@ void Commons::error(const String& logline) {
     exit(1);
 }
 
-void Commons::error(int errno, const String& logline) {
-    logger->log("ERROR " + toString(errno) + "! " + logline);
+void Commons::error(int errnum, const String& logline) {
+    logger->log("ERROR " + toString(errnum) + "! " + logline);
     exit(1);
 }
 
@@ -245,8 +245,8 @@ void Commons::warning(const String& logline) {
     logger->log("ERROR! " + logline);
 }
 
-void Commons::warning(int errno, const String& logline) {
-    logger->log("WARNING " + toString(errno) + ": " + logline);
+void Commons::warning(int errnum, const String& logline) {
+    logger->log("WARNING " + toString(errnum) + ": " + logline);
 }
 
 

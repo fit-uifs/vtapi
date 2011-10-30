@@ -293,6 +293,9 @@ String VTApi::getCSV(String& word) {
     return csv;
 }
 
+
+
+// ************************************************************************** //
 void VTApi::test() {
     cout << "TESTING generic classes:" << endl;
     TKeyValue<float> tkvf ("float", "number", 32156.7, "test");
@@ -304,12 +307,19 @@ void VTApi::test() {
     v.push_back(&tkvf);
     TKey* kv2 = new  TKeyValue<String> ("varchar", "string", "whatever", "test");
     v.push_back(kv2);
-    for (int i = 0; i < v.size(); ++i) (v[i])->print();
-    cout << "static_cast< TKeyValue<float>* >(v[0]);" << endl;
-    TKeyValue<float>* tkfc = static_cast< TKeyValue<float>* >(v[0]);
-    tkfc->print();
-    cout << endl;
+    
+    char* chs[] = {"1", "2", "3", "ctyri", "5"};
+    TKeyValue<char*> tki ("varchar[]", "array", chs, 5);
+    v.push_back(&tki);
 
+    for (int i = 0; i < v.size(); ++i) (v[i])->print();
+
+    cout << "static_cast< TKeyValue<char*>* >(v[2]);" << endl;
+    TKeyValue<char*>* tkic = static_cast< TKeyValue<char*>* >(v[2]);
+    tkic->print();
+    cout << endl << endl;
+
+    // dataset usw.
     cout << "TESTING  Dataset" << endl;
     Dataset* dataset = this->newDataset();
     dataset->next();

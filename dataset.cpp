@@ -14,7 +14,7 @@ Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
         dataset = name;
     }
     if (dataset.empty()) {
-        warning(303, "No dataset specified");
+        warning(313, "No dataset specified");
     }
 
     select = new Select(*this);

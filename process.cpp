@@ -26,9 +26,6 @@ Process::Process(const Dataset& orig) : KeyValues(orig) {
     select->from("processes", "*");
 }
 
-Process::Process(const Process& orig) : KeyValues(orig) {
-}
-
 Process::~Process() {
 }
 
@@ -44,11 +41,3 @@ String Process::getOutputs() {
     return this->getString("outputs");
 }
 
-void Process::printProcesses() {
-    cout << left;
-    cout << setw(20) << "Process" << setw(20) << "Inputs" << setw(20)<< "Outputs" << endl;
-    for (int i = 0; i < PQntuples(select->res); i++) {
-        this->next();
-        cout << setw(20) << this->getPrsname() << setw(20) << this->getInputs() << setw(20) << this->getOutputs() << endl;
-    }
-}
