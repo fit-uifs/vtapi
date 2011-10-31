@@ -9,6 +9,7 @@
 #define	INTERNALS_H
 
 #include <typeinfo>
+#include <map>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -184,6 +185,10 @@ public:
     String getSequence();
     String getSelection();
     std::set<String> dscontext;
+   
+    void registerTypes();
+    int getOidFromTypname(const String& typname);
+    String getTypnameFromOid(const int oid);
     
 protected:
     Connector* connector; // this was most probably inherited
@@ -207,6 +212,9 @@ protected:
     String selection;
 
     bool doom; // every derived class will have +1 = (true :)
+
+    std::map<int, String> oid2typname;
+    std::map<String, int> typname2oid;
 };
 
 

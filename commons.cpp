@@ -9,10 +9,12 @@
 
 #include "postgresql/libpqtypes.h"
 #include "postgresql/vt-print.h"
+#include "vtapi.h"
 
 #include <iostream>
 #include <fstream>
 #include <stdlib.h>
+#include <map>
 
 
 /* ************************************************************************** */
@@ -303,3 +305,33 @@ void Commons::printRes(PGresult* res, int pTuple, const String& format) {
     vtPQprint(stdout, res, &opt, pTuple);
 }
 
+void Commons::registerTypes() {
+    if (this->oid2typname.empty() || this->typname2oid.empty()) {
+        this->oid2typname.clear();
+        this->typname2oid.clear();
+
+        int oid;
+        String typname;
+        KeyValues* kv = new KeyValues(*this);
+        kv->select = new Select(*this);
+        kv->select->from("pg_catalog.pg_type", "oid, typname");
+        
+        while (kv->next()) {
+            oid = kv->getOid("oid");
+            typname = kv->getName("typname");
+            this->oid2typname[oid] = typname;
+            this->typname2oid[typname] = oid;
+        }        
+    }
+
+}
+
+String Commons::getTypnameFromOid(const int oid) {
+    this->registerTypes();
+    return this->oid2typname[oid];
+}
+
+int Commons::getOidFromTypname(const String& typname) {
+    this->registerTypes();
+    return this->typname2oid[typname];
+}

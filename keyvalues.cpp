@@ -295,6 +295,26 @@ float* KeyValues::getFloatA(int position, int& size) {
     return values;
 }
 
+String KeyValues::getName(String key) {
+    PGtext value = (PGtext) "";
+
+    PQgetf(select->res, this->pos, "#name", key.c_str(), &value);
+
+    if (value == NULL) {
+        value = (PGtext) "";
+    }
+
+    return (String) value;
+}
+
+int KeyValues::getOid(String key) {
+    PGint4 value;
+
+    PQgetf(select->res, this->pos, "#oid", key.c_str(), &value);
+
+    return (int) value;
+}
+
 
 // !!!!!! TODO SETS TODO !!!!!!!
 // TODO: mozna by se dalo premyslet o PQsetvalue
