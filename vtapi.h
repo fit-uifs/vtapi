@@ -477,9 +477,6 @@ protected:
  * Error codes 35*
  */
 class Method : public KeyValues {
-private:
-    std::vector<TKey> methodkeys;
-
 public:
     Method(const KeyValues& orig, const String& name = "");
     virtual ~Method();
@@ -490,7 +487,10 @@ public:
 
     Process* newProcess(const String& name = "");
 
-    // TODO:
+    // TODO Tomas: naplnit
+    std::vector<TKey> getMethodKeys();
+    std::vector<TKey> methodKeys;
+
 private:
     void printData(const String& inout);
 };
