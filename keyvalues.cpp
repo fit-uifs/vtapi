@@ -80,41 +80,15 @@ void KeyValues::printAll() {
     else warning(303, "There is nothing to print (see other messages)");
 }
 
+
+
 /**
  * Get string value specified by column key
  * @param key column key
  * @return string value
  */
 String KeyValues::getString(String key) {
-    PGtext value;
-
-    // Several data types are other representation of string, so we must catch all of them
-    switch (PQftype(select->res, PQfnumber(select->res, key.c_str()))) {
-        case TEXTOID:
-                PQgetf(select->res, this->pos, "#text", key.c_str(), &value);
-            break;
-        case NAMEOID:
-                PQgetf(select->res, this->pos, "#name", key.c_str(), &value);
-            break;
-        case VARCHAROID:
-                PQgetf(select->res, this->pos, "#varchar", key.c_str(), &value);
-            break;
-        case BYTEAOID:
-                PQgetf(select->res, this->pos, "#bytea", key.c_str(), &value);
-            break;
-        case BPCHAROID:
-                PQgetf(select->res, this->pos, "#bpchar", key.c_str(), &value);
-            break;
-        default:
-                error(304, "Value is not a string");
-            break;
-    }
-
-    if (value == NULL) {
-        value = (PGtext) "";
-    }
-    
-    return (String) value;
+    return this->getString(PQfnumber(select->res, key.c_str()));
 }
 
 /**
@@ -122,28 +96,29 @@ String KeyValues::getString(String key) {
  * @param pos index of column
  * @return string value
  */
-String KeyValues::getString(int pos) {
+String KeyValues::getString(int position) {
     PGtext value = (PGtext) "";
 
     // Several data types are other representation of string, so we must catch all of them
-    switch (PQftype(select->res, pos)) {
+    switch (PQftype(select->res, position)) {
         case TEXTOID:
-                PQgetf(select->res, this->pos, "%text", pos, &value);
+                PQgetf(select->res, this->pos, "%text", position, &value);
             break;
         case NAMEOID:
-                PQgetf(select->res, this->pos, "%name", pos, &value);
+                PQgetf(select->res, this->pos, "%name", position, &value);
             break;
         case VARCHAROID:
-                PQgetf(select->res, this->pos, "%varchar", pos, &value);
+                PQgetf(select->res, this->pos, "%varchar", position, &value);
             break;
         case BYTEAOID:
-                PQgetf(select->res, this->pos, "%bytea", pos, &value);
+                PQgetf(select->res, this->pos, "%bytea", position, &value);
             break;
         case BPCHAROID:
-                PQgetf(select->res, this->pos, "%bpchar", pos, &value);
+                PQgetf(select->res, this->pos, "%bpchar", position, &value);
             break;
         default:
-                error(305,"Value is not a string");
+                warning(304,"Value is not a string");
+                this->print();
             break;
     }
 
@@ -162,13 +137,7 @@ String KeyValues::getString(int pos) {
  * @return integer value
  */
 int KeyValues::getInt(String key) {
-    PGint4 value;
-
-    if (! PQgetf(select->res, this->pos, "#int4", key.c_str(), &value)) {
-        error(306, "Value is not an integer");
-    }
-    
-    return (int) value;
+    return this->getInt(PQfnumber(select->res, key.c_str()));
 }
 
 /**
@@ -176,11 +145,12 @@ int KeyValues::getInt(String key) {
  * @param pos index of column
  * @return integer value
  */
-int KeyValues::getInt(int pos) {
+int KeyValues::getInt(int position) {
     PGint4 value;
 
-    if (! PQgetf(select->res, this->pos, "%int4", pos, &value)) {
-        error(307, "Value is not an integer");
+    if (! PQgetf(select->res, this->pos, "%int4", position, &value)) {
+        warning(305, "Value is not an integer");
+        this->print();
     }
     
     return (int) value;
@@ -193,23 +163,7 @@ int KeyValues::getInt(int pos) {
  * @return array of integer values
  */
 int* KeyValues::getIntA(String key, int& size) {
-    PGarray tmp;
-    int* values;
-
-    if (! PQgetf(select->res, this->pos, "#int4[]", key.c_str(), &tmp)) {
-        error(308, "Value is not an array of integer");
-    }
-
-    size = PQntuples(tmp.res);
-    values = new int(size);
-    for (int i = 0; i < size; i++) {
-        if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
-            error(309, "Unexpected value in integer array");
-        }
-    }
-    PQclear(tmp.res);
-
-    return values;
+    return this->getIntA(PQfnumber(select->res, key.c_str()), size);
 }
 
 /**
@@ -218,19 +172,22 @@ int* KeyValues::getIntA(String key, int& size) {
  * @param size size of array of integer values
  * @return array of integer values
  */
-int* KeyValues::getIntA(int pos, int& size) {
+int* KeyValues::getIntA(int position, int& size) {
     PGarray tmp;
     int* values;
 
-    if (! PQgetf(select->res, this->pos, "%int4[]", pos, &tmp)) {
-        error(310, "Value is not an array of integer");
+    if (! PQgetf(select->res, this->pos, "%int4[]", position, &tmp)) {
+        warning(306, "Value is not an array of integer");
+        this->print();
     }
 
     size = PQntuples(tmp.res);
     values = new int(size);
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
-            error(311, "Unexpected value in integer array");
+            warning(307, "Unexpected value in integer array");
+            this->print();
+
         }
     }
     PQclear(tmp.res);
@@ -244,23 +201,7 @@ int* KeyValues::getIntA(int pos, int& size) {
  * @return  array of integer values
  */
 std::vector<int> KeyValues::getIntV(String key) {
-    PGarray tmp;
-    PGint4 value;
-    std::vector<int> values;
-
-    if (! PQgetf(select->res, this->pos, "#int4[]", key.c_str(), &tmp)) {
-        error(312, "Value is not an array of integer");
-    }
-
-    for (int i = 0; i < PQntuples(tmp.res); i++) {
-        if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
-            error(313, "Unexpected value in integer array");
-        }
-        values.push_back(value);
-    }
-    PQclear(tmp.res);
-
-    return values;
+    return this->getIntV(PQfnumber(select->res, key.c_str()));
 }
 
 /**
@@ -268,18 +209,20 @@ std::vector<int> KeyValues::getIntV(String key) {
  * @param pos index of column
  * @return  array of integer values
  */
-std::vector<int> KeyValues::getIntV(int pos) {
+std::vector<int> KeyValues::getIntV(int position) {
     PGarray tmp;
     PGint4 value;
     std::vector<int> values;
 
-    if (! PQgetf(select->res, this->pos, "%int4[]", pos, &tmp)) {
-        error(314, "Value is not an array of integer");
+    if (! PQgetf(select->res, this->pos, "%int4[]", position, &tmp)) {
+        warning(308, "Value is not an array of integer");
+        this->print();
     }
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
-            error(315, "Unexpected value in integer array");
+            warning(309, "Unexpected value in integer array");
+            this->print();
         }
         values.push_back(value);
     }
@@ -295,13 +238,7 @@ std::vector<int> KeyValues::getIntV(int pos) {
  * @return float value
  */
 float KeyValues::getFloat(String key) {
-    PGfloat4 value;
-
-    if (! PQgetf(select->res, this->pos, "#float4", key.c_str(), &value)) {
-        error(316, "Value is not a float");
-    }
-    
-    return (float) value;
+    return this->getFloat(PQfnumber(select->res, key.c_str()));
 }
 
 /**
@@ -309,11 +246,12 @@ float KeyValues::getFloat(String key) {
  * @param pos index of column
  * @return float value
  */
-float KeyValues::getFloat(int pos) {
+float KeyValues::getFloat(int position) {
     PGfloat4 value;
 
-    if (! PQgetf(select->res, this->pos, "%float4", pos, &value)) {
-        error(317, "Value is not a float");
+    if (! PQgetf(select->res, this->pos, "%float4", position, &value)) {
+        warning(310, "Value is not a float");
+        this->print();
     }
 
     return (float) value;
@@ -326,23 +264,7 @@ float KeyValues::getFloat(int pos) {
  * @return array of float values
  */
 float* KeyValues::getFloatA(String key, int& size) {
-    PGarray tmp;
-    float* values;
-
-    if (! PQgetf(select->res, this->pos, "#float4[]", key.c_str(), &tmp)) {
-        error(318, "Value is not an array of float");
-    }
-
-    size = PQntuples(tmp.res);
-    values = new float(size);
-    for (int i = 0; i < size; i++) {
-        if (! PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
-            error(319, "Unexpected value in float array");
-        }
-    }
-    PQclear(tmp.res);
-
-    return values;
+    return this->getFloatA(PQfnumber(select->res, key.c_str()), size);
 }
 
 /**
@@ -351,19 +273,21 @@ float* KeyValues::getFloatA(String key, int& size) {
  * @param size size of array of float values
  * @return array of float values
  */
-float* KeyValues::getFloatA(int pos, int& size) {
+float* KeyValues::getFloatA(int position, int& size) {
     PGarray tmp;
     float* values;
 
-    if (! PQgetf(select->res, this->pos, "%float4[]", pos, &tmp)) {
-        error(320, "Value is not an array of float");
+    if (! PQgetf(select->res, this->pos, "%float4[]", position, &tmp)) {
+        warning(311, "Value is not an array of float");
+        this->print();
     }
 
     size = PQntuples(tmp.res);
     values = new float(size);
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
-            error(321, "Uunexpected value in float array");
+            warning(312, "Unexpected value in float array");
+            this->print();
         }
     }
     PQclear(tmp.res);
