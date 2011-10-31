@@ -133,7 +133,7 @@ int VTApi::run() {
                 seq->select->whereString("seqtyp", params["seqtype"]);
                 // TODO: join tables, don't iterate?
                 for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
-                    seq->position = -1;
+                    seq->pos = -1;
                     seq->select->fromList.clear();
                     seq->select->from(String((*dsit) + ".sequences"), "*");
                     seq->next();
@@ -150,7 +150,7 @@ int VTApi::run() {
                 in->select->whereString("imglocation", params["location"]);
                 // TODO: join tables, don't iterate?
                 for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
-                    in->position = -1;
+                    in->pos = -1;
                     in->select->fromList.clear();
                     in->select->from(String((*dsit) + "." + in->getSelection()), "*");
                     in->next();
@@ -167,7 +167,7 @@ int VTApi::run() {
                 pr->select->whereString("outputs", params["outputs"]);
                 // TODO: join tables, don't iterate?
                 for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
-                    pr->position = -1;
+                    pr->pos = -1;
                     pr->select->fromList.clear();
                     pr->select->from(String((*dsit) + ".processes"), "*");
                     pr->next();
@@ -181,7 +181,7 @@ int VTApi::run() {
                 me->select->whereString("mtname", params["name"]);
                 // TODO: join tables, don't iterate?
                 for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
-                    me->position = -1;
+                    me->pos = -1;
                     me->select->fromList.clear();
                     me->select->from(String((*dsit) + ".methods"), "*");
                     me->next();
@@ -295,7 +295,6 @@ String VTApi::getCSV(String& word) {
 
 
 
-// ************************************************************************** //
 void VTApi::test() {
     cout << "TESTING generic classes:" << endl;
     TKeyValue<float> tkvf ("float", "number", 32156.7, "test");
@@ -317,9 +316,10 @@ void VTApi::test() {
     cout << "static_cast< TKeyValue<char*>* >(v[2]);" << endl;
     TKeyValue<char*>* tkic = static_cast< TKeyValue<char*>* >(v[2]);
     tkic->print();
-    cout << endl << endl;
+    cout << "DONE testing generic classes." << endl;
 
     // dataset usw.
+    cout << endl << endl;
     cout << "TESTING  Dataset" << endl;
     Dataset* dataset = this->newDataset();
     dataset->next();
@@ -331,9 +331,21 @@ void VTApi::test() {
 
     Sequence* sequence = dataset->newSequence();
     sequence->next();
-    sequence->printRes(sequence->select->res);
+    sequence->printAll();
 
-    sequence->add("just_a_test_sequence");
+    cout << "ADDING Sequence " << "just_a_test_sequence" << endl;
+    sequence->add("just_a_test_sequence", "/test_location");
+    sequence->next();
+
+    free(sequence);
+    sequence = dataset->newSequence();
+    sequence->next();   // this can execute and commit (a suicide)
+    sequence->printAll();
+
+    cout << "DELETING Sequence " << "just_a_test_sequence" << endl;
+    Query* query = new Query(*sequence, "DELETE FROM public.sequences WHERE seqname='just_a_test_sequence';");
+    cout << "OK:" << query->execute() << endl;
+    free(query);
 
     cout << endl;
     cout << "TESTING Interval" << endl;
@@ -346,39 +358,3 @@ void VTApi::test() {
     interval->print();
 
 }
-
-/*
-void VTApi::testKeyValues() {
-    cout << "========== BEGIN OF TESTING PART ==========" << endl;
-    Dataset* dataset = newDataset();
-    dataset->next();
-    Sequence* sequence = dataset->newSequence();
-    size_t velikost;
-    Method* method = new Method(*dataset);
-    method->next();
-    method->getOutputData();
-
-    cout << endl;
-
-    Process* process = new Process(*dataset);
-    process->printProcesses();
-
-    cout << "=========== END OF TESTING PART ===========" << endl;
-
-//    Method* method = new Method();
-//    method->next();
-
-    sequence->next();
-    cout << "Sekvence [getInt: seqnum]: " << sequence->getInt("seqnum") << endl;
-    cout << "Sekvence [getString: seqlocation]: " << sequence->getString("seqlocation") << endl;
-    cout << "Sekvence [getString: seqname]: " << sequence->getString("seqname") << endl;
-    Interval* interval = sequence->newInterval();
-    std::vector<int> pole = interval->getIntV(4);
-    cout << "Intervaly [getIntV: #4] - velikost pole " << velikost << ":" << endl;
-
-    for (int i = 0; i < pole.size(); i++) {
-        cout << i << ": " << pole[i] << endl;
-    }
-  
-}*/
-

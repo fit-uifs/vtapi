@@ -25,7 +25,7 @@ typedef std::string String;
 // be nice while destructing
 #define destruct(v) if (v) { delete(v); (v) = NULL; }
 #define destructall(v) if (v) { delete[](v); (v) = NULL; }
-#define boolStr(b) ((b) ? "true" : "false")
+// #define boolStr(b) ((b) ? "true" : "false")
 
 // format: 0=text, 1=binary
 #define PGF 1

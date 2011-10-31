@@ -17,8 +17,8 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=gfortran
-AS=
+FC=
+AS=as
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86
@@ -43,7 +43,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/cli_insert.o \
 	${OBJECTDIR}/process.o \
-	${OBJECTDIR}/methodkeys.o \
 	${OBJECTDIR}/query.o \
 	${OBJECTDIR}/postgresql/vt-print.o \
 	${OBJECTDIR}/dataset.o
@@ -122,11 +121,6 @@ ${OBJECTDIR}/process.o: process.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/process.o process.cpp
-
-${OBJECTDIR}/methodkeys.o: methodkeys.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/methodkeys.o methodkeys.cpp
 
 ${OBJECTDIR}/query.o: query.cpp 
 	${MKDIR} -p ${OBJECTDIR}

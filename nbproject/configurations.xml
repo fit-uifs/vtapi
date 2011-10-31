@@ -42,7 +42,6 @@
       <itemPath>keyvalues.cpp</itemPath>
       <itemPath>main.cpp</itemPath>
       <itemPath>method.cpp</itemPath>
-      <itemPath>methodkeys.cpp</itemPath>
       <itemPath>process.cpp</itemPath>
       <itemPath>query.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>

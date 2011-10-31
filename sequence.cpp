@@ -43,22 +43,11 @@ Interval* Sequence::newInterval() {
 }
 
 
-bool Sequence::add(String name) {
+bool Sequence::add(String name, String location) {
     destruct(insert);
 
     insert = new Insert(*this, "sequences");
     insert->valueString("seqname", name);
-/*
-    PGparam *param = PQparamCreate(connector->conn);
-
-    // Pack one or more parameters into a PGparam.
-    PQputf(param, "%varchar", name.c_str());
-    PQputf(param, "%varchar", "nejake/");
-
-    // Execute a parameterized query.
-    PGresult *res = PQparamExec(connector->conn, param,
-      "INSERT INTO sequences(seqname, location) VALUES ($1, $2)", PGF);
-
-
- */
+    insert->valueString("location", location);
+    // that's all, folks ... continue similarly if needed
 }

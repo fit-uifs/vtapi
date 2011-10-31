@@ -35,7 +35,6 @@ public:
     int size;       // you can use -1 for NULL :)
     String from;
 
-
     TKey() : size(-1) {};
     TKey(const String& type, const String& key, const int size, const String& from = "")
             : type(type), key(key), from(from), size(size) {};
@@ -45,51 +44,8 @@ public:
 
 
 /**
- * A generic class for storing a single keyvalue type
- * It uses std::copy (memcpy) to maintain the object data (except pointer targets)
- * WARNING: use PDOs only ... @see http://en.wikipedia.org/wiki/Plain_old_data_structure
- * WARNING: if you use pointers, you shouldn't free them
- * You can use size=-1 for NULL :)
- *
- * @see http://www.cplusplus.com/doc/tutorial/templates/
- * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
- * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
- */
-template <class T>
-class TKeyValue : public TKey {
-public:
-    /** This attribute is there for validation */
-    String typein;
-    T* values;
-
-    TKeyValue() : TKey(), values(NULL) {};
-    TKeyValue(const String& type, const String& key, const T& value, const String& from = "")
-            : TKey(type, key, 1, from) {
-        values = new T[1];
-        values[0] = value;
-        typein = typeid(this->values).name();
-    }
-    TKeyValue (const String& type, const String& key, const T* values, const int size, const String& from = "")
-            : TKey(type, key, size, from) {
-        this->values = new T[this->size];
-        std::copy(values, values+size, this->values);
-        // memcpy(this->values, values, size*sizeof(values));
-        typein = typeid(values).name();
-    }
-
-    ~TKeyValue () {
-        destructall(values);
-    }
-
-    String print();
-};
-
-
-
-
-/**
  * This is a virtual query class
- * // TODO: It will be used for delayed queries
+ * TODO: It will be used for delayed queries (store())
  * @see http://libpqtypes.esilo.com/
  *
  * Error codes 20*
@@ -105,16 +61,23 @@ public:
      */
     virtual String getQuery();
 
-    virtual bool prepare();
-    virtual bool execute();
-
     /**
-     * This is for (direct) queries
+     * This will commit your query
+     * @return 
      */
-    std::vector<TKey> keyValues;
+    bool execute();
+    // TODO? virtual bool prepare();
 
+    /** This is a flag wheather the query was executed after any change */
+    bool executed;
+
+    /** This is where the keys are stored */
+    std::vector<TKey> keys;
+
+    /** This is used for (direct) queries */
     String queryString;
     PGparam* param;
+    PGresult* res;
 };
 
 /**
@@ -135,9 +98,6 @@ public:
      */
     String getQuery();
 
-    // TODO: necessary?
-    bool prepare() {};
-    bool execute();
     // TODO Tomas: implement
 
     /**
@@ -152,17 +112,17 @@ public:
     bool from(const String& table, const String& column);
     // this is a tuple table and column name
     // TODO: this->from["intervals"] = "*";
-    // FIXME: AS
+    // FIXME: use keys
     std::multimap<String, String> fromList;
 
-    // FIXME: use TKeyValue instead
+    // FIXME: use keys instead
     /**
      * This is a persistent function to add where clauses
-     * It can be called more times as:
+     * It can be called several times as:
      *
      * @param column
      * @param value
-     * @return
+     * @return success
      */
     bool whereString(const String& key, const String& value, const String& table = "");
     bool whereInt(const String& key, const int value, const String& table = "");
@@ -171,8 +131,6 @@ public:
 
     String groupby;
     String orderby;
-
-    PGresult* res;
 
     int limit;
     int offset;
@@ -198,8 +156,24 @@ public:
     bool into(const String& table);
     String intoTable;
 
+    /**
+     * This may be hazardeous for someone...
+     * marked as deprecated, because there is no discouraged mark
+     * @deprecated
+     * @param key
+     * @return success
+     */
     bool keyValue(const TKey& key);
-    // TODO:
+
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times as:
+     *
+     *
+     * @param key
+     * @param value
+     * @return success
+     */
     bool valueString(const String& key, const String& value);
     bool valueStringA(const String& key, const String* values, const int size);
     bool valueInt(const String& key, const int& value);
@@ -212,11 +186,6 @@ public:
      * @return
      */
     String getQuery();
-
-    bool prepare();
-    bool execute();
-
-    PGresult* res;
 };
 
 
@@ -326,6 +295,7 @@ protected:
  */
 class KeyValues : public Commons {
 public:
+    // FIXME: proc jsou tu nutne 2 stejne konstruktory?
     KeyValues(const Commons& orig);
     KeyValues(const KeyValues& orig);
     virtual ~KeyValues();
@@ -348,15 +318,15 @@ public:
 
     int getInt(String key);
     int getInt(int pos);
-    int* getIntA(String key, size_t& size);
-    int* getIntA(int pos, size_t& size);
+    int* getIntA(String key, int& size);
+    int* getIntA(int pos, int& size);
     std::vector<int> getIntV(int pos);
     std::vector<int> getIntV(String key);
 
     float getFloat(String key);
     float getFloat(int pos);
-    float* getFloatA(String key, size_t& size);
-    float* getFloatA(int pos, size_t& size);
+    float* getFloatA(String key, int& size);
+    float* getFloatA(int pos, int& size);
 
     // setters (Update)
     // TODO: overit jestli a jak funguje... jako UPDATE?
@@ -364,20 +334,20 @@ public:
     bool setString(String key, String value);
     bool setInt(String key, String value);
     bool setInt(String key, int value);
-    bool setIntA(String key, int* value, size_t size);
+    bool setIntA(String key, int* value, int size);
     bool setFloat(String key, String value);
     bool setFloat(String key, float value);
-    bool setFloatA(String key, float_t value, size_t size);
+    bool setFloatA(String key, float_t value, int size);
 
     // adders (Insert)
     // TODO: implement
     bool addString(String key, String value);
     bool addInt(String key, String value);
     bool addInt(String key, int value);
-    bool addIntA(String key, int* value, size_t size);
+    bool addIntA(String key, int* value, int size);
     bool addFloat(String key, String value);
     bool addFloat(String key, float value);
-    bool addFloatA(String key, float_t value, size_t size);
+    bool addFloatA(String key, float_t value, int size);
 
 
     // TODO Tomas: u kazde tridy add vytvori objekt te tridy se stejnymi keys, ale bez hodnot a ty se naplni jako set
@@ -386,9 +356,9 @@ public:
      * Select is (to be) pre-filled byt the constructor
      */
     Select* select;
-    Insert* insert;
-    int position;       // initialized to -1 by default
+    int pos;       // initialized to -1 by default
 
+    Insert* insert;
     // some other inherited from Commons
 };
 
@@ -411,7 +381,6 @@ public:
      * @param name
      */
     Dataset(const KeyValues& orig, const String& name = "");
-    Dataset(const Dataset& orig);
     virtual ~Dataset();
 
     /**
@@ -437,7 +406,6 @@ protected:
 class Sequence : public KeyValues {
 public:
     Sequence(const KeyValues& orig, const String& seqname = "");
-    Sequence(const Sequence& orig);
     virtual ~Sequence();
 
     KeyValues* next();
@@ -445,7 +413,7 @@ public:
     String getName();
     String getLocation();
 
-    bool add(String name="");
+    bool add(String name, String location);
 
     Interval* newInterval();
 
@@ -469,7 +437,6 @@ protected:
 class Interval : public KeyValues {
 public:
     Interval(const KeyValues& orig, const String& selection = "intervals");
-    Interval(const Interval& orig);
     virtual ~Interval();
 
     String getSequence();
@@ -490,7 +457,6 @@ protected:
 class Image : public Interval {
 public:
     Image(const KeyValues& orig, const String& selection = "intervals");
-    Image(const Interval& orig);
     virtual ~Image();
 
     int getTime();
@@ -508,7 +474,7 @@ protected:
 /**
  * // TODO: zvazit jestli nechat + komentar nutny
  * // TODO: zvazeno, odstanit a nahradit: vector<TKey> methodKeys;
- */
+ *
 class MethodKeys : public KeyValues {
 public:
     MethodKeys(const Dataset& orig);
@@ -516,17 +482,12 @@ public:
     MethodKeys(const MethodKeys& orig);
     virtual ~MethodKeys();
 
-    /**
-     * TODO: 
-     * @param methodName
-     * @param inout
-     */
     void getMethodKeyData(const String& methodName, const String& inout);
     int getMethodKeyDataSize();
 
     String getKeyname();
     String getTypname();
-};
+};*/
 
 /**
  *
@@ -534,17 +495,15 @@ public:
  */
 class Method : public KeyValues {
 private:
-    MethodKeys* methodkeys;
+    std::vector<TKey> methodkeys;
 
 public:
-    Method(const Dataset& orig);
-    Method(const Method& orig);
+    Method(const KeyValues& orig);
     virtual ~Method();
 
     String getMtname();
 
-    void getInputData();
-    void getOutputData();
+    // TODO:
 private:
     void printData(const String& inout);
 };
@@ -555,8 +514,7 @@ private:
  */
 class Process : public KeyValues {
 public:
-    Process(const Dataset& orig);
-    Process(const Process& orig);
+    Process(const KeyValues& orig);
     virtual ~Process();
 
     String getPrsname();
@@ -639,6 +597,47 @@ protected:
     std::pair<String,String> createParam(String word);
 };
 
+
+// this is just a development branch...
+/**
+ * A generic class for storing a single keyvalue type
+ * It uses std::copy (memcpy) to maintain the object data (except pointer targets)
+ * WARNING: use PDOs only ... @see http://en.wikipedia.org/wiki/Plain_old_data_structure
+ * WARNING: if you use pointers, you shouldn't free them
+ * You can use size=-1 for NULL :)
+ *
+ * @see http://www.cplusplus.com/doc/tutorial/templates/
+ * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
+ * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
+ */
+template <class T>
+class TKeyValue : public TKey {
+public:
+    /** This attribute is there for validation */
+    String typein;
+    T* values;
+
+    TKeyValue() : TKey(), values(NULL) {};
+    TKeyValue(const String& type, const String& key, const T& value, const String& from = "")
+            : TKey(type, key, 1, from) {
+        values = new T[1];
+        values[0] = value;
+        typein = typeid(this->values).name();
+    }
+    TKeyValue (const String& type, const String& key, const T* values, const int size, const String& from = "")
+            : TKey(type, key, size, from) {
+        this->values = new T[this->size];
+        std::copy(values, values+size, this->values);
+        // memcpy(this->values, values, size*sizeof(values));
+        typein = typeid(values).name();
+    }
+
+    ~TKeyValue () {
+        destructall(values);
+    }
+
+    String print();
+};
 
 
 // FIXME: tohle kdyz dam jinam, tak je to v haji - proc?

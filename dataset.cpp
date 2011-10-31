@@ -22,9 +22,6 @@ Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
     select->whereString("dsname", this->dataset);
 }
 
-Dataset::Dataset(const Dataset& orig) : KeyValues(orig) {
-    // TODO: rozhodnout jak se to tu udela
-}
 
 Dataset::~Dataset() {
 }

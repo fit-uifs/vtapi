@@ -8,46 +8,51 @@
 #include "vtapi.h"
 #include <iostream>
 
-
-
 Query::Query(const Commons& commons, const String& query, PGparam* param)
-      : Commons(commons), queryString(query), param(param) {
-    if (!param) param = PQparamCreate(connector->conn);
+: Commons(commons), queryString(query), param(param), res(NULL), executed(false) {
+    if (!param) this->param = PQparamCreate(connector->conn);
 }
 
 Query::~Query() {
+    if (!executed) warning(208, "The query was not executed after the last change\n" + queryString);
+
+    PQclear(res);
     PQparamClear(param);
 }
 
 String Query::getQuery() {
-    warning(201, "Query is a virtual class... probably won't get what wanted");
+    if (queryString.empty()) warning(201, "Query is a virtual class... check whether got what wanted");
     return queryString;
 }
 
-bool Query::prepare() {
-    warning(201, "Query is a virtual class... probably won't get what wanted");
-    return false;
-}
-
 bool Query::execute() {
-    warning(201, "Query is a virtual class... probably won't get what wanted");
-    return false;
+    queryString = this->getQuery();
+
+    if (verbose) logger->debug(queryString);
+    res = PQparamExec(connector->getConn(), param, queryString.c_str(), PGF);
+
+    if (!res) error(200, "Query::execute():\n" + String(PQgeterror()));
+    else executed = true;
+
+    return (res);
 }
 
 
 // ************************************************************************** //
 // Select::Select() { }
 Select::Select(const Commons& commons, const String& queryString, PGparam* param)
-       : Query(commons, queryString, param), res(NULL), limit(0), offset(0) {
+: Query(commons, queryString, param), limit(0), offset(0) {
 }
 
 Select::~Select() {
-    PQclear(res);
 }
 
 // FIXME: tohle se musi predelat na TKey
+
 bool Select::from(const String& table, const String& column) {
-    fromList.insert( std::pair<String, String>(table, column) );
+    fromList.insert(std::pair<String, String > (table, column));
+
+    executed = false;
     return true;
 }
 
@@ -57,11 +62,12 @@ bool Select::whereString(const String& column, const String& value, const String
 
     if (value.compare("NULL") == 0) {
         where += column + " IS NULL ";
-    }
-    else {
+    } else {
         // FIXME: buffer overflow!! use params!
         where += column + " = " + String(PQescapeLiteral(connector->conn, value.c_str(), value.length())) + " AND ";
     }
+
+    executed = false;
     return true;
 }
 
@@ -69,73 +75,58 @@ bool Select::whereString(const String& column, const String& value, const String
 String Select::getQuery() {
     if (fromList.empty()) return queryString; // in case of a direct query
 
-   String query = "SELECT ";
-   String tmpStr = "\n  FROM ";
+    queryString = "SELECT ";
+    String tmpStr = "\n  FROM ";
 
-   // make the SELECT and FROM statement
-   for (std::multimap<String, String>::iterator ii=fromList.begin(); ii!=fromList.end(); ++ii)
-   {
-       // FIXME: kde se to proboha otocilo???
-       String tmpTable = (*ii).first;
-       if (tmpTable.find(".") == String::npos) tmpTable = this->getDataset() + "." + tmpTable;
+    // make the SELECT and FROM statement
+    for (std::multimap<String, String>::iterator ii = fromList.begin(); ii != fromList.end(); ++ii) {
+        String tmpTable = (*ii).first;
+        if (tmpTable.find(".") == String::npos) tmpTable = this->getDataset() + "." + tmpTable;
 
-       query += tmpTable + "." + (*ii).second;
-       if ((*ii).second.compare("*") != 0) query += " AS " + (*ii).second + ", ";
-       else query += ", ";
+        queryString += tmpTable + "." + (*ii).second;
+        if ((*ii).second.compare("*") != 0) queryString += " AS " + (*ii).second + ", ";
+        else queryString += ", ";
 
-       tmpStr += tmpTable + ", ";
-   }
+        tmpStr += tmpTable + ", ";
+    }
 
-   // if there are some fields
-   if (query.length() < 10 || tmpStr.length() < 9)
-       error(201, "Select::getQuery():\n" + query + "\n" + tmpStr);
+    // if there are some fields
+    if (queryString.length() < 10 || tmpStr.length() < 9)
+        error(201, "Select::getQuery():\n" + queryString + "\n" + tmpStr);
 
-   query.erase(query.length()-2);
-   query += tmpStr.erase(tmpStr.length()-2);
+    queryString.erase(queryString.length() - 2);
+    queryString += tmpStr.erase(tmpStr.length() - 2);
 
-   // FIXME: the rest should be done as above + using params...
-   if (!where.empty()) {
-       tmpStr = "\n  WHERE " + where;
-       query += tmpStr.erase(tmpStr.length()-5);
-   }
+    // FIXME: the rest should be done as above + using params...
+    if (!where.empty()) {
+        tmpStr = "\n  WHERE " + where;
+        queryString += tmpStr.erase(tmpStr.length() - 5);
+    }
 
-   if (!groupby.empty()) {
-       query += "\n  GROUP BY " + groupby;
-   }
+    if (!groupby.empty()) {
+        queryString += "\n  GROUP BY " + groupby;
+    }
 
-   if (!orderby.empty()) {
-       query += "\n  ORDER BY " + orderby;
-   }
+    if (!orderby.empty()) {
+        queryString += "\n  ORDER BY " + orderby;
+    }
 
-   if (limit > 0) {
-       query += "\n  LIMIT " + toString(limit);
-   }
+    if (limit > 0) {
+        queryString += "\n  LIMIT " + toString(limit);
+    }
 
-   if (offset > 0) {
-       query += "\n  OFFSET " + toString(offset);
-   }
-   query += ";";
-   return (query);
+    if (offset > 0) {
+        queryString += "\n  OFFSET " + toString(offset);
+    }
+    queryString += ";";
+    return (queryString);
 }
-
-// TODO: zvazit pouziti statement
-bool Select::execute() {
-    String query = this->getQuery();
-    
-    if (verbose) logger->debug(query);
-    res = PQparamExec(connector->getConn(), param, query.c_str(), PGF);
-    // TODO: use params in the getQuery next time
-
-    if (!res) error(210, "Select::execute():\n" + String(PQgeterror()));
-    return (res);
-}
-
 
 
 // ************************************************************************** //
 // Insert::Insert() { }
 Insert::Insert(const Commons& commons, const String& queryString, PGparam* param)
-       : Query(commons, queryString, param) {
+: Query(commons, queryString, param) {
 }
 
 Insert::~Insert() {
@@ -143,27 +134,56 @@ Insert::~Insert() {
 }
 
 bool Insert::into(const String& table) {
-    intoTable = table;      // we can handle only a single table/view at the moment
+    intoTable = table; // we can handle only a single table/view at the moment
     // TODO: check if table exists to return true???
+
+    executed = false;
     return true;
 }
 
 bool Insert::keyValue(const TKey& key) {
-    keyValues.push_back(key);
+    if (key.size > 0) warning("TODO");
+    // keys.push_back(key);
+
+    executed = false;
+    return true;
+}
+
+bool Insert::valueString(const String& key, const String& value) {
+    TKey k("varchar", key, 1);
+    keys.push_back(k);
+    PQputf(param, "%varchar", value.c_str());
+
+    executed = false;
     return true;
 }
 
 String Insert::getQuery() {
-    warning(201, "Query is a virtual class... probably won't get what wanted");
+    if (keys.empty()) return queryString; // in case of a direct query
+
+    // in case we're lazy, we have the table specified in the queryString
+    if (intoTable.empty() && queryString.find("INSERT") == String::npos) intoTable = queryString;
+    
+    // add the dataset selected and escape identifiers
+    if (intoTable.find(".") == String::npos) {
+        intoTable = String(PQescapeIdentifier(connector->conn, this->dataset.c_str(), this->dataset.length())) +
+              "." + String(PQescapeIdentifier(connector->conn, intoTable.c_str(), intoTable.length()));
+    }
+
+    queryString = "INSERT INTO " + intoTable + "(";
+    String tmpStr;
+
+    // go through keys
+    for (int i = 0; i < keys.size(); ++i) {
+        queryString += String(PQescapeIdentifier(connector->conn, keys[i].key.c_str(), keys[i].key.length())) + ", ";
+        tmpStr += "$" + toString(i+1) + ", ";
+    }
+    // this is to remove ending separators
+    queryString.erase(queryString.length()-2);
+    tmpStr.erase(tmpStr.length()-2);
+
+    queryString += ") VALUES(" + tmpStr + ");";
+
     return queryString;
 }
 
-bool Insert::prepare() {
-    warning(201, "Query is a virtual class... probably won't get what wanted");
-    return false;
-}
-
-bool Insert::execute() {
-    warning(201, "Query is a virtual class... probably won't get what wanted");
-    return false;
-}
