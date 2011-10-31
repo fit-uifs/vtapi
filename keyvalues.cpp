@@ -106,7 +106,7 @@ String KeyValues::getString(String key) {
                 PQgetf(select->res, this->pos, "#bpchar", key.c_str(), &value);
             break;
         default:
-                error(304, "Value of key \"" + key + "\" is not a string");
+                error(304, "Value is not a string");
             break;
     }
 
@@ -126,7 +126,7 @@ String KeyValues::getString(int pos) {
     PGtext value = (PGtext) "";
 
     // Several data types are other representation of string, so we must catch all of them
-    switch (PQftype(select->res, PQfnumber(select->res, pos))) {
+    switch (PQftype(select->res, pos)) {
         case TEXTOID:
                 PQgetf(select->res, this->pos, "%text", pos, &value);
             break;
@@ -143,7 +143,7 @@ String KeyValues::getString(int pos) {
                 PQgetf(select->res, this->pos, "%bpchar", pos, &value);
             break;
         default:
-                error(305, "Value of column index #" + pos + " is not a string");
+                error(305,"Value is not a string");
             break;
     }
 
@@ -165,7 +165,7 @@ int KeyValues::getInt(String key) {
     PGint4 value;
 
     if (! PQgetf(select->res, this->pos, "#int4", key.c_str(), &value)) {
-        error(306, "Value of key \"" + key + "\" is not an integer");
+        error(306, "Value is not an integer");
     }
     
     return (int) value;
@@ -180,7 +180,7 @@ int KeyValues::getInt(int pos) {
     PGint4 value;
 
     if (! PQgetf(select->res, this->pos, "%int4", pos, &value)) {
-        error(307, "Value of column index #" + pos + " is not an integer");
+        error(307, "Value is not an integer");
     }
     
     return (int) value;
@@ -197,14 +197,14 @@ int* KeyValues::getIntA(String key, int& size) {
     int* values;
 
     if (! PQgetf(select->res, this->pos, "#int4[]", key.c_str(), &tmp)) {
-        error(308, "Value of key \"" + key + "\" is not an array of integer");
+        error(308, "Value is not an array of integer");
     }
 
     size = PQntuples(tmp.res);
     values = new int(size);
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
-            error(309, "Value of key \"" + key + "\": unexpected value in integer array");
+            error(309, "Unexpected value in integer array");
         }
     }
     PQclear(tmp.res);
@@ -223,14 +223,14 @@ int* KeyValues::getIntA(int pos, int& size) {
     int* values;
 
     if (! PQgetf(select->res, this->pos, "%int4[]", pos, &tmp)) {
-        error(310, "Value of column index #" + pos + "\" is not an array of integer");
+        error(310, "Value is not an array of integer");
     }
 
     size = PQntuples(tmp.res);
     values = new int(size);
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
-            error(311, "Value of column index #" + pos + ": unexpected value in integer array");
+            error(311, "Unexpected value in integer array");
         }
     }
     PQclear(tmp.res);
@@ -249,12 +249,12 @@ std::vector<int> KeyValues::getIntV(String key) {
     std::vector<int> values;
 
     if (! PQgetf(select->res, this->pos, "#int4[]", key.c_str(), &tmp)) {
-        error(312, "Value of key \"" + key + "\" is not an array of integer");
+        error(312, "Value is not an array of integer");
     }
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
-            error(313, "Value of key \"" + key + "\": unexpected value in integer array");
+            error(313, "Unexpected value in integer array");
         }
         values.push_back(value);
     }
@@ -274,12 +274,12 @@ std::vector<int> KeyValues::getIntV(int pos) {
     std::vector<int> values;
 
     if (! PQgetf(select->res, this->pos, "%int4[]", pos, &tmp)) {
-        error(314, "Value of column index #" + pos + "\" is not an array of integer");
+        error(314, "Value is not an array of integer");
     }
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
-            error(315, "Value of column index #" + pos + ": unexpected value in integer array");
+            error(315, "Unexpected value in integer array");
         }
         values.push_back(value);
     }
@@ -298,7 +298,7 @@ float KeyValues::getFloat(String key) {
     PGfloat4 value;
 
     if (! PQgetf(select->res, this->pos, "#float4", key.c_str(), &value)) {
-        error(316, "Value of key \"" + key + "\" is not a float");
+        error(316, "Value is not a float");
     }
     
     return (float) value;
@@ -313,7 +313,7 @@ float KeyValues::getFloat(int pos) {
     PGfloat4 value;
 
     if (! PQgetf(select->res, this->pos, "%float4", pos, &value)) {
-        error(317, "Value of column index #" + pos + " is not a float");
+        error(317, "Value is not a float");
     }
 
     return (float) value;
@@ -330,14 +330,14 @@ float* KeyValues::getFloatA(String key, int& size) {
     float* values;
 
     if (! PQgetf(select->res, this->pos, "#float4[]", key.c_str(), &tmp)) {
-        error(318, "Value of key \"" + key + "\" is not an array of float");
+        error(318, "Value is not an array of float");
     }
 
     size = PQntuples(tmp.res);
     values = new float(size);
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
-            error(319, "Value of key \"" + key + "\": unexpected value in float array");
+            error(319, "Unexpected value in float array");
         }
     }
     PQclear(tmp.res);
@@ -356,14 +356,14 @@ float* KeyValues::getFloatA(int pos, int& size) {
     float* values;
 
     if (! PQgetf(select->res, this->pos, "%float4[]", pos, &tmp)) {
-        error(320, "Value of column index #" + pos + "\" is not an array of float");
+        error(320, "Value is not an array of float");
     }
 
     size = PQntuples(tmp.res);
     values = new float(size);
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
-            error(321, "Value of column index #" + pos + ": unexpected value in float array");
+            error(321, "Uunexpected value in float array");
         }
     }
     PQclear(tmp.res);
