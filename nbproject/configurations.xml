@@ -10,6 +10,7 @@
                      projectFiles="true"
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>postgresql/libpqtypes.h</itemPath>
+        <itemPath>postgresql/pg_type.h</itemPath>
         <itemPath>postgresql/vt-print.h</itemPath>
       </logicalFolder>
       <itemPath>cli.h</itemPath>
@@ -65,7 +66,7 @@
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
-        <platform>2</platform>
+        <platform>3</platform>
       </toolsSet>
       <compileType>
         <ccTool>
