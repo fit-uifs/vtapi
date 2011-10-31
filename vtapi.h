@@ -288,9 +288,6 @@ protected:
 /**
  * KeyValues storage class
  *
- * // FIXME Tomas: predelej ty hromady "cerr << " ... >>
- * // dej tam error nebo warning podle toho jestli koncis nebo ne
- *
  * Errors 30*
  */
 class KeyValues : public Commons {
