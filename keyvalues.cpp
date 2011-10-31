@@ -93,7 +93,7 @@ String KeyValues::getString(String key) {
 
 /**
  * Get string value spevified by index of column
- * @param pos index of column
+ * @param position index of column
  * @return string value
  */
 String KeyValues::getString(int position) {
@@ -142,7 +142,7 @@ int KeyValues::getInt(String key) {
 
 /**
  * Get integer value specified by index of column
- * @param pos index of column
+ * @param position index of column
  * @return integer value
  */
 int KeyValues::getInt(int position) {
@@ -197,7 +197,7 @@ int* KeyValues::getIntA(int position, int& size) {
 
 /**
  * Get vector of integer values specified by column key
- * @param pos index of column
+ * @param key column key
  * @return  array of integer values
  */
 std::vector<int> KeyValues::getIntV(String key) {
@@ -206,7 +206,7 @@ std::vector<int> KeyValues::getIntV(String key) {
 
 /**
  * Get vector of integer values specified by index of column
- * @param pos index of column
+ * @param position index of column
  * @return  array of integer values
  */
 std::vector<int> KeyValues::getIntV(int position) {
@@ -243,7 +243,7 @@ float KeyValues::getFloat(String key) {
 
 /**
  * Get float value specified by index of column
- * @param pos index of column
+ * @param position index of column
  * @return float value
  */
 float KeyValues::getFloat(int position) {
@@ -269,7 +269,7 @@ float* KeyValues::getFloatA(String key, int& size) {
 
 /**
  * Get array of float values specified by index of column
- * @param pos index of column
+ * @param position index of column
  * @param size size of array of float values
  * @return array of float values
  */
