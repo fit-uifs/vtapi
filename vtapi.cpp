@@ -357,4 +357,18 @@ void VTApi::test() {
     cout << "// FIXME: PQprint is deprecated" << endl;
     interval->print();
 
+    // process usw.
+    cout << endl;
+    cout << "TESTING  Method" << endl;
+    Method* method = dataset->newMethod();
+    method->next();
+    method->printAll();
+
+    cout << endl;
+    cout << "TESTING  Process" << endl;
+    Process* process = method->newProcess();
+    process->next();
+    process->printAll();
+
+
 }

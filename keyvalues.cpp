@@ -7,7 +7,7 @@
 
 #include "vtapi.h"
 #include "postgresql/libpqtypes.h"
-#include "postgresql/pg_type.h"
+#include <postgresql/catalog/pg_type.h>
 #include <cstdlib>
 #include <iostream>
 
@@ -29,7 +29,6 @@ String TKey::print() {
 // String TKeyValue<T>::print() {};
 // ************************************************************************** //
 
-// FIXME: proc to nekdy vynecha tento konstruktor???
 KeyValues::KeyValues(const Commons& orig) 
           : Commons(orig), select(NULL), pos(-1), insert(NULL) {
 }
@@ -102,19 +101,19 @@ String KeyValues::getString(int position) {
     // Several data types are other representation of string, so we must catch all of them
     switch (PQftype(select->res, position)) {
         case TEXTOID:
-                PQgetf(select->res, this->pos, "%text", position, &value);
+                PQgetf(select->res, pos, "%text", position, &value);
             break;
         case NAMEOID:
-                PQgetf(select->res, this->pos, "%name", position, &value);
+                PQgetf(select->res, pos, "%name", position, &value);
             break;
         case VARCHAROID:
-                PQgetf(select->res, this->pos, "%varchar", position, &value);
+                PQgetf(select->res, pos, "%varchar", position, &value);
             break;
         case BYTEAOID:
-                PQgetf(select->res, this->pos, "%bytea", position, &value);
+                PQgetf(select->res, pos, "%bytea", position, &value);
             break;
         case BPCHAROID:
-                PQgetf(select->res, this->pos, "%bpchar", position, &value);
+                PQgetf(select->res, pos, "%bpchar", position, &value);
             break;
         default:
                 warning(304,"Value is not a string");

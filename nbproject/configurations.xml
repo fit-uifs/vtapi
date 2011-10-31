@@ -66,10 +66,13 @@
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
-        <platform>3</platform>
+        <platform>2</platform>
       </toolsSet>
       <compileType>
         <ccTool>
+          <incDir>
+            <pElem>/usr/include/postgresql</pElem>
+          </incDir>
           <preprocessorList>
             <Elem>_DEBUG</Elem>
           </preprocessorList>

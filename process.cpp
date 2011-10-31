@@ -13,19 +13,33 @@
 using namespace std;
 
 
-
-Process::Process(const KeyValues& orig) : KeyValues(orig) {
-    select = new Select(*this,
-            "SELECT P.prsname, PA1.relname AS inputs, PA2.relname AS outputs "
+Process::Process(const KeyValues& orig, const String& name) : KeyValues(orig) {
+    String s = "SELECT P.*, PA1.relname AS inputs, PA2.relname AS outputs "
             "  FROM public.processes P "
             "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode "
-            "  LEFT JOIN pg_catalog.pg_class PA2 ON P.outputs::regclass = PA2.relfilenode ");
+            "  LEFT JOIN pg_catalog.pg_class PA2 ON P.outputs::regclass = PA2.relfilenode ";
+    if (!name.empty())
+        s += "  WHERE P.prsname='" + name + "'";
+        
+    select = new Select(*this, s.c_str());
 }
 
 Process::~Process() {
 }
 
-String Process::getPrsname() {
+
+bool Process::next() {
+    KeyValues* kv = ((KeyValues*)this)->next();
+    if (kv) {
+        process = this->getName();
+        selection = this->getOutputs();
+    }
+
+    return kv;
+}
+
+
+String Process::getName() {
     return this->getString("prsname");
 }
 
@@ -37,3 +51,6 @@ String Process::getOutputs() {
     return this->getString("outputs");
 }
 
+Interval* Process::newInterval(const int t1, const int t2) {
+    return new Interval(*this);
+}

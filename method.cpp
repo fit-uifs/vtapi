@@ -14,17 +14,34 @@ using namespace std;
 
 
 
-Method::Method(const KeyValues& orig) : KeyValues(orig) {
+Method::Method(const KeyValues& orig, const String& name) : KeyValues(orig) {
     // TODO: methodkeys = new TKeys(orig);
     
     select = new Select(*this);
     select->from("public.methods", "*");
+    select->whereString("mtname", name);
 }
 
 Method::~Method() {
 }
 
-String Method::getMtname() {
+bool Method::next() {
+    KeyValues* kv = ((KeyValues*)this)->next();
+    if (kv) {
+        this->method = this->getName();
+    }
+
+    return kv;
+}
+
+String Method::getName() {
     return this->getString("mtname");
 }
 
+/**
+ * Create new sequence for current dataset
+ * @return pointer to new sequence
+ */
+Process* Method::newProcess(const String& name) {
+    return (new Process(*this, name));
+}

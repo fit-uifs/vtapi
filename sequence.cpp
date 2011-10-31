@@ -19,7 +19,7 @@ Sequence::Sequence(const KeyValues& orig, const String& name) : KeyValues(orig) 
 Sequence::~Sequence() {
 }
 
-KeyValues* Sequence::next() {
+bool Sequence::next() {
     KeyValues* kv = ((KeyValues*)this)->next();
     if (kv) {
         this->sequence = this->getName();
@@ -38,7 +38,7 @@ String Sequence::getLocation() {
     return this->getString("seqlocation");
 }
 
-Interval* Sequence::newInterval() {
+Interval* Sequence::newInterval(const int t1, const int t2) {
     return new Interval(*this);
 }
 
@@ -47,7 +47,7 @@ bool Sequence::add(String name, String location) {
     destruct(insert);
 
     insert = new Insert(*this, "sequences");
-    insert->valueString("seqname", name);
-    insert->valueString("location", location);
+    insert->keyString("seqname", name);
+    insert->keyString("seqlocation", location);
     // that's all, folks ... continue similarly if needed
 }

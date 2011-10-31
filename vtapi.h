@@ -21,6 +21,8 @@
 class Dataset;
 class Sequence;
 class Interval;
+class Method;
+class Process;
 
 
 /**
@@ -71,12 +73,39 @@ public:
     /** This is a flag wheather the query was executed after any change */
     bool executed;
 
-    /** This is where the keys are stored */
+    /**
+     * This may be hazardeous for someone...
+     * marked as deprecated, because there is no discouraged mark
+     * @deprecated
+     * @param key
+     * @return success
+     */
+    bool keyValue(const TKey& key);
+
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times as:
+     *
+     *
+     * @param key
+     * @param value
+     * @return success
+     */
+    bool keyString(const String& key, const String& value, const String& from = "");
+    bool keyStringA(const String& key, const String* values, const int size, const String& from = "");
+    bool keyInt(const String& key, const int& value, const String& from = "");
+    bool keyIntA(const String& key, const int* values, const int size, const String& from = "");
+    bool keyFloat(const String& key, const float& value, const String& from = "");
+    bool keyFloatA(const String& key, const float* values, const int size, const String& from = "");
+    
+    /** This is where those keys are stored */
     std::vector<TKey> keys;
+    PGparam* param;
 
     /** This is used for (direct) queries */
     String queryString;
-    PGparam* param;
+
+    /** This is where results are (to be) not NULL */
     PGresult* res;
 };
 
@@ -125,8 +154,6 @@ public:
      * @return success
      */
     bool whereString(const String& key, const String& value, const String& table = "");
-    bool whereInt(const String& key, const int value, const String& table = "");
-    bool whereFloat(const String& key, const float value, const String& table = "");
     String where;   // FIXME: see above :(
 
     String groupby;
@@ -155,31 +182,6 @@ public:
      */
     bool into(const String& table);
     String intoTable;
-
-    /**
-     * This may be hazardeous for someone...
-     * marked as deprecated, because there is no discouraged mark
-     * @deprecated
-     * @param key
-     * @return success
-     */
-    bool keyValue(const TKey& key);
-
-    /**
-     * This is a persistent function to add keys (columns) and values
-     * It may be called several times as:
-     *
-     *
-     * @param key
-     * @param value
-     * @return success
-     */
-    bool valueString(const String& key, const String& value);
-    bool valueStringA(const String& key, const String* values, const int size);
-    bool valueInt(const String& key, const int& value);
-    bool valueIntA(const String& key, const int* values, const int size);
-    bool valueFloat(const String& key, const float& value);
-    bool valueFloatA(const String& key, const float* values, const int size);
 
     /**
      * This expands the query, so you can check it before the execution
@@ -387,12 +389,15 @@ public:
      * Over-loading next();
      * @return
      */
-    KeyValues* next();
+    bool next();
 
     String getName();
     String getLocation();
 
     Sequence* newSequence(const String& name = "");
+    Method* newMethod(const String& name = "");
+    Process* newProcess(const String& name = "");
+
 protected:
 
 };
@@ -405,17 +410,18 @@ protected:
  */
 class Sequence : public KeyValues {
 public:
-    Sequence(const KeyValues& orig, const String& seqname = "");
+    Sequence(const KeyValues& orig, const String& name = "");
     virtual ~Sequence();
 
-    KeyValues* next();
+    bool next();
 
     String getName();
     String getLocation();
 
     bool add(String name, String location);
 
-    Interval* newInterval();
+    Interval* newInterval(const int t1 = -1, const int t2 = -1);
+    Process* newProcess(const String& name = "");
 
     cv::Mat getImage();
 
@@ -469,41 +475,25 @@ protected:
 };
 
 
-
-
-/**
- * // TODO: zvazit jestli nechat + komentar nutny
- * // TODO: zvazeno, odstanit a nahradit: vector<TKey> methodKeys;
- *
-class MethodKeys : public KeyValues {
-public:
-    MethodKeys(const Dataset& orig);
-    MethodKeys(const Dataset& orig, const String& methodName, const String& inout = "");
-    MethodKeys(const MethodKeys& orig);
-    virtual ~MethodKeys();
-
-    void getMethodKeyData(const String& methodName, const String& inout);
-    int getMethodKeyDataSize();
-
-    String getKeyname();
-    String getTypname();
-};*/
-
 /**
  *
  * Error codes 35*
  */
 class Method : public KeyValues {
-private:
-    std::vector<TKey> methodkeys;
-
 public:
-    Method(const KeyValues& orig);
+    Method(const KeyValues& orig, const String& name = "");
     virtual ~Method();
 
-    String getMtname();
+    String getName();
 
-    // TODO:
+    bool next();
+
+    Process* newProcess(const String& name = "");
+
+    // TODO Tomas: naplnit
+    std::vector<TKey> getMethodKeys();
+    std::vector<TKey> methodKeys;
+
 private:
     void printData(const String& inout);
 };
@@ -514,17 +504,24 @@ private:
  */
 class Process : public KeyValues {
 public:
-    Process(const KeyValues& orig);
+    Process(const KeyValues& orig, const String& name = "");
     virtual ~Process();
 
-    String getPrsname();
+    String getName();
     String getInputs();
     String getOutputs();
 
-    bool add(String name="");
-    
+    // TODO: o tohle bych se ani nepokousel
+    // bool add(String name="");
+
+    bool next();
+
+    Interval* newInterval(const int t1 = -1, const int t2 = -1);
+    Sequence* newSequence(const String& name = "");
+
 // TODO:    void print();
 };
+
 
 /**
  * VTApi class manages Commons and processes args[]
@@ -534,7 +531,7 @@ public:
  *       special interest to the configuration files is needed
  *
  * Error codes 60*
- */
+ */ // ********************************************************************** //
 class VTApi {
 public:
     /**

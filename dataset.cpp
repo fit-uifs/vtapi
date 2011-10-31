@@ -26,7 +26,7 @@ Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
 Dataset::~Dataset() {
 }
 
-KeyValues* Dataset::next() {
+bool Dataset::next() {
     KeyValues* kv = ((KeyValues*)this)->next();
     if (kv) {
         this->dataset = this->getName();
@@ -58,4 +58,20 @@ String Dataset::getLocation() {
  */
 Sequence* Dataset::newSequence(const String& name) {
     return (new Sequence(*this, name));
+}
+
+/**
+ * Create new sequence for current dataset
+ * @return pointer to new sequence
+ */
+Method* Dataset::newMethod(const String& name) {
+    return (new Method(*this, name));
+}
+
+/**
+ * Create new sequence for current dataset
+ * @return pointer to new sequence
+ */
+Process* Dataset::newProcess(const String& name) {
+    return (new Process(*this, name));
 }

@@ -37,6 +37,61 @@ bool Query::execute() {
     return (res);
 }
 
+bool Query::keyValue(const TKey& key) {
+    if (key.size > 0) warning("TODO");
+    // keys.push_back(key);
+
+    executed = false;
+    return true;
+}
+
+bool Query::keyString(const String& key, const String& value, const String& from) {
+    TKey k("varchar", key, 1, from);
+    keys.push_back(k);
+    PQputf(param, "%varchar", value.c_str());
+
+    executed = false;
+    return true;
+}
+
+bool Query::keyInt(const String& key, const int& value, const String& from) {
+    TKey k("int4", key, 1, from);
+    keys.push_back(k);
+    PQputf(param, "%int4", value);
+
+    executed = false;
+    return true;
+}
+
+bool Query::keyIntA(const String& key, const int* values, const int size, const String& from) {
+    TKey k("int4[]", key, size, from);
+    keys.push_back(k);
+    PQputf(param, "%int4[]", values);
+
+    executed = false;
+    return true;
+}
+
+bool Query::keyFloat(const String& key, const float& value, const String& from) {
+    TKey k("float4", key, 1, from);
+    keys.push_back(k);
+    PQputf(param, "%float4", value);
+
+    executed = false;
+    return true;
+}
+
+bool Query::keyFloatA(const String& key, const float* values, const int size, const String& from) {
+    TKey k("float4[]", key, size, from);
+    keys.push_back(k);
+    PQputf(param, "%float4[]", values);
+
+    executed = false;
+    return true;
+}
+
+
+
 
 // ************************************************************************** //
 // Select::Select() { }
@@ -141,22 +196,6 @@ bool Insert::into(const String& table) {
     return true;
 }
 
-bool Insert::keyValue(const TKey& key) {
-    if (key.size > 0) warning("TODO");
-    // keys.push_back(key);
-
-    executed = false;
-    return true;
-}
-
-bool Insert::valueString(const String& key, const String& value) {
-    TKey k("varchar", key, 1);
-    keys.push_back(k);
-    PQputf(param, "%varchar", value.c_str());
-
-    executed = false;
-    return true;
-}
 
 String Insert::getQuery() {
     if (keys.empty()) return queryString; // in case of a direct query
