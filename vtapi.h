@@ -325,6 +325,9 @@ public:
     float* getFloatA(String key, int& size);
     float* getFloatA(int pos, int& size);
 
+    int getOid(String key);
+    String getName(String key);
+
     // setters (Update)
     // TODO: overit jestli a jak funguje... jako UPDATE?
 
