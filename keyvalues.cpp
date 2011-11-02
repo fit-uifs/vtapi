@@ -96,6 +96,7 @@ String KeyValues::getString(String key) {
  */
 String KeyValues::getString(int position) {
     PGtext value = (PGtext) "";
+    
     String typname = this->toTypname(PQftype(select->res, position));
 
     // Several data types are other representation of string, so we must catch all of them
@@ -107,6 +108,12 @@ String KeyValues::getString(int position) {
     }
     else if (typname.compare("varchar") == 0) {
         PQgetf(select->res, pos, "%varchar", position, &value);
+    }
+    else if (typname.compare("oid") == 0) {
+        value = (PGtext) this->toTypname(this->getInt(position)).c_str();
+    }
+    else if (typname.compare("inouttype") == 0) {
+        value = (PGtext) ((this->getInt(position)) ? "out" : "in");
     }
     else if (typname.compare("bytea") == 0) {
         PQgetf(select->res, pos, "%bytea", position, &value);
@@ -144,8 +151,18 @@ int KeyValues::getInt(String key) {
  */
 int KeyValues::getInt(int position) {
     PGint4 value;
+    String typname = this->toTypname(PQftype(select->res, position));
 
-    if (! PQgetf(select->res, this->pos, "%int4", position, &value)) {
+    if (typname.compare("int4") == 0) {
+        PQgetf(select->res, this->pos, "%int4", position, &value);
+    }
+    else if (typname.compare("oid") == 0) {
+        PQgetf(select->res, this->pos, "%oid", position, &value);
+    }
+    else if (typname.compare("inouttype") == 0) {
+        PQgetf(select->res, this->pos, "%inouttype", position, &value);
+    }
+    else {
         warning(305, "Value is not an integer");
         this->print();
     }
