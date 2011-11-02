@@ -46,6 +46,7 @@
       <itemPath>process.cpp</itemPath>
       <itemPath>query.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>
+      <itemPath>typemap.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -66,13 +67,10 @@
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
-        <platform>2</platform>
+        <platform>3</platform>
       </toolsSet>
       <compileType>
         <ccTool>
-          <incDir>
-            <pElem>/usr/include/postgresql</pElem>
-          </incDir>
           <preprocessorList>
             <Elem>_DEBUG</Elem>
           </preprocessorList>

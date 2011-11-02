@@ -31,6 +31,8 @@ typedef std::string String;
 // format: 0=text, 1=binary
 #define PGF 1
 
+class TypeMap;
+
 /**
  * Standard logger
  * Allows to log to a cerr or to a file if specified...
@@ -184,11 +186,13 @@ public:
     String getDataset();
     String getSequence();
     String getSelection();
+
+    int toOid(String typname);
+    String toTypname(int oid);
+
     std::set<String> dscontext;
-   
-    void registerTypes();
-    int getOidFromTypname(const String& typname);
-    String getTypnameFromOid(const int oid);
+
+
     
 protected:
     Connector* connector; // this was most probably inherited
@@ -211,13 +215,35 @@ protected:
 
     String selection;
 
-    bool doom; // every derived class will have +1 = (true :)
+    TypeMap* typemap;
+    void registerTypes();
 
-    std::map<int, String> oid2typname;
-    std::map<String, int> typname2oid;
+    bool doom; // every derived class will have +1 = (true :)
 };
 
+/**
+ * Auxiliary class which holds maping between OID an typname of data type
+ */
+class TypeMap {
+  private:
+    std::map<int, String> oid2typname;
+    std::map<String, int> typname2oid;
 
+  public:
+    bool dataloaded;
+
+    TypeMap();
+    virtual ~TypeMap();
+
+    void clear();
+    bool empty();
+    void insert(int oid, String typname);
+    void insert(String typname, int oid);
+    int size();
+
+    int toOid(String typname);
+    String toTypname(int Oid);
+};
 
 /**
  * A generic function to convert any numeric type to string

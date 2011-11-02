@@ -171,18 +171,21 @@ Commons::Commons(const Commons& orig) {
     selection = orig.selection;
 
     dscontext = orig.dscontext;
+    typemap   = orig.typemap;
     doom      = true;       // won't destroy the connector and logger
 }
 
 Commons::Commons(Connector& orig) {
     logger    = orig.getLogger();
     connector = &orig;
+    typemap   = new TypeMap();
     doom      = true;       // won't destroy the connector and logger
 }
 
 Commons::Commons(const String& connStr, const String& logFilename) {
     logger    = new Logger(logFilename);
     connector = new Connector(connStr, logger);
+    typemap   = new TypeMap();
     doom      = false;        // finally, we can destroy the above objects without any DOOM :D
 }
 
@@ -192,6 +195,7 @@ Commons::Commons(const String& connStr, const String& logFilename) {
 Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename) {
     logger    = new Logger(logFilename);
     connector = new Connector(args_info.connection_arg, logger);
+    typemap   = new TypeMap();
     verbose   = args_info.verbose_given;
 
     user      = String(args_info.user_arg);
@@ -221,6 +225,7 @@ Commons::~Commons() {
     if (!doom) {
         destruct(connector);        // the doom is very close     !!!!!
         destruct(logger);           // you shouldn't debug these lines!
+        destruct(typemap);
     }
 }
 
@@ -306,32 +311,29 @@ void Commons::printRes(PGresult* res, int pTuple, const String& format) {
 }
 
 void Commons::registerTypes() {
-    if (this->oid2typname.empty() || this->typname2oid.empty()) {
-        this->oid2typname.clear();
-        this->typname2oid.clear();
-
-        int oid;
-        String typname;
+    if (! this->typemap->dataloaded) {
         KeyValues* kv = new KeyValues(*this);
         kv->select = new Select(*this);
         kv->select->from("pg_catalog.pg_type", "oid, typname");
-        
+
         while (kv->next()) {
-            oid = kv->getOid("oid");
-            typname = kv->getName("typname");
-            this->oid2typname[oid] = typname;
-            this->typname2oid[typname] = oid;
-        }        
+            this->typemap->insert(kv->getOid("oid"), kv->getName("typname"));
+        }
+
+        this->typemap->dataloaded = true;
+
+        delete kv;
     }
 
 }
 
-String Commons::getTypnameFromOid(const int oid) {
+int Commons::toOid(String typname) {
     this->registerTypes();
-    return this->oid2typname[oid];
+    return this->typemap->toOid(typname);
 }
 
-int Commons::getOidFromTypname(const String& typname) {
+String Commons::toTypname(const int oid) {
     this->registerTypes();
-    return this->typname2oid[typname];
+    return this->typemap->toTypname(oid);
 }
+

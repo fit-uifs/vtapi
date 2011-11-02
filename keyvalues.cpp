@@ -7,7 +7,6 @@
 
 #include "vtapi.h"
 #include "postgresql/libpqtypes.h"
-#include <postgresql/catalog/pg_type.h>
 #include <cstdlib>
 #include <iostream>
 
@@ -97,30 +96,29 @@ String KeyValues::getString(String key) {
  */
 String KeyValues::getString(int position) {
     PGtext value = (PGtext) "";
+    String typname = this->toTypname(PQftype(select->res, position));
 
     // Several data types are other representation of string, so we must catch all of them
-    switch (PQftype(select->res, position)) {
-        case TEXTOID:
-                PQgetf(select->res, pos, "%text", position, &value);
-            break;
-        case NAMEOID:
-                PQgetf(select->res, pos, "%name", position, &value);
-            break;
-        case VARCHAROID:
-                PQgetf(select->res, pos, "%varchar", position, &value);
-            break;
-        case BYTEAOID:
-                PQgetf(select->res, pos, "%bytea", position, &value);
-            break;
-        case BPCHAROID:
-                PQgetf(select->res, pos, "%bpchar", position, &value);
-            break;
-        default:
-                warning(304,"Value is not a string");
-                this->print();
-            break;
+    if (typname.compare("text") == 0) {
+        PQgetf(select->res, pos, "%text", position, &value);
     }
-
+    else if (typname.compare("name") == 0) {
+        PQgetf(select->res, pos, "%name", position, &value);
+    }
+    else if (typname.compare("varchar") == 0) {
+        PQgetf(select->res, pos, "%varchar", position, &value);
+    }
+    else if (typname.compare("bytea") == 0) {
+        PQgetf(select->res, pos, "%bytea", position, &value);
+    }
+    else if (typname.compare("bpchar") == 0) {
+        PQgetf(select->res, pos, "%bpchar", position, &value);
+    }
+    else {
+       warning(304,"Value is not a string");
+       this->print();
+    }
+       
     if (value == NULL) {
         value = (PGtext) "";
     }
