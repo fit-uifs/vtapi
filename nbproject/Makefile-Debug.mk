@@ -45,6 +45,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/cli_insert.o \
 	${OBJECTDIR}/process.o \
+	${OBJECTDIR}/typemap.o \
 	${OBJECTDIR}/query.o \
 	${OBJECTDIR}/postgresql/vt-print.o \
 	${OBJECTDIR}/dataset.o
@@ -77,57 +78,62 @@ dist/Debug/GNU-Linux-x86/vtapi: ${OBJECTFILES}
 ${OBJECTDIR}/sequence.o: sequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/sequence.o sequence.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/sequence.o sequence.cpp
 
 ${OBJECTDIR}/commons.o: commons.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/commons.o commons.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/commons.o commons.cpp
 
 ${OBJECTDIR}/interval.o: interval.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
 
 ${OBJECTDIR}/method.o: method.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
 
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
 
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
 
 ${OBJECTDIR}/cli_settings.o: cli_settings.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_settings.o cli_settings.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_settings.o cli_settings.cpp
 
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
 
 ${OBJECTDIR}/cli_insert.o: cli_insert.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_insert.o cli_insert.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_insert.o cli_insert.cpp
 
 ${OBJECTDIR}/process.o: process.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/process.o process.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/process.o process.cpp
+
+${OBJECTDIR}/typemap.o: typemap.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/typemap.o typemap.cpp
 
 ${OBJECTDIR}/query.o: query.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/query.o query.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/query.o query.cpp
 
 ${OBJECTDIR}/postgresql/vt-print.o: postgresql/vt-print.c 
 	${MKDIR} -p ${OBJECTDIR}/postgresql
@@ -137,7 +143,7 @@ ${OBJECTDIR}/postgresql/vt-print.o: postgresql/vt-print.c
 ${OBJECTDIR}/dataset.o: dataset.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
+	$(COMPILE.cc) -g -D_DEBUG -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
 
 # Subprojects
 .build-subprojects:

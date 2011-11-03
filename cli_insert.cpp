@@ -97,9 +97,9 @@ bool CLIInsert::checkLocation(String seqname, String intlocation) {
     }
     PQgetf(res, 0, "%varchar", 0, &seqlocation);
 
-    // TODO: check location
+    // FIXME: check location using getDataLocation();
     location = this->dataset->getLocation().append((String) seqlocation).append(intlocation);
-    // check here
+    // TODO:
     
     PQclear(res);
     return true;

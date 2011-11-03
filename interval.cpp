@@ -31,12 +31,31 @@ int Interval::getEndTime() {
     return this->getInt("t2");
 }
 
+bool Interval::add(const String& sequence, const int t1, const int t2, const String& location) {
+    destruct(insert);
+    int te2 = t2;
+    if (t2 < 0) te2 = t1;
+
+    insert = new Insert(*this, this->selection);
+    insert->keyString("seqname", sequence);
+    insert->keyInt("t1", t1);
+    insert->keyInt("t2", t2);
+    if (!location.empty()) {
+        insert->keyString("imglocation", this->getDataLocation() + location);
+    }
+    // that's all, folks ... continue similarly if needed
+}
+
+String Interval::getLocation() {
+    return this->getString("imglocation");
+}
+
+String Interval::getDataLocation() {
+    ((Sequence*)this)->getDataLocation() + this->getLocation();
+}
 
 
-
-
-
-
+// ************************************************************************** //
 Image::Image(const KeyValues& orig, const String& selection) : Interval(orig, selection) {
 }
 
@@ -52,8 +71,4 @@ int Image::getTime() {
         // if (verbose) this->print();
     }
     return t1;
-}
-
-String Image::getLocation() {
-
 }

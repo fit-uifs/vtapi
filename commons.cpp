@@ -163,9 +163,14 @@ Commons::Commons(const Commons& orig) {
     verbose   = orig.verbose;
     user      = orig.user;
     format    = orig.format;
+    baseLocation = orig.baseLocation;
+
     dataset   = orig.dataset;
+    datasetLocation = orig.datasetLocation;
     sequence  = orig.sequence;
+    sequenceLocation  = orig.sequenceLocation;
     interval  = orig.interval;
+
     method    = orig.method;
     process   = orig.process;
     selection = orig.selection;
@@ -200,21 +205,21 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
 
     user      = String(args_info.user_arg);
     format    = String(args_info.format_arg);
-    // FIXME: proc je mozna nastavit vice datasetu? (i vseho ostatniho)
-    // protoze jsem to tak dal ve vtapi.ggo (argument je multiple) --Vojta
-    // FIXME Vojta: hmm a ma to vyznam? mohlo by to nekoho mast, kdyz to dal nepouzivame... resp. budem?
-    // takto to ma pouziti jako omezeni kontextu pro selecty atp. -- Vojta
-    // pak bude asi zbytecne plnit tyhle promenne dataset, sequence tady v konstruktoru...
-    for (int i = 0; i < args_info.dataset_given; i++)
-        dscontext.insert(String(args_info.dataset_arg[i]));
-/*
+    baseLocation = String(args_info.location_arg);
+
+    // FIXME Vojta: prosim, oprav to, at to jede na 1 dataset a ty ostatni veci
     dataset   = String(args_info.dataset_arg[0]);
+/*
     sequence  = String(args_info.sequence_arg[0]);
     interval  = String(args_info.interval_arg[0]);
     method    = String(args_info.method_arg[0]);
     process   = String(args_info.process_arg[0]);
     selection = String(args_info.selection_arg[0]);
 */
+    /*
+    for (int i = 0; i < args_info.dataset_given; i++)
+        dscontext.insert(String(args_info.dataset_arg[i]));
+    */
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 }
 
@@ -267,9 +272,19 @@ String Commons::getSequence() {
     if (sequence.empty()) warning(153, "No sequence specified");
     return (sequence);
 }
+
 String Commons::getSelection() {
     if (selection.empty()) warning(155, "No selection specified");
     return selection;
+}
+
+
+String Commons::getDataLocation() {
+    if (baseLocation.empty()) error(156, "No (base) location specified");
+    if (datasetLocation.empty()) error(156, "No (dataset) location specified");
+    if (sequenceLocation.empty()) warning(156, "No sequence location specified");
+    
+    return (baseLocation + datasetLocation + sequenceLocation);
 }
 
 void Commons::printRes(PGresult* res, const String& format) {

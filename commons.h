@@ -187,6 +187,8 @@ public:
     String getSequence();
     String getSelection();
 
+    String getDataLocation();
+
     int toOid(String typname);
     String toTypname(int oid);
 
@@ -201,18 +203,16 @@ protected:
     bool verbose;
     String user;
     String format;
-
+    String baseLocation;
 
     String dataset;
     String datasetLocation;
-
     String sequence;
     String sequenceLocation;
 
     String interval;
     String method;
     String process;
-
     String selection;
 
     TypeMap* typemap;

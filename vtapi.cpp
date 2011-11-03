@@ -141,7 +141,8 @@ int VTApi::run() {
                 }
             }
             else if (!input.compare("interval")) {
-                Interval* in = ds->newSequence()->newInterval();
+                // FIXME: tady radeji zavorky + newSequence("seqname")
+                Interval* in = (ds->newSequence())->newInterval();
                 in->select->where.clear();
                 in->select->whereString("seqname", params["sequence"]);
                 // TODO: whereInt
