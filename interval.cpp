@@ -51,7 +51,7 @@ String Interval::getLocation() {
 }
 
 String Interval::getDataLocation() {
-    ((Sequence*)this)->getDataLocation() + this->getLocation();
+    ((Commons*)this)->getDataLocation() + this->getLocation();
 }
 
 
@@ -71,4 +71,8 @@ int Image::getTime() {
         // if (verbose) this->print();
     }
     return t1;
+}
+
+bool Image::add(const String& sequence, const int t, const String& location) {
+    ((Interval*)this)->add(sequence, t, t, location);
 }

@@ -305,7 +305,9 @@ String VTApi::getCSV(String& word) {
 
 
 void VTApi::test() {
-    cout << "TESTING generic classes:" << endl;
+    // lines starting with cout should be ignored :)
+    
+    cout << "TESTING generic classes..." << endl;
     TKeyValue<float> tkvf ("float", "number", 32156.7, "test");
     cout << "TKeyValue<float> tkvf (32156.7) ... typeid: " << typeid(tkvf).name() << endl;
     tkvf.print();
@@ -319,28 +321,29 @@ void VTApi::test() {
     char* chs[] = {"1", "2", "3", "ctyri", "5"};
     TKeyValue<char*> tki ("varchar[]", "array", chs, 5);
     v.push_back(&tki);
-
     for (int i = 0; i < v.size(); ++i) (v[i])->print();
 
     cout << "static_cast< TKeyValue<char*>* >(v[2]);" << endl;
     TKeyValue<char*>* tkic = static_cast< TKeyValue<char*>* >(v[2]);
     tkic->print();
-    cout << "DONE testing generic classes." << endl;
 
     // dataset usw.
+    cout << "DONE testing generic classes." << endl;
     cout << endl << endl;
-    cout << "TESTING  Dataset" << endl;
+    cout << "TESTING  Dataset..." << endl;
+
     Dataset* dataset = this->newDataset();
     dataset->next();
-    dataset->printRes(dataset->select->res);
+    dataset->printAll();
 
+    cout << "DONE." << endl;
     cout << endl;
-    cout << "TESTING Sequence" << endl;
+    cout << "TESTING Sequence..." << endl;
     cout << "USING dataset " << dataset->getDataset() << endl;
 
     Sequence* sequence = dataset->newSequence();
     sequence->next();
-    sequence->printAll();
+    sequence->printRes(sequence->select->res); // equivalent to printAll()
 
     cout << "ADDING Sequence " << "just_a_test_sequence" << endl;
     sequence->add("just_a_test_sequence", "/test_location");
@@ -356,19 +359,29 @@ void VTApi::test() {
     cout << "OK:" << query->execute() << endl;
     free(query);
 
+    cout << "DONE." << endl;
     cout << endl;
-    cout << "TESTING Interval" << endl;
+    cout << "TESTING Interval..." << endl;
     cout << "USING sequence " << sequence->getSequence() << endl;
     
     Interval* interval = sequence->newInterval();
     interval->select->limit = 10;
     interval->next();
-    cout << "// FIXME: PQprint is deprecated" << endl;
     interval->print();
+    
+    // this has no effect outside ...
+    srand(time(NULL));
+    int t1 = 100000 + rand()%1000;
+    cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
+    Image* image = new Image(*interval);
+    image->add(interval->getSequence(), t1, "nosuchimage.jpg");
+    // ... except the database => do not fordet to delete where t1 > 99999 !!!!
 
     // process usw.
+    cout << "DONE." << endl;
     cout << endl;
-    cout << "TESTING  Method" << endl;
+    cout << "TESTING Method..." << endl;
+
     Method* method = dataset->newMethod();
     method->next();
     method->printAll();
@@ -376,17 +389,21 @@ void VTApi::test() {
     cout << endl;
     cout << "TESTING  MethodKeys" << endl;
     cout << "USING method " << method->getName() << endl;
-    method->getMethodKeys();
-    cout << "Number of method keys: " << method->methodKeys.size() << endl;
+    cout << "Printing methodKeys (" << method->methodKeys.size() << ")" << endl;
+
     for (int i = 0; i < method->methodKeys.size(); i++) {
         method->methodKeys[i].print();
     }
 
+    cout << "DONE." << endl;
     cout << endl;
-    cout << "TESTING  Process" << endl;
+    cout << "TESTING Process" << endl;
+
     Process* process = method->newProcess();
     process->next();
     process->printAll();
+
+    process;
 
 
 }

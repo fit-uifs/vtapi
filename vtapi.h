@@ -491,7 +491,10 @@ public:
 
     Process* newProcess(const String& name = "");
 
-    // TODO Tomas: naplnit
+    /**
+     * This is to refresh the methodKeys vector
+     * @return vector<TKey>
+     */
     std::vector<TKey> getMethodKeys();
     std::vector<TKey> methodKeys;
 

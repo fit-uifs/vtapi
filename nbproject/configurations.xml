@@ -10,7 +10,6 @@
                      projectFiles="true"
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>postgresql/libpqtypes.h</itemPath>
-        <itemPath>postgresql/pg_type.h</itemPath>
         <itemPath>postgresql/vt-print.h</itemPath>
       </logicalFolder>
       <itemPath>commons.h</itemPath>
