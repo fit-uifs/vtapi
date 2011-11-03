@@ -163,9 +163,14 @@ Commons::Commons(const Commons& orig) {
     verbose   = orig.verbose;
     user      = orig.user;
     format    = orig.format;
+    baseLocation = orig.baseLocation;
+
     dataset   = orig.dataset;
+    datasetLocation = orig.datasetLocation;
     sequence  = orig.sequence;
+    sequenceLocation  = orig.sequenceLocation;
     interval  = orig.interval;
+
     method    = orig.method;
     process   = orig.process;
     selection = orig.selection;
@@ -206,6 +211,10 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
     process   = args_info.process_given ? String(args_info.process_arg) : String ("");
     selection = args_info.selection_given ? String(args_info.selection_arg) : String ("");
 
+    user      = args_info.user_given ? String(args_info.user_arg) : String("");
+    format    = args_info.format_given ? String(args_info.format_arg) : String("");
+
+    baseLocation = args_info.location_given ? String(args_info.location_arg) : String("");
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 }
 
@@ -258,9 +267,19 @@ String Commons::getSequence() {
     if (sequence.empty()) warning(153, "No sequence specified");
     return (sequence);
 }
+
 String Commons::getSelection() {
     if (selection.empty()) warning(155, "No selection specified");
     return selection;
+}
+
+
+String Commons::getDataLocation() {
+    if (baseLocation.empty()) error(156, "No (base) location specified");
+    if (datasetLocation.empty()) error(156, "No (dataset) location specified");
+    if (sequenceLocation.empty()) warning(156, "No sequence location specified");
+    
+    return (baseLocation + datasetLocation + sequenceLocation);
 }
 
 void Commons::printRes(PGresult* res, const String& format) {

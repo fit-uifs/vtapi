@@ -449,7 +449,15 @@ public:
     int getStartTime();
     int getEndTime();
 
-    bool add(String name="");
+    /**
+     * This is most probably what you always wanted...
+     * @return
+     */
+    String getDataLocation();
+    /** This is here just for image name */
+    String getLocation();
+
+    bool add(const String& sequence, const int t1, const int t2 = -1, const String& location = "");
 
 protected:
 
@@ -466,9 +474,7 @@ public:
     virtual ~Image();
 
     int getTime();
-    String getLocation();
-
-    bool add(String name="");
+    bool add(const String& sequence, const int t, const String& location);
 
 protected:
 
