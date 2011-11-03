@@ -208,13 +208,8 @@ class CLIInsert {
 public:
     enum InsertType {GENERIC, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
 
-    CLIInsert(Dataset* ds);
+    CLIInsert(Commons& orig);
     ~CLIInsert();
-    /**
-     * Set dataset (schema) on which the insert is executed
-     * @param dsname Name of the dataset
-     */
-    void setDataset(Dataset* newdataset);
     /**
      * Set what to insert into dataset
      * @param newtype {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION}
@@ -252,8 +247,8 @@ public:
     bool execute();
 
 protected:
+    String dataset;
     Connector* connector;
-    Dataset* dataset;
     InsertType type;
     std::map<String,String> params;
 

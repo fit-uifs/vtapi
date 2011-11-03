@@ -13,7 +13,6 @@
         <itemPath>postgresql/pg_type.h</itemPath>
         <itemPath>postgresql/vt-print.h</itemPath>
       </logicalFolder>
-      <itemPath>cli.h</itemPath>
       <itemPath>commons.h</itemPath>
       <itemPath>vtapi.h</itemPath>
     </logicalFolder>

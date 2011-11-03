@@ -12,17 +12,13 @@
 
 using namespace std;
 
-CLIInsert::CLIInsert(Dataset* ds){
-    this->connector = ds->getConnector();
-    this->dataset = ds;
+CLIInsert::CLIInsert(Commons& orig){
+    this->connector = (&orig)->getConnector();
+    this->dataset = (&orig)->getDataset();
     this->type = GENERIC;
 }
 CLIInsert::~CLIInsert() {
     this->params.clear();
-}
-
-void CLIInsert::setDataset(Dataset* newdataset) {
-    this->dataset = newdataset;
 }
 
 void CLIInsert::setType(InsertType newtype){
@@ -89,7 +85,7 @@ bool CLIInsert::checkLocation(String seqname, String intlocation) {
 
     // get sequence location
     res = PQexec(this->connector->getConn(),
-        String("SELECT seqlocation FROM " + this->dataset->getName() +
+        String("SELECT seqlocation FROM " + this->dataset +
             ".sequences WHERE seqname=\'" + seqname.c_str() + "\';").c_str());
     if(!res) {
         this->connector->getLogger()->write(PQgeterror());
@@ -98,7 +94,7 @@ bool CLIInsert::checkLocation(String seqname, String intlocation) {
     PQgetf(res, 0, "%varchar", 0, &seqlocation);
 
     // FIXME: check location using getDataLocation();
-    location = this->dataset->getLocation().append((String) seqlocation).append(intlocation);
+    location = this->dataset.append((String) seqlocation).append(intlocation);
     // TODO:
     
     PQclear(res);
@@ -127,9 +123,9 @@ bool CLIInsert::execute() {
         PQputf(param, "%int4", atoi(getParam("seqnum").c_str()));
         PQputf(param, "%varchar", getParam("location").c_str());
         PQputf(param, "%timestamp", &timestamp);
-        query << "INSERT INTO " << this->dataset->getName() << ".sequences " <<
-            "(seqname, seqnum, seqlocation, seqtyp, created) VALUES ($1, $2, $3, \'" <<
-            getParam("seqtype") << "\', $4)";
+        query << "INSERT INTO " << this->dataset << ".sequences " <<
+            "(seqname, seqnum, seqlocation, seqtyp, created) " <<
+            "VALUES ($1, $2, $3, \'" << getParam("seqtype") << "\', $4)";
     }
     // insert interval
     else if (this->type == INTERVAL) {
@@ -144,8 +140,9 @@ bool CLIInsert::execute() {
         PQputf(param, "%float4[]", &arr);
         PQparamClear(arr.param);
         PQputf(param, "%timestamp", &timestamp);
-        query << "INSERT INTO " << this->dataset->getName() << ".intervals " <<
-            "(seqname, t1, t2, imglocation, tags, svm) VALUES ($1, $2, $3, $4, $5, $6, $7)";
+        query << "INSERT INTO " << this->dataset << ".intervals " <<
+            "(seqname, t1, t2, imglocation, tags, svm, created) " <<
+            "VALUES ($1, $2, $3, $4, $5, $6, $7)";
         queryOK = checkLocation(getParam("sequence"), getParam("location"));
     }
     // insert process
@@ -155,7 +152,7 @@ bool CLIInsert::execute() {
         PQputf(param, "%varchar", getParam("inputs").c_str());
         PQputf(param, "%varchar", getParam("outputs").c_str());
         PQputf(param, "%timestamp", &timestamp);
-        query << "INSERT INTO " << this->dataset->getName() << ".processes " <<
+        query << "INSERT INTO " << this->dataset << ".processes " <<
             "(prsname, mtname, inputs, outputs, created) VALUES ($1, $2, $3, $4, $5)";
     }
 

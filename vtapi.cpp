@@ -93,6 +93,7 @@ int VTApi::run() {
                 cout << "helping you with query command" << endl;
                 continue;
             }
+            if (line.empty()) continue;
             Query* query = new Query(*commons, line, NULL);
             query->execute();
             commons->printRes(query->res);
@@ -135,7 +136,7 @@ int VTApi::run() {
             }
             // select interval
             else if (!input.compare("interval")) {
-                 Interval* in = new Interval(*commons);
+                Interval* in = new Interval(*commons);
                 in->select->where.clear();
                 in->select->whereString("seqname", params["sequence"]);
                 //in->select->whereInt(t1, params["t1"]);
@@ -176,7 +177,7 @@ int VTApi::run() {
                 continue;
             }
 
-            CLIInsert* insert = new CLIInsert(new Dataset(*this->commons));
+            CLIInsert* insert = new CLIInsert(*commons);
             while (!line.empty()) insert->addParam(createParam(getWord(line)));
 
             if (!input.compare("dataset")) insert->setType(CLIInsert::DATASET);
