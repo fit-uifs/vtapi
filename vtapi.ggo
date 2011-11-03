@@ -19,7 +19,7 @@ option "config" - "Config file location"
     optional
 option "user" u "User name"
     string
-    required
+    optional
 option "password" p "User password"
     string
     optional dependon="user"
@@ -42,22 +42,22 @@ option "write" w "Write output"
 section "Context specification (WHERE clause)"
 option "where" W "explicit WHERE, ex.: --where=\"features is NULL\""
     string typestr="SQLSTRING"
-    optional multiple
+    optional
 option "dataset" D "Set dataset to use"
     string
-    optional multiple
+    optional
 option "sequence" S "Set sequence to use"
     string
-    optional multiple
+    optional
 option "interval" I "Set interval to use"
     string
-    optional multiple
+    optional
 option "method" M "Set method to use"
     string
-    optional multiple
+    optional
 option "process" P "Set process to use"
     string
-    optional multiple
+    optional
 option "selection" E "Set selection to use"
     string
-    optional multiple
+    optional

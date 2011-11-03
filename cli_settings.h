@@ -64,40 +64,26 @@ struct gengetopt_args_info
   char * write_arg;	/**< @brief Write output.  */
   char * write_orig;	/**< @brief Write output original value given at command line.  */
   const char *write_help; /**< @brief Write output help description.  */
-  char ** where_arg;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\".  */
-  char ** where_orig;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\" original value given at command line.  */
-  unsigned int where_min; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\"'s minimum occurreces */
-  unsigned int where_max; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\"'s maximum occurreces */
+  char * where_arg;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\".  */
+  char * where_orig;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\" original value given at command line.  */
   const char *where_help; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\" help description.  */
-  char ** dataset_arg;	/**< @brief Set dataset to use.  */
-  char ** dataset_orig;	/**< @brief Set dataset to use original value given at command line.  */
-  unsigned int dataset_min; /**< @brief Set dataset to use's minimum occurreces */
-  unsigned int dataset_max; /**< @brief Set dataset to use's maximum occurreces */
+  char * dataset_arg;	/**< @brief Set dataset to use.  */
+  char * dataset_orig;	/**< @brief Set dataset to use original value given at command line.  */
   const char *dataset_help; /**< @brief Set dataset to use help description.  */
-  char ** sequence_arg;	/**< @brief Set sequence to use.  */
-  char ** sequence_orig;	/**< @brief Set sequence to use original value given at command line.  */
-  unsigned int sequence_min; /**< @brief Set sequence to use's minimum occurreces */
-  unsigned int sequence_max; /**< @brief Set sequence to use's maximum occurreces */
+  char * sequence_arg;	/**< @brief Set sequence to use.  */
+  char * sequence_orig;	/**< @brief Set sequence to use original value given at command line.  */
   const char *sequence_help; /**< @brief Set sequence to use help description.  */
-  char ** interval_arg;	/**< @brief Set interval to use.  */
-  char ** interval_orig;	/**< @brief Set interval to use original value given at command line.  */
-  unsigned int interval_min; /**< @brief Set interval to use's minimum occurreces */
-  unsigned int interval_max; /**< @brief Set interval to use's maximum occurreces */
+  char * interval_arg;	/**< @brief Set interval to use.  */
+  char * interval_orig;	/**< @brief Set interval to use original value given at command line.  */
   const char *interval_help; /**< @brief Set interval to use help description.  */
-  char ** method_arg;	/**< @brief Set method to use.  */
-  char ** method_orig;	/**< @brief Set method to use original value given at command line.  */
-  unsigned int method_min; /**< @brief Set method to use's minimum occurreces */
-  unsigned int method_max; /**< @brief Set method to use's maximum occurreces */
+  char * method_arg;	/**< @brief Set method to use.  */
+  char * method_orig;	/**< @brief Set method to use original value given at command line.  */
   const char *method_help; /**< @brief Set method to use help description.  */
-  char ** process_arg;	/**< @brief Set process to use.  */
-  char ** process_orig;	/**< @brief Set process to use original value given at command line.  */
-  unsigned int process_min; /**< @brief Set process to use's minimum occurreces */
-  unsigned int process_max; /**< @brief Set process to use's maximum occurreces */
+  char * process_arg;	/**< @brief Set process to use.  */
+  char * process_orig;	/**< @brief Set process to use original value given at command line.  */
   const char *process_help; /**< @brief Set process to use help description.  */
-  char ** selection_arg;	/**< @brief Set selection to use.  */
-  char ** selection_orig;	/**< @brief Set selection to use original value given at command line.  */
-  unsigned int selection_min; /**< @brief Set selection to use's minimum occurreces */
-  unsigned int selection_max; /**< @brief Set selection to use's maximum occurreces */
+  char * selection_arg;	/**< @brief Set selection to use.  */
+  char * selection_orig;	/**< @brief Set selection to use original value given at command line.  */
   const char *selection_help; /**< @brief Set selection to use help description.  */
   
   unsigned int help_given ;	/**< @brief Whether help was given.  */

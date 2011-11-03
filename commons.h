@@ -190,9 +190,6 @@ public:
     int toOid(String typname);
     String toTypname(int oid);
 
-    std::set<String> dscontext;
-
-
     
 protected:
     Connector* connector; // this was most probably inherited

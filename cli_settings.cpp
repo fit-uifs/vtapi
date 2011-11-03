@@ -177,26 +177,12 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->read_help = gengetopt_args_info_help[10] ;
   args_info->write_help = gengetopt_args_info_help[11] ;
   args_info->where_help = gengetopt_args_info_help[13] ;
-  args_info->where_min = 0;
-  args_info->where_max = 0;
   args_info->dataset_help = gengetopt_args_info_help[14] ;
-  args_info->dataset_min = 0;
-  args_info->dataset_max = 0;
   args_info->sequence_help = gengetopt_args_info_help[15] ;
-  args_info->sequence_min = 0;
-  args_info->sequence_max = 0;
   args_info->interval_help = gengetopt_args_info_help[16] ;
-  args_info->interval_min = 0;
-  args_info->interval_max = 0;
   args_info->method_help = gengetopt_args_info_help[17] ;
-  args_info->method_min = 0;
-  args_info->method_max = 0;
   args_info->process_help = gengetopt_args_info_help[18] ;
-  args_info->process_min = 0;
-  args_info->process_max = 0;
   args_info->selection_help = gengetopt_args_info_help[19] ;
-  args_info->selection_min = 0;
-  args_info->selection_max = 0;
   
 }
 
@@ -275,50 +261,6 @@ free_string_field (char **s)
     }
 }
 
-/** @brief generic value variable */
-union generic_value {
-    char *string_arg;
-    const char *default_string_arg;
-};
-
-/** @brief holds temporary values for multiple options */
-struct generic_list
-{
-  union generic_value arg;
-  char *orig;
-  struct generic_list *next;
-};
-
-/**
- * @brief add a node at the head of the list 
- */
-static void add_node(struct generic_list **list) {
-  struct generic_list *new_node = (struct generic_list *) malloc (sizeof (struct generic_list));
-  new_node->next = *list;
-  *list = new_node;
-  new_node->arg.string_arg = 0;
-  new_node->orig = 0;
-}
-
-
-static void
-free_multiple_string_field(unsigned int len, char ***arg, char ***orig)
-{
-  unsigned int i;
-  if (*arg) {
-    for (i = 0; i < len; ++i)
-      {
-        free_string_field(&((*arg)[i]));
-        free_string_field(&((*orig)[i]));
-      }
-    free_string_field(&((*arg)[0])); /* free default string */
-
-    free (*arg);
-    *arg = 0;
-    free (*orig);
-    *orig = 0;
-  }
-}
 
 static void
 cmdline_parser_release (struct gengetopt_args_info *args_info)
@@ -340,13 +282,20 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->read_orig));
   free_string_field (&(args_info->write_arg));
   free_string_field (&(args_info->write_orig));
-  free_multiple_string_field (args_info->where_given, &(args_info->where_arg), &(args_info->where_orig));
-  free_multiple_string_field (args_info->dataset_given, &(args_info->dataset_arg), &(args_info->dataset_orig));
-  free_multiple_string_field (args_info->sequence_given, &(args_info->sequence_arg), &(args_info->sequence_orig));
-  free_multiple_string_field (args_info->interval_given, &(args_info->interval_arg), &(args_info->interval_orig));
-  free_multiple_string_field (args_info->method_given, &(args_info->method_arg), &(args_info->method_orig));
-  free_multiple_string_field (args_info->process_given, &(args_info->process_arg), &(args_info->process_orig));
-  free_multiple_string_field (args_info->selection_given, &(args_info->selection_arg), &(args_info->selection_orig));
+  free_string_field (&(args_info->where_arg));
+  free_string_field (&(args_info->where_orig));
+  free_string_field (&(args_info->dataset_arg));
+  free_string_field (&(args_info->dataset_orig));
+  free_string_field (&(args_info->sequence_arg));
+  free_string_field (&(args_info->sequence_orig));
+  free_string_field (&(args_info->interval_arg));
+  free_string_field (&(args_info->interval_orig));
+  free_string_field (&(args_info->method_arg));
+  free_string_field (&(args_info->method_orig));
+  free_string_field (&(args_info->process_arg));
+  free_string_field (&(args_info->process_orig));
+  free_string_field (&(args_info->selection_arg));
+  free_string_field (&(args_info->selection_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -411,14 +360,6 @@ write_into_file(FILE *outfile, const char *opt, const char *arg, const char *val
   }
 }
 
-static void
-write_multiple_into_file(FILE *outfile, int len, const char *opt, char **arg, const char *values[])
-{
-  int i;
-  
-  for (i = 0; i < len; ++i)
-    write_into_file(outfile, opt, (arg ? arg[i] : 0), values);
-}
 
 int
 cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
@@ -453,13 +394,20 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "read", args_info->read_orig, 0);
   if (args_info->write_given)
     write_into_file(outfile, "write", args_info->write_orig, 0);
-  write_multiple_into_file(outfile, args_info->where_given, "where", args_info->where_orig, 0);
-  write_multiple_into_file(outfile, args_info->dataset_given, "dataset", args_info->dataset_orig, 0);
-  write_multiple_into_file(outfile, args_info->sequence_given, "sequence", args_info->sequence_orig, 0);
-  write_multiple_into_file(outfile, args_info->interval_given, "interval", args_info->interval_orig, 0);
-  write_multiple_into_file(outfile, args_info->method_given, "method", args_info->method_orig, 0);
-  write_multiple_into_file(outfile, args_info->process_given, "process", args_info->process_orig, 0);
-  write_multiple_into_file(outfile, args_info->selection_given, "selection", args_info->selection_orig, 0);
+  if (args_info->where_given)
+    write_into_file(outfile, "where", args_info->where_orig, 0);
+  if (args_info->dataset_given)
+    write_into_file(outfile, "dataset", args_info->dataset_orig, 0);
+  if (args_info->sequence_given)
+    write_into_file(outfile, "sequence", args_info->sequence_orig, 0);
+  if (args_info->interval_given)
+    write_into_file(outfile, "interval", args_info->interval_orig, 0);
+  if (args_info->method_given)
+    write_into_file(outfile, "method", args_info->method_orig, 0);
+  if (args_info->process_given)
+    write_into_file(outfile, "process", args_info->process_orig, 0);
+  if (args_info->selection_given)
+    write_into_file(outfile, "selection", args_info->selection_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -507,141 +455,6 @@ gengetopt_strdup (const char *s)
   return result;
 }
 
-static char *
-get_multiple_arg_token(const char *arg)
-{
-  const char *tok;
-  char *ret;
-  size_t len, num_of_escape, i, j;
-
-  if (!arg)
-    return 0;
-
-  tok = strchr (arg, ',');
-  num_of_escape = 0;
-
-  /* make sure it is not escaped */
-  while (tok)
-    {
-      if (*(tok-1) == '\\')
-        {
-          /* find the next one */
-          tok = strchr (tok+1, ',');
-          ++num_of_escape;
-        }
-      else
-        break;
-    }
-
-  if (tok)
-    len = (size_t)(tok - arg + 1);
-  else
-    len = strlen (arg) + 1;
-
-  len -= num_of_escape;
-
-  ret = (char *) malloc (len);
-
-  i = 0;
-  j = 0;
-  while (arg[i] && (j < len-1))
-    {
-      if (arg[i] == '\\' && 
-	  arg[ i + 1 ] && 
-	  arg[ i + 1 ] == ',')
-        ++i;
-
-      ret[j++] = arg[i++];
-    }
-
-  ret[len-1] = '\0';
-
-  return ret;
-}
-
-static const char *
-get_multiple_arg_token_next(const char *arg)
-{
-  const char *tok;
-
-  if (!arg)
-    return 0;
-
-  tok = strchr (arg, ',');
-
-  /* make sure it is not escaped */
-  while (tok)
-    {
-      if (*(tok-1) == '\\')
-        {
-          /* find the next one */
-          tok = strchr (tok+1, ',');
-        }
-      else
-        break;
-    }
-
-  if (! tok || strlen(tok) == 1)
-    return 0;
-
-  return tok+1;
-}
-
-static int
-check_multiple_option_occurrences(const char *prog_name, unsigned int option_given, unsigned int min, unsigned int max, const char *option_desc);
-
-int
-check_multiple_option_occurrences(const char *prog_name, unsigned int option_given, unsigned int min, unsigned int max, const char *option_desc)
-{
-  int error = 0;
-
-  if (option_given && (min > 0 || max > 0))
-    {
-      if (min > 0 && max > 0)
-        {
-          if (min == max)
-            {
-              /* specific occurrences */
-              if (option_given != (unsigned int) min)
-                {
-                  fprintf (stderr, "%s: %s option occurrences must be %d\n",
-                    prog_name, option_desc, min);
-                  error = 1;
-                }
-            }
-          else if (option_given < (unsigned int) min
-                || option_given > (unsigned int) max)
-            {
-              /* range occurrences */
-              fprintf (stderr, "%s: %s option occurrences must be between %d and %d\n",
-                prog_name, option_desc, min, max);
-              error = 1;
-            }
-        }
-      else if (min > 0)
-        {
-          /* at least check */
-          if (option_given < min)
-            {
-              fprintf (stderr, "%s: %s option occurrences must be at least %d\n",
-                prog_name, option_desc, min);
-              error = 1;
-            }
-        }
-      else if (max > 0)
-        {
-          /* at most check */
-          if (option_given > max)
-            {
-              fprintf (stderr, "%s: %s option occurrences must be at most %d\n",
-                prog_name, option_desc, max);
-              error = 1;
-            }
-        }
-    }
-    
-  return error;
-}
 int
 cmdline_parser (int argc, char **argv, struct gengetopt_args_info *args_info)
 {
@@ -693,38 +506,11 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   FIX_UNUSED (additional_error);
 
   /* checks for required options */
-  if (! args_info->user_given)
-    {
-      fprintf (stderr, "%s: '--user' ('-u') option required%s\n", prog_name, (additional_error ? additional_error : ""));
-      error = 1;
-    }
-  
   if (! args_info->connection_given)
     {
       fprintf (stderr, "%s: '--connection' ('-c') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error = 1;
     }
-  
-  if (check_multiple_option_occurrences(prog_name, args_info->where_given, args_info->where_min, args_info->where_max, "'--where' ('-W')"))
-     error = 1;
-  
-  if (check_multiple_option_occurrences(prog_name, args_info->dataset_given, args_info->dataset_min, args_info->dataset_max, "'--dataset' ('-D')"))
-     error = 1;
-  
-  if (check_multiple_option_occurrences(prog_name, args_info->sequence_given, args_info->sequence_min, args_info->sequence_max, "'--sequence' ('-S')"))
-     error = 1;
-  
-  if (check_multiple_option_occurrences(prog_name, args_info->interval_given, args_info->interval_min, args_info->interval_max, "'--interval' ('-I')"))
-     error = 1;
-  
-  if (check_multiple_option_occurrences(prog_name, args_info->method_given, args_info->method_min, args_info->method_max, "'--method' ('-M')"))
-     error = 1;
-  
-  if (check_multiple_option_occurrences(prog_name, args_info->process_given, args_info->process_min, args_info->process_max, "'--process' ('-P')"))
-     error = 1;
-  
-  if (check_multiple_option_occurrences(prog_name, args_info->selection_given, args_info->selection_min, args_info->selection_max, "'--selection' ('-E')"))
-     error = 1;
   
   
   /* checks for dependences among options */
@@ -846,127 +632,6 @@ int update_arg(void *field, char **orig_field,
   return 0; /* OK */
 }
 
-/**
- * @brief store information about a multiple option in a temporary list
- * @param list where to (temporarily) store multiple options
- */
-static
-int update_multiple_arg_temp(struct generic_list **list,
-               unsigned int *prev_given, const char *val,
-               const char *possible_values[], const char *default_value,
-               cmdline_parser_arg_type arg_type,
-               const char *long_opt, char short_opt,
-               const char *additional_error)
-{
-  /* store single arguments */
-  char *multi_token;
-  const char *multi_next;
-
-  if (arg_type == ARG_NO) {
-    (*prev_given)++;
-    return 0; /* OK */
-  }
-
-  multi_token = get_multiple_arg_token(val);
-  multi_next = get_multiple_arg_token_next (val);
-
-  while (1)
-    {
-      add_node (list);
-      if (update_arg((void *)&((*list)->arg), &((*list)->orig), 0,
-          prev_given, multi_token, possible_values, default_value, 
-          arg_type, 0, 1, 1, 1, long_opt, short_opt, additional_error)) {
-        if (multi_token) free(multi_token);
-        return 1; /* failure */
-      }
-
-      if (multi_next)
-        {
-          multi_token = get_multiple_arg_token(multi_next);
-          multi_next = get_multiple_arg_token_next (multi_next);
-        }
-      else
-        break;
-    }
-
-  return 0; /* OK */
-}
-
-/**
- * @brief free the passed list (including possible string argument)
- */
-static
-void free_list(struct generic_list *list, short string_arg)
-{
-  if (list) {
-    struct generic_list *tmp;
-    while (list)
-      {
-        tmp = list;
-        if (string_arg && list->arg.string_arg)
-          free (list->arg.string_arg);
-        if (list->orig)
-          free (list->orig);
-        list = list->next;
-        free (tmp);
-      }
-  }
-}
-
-/**
- * @brief updates a multiple option starting from the passed list
- */
-static
-void update_multiple_arg(void *field, char ***orig_field,
-               unsigned int field_given, unsigned int prev_given, union generic_value *default_value,
-               cmdline_parser_arg_type arg_type,
-               struct generic_list *list)
-{
-  int i;
-  struct generic_list *tmp;
-
-  if (prev_given && list) {
-    *orig_field = (char **) realloc (*orig_field, (field_given + prev_given) * sizeof (char *));
-
-    switch(arg_type) {
-    case ARG_STRING:
-      *((char ***)field) = (char **)realloc (*((char ***)field), (field_given + prev_given) * sizeof (char *)); break;
-    default:
-      break;
-    };
-    
-    for (i = (prev_given - 1); i >= 0; --i)
-      {
-        tmp = list;
-        
-        switch(arg_type) {
-        case ARG_STRING:
-          (*((char ***)field))[i + field_given] = tmp->arg.string_arg; break;
-        default:
-          break;
-        }        
-        (*orig_field) [i + field_given] = list->orig;
-        list = list->next;
-        free (tmp);
-      }
-  } else { /* set the default value */
-    if (default_value && ! field_given) {
-      switch(arg_type) {
-      case ARG_STRING:
-        if (! *((char ***)field)) {
-          *((char ***)field) = (char **)malloc (sizeof (char *));
-          (*((char ***)field))[0] = gengetopt_strdup(default_value->string_arg);
-        }
-        break;
-      default: break;
-      }
-      if (!(*orig_field)) {
-        *orig_field = (char **) malloc (sizeof (char *));
-        (*orig_field)[0] = 0;
-      }
-    }
-  }
-}
 
 int
 cmdline_parser_internal (
@@ -975,13 +640,6 @@ cmdline_parser_internal (
 {
   int c;	/* Character of the parsed option.  */
 
-  struct generic_list * where_list = NULL;
-  struct generic_list * dataset_list = NULL;
-  struct generic_list * sequence_list = NULL;
-  struct generic_list * interval_list = NULL;
-  struct generic_list * method_list = NULL;
-  struct generic_list * process_list = NULL;
-  struct generic_list * selection_list = NULL;
   int error = 0;
   struct gengetopt_args_info local_args_info;
   
@@ -1147,8 +805,11 @@ cmdline_parser_internal (
           break;
         case 'W':	/* explicit WHERE, ex.: --where=\"features is NULL\".  */
         
-          if (update_multiple_arg_temp(&where_list, 
+        
+          if (update_arg( (void *)&(args_info->where_arg), 
+               &(args_info->where_orig), &(args_info->where_given),
               &(local_args_info.where_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
               "where", 'W',
               additional_error))
             goto failure;
@@ -1156,8 +817,11 @@ cmdline_parser_internal (
           break;
         case 'D':	/* Set dataset to use.  */
         
-          if (update_multiple_arg_temp(&dataset_list, 
+        
+          if (update_arg( (void *)&(args_info->dataset_arg), 
+               &(args_info->dataset_orig), &(args_info->dataset_given),
               &(local_args_info.dataset_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
               "dataset", 'D',
               additional_error))
             goto failure;
@@ -1165,8 +829,11 @@ cmdline_parser_internal (
           break;
         case 'S':	/* Set sequence to use.  */
         
-          if (update_multiple_arg_temp(&sequence_list, 
+        
+          if (update_arg( (void *)&(args_info->sequence_arg), 
+               &(args_info->sequence_orig), &(args_info->sequence_given),
               &(local_args_info.sequence_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
               "sequence", 'S',
               additional_error))
             goto failure;
@@ -1174,8 +841,11 @@ cmdline_parser_internal (
           break;
         case 'I':	/* Set interval to use.  */
         
-          if (update_multiple_arg_temp(&interval_list, 
+        
+          if (update_arg( (void *)&(args_info->interval_arg), 
+               &(args_info->interval_orig), &(args_info->interval_given),
               &(local_args_info.interval_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
               "interval", 'I',
               additional_error))
             goto failure;
@@ -1183,8 +853,11 @@ cmdline_parser_internal (
           break;
         case 'M':	/* Set method to use.  */
         
-          if (update_multiple_arg_temp(&method_list, 
+        
+          if (update_arg( (void *)&(args_info->method_arg), 
+               &(args_info->method_orig), &(args_info->method_given),
               &(local_args_info.method_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
               "method", 'M',
               additional_error))
             goto failure;
@@ -1192,8 +865,11 @@ cmdline_parser_internal (
           break;
         case 'P':	/* Set process to use.  */
         
-          if (update_multiple_arg_temp(&process_list, 
+        
+          if (update_arg( (void *)&(args_info->process_arg), 
+               &(args_info->process_orig), &(args_info->process_given),
               &(local_args_info.process_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
               "process", 'P',
               additional_error))
             goto failure;
@@ -1201,8 +877,11 @@ cmdline_parser_internal (
           break;
         case 'E':	/* Set selection to use.  */
         
-          if (update_multiple_arg_temp(&selection_list, 
+        
+          if (update_arg( (void *)&(args_info->selection_arg), 
+               &(args_info->selection_orig), &(args_info->selection_given),
               &(local_args_info.selection_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
               "selection", 'E',
               additional_error))
             goto failure;
@@ -1237,50 +916,7 @@ cmdline_parser_internal (
     } /* while */
 
 
-  update_multiple_arg((void *)&(args_info->where_arg),
-    &(args_info->where_orig), args_info->where_given,
-    local_args_info.where_given, 0,
-    ARG_STRING, where_list);
-  update_multiple_arg((void *)&(args_info->dataset_arg),
-    &(args_info->dataset_orig), args_info->dataset_given,
-    local_args_info.dataset_given, 0,
-    ARG_STRING, dataset_list);
-  update_multiple_arg((void *)&(args_info->sequence_arg),
-    &(args_info->sequence_orig), args_info->sequence_given,
-    local_args_info.sequence_given, 0,
-    ARG_STRING, sequence_list);
-  update_multiple_arg((void *)&(args_info->interval_arg),
-    &(args_info->interval_orig), args_info->interval_given,
-    local_args_info.interval_given, 0,
-    ARG_STRING, interval_list);
-  update_multiple_arg((void *)&(args_info->method_arg),
-    &(args_info->method_orig), args_info->method_given,
-    local_args_info.method_given, 0,
-    ARG_STRING, method_list);
-  update_multiple_arg((void *)&(args_info->process_arg),
-    &(args_info->process_orig), args_info->process_given,
-    local_args_info.process_given, 0,
-    ARG_STRING, process_list);
-  update_multiple_arg((void *)&(args_info->selection_arg),
-    &(args_info->selection_orig), args_info->selection_given,
-    local_args_info.selection_given, 0,
-    ARG_STRING, selection_list);
 
-  args_info->where_given += local_args_info.where_given;
-  local_args_info.where_given = 0;
-  args_info->dataset_given += local_args_info.dataset_given;
-  local_args_info.dataset_given = 0;
-  args_info->sequence_given += local_args_info.sequence_given;
-  local_args_info.sequence_given = 0;
-  args_info->interval_given += local_args_info.interval_given;
-  local_args_info.interval_given = 0;
-  args_info->method_given += local_args_info.method_given;
-  local_args_info.method_given = 0;
-  args_info->process_given += local_args_info.process_given;
-  local_args_info.process_given = 0;
-  args_info->selection_given += local_args_info.selection_given;
-  local_args_info.selection_given = 0;
-  
   if (check_required)
     {
       error += cmdline_parser_required2 (args_info, argv[0], additional_error);
@@ -1318,13 +954,6 @@ cmdline_parser_internal (
   return 0;
 
 failure:
-  free_list (where_list, 1 );
-  free_list (dataset_list, 1 );
-  free_list (sequence_list, 1 );
-  free_list (interval_list, 1 );
-  free_list (method_list, 1 );
-  free_list (process_list, 1 );
-  free_list (selection_list, 1 );
   
   cmdline_parser_release (&local_args_info);
   return (EXIT_FAILURE);

@@ -67,134 +67,114 @@ Dataset* VTApi::newDataset(const String& name) {
 
 
 int VTApi::run() {
-/*  TODO: co je tohle za blbost? proc by se to melo dotazovat na vsechna data???
-    Sequence* sequence = dataset->newSequence();
-    Interval* interval = sequence->newInterval();
-    Process* process = new Process(*dataset);
-    Insert* insert = new Insert(dataset);
-*/
-    String line = cmdline;
-    String command;
-    cout << "commands: query, select, insert, update, delete, show, test, exit" << endl;
-
+    // TODO: toto nechat?
+    if (cmdline.empty()) {
+        cout << "VTApi is running" << endl;
+        cout << "Commands: query, select, insert, update, delete, show, test, help, exit" << endl;
+    }
+    String line, command;
     // command cycle
     while (interact) {
-        // get command
-        if (line.empty()) getline(cin, line);
-        else interact = false;
+        // get command, if cli is empty then start interactive mode
+        if (cmdline.empty()) getline(cin, line);
+        else {
+            line = cmdline;
+            interact = false;
+        }
         // EOF detected
         if (cin.fail()) break;
+
         command = getWord(line);
-
-        // exit
-        if (command.compare("exit") == 0) interact = false;
-        // general query
-        else if (command.compare("query") == 0) {
-            PGresult *res = PQexecf(commons->getConnector()->getConn(),
-                line.c_str());
-            commons->printRes(res);
-            PQclear(res);
-        }
-        // select
-        else if (command.compare("select") == 0) {
-            Dataset* ds = this->newDataset("sel");
-            std::set<String>::iterator dsit;
-
-            String input;
-            // what to select
-            input = getWord(line);
-            std::map<String,String> params;
-            // get select params and dataset context
-            while (!line.empty()) {
-                std::pair<String,String> param = createParam(getWord(line));
-                if (param.first.compare("datasets") == 0) {
-                    while (!param.second.empty())
-                        ds->dscontext.insert(getCSV(param.second));
-                }
-                else params.insert(param);
+        // command: exit
+        if (!command.compare("exit")) break;
+        // command: general query
+        else if (!command.compare("query")) {
+            if (!line.substr(0,4).compare("help")) {
+                cout << "helping you with query command" << endl;
+                continue;
             }
-            // no datasets specified
-            if (ds->dscontext.empty()) commons->warning(303, "No datasets specified");
-            // insert dataset
+            Query* query = new Query(*commons, line, NULL);
+            query->execute();
+            commons->printRes(query->res);
+            delete(query);
+        }
+        // command: select
+        else if (!command.compare("select")) {
+            String input = getWord(line);
+            // select help
+            if (!input.compare("help")) {
+                cout << "helping you with select command " << endl;
+                continue;
+            }
+            // get select params
+            std::map<String,String> params;
+            while (!line.empty()) params.insert(createParam(getWord(line)));
+
+            // TODO: udelat pres Tkey
+            // select dataset
             if (!input.compare("dataset")) {
+                Dataset* ds = new Dataset(*commons);
                 ds->select->where.clear();
                 ds->select->whereString("dsname", params["name"]);
                 ds->select->whereString("dslocation", params["location"]);
                 ds->next();
                 ds->printAll();
+                delete(ds);
             }
+            // select sequence
             else if (!input.compare("sequence")) {
-                Sequence* seq = ds->newSequence();
+                Sequence* seq = new Sequence(*commons);
                 seq->select->where.clear();
                 seq->select->whereString("seqname", params["name"]);
-                // TODO: whereInt
                 //seq->select->whereInt("seqnum", atoi(params["seqnum"]));
                 seq->select->whereString("seqlocation", params["location"]);
                 seq->select->whereString("seqtyp", params["seqtype"]);
-                // TODO: join tables, don't iterate?
-                for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
-                    seq->pos = -1;
-                    seq->select->fromList.clear();
-                    seq->select->from(String((*dsit) + ".sequences"), "*");
-                    seq->next();
-                    seq->printAll();
-                }
+                seq->next();
+                seq->printAll();
+                delete(seq);
             }
+            // select interval
             else if (!input.compare("interval")) {
-                Interval* in = ds->newSequence()->newInterval();
+                 Interval* in = new Interval(*commons);
                 in->select->where.clear();
                 in->select->whereString("seqname", params["sequence"]);
-                // TODO: whereInt
                 //in->select->whereInt(t1, params["t1"]);
                 //in->select->whereInt(t1, params["t1"]);
                 in->select->whereString("imglocation", params["location"]);
-                // TODO: join tables, don't iterate?
-                for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
-                    in->pos = -1;
-                    in->select->fromList.clear();
-                    in->select->from(String((*dsit) + "." + in->getSelection()), "*");
-                    in->next();
-                    in->printAll();
-                }
-                
+                in->next();
+                in->printAll();
+                delete(in);
             }
+            // select process
             else if (!input.compare("process")) {
-                Process* pr = new Process(*ds);
+                Process* pr = new Process(*commons);
                 pr->select->where.clear();
                 pr->select->whereString("prsname", params["name"]);
                 pr->select->whereString("mtname", params["method"]);
                 pr->select->whereString("inputs", params["inputs"]);
                 pr->select->whereString("outputs", params["outputs"]);
-                // TODO: join tables, don't iterate?
-                for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
-                    pr->pos = -1;
-                    pr->select->fromList.clear();
-                    pr->select->from(String((*dsit) + ".processes"), "*");
-                    pr->next();
-                    pr->printAll();
-                }
+                pr->next();
+                pr->printAll();
+                delete(pr);
             }
+            // select method
             else if (!input.compare("method")) {
-                Method* me = new Method(*ds);
+                Method* me = new Method(*commons);
                 //TODO: methodkeys not implemented yet
                 me->select->where.clear();
                 me->select->whereString("mtname", params["name"]);
-                // TODO: join tables, don't iterate?
-                for (dsit = ds->dscontext.begin(); dsit != ds->dscontext.end(); dsit++) {
-                    me->pos = -1;
-                    me->select->fromList.clear();
-                    me->select->from(String((*dsit) + ".methods"), "*");
-                    me->next();
-                    me->printAll();
-                }
+                me->next();
+                me->printAll();
+                delete(me);
             }
-
         }
-        // insert
+        // command: insert
         else if (command.compare("insert") == 0) {
-
-            String input;
-            input = getWord(line);
+            String input = getWord(line);
+            if (!input.compare("help")) {
+                cout << "helping you with insert command " << endl;
+                continue;
+            }
 
             CLIInsert* insert = new CLIInsert(new Dataset(*this->commons));
             while (!line.empty()) insert->addParam(createParam(getWord(line)));
@@ -204,20 +184,48 @@ int VTApi::run() {
             else if (!input.compare("interval")) insert->setType(CLIInsert::INTERVAL);
             else if (!input.compare("process")) insert->setType(CLIInsert::PROCESS);
             else if (!input.compare("method")) insert->setType(CLIInsert::METHOD);
-
+            else if (!input.compare("help")) {
+                cout << "helping you with insert command " << endl;
+            }
             insert->execute();
+            delete(insert);
         }
-        // TODO: commands
-        else if (command.compare("update") == 0) cout << "todo" << endl;
-        else if (command.compare("delete") == 0) cout << "todo" << endl;
-        else if (command.compare("show") == 0) cout << "todo" << endl;
-        // test
-        else if (command.compare("test") == 0) {
+        // TODO: update
+        else if (!command.compare("update")) {
+            String input = getWord(line);
+            if (!input.compare("help")) {
+                cout << "helping you with update command " << endl;
+                continue;
+            }
+            cout << "todo update" << endl;
+        }
+        // TODO: delete
+        else if (!command.compare("delete")) {
+            String input = getWord(line);
+            if (!input.compare("help")) {
+                cout << "helping you with delete command " << endl;
+                continue;
+            }
+            cout << "todo delete" << endl;
+        }
+        // TODO: show
+        else if (!command.compare("show")) {
+            String input = getWord(line);
+            if (!input.compare("help")) {
+                cout << "helping you with show command " << endl;
+                continue;
+            }
+            cout << "todo show" << endl;
+        }
+        // command: test
+        else if (!command.compare("test")) {
             this->test();
         }
+        // command: help
+        else if (!command.compare("help")) {
+            cout << "helping you" << endl;
+        }
         else commons->warning("Unknown command");
-
-        line.clear();
     }
 
     return 0;
