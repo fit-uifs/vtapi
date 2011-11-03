@@ -15,294 +15,65 @@
 using namespace std;
 
 VTApi::VTApi(int argc, char** argv) {
-
     gengetopt_args_info args_info;
     struct cmdline_parser_params *cli_params;
+    bool warn = false;
 
     // Initialize parser parameters structure
     cli_params = cmdline_parser_params_create();
     // Hold check for required arguments until config file is parsed
     cli_params->check_required = 0;
-
-    // Parse cmdline first
-    if (cmdline_parser_ext (argc, argv, &args_info, cli_params) != 0) {
-        cmdline_parser_free (&args_info);
-        free (cli_params);
-        exit(1);
-    }
-
+    if (cmdline_parser_ext (argc, argv, &args_info, cli_params)) warn = true;
     // Get the rest of arguments from config file, don't override cmdline
     cli_params->initialize = 0;
     cli_params->override = 0;
     cli_params->check_required = 1;
+    if (cmdline_parser_config_file (args_info.config_arg, &args_info, cli_params)) warn = true;
 
-    // Parse config file
-    if (cmdline_parser_config_file
-        (args_info.config_arg, &args_info, cli_params) != 0) {
-        cmdline_parser_free (&args_info);
-        free (cli_params);
-        exit(1);
-    }
     // TODO: user authentization here
-    
+
     // Create commons class to store connection etc.
     commons = new Commons(args_info);
-    // Construct command entered through arguments
+    // Construct string from unnamed arguments
     for (int i = 0; i < args_info.inputs_num; i++)
-        cmdline.append(args_info.inputs[i]).append(" ");
+        un_args.append(args_info.inputs[i]).append(" ");
+
+    if (warn) commons->warning("Error parsing config arguments");
     cmdline_parser_free (&args_info);
     free (cli_params);
-    // Interactive mode
-    interact = true;
+}
+
+VTApi::VTApi(const String& configFile) {
+    gengetopt_args_info args_info;
+    struct cmdline_parser_params *cli_params;
+    bool warn = false;
+
+    // Initialize parser parameters structure and parse config file
+    cli_params = cmdline_parser_params_create();
+    if (cmdline_parser_config_file (configFile.c_str(), &args_info, cli_params)) warn = true;
+    // TODO: user authentization here
+
+    // Create commons class to store connection etc.
+    commons = new Commons(args_info);
+    // Construct string from unnamed arguments
+    for (int i = 0; i < args_info.inputs_num; i++)
+        un_args.append(args_info.inputs[i]).append(" ");
+
+    if (warn) commons->warning("Error parsing config arguments");
+    cmdline_parser_free (&args_info);
+    free (cli_params);
+}
+
+VTApi::VTApi(const VTApi& orig)
+        : commons((&orig)->commons) {
 }
 
 VTApi::~VTApi() {
 }
 
-
 Dataset* VTApi::newDataset(const String& name) {
     return (new Dataset(*commons, name));
-};
-
-
-
-int VTApi::run() {
-    // TODO: toto nechat?
-    if (cmdline.empty()) {
-        cout << "VTApi is running" << endl;
-        cout << "Commands: query, select, insert, update, delete, show, test, help, exit" << endl;
-    }
-    String line, command;
-    // command cycle
-    while (interact) {
-        // get command, if cli is empty then start interactive mode
-        if (cmdline.empty()) getline(cin, line);
-        else {
-            line = cmdline;
-            interact = false;
-        }
-        // EOF detected
-        if (cin.fail()) break;
-
-        command = getWord(line);
-        // command: exit
-        if (!command.compare("exit")) break;
-        // command: general query
-        else if (!command.compare("query")) {
-            if (!line.substr(0,4).compare("help")) {
-                cout << "helping you with query command" << endl;
-                continue;
-            }
-            if (line.empty()) continue;
-            Query* query = new Query(*commons, line, NULL);
-            query->execute();
-            commons->printRes(query->res);
-            delete(query);
-        }
-        // command: select
-        else if (!command.compare("select")) {
-            String input = getWord(line);
-            // select help
-            if (!input.compare("help")) {
-                cout << "helping you with select command " << endl;
-                continue;
-            }
-            // get select params
-            std::map<String,String> params;
-            while (!line.empty()) params.insert(createParam(getWord(line)));
-
-            // TODO: udelat pres Tkey
-            // select dataset
-            if (!input.compare("dataset")) {
-                Dataset* ds = new Dataset(*commons);
-                ds->select->where.clear();
-                ds->select->whereString("dsname", params["name"]);
-                ds->select->whereString("dslocation", params["location"]);
-                ds->next();
-                ds->printAll();
-                delete(ds);
-            }
-            // select sequence
-            else if (!input.compare("sequence")) {
-                Sequence* seq = new Sequence(*commons);
-                seq->select->where.clear();
-                seq->select->whereString("seqname", params["name"]);
-                //seq->select->whereInt("seqnum", atoi(params["seqnum"]));
-                seq->select->whereString("seqlocation", params["location"]);
-                seq->select->whereString("seqtyp", params["seqtype"]);
-                seq->next();
-                seq->printAll();
-                delete(seq);
-            }
-            // select interval
-            else if (!input.compare("interval")) {
-                Interval* in = new Interval(*commons);
-                in->select->where.clear();
-                in->select->whereString("seqname", params["sequence"]);
-                //in->select->whereInt(t1, params["t1"]);
-                //in->select->whereInt(t1, params["t1"]);
-                in->select->whereString("imglocation", params["location"]);
-                in->next();
-                in->printAll();
-                delete(in);
-            }
-            // select process
-            else if (!input.compare("process")) {
-                Process* pr = new Process(*commons);
-                pr->select->where.clear();
-                pr->select->whereString("prsname", params["name"]);
-                pr->select->whereString("mtname", params["method"]);
-                pr->select->whereString("inputs", params["inputs"]);
-                pr->select->whereString("outputs", params["outputs"]);
-                pr->next();
-                pr->printAll();
-                delete(pr);
-            }
-            // select method
-            else if (!input.compare("method")) {
-                Method* me = new Method(*commons);
-                //TODO: methodkeys not implemented yet
-                me->select->where.clear();
-                me->select->whereString("mtname", params["name"]);
-                me->next();
-                me->printAll();
-                delete(me);
-            }
-        }
-        // command: insert
-        else if (command.compare("insert") == 0) {
-            String input = getWord(line);
-            if (!input.compare("help")) {
-                cout << "helping you with insert command " << endl;
-                continue;
-            }
-
-            CLIInsert* insert = new CLIInsert(*commons);
-            while (!line.empty()) insert->addParam(createParam(getWord(line)));
-
-            if (!input.compare("dataset")) insert->setType(CLIInsert::DATASET);
-            else if (!input.compare("sequence")) insert->setType(CLIInsert::SEQUENCE);
-            else if (!input.compare("interval")) insert->setType(CLIInsert::INTERVAL);
-            else if (!input.compare("process")) insert->setType(CLIInsert::PROCESS);
-            else if (!input.compare("method")) insert->setType(CLIInsert::METHOD);
-            else if (!input.compare("help")) {
-                cout << "helping you with insert command " << endl;
-            }
-            insert->execute();
-            delete(insert);
-        }
-        // TODO: update
-        else if (!command.compare("update")) {
-            String input = getWord(line);
-            if (!input.compare("help")) {
-                cout << "helping you with update command " << endl;
-                continue;
-            }
-            cout << "todo update" << endl;
-        }
-        // TODO: delete
-        else if (!command.compare("delete")) {
-            String input = getWord(line);
-            if (!input.compare("help")) {
-                cout << "helping you with delete command " << endl;
-                continue;
-            }
-            cout << "todo delete" << endl;
-        }
-        // TODO: show
-        else if (!command.compare("show")) {
-            String input = getWord(line);
-            if (!input.compare("help")) {
-                cout << "helping you with show command " << endl;
-                continue;
-            }
-            cout << "todo show" << endl;
-        }
-        // command: test
-        else if (!command.compare("test")) {
-            this->test();
-        }
-        // command: help
-        else if (!command.compare("help")) {
-            cout << "helping you" << endl;
-        }
-        else commons->warning("Unknown command");
-    }
-
-    return 0;
 }
-/**
- * Creates key/value pair from string in key=value format
- * @param word Input string
- * @return Key,Value pair
- */
-std::pair<String,String> VTApi::createParam(String word) {
-    size_t pos = word.find('=');
-
-    if (pos != string::npos && pos < word.length()-1)
-        return pair<String,String>
-                (word.substr(0,pos), word.substr(pos+1, string::npos));
-    else
-        return pair<String,String>("","");
-}
-/**
- * Cut first word from input command line
- * @param line input line
- * @return word
- */
-String VTApi::getWord(String& line) {
-    String word;
-    size_t startPos = 0, pos, endPos = string::npos;
-
-    if (line.empty()) return "";
-
-    // word end is whitespace, skip quoted part
-        pos = line.find_first_of(" \t\n\"", startPos);
-        if (pos != string::npos && line.at(pos) == '\"'){
-            if (pos + 1 >= line.length()) {
-                line.clear();
-                return "";
-            }
-            endPos = line.find('\"', pos + 1);
-            if (endPos == string::npos)
-                word = line.substr(pos + 1, string::npos);
-            else {
-                word = line.substr(pos + 1, endPos - pos - 1);
-                endPos++;
-            }
-        }
-        else {
-            endPos = pos;
-            word = line.substr(0, endPos);
-        }
-    // cut line
-    if (endPos != string::npos && endPos < line.length()){
-        endPos = line.find_first_not_of(" \t\n", endPos);
-        if (endPos != string::npos) line = line.substr(endPos, string::npos);
-        else line.clear();
-    }
-    else
-        line.clear();
-
-    return word;
-}
-/**
- * Cuts first comma-separated value from string
- * @param word CSV string
- * @return first CSV
- */
-String VTApi::getCSV(String& word) {
-    String csv;
-    size_t pos = word.find(",", 0);
-
-    csv = word.substr(0, pos);
-    if (pos != string::npos && pos+1 < word.length())
-        word = word.substr(pos+1, string::npos);
-    else word.clear();
-    return csv;
-}
-
-
 
 void VTApi::test() {
     cout << "TESTING generic classes:" << endl;

@@ -12,8 +12,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#include "cli_settings.h"
-#include "vtapi.h"
+#include "vtcli.h"
 
 using namespace std;
 
@@ -27,12 +26,11 @@ using namespace std;
  */
 int main(int argc, char** argv) {
 
-   
-    VTApi* vtapi = new VTApi(argc, argv);
+    VTCli* vtcli = new VTCli(argc, argv);
 
-    vtapi->run();
+    vtcli->run();
 
-    delete vtapi;
+    delete vtcli;
 
     return 0;
 }
