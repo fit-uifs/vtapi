@@ -22,10 +22,6 @@ Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
     select->whereString("dsname", this->dataset);
 }
 
-
-Dataset::~Dataset() {
-}
-
 bool Dataset::next() {
     KeyValues* kv = ((KeyValues*)this)->next();
     if (kv) {

@@ -29,6 +29,7 @@ bool Method::next() {
     KeyValues* kv = ((KeyValues*)this)->next();
     if (kv) {
         this->method = this->getName();
+        this->getMethodKeys();
     }
 
     return kv;
@@ -47,18 +48,6 @@ Process* Method::newProcess(const String& name) {
 }
 
 std::vector<TKey> Method::getMethodKeys() {
-    /*
-    KeyValues* kv = new KeyValues(*this);
-        kv->select = new Select(*this);
-        kv->select->from("pg_catalog.pg_type", "oid, typname");
-
-        while (kv->next()) {
-            this->typemap->insert(kv->getOid("oid"), kv->getName("typname"));
-        }
-
-        this->typemap->dataloaded = true;
-
-        delete kv;*/
     methodKeys.clear();
 
     KeyValues* kv = new KeyValues(*this);
@@ -70,7 +59,7 @@ std::vector<TKey> Method::getMethodKeys() {
         TKey* mk = new TKey();
         mk->key = kv->getString("keyname");
         mk->type = kv->getString("typname");
-        mk->size = 0;
+        mk->size = 0;   // 0 is for the definition
         mk->from = kv->getString("inout");
 
         methodKeys.push_back(*mk);

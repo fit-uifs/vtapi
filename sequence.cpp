@@ -16,9 +16,6 @@ Sequence::Sequence(const KeyValues& orig, const String& name) : KeyValues(orig) 
     // res = PQexecf(connector->getConn(), String("SELECT * FROM "+ getString("dsname") +".sequences;").c_str());
 }
 
-Sequence::~Sequence() {
-}
-
 bool Sequence::next() {
     KeyValues* kv = ((KeyValues*)this)->next();
     if (kv) {

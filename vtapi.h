@@ -292,6 +292,11 @@ public:
     // FIXME: proc jsou tu nutne 2 stejne konstruktory?
     KeyValues(const Commons& orig);
     KeyValues(const KeyValues& orig);
+
+    /**
+     * This destroys the KeyValues
+     * It raises warning when there was something left not-excecuted (some collaborants left)
+     */
     virtual ~KeyValues();
 
     /**
@@ -378,7 +383,6 @@ public:
      * @param name
      */
     Dataset(const KeyValues& orig, const String& name = "");
-    virtual ~Dataset();
 
     /**
      * Over-loading next();
@@ -406,7 +410,6 @@ protected:
 class Sequence : public KeyValues {
 public:
     Sequence(const KeyValues& orig, const String& name = "");
-    virtual ~Sequence();
 
     bool next();
 
@@ -438,7 +441,6 @@ protected:
 class Interval : public KeyValues {
 public:
     Interval(const KeyValues& orig, const String& selection = "intervals");
-    virtual ~Interval();
 
     String getSequence();
     int getStartTime();
@@ -466,7 +468,6 @@ protected:
 class Image : public Interval {
 public:
     Image(const KeyValues& orig, const String& selection = "intervals");
-    virtual ~Image();
 
     int getTime();
     bool add(const String& sequence, const int t, const String& location);
@@ -491,7 +492,10 @@ public:
 
     Process* newProcess(const String& name = "");
 
-    // TODO Tomas: naplnit
+    /**
+     * This is to refresh the methodKeys vector
+     * @return vector<TKey>
+     */
     std::vector<TKey> getMethodKeys();
     std::vector<TKey> methodKeys;
 
