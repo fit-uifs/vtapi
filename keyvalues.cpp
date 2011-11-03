@@ -124,6 +124,9 @@ String KeyValues::getString(int position) {
     else if (typname.compare("bpchar") == 0) {
         PQgetf(select->res, pos, "%bpchar", position, &value);
     }
+    else if (typname.compare("regclass") == 0) {
+        PQgetf(select->res, pos, "%varchar", position, &value);
+    }
     else {
        warning(304,"Value is not a string");
        this->print();

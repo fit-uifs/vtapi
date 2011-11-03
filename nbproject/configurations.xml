@@ -14,6 +14,7 @@
       </logicalFolder>
       <itemPath>commons.h</itemPath>
       <itemPath>vtapi.h</itemPath>
+      <itemPath>vtcli.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -46,6 +47,7 @@
       <itemPath>sequence.cpp</itemPath>
       <itemPath>typemap.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
+      <itemPath>vtcli.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"

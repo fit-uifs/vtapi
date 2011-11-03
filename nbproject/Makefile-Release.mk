@@ -43,6 +43,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/cli_insert.o \
 	${OBJECTDIR}/process.o \
+	${OBJECTDIR}/vtcli.o \
 	${OBJECTDIR}/typemap.o \
 	${OBJECTDIR}/query.o \
 	${OBJECTDIR}/postgresql/vt-print.o \
@@ -122,6 +123,11 @@ ${OBJECTDIR}/process.o: process.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/process.o process.cpp
+
+${OBJECTDIR}/vtcli.o: vtcli.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtcli.o vtcli.cpp
 
 ${OBJECTDIR}/typemap.o: typemap.cpp 
 	${MKDIR} -p ${OBJECTDIR}

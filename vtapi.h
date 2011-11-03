@@ -545,28 +545,12 @@ public:
      * @param argv
      */
     VTApi(int argc, char** argv);
+    VTApi(const String& configFile);
     VTApi(const String& connStr, const String& location, const String& user, const String& password);
     VTApi(const Commons& orig);
     VTApi(const VTApi& orig);
     virtual ~VTApi();
 
-
-    /**
-     * An command-line driven api interface (just basic so far)
-     * @param argc
-     * @param argv
-     * @return
-     */
-    int main(int argc, char** argv);
-
-    /**
-     * Use this function instead of main(int, char**) only in case constructor was
-     * VTApi(int argc, char** argv);
-     *
-     * @param name
-     * @return
-     */
-    int run();
 
     /**
      * For testing and learning purposes
@@ -586,17 +570,9 @@ public:
      * Commons are common objects to the project.
      */
     Commons* commons;
-    
+    String un_args;
 protected:
-    /**
-     * Command entered through program arguments
-     */
-    String cmdline;
 
-    bool interact;
-    String getWord(String& line);
-    String getCSV(String& word);
-    std::pair<String,String> createParam(String word);
 };
 
 
