@@ -223,6 +223,7 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
  */
 Commons::~Commons() {
     if (!doom) {
+        logger->log("~Commons()");
         destruct(connector);        // the doom is very close     !!!!!
         destruct(logger);           // you shouldn't debug these lines!
         destruct(typemap);

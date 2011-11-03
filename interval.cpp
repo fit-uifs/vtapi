@@ -16,9 +16,6 @@ Interval::Interval(const KeyValues& orig, const String& selection) : KeyValues(o
     // res = PQexecf(getConnector()->getConn(), String("SELECT * FROM public.intervals;").c_str());
 }
 
-Interval::~Interval() {
-}
-
 String Interval::getSequence() {
     return this->getString("seqname");
 }
@@ -51,15 +48,12 @@ String Interval::getLocation() {
 }
 
 String Interval::getDataLocation() {
-    ((Commons*)this)->getDataLocation() + this->getLocation();
+    return (((Commons*)this)->getDataLocation() + this->getLocation());
 }
 
 
 // ************************************************************************** //
 Image::Image(const KeyValues& orig, const String& selection) : Interval(orig, selection) {
-}
-
-Image::~Image() {
 }
 
 int Image::getTime() {

@@ -32,7 +32,7 @@ int main(int argc, char** argv) {
 
     vtapi->run();
 
-    delete vtapi;
+    delete (vtapi);
 
     return 0;
 }

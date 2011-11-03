@@ -38,8 +38,11 @@ KeyValues::KeyValues(const KeyValues& orig)
 
 
 KeyValues::~KeyValues() {
-    destruct(select);
-    destruct(insert);
+    logger->log("~KeyValues()");
+    destruct (select);
+
+    if (insert && !insert->executed) warning(301, "The insert was not executed");
+    destruct (insert);
 }
 
 KeyValues* KeyValues::next() {
@@ -130,7 +133,7 @@ String KeyValues::getString(int position) {
         value = (PGtext) "";
     }
 
-    return (String) value;
+    return String(value);
 }
 
 

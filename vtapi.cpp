@@ -345,19 +345,22 @@ void VTApi::test() {
     sequence->next();
     sequence->printRes(sequence->select->res); // equivalent to printAll()
 
-    cout << "ADDING Sequence " << "just_a_test_sequence" << endl;
-    sequence->add("just_a_test_sequence", "/test_location");
+    srand(time(NULL));
+    String sn = "test_sequence" + toString(rand()%1000);
+    cout << "ADDING Sequence " << sn << endl;
+    sequence->add(sn, "/test_location");
     sequence->next();
 
-    free(sequence);
+    // FIXME: proc to tady pada????
+    // delete (sequence);
     sequence = dataset->newSequence();
     sequence->next();   // this can execute and commit (a suicide)
     sequence->printAll();
 
-    cout << "DELETING Sequence " << "just_a_test_sequence" << endl;
-    Query* query = new Query(*sequence, "DELETE FROM public.sequences WHERE seqname='just_a_test_sequence';");
+    cout << "DELETING Sequence " << sn << endl;
+    Query* query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".sequences WHERE seqname='" + sn + "';");
     cout << "OK:" << query->execute() << endl;
-    free(query);
+    delete (query);
 
     cout << "DONE." << endl;
     cout << endl;
@@ -370,12 +373,17 @@ void VTApi::test() {
     interval->print();
     
     // this has no effect outside ...
-    srand(time(NULL));
     int t1 = 100000 + rand()%1000;
     cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
     Image* image = new Image(*interval);
     image->add(interval->getSequence(), t1, "nosuchimage.jpg");
+    // insert->execute() or next() must be called after inserting all voluntary fields such as
+    // image->insert->keyFloat("sizeKB", 100.3);
+    // image->insert->execute();
+    delete (image);    // if not called the destructor raises a warning
     // ... except the database => do not fordet to delete where t1 > 99999 !!!!
+    delete (interval);
+    delete (sequence);
 
     // process usw.
     cout << "DONE." << endl;
@@ -403,7 +411,10 @@ void VTApi::test() {
     process->next();
     process->printAll();
 
-    process;
+    delete (process);
+    delete (method);
+    cout << "DONE." << endl;
 
-
+    delete (dataset);
+    cout << "DONE ALL ... see warnings." << endl;
 }
