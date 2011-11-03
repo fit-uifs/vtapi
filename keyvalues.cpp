@@ -40,9 +40,9 @@ KeyValues::KeyValues(const KeyValues& orig)
 KeyValues::~KeyValues() {
     logger->log("~KeyValues()");
     destruct (select);
-
-    if (insert && !insert->executed) warning(301, "The insert was not executed");
     destruct (insert);
+
+    this->beDoomed();
 }
 
 KeyValues* KeyValues::next() {
@@ -51,7 +51,10 @@ KeyValues* KeyValues::next() {
 
     // it is executed here when position == -1
     if (pos == -1) {
-        if (select->res) PQclear(select->res);
+        if (select->res) {
+            PQclear(select->res);
+            select->res = NULL;
+        }
         select->execute();
     }
 

@@ -137,6 +137,8 @@ bool Connector::connected() {
     }
 
     PQclear(res);
+    res = NULL;
+
     return success;
 }
 
@@ -158,6 +160,8 @@ Connector::~Connector() {
 
 /* ************************************************************************** */
 Commons::Commons(const Commons& orig) {
+
+
     logger    = orig.logger;
     connector = orig.connector;
     verbose   = orig.verbose;
@@ -218,16 +222,24 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 }
 
+
 /**
- * This is a doom destructor, which should never happen :)
+ * This should be called from any other (virtual) constructor
+ * @return
  */
-Commons::~Commons() {
+void Commons::beDoomed() {
     if (!doom) {
-        logger->log("~Commons()");
         destruct(connector);        // the doom is very close     !!!!!
         destruct(logger);           // you shouldn't debug these lines!
         destruct(typemap);
     }
+}
+
+/**
+ * This is a doom destructor, which should never happen :)
+ */
+Commons::~Commons() {
+    this->beDoomed();
 }
 
 Connector* Commons::getConnector() {

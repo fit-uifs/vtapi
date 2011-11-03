@@ -123,7 +123,7 @@ void VTApi::test() {
     sequence->next();
 
     // FIXME: proc to tady pada????
-    // delete (sequence);
+    delete (sequence);
     sequence = dataset->newSequence();
     sequence->next();   // this can execute and commit (a suicide)
     sequence->printAll();

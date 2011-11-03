@@ -55,7 +55,7 @@ public:
 class Query : public Commons {
 public:
     Query(const Commons& commons, const String& query = "", PGparam *param = NULL);
-    ~Query();
+    virtual ~Query();
 
     /**
      * This expands the query, so you can check it before the execution
@@ -119,7 +119,6 @@ public:
 class Select : public Query {
 public:
     Select(const Commons& commons, const String& queryString = "", PGparam *param = NULL);
-    ~Select();
 
     /**
      * This expands the query, so you can check it before the execution
@@ -173,7 +172,6 @@ public:
 class Insert : public Query {
 public:
     Insert(const Commons& commons, const String& insertString = "", PGparam *param = NULL);
-    ~Insert();
 
     /**
      * This is to specify the (single) table to be inserted in

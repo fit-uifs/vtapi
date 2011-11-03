@@ -18,6 +18,8 @@ Query::~Query() {
 
     PQclear(res);
     PQparamClear(param);
+
+    this->beDoomed();
 }
 
 String Query::getQuery() {
@@ -97,9 +99,6 @@ bool Query::keyFloatA(const String& key, const float* values, const int size, co
 // Select::Select() { }
 Select::Select(const Commons& commons, const String& queryString, PGparam* param)
 : Query(commons, queryString, param), limit(0), offset(0) {
-}
-
-Select::~Select() {
 }
 
 // FIXME: tohle se musi predelat na TKey
@@ -182,10 +181,6 @@ String Select::getQuery() {
 // Insert::Insert() { }
 Insert::Insert(const Commons& commons, const String& queryString, PGparam* param)
 : Query(commons, queryString, param) {
-}
-
-Insert::~Insert() {
-    PQclear(res);
 }
 
 bool Insert::into(const String& table) {

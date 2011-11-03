@@ -156,8 +156,17 @@ public:
      */
     Commons(const gengetopt_args_info& args_info, const String& logFilename = "");
 
-    // this constructor is close to doom as capitalism;
-    // this is different from comunism, which has been destroyed already
+    /**
+     * This should be called from any (virtual) constructor of a derived class
+     *     this->beDoomed();
+     * @return
+     */
+    void beDoomed();
+
+    /**
+     * This constructor is close to doom as capitalism;
+     * this is different from comunism, which has been destroyed already
+     */
     virtual ~Commons();
 
     /**
@@ -194,6 +203,8 @@ public:
 
     
 protected:
+    String classStr;
+
     Connector* connector; // this was most probably inherited
     Logger* logger;
 
