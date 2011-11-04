@@ -27,24 +27,25 @@
 
 const char *gengetopt_args_info_purpose = "";
 
-const char *gengetopt_args_info_usage = "Usage: vtapi [OPTIONS] ...";
+const char *gengetopt_args_info_usage = "Usage: vtapi [OPTIONS] [COMMAND]";
 
 const char *gengetopt_args_info_description = "";
 
 const char *gengetopt_args_info_help[] = {
   "  -h, --help               Print help and exit",
   "  -V, --version            Print version and exit",
+  "\nOPTIONS\n",
   "  -v, --verbose            Verbose output mode - write used SQL commands etc.",
-  "\nConfig arguments:",
+  "\n Config arguments",
   "      --config=FILENAME    Config file location  (default=`./vtapi.conf')",
   "  -u, --user=STRING        User name",
   "  -p, --password=STRING    User password",
-  "  -l, --location=filename  Path to data files",
+  "  -l, --location=filename  Base location of data files",
   "  -c, --connection=STRING  Connection string \"host=.. port=.. dbname=.. \n                             user=.. password=..\"",
   "  -f, --format=STRING      Input/output format  (possible values=\"standard\", \n                             \"csv\", \"html\", \"binary\", \"sparse\", \n                             \"html\" default=`standard')",
   "  -r, --read=FILENAME      Read input",
   "  -w, --write=FILENAME     Write output",
-  "\nContext specification (WHERE clause):",
+  "\n Context specification (WHERE clause)",
   "  -W, --where=SQLSTRING    explicit WHERE, ex.: --where=\"features is NULL\"",
   "  -D, --dataset=STRING     Set dataset to use",
   "  -S, --sequence=STRING    Set sequence to use",
@@ -52,6 +53,7 @@ const char *gengetopt_args_info_help[] = {
   "  -M, --method=STRING      Set method to use",
   "  -P, --process=STRING     Set process to use",
   "  -E, --selection=STRING   Set selection to use",
+  "\nCOMMANDS\n\nEnter one command via argument or sequence of them in interactive mode\n\nquery SQLQUERY\n\n    * executes custom SQLQUERY\n    * ex.: list methods with active processes\n                   query SELECT DISTINCT mtname FROM public.processes\n\nselect dataset|sequence|interval|process|method|selection|help [ARGS]\n\n    *  selects data and prints them in specified format (-f option)\n    *  for detailed help about ARGS, use command \"select help\"\n    *  ex.: pick processes of method 'm1'\n                   select process method=m1\n\ninsert sequence|interval|process|help [ARGS]\n\n    *  inserts data into database\n    *  for detailed help about ARGS, use command \"insert help\"\n    *  ex.: insert interval in sequence 'seq1'\n                   insert interval t1=10 t2=20 sequence=seq1\n\nupdate *not implemented in CLI\n\ndelete *not implemented in CLI\n\nshow   *not implemented in CLI\n\ntest\n    * Tests VTApi methods and prints details\n\nhelp\n    * prints this help\n\nexit\n    * exits interactive mode (or enter EOF)\n",
     0
 };
 
@@ -167,22 +169,22 @@ void init_args_info(struct gengetopt_args_info *args_info)
 
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->verbose_help = gengetopt_args_info_help[2] ;
-  args_info->config_help = gengetopt_args_info_help[4] ;
-  args_info->user_help = gengetopt_args_info_help[5] ;
-  args_info->password_help = gengetopt_args_info_help[6] ;
-  args_info->location_help = gengetopt_args_info_help[7] ;
-  args_info->connection_help = gengetopt_args_info_help[8] ;
-  args_info->format_help = gengetopt_args_info_help[9] ;
-  args_info->read_help = gengetopt_args_info_help[10] ;
-  args_info->write_help = gengetopt_args_info_help[11] ;
-  args_info->where_help = gengetopt_args_info_help[13] ;
-  args_info->dataset_help = gengetopt_args_info_help[14] ;
-  args_info->sequence_help = gengetopt_args_info_help[15] ;
-  args_info->interval_help = gengetopt_args_info_help[16] ;
-  args_info->method_help = gengetopt_args_info_help[17] ;
-  args_info->process_help = gengetopt_args_info_help[18] ;
-  args_info->selection_help = gengetopt_args_info_help[19] ;
+  args_info->verbose_help = gengetopt_args_info_help[3] ;
+  args_info->config_help = gengetopt_args_info_help[5] ;
+  args_info->user_help = gengetopt_args_info_help[6] ;
+  args_info->password_help = gengetopt_args_info_help[7] ;
+  args_info->location_help = gengetopt_args_info_help[8] ;
+  args_info->connection_help = gengetopt_args_info_help[9] ;
+  args_info->format_help = gengetopt_args_info_help[10] ;
+  args_info->read_help = gengetopt_args_info_help[11] ;
+  args_info->write_help = gengetopt_args_info_help[12] ;
+  args_info->where_help = gengetopt_args_info_help[14] ;
+  args_info->dataset_help = gengetopt_args_info_help[15] ;
+  args_info->sequence_help = gengetopt_args_info_help[16] ;
+  args_info->interval_help = gengetopt_args_info_help[17] ;
+  args_info->method_help = gengetopt_args_info_help[18] ;
+  args_info->process_help = gengetopt_args_info_help[19] ;
+  args_info->selection_help = gengetopt_args_info_help[20] ;
   
 }
 
@@ -743,7 +745,7 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'l':	/* Path to data files.  */
+        case 'l':	/* Base location of data files.  */
         
         
           if (update_arg( (void *)&(args_info->location_arg), 

@@ -9,6 +9,7 @@
 #define	VTCLI_H
 
 #include "vtapi.h"
+#include <map>
 
 class VTCli {
 public:
@@ -22,8 +23,11 @@ public:
     int run();
 protected:
     VTApi* vtapi;
-
     bool interact;
+    String cmdline;
+    std::map<String,String> helpStrings;
+
+    int processArgs(int argc, char** argv);
     String getWord(String& line);
     String getCSV(String& word);
     std::pair<String,String> createParam(String word);

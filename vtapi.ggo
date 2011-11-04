@@ -5,15 +5,16 @@
 # Program name, version and usage
 package "VTApi"
 version "0.1"
-usage "vtapi [OPTIONS] ..."
+usage "vtapi [OPTIONS] [COMMAND]"
 
 # Default gengetopt arguments
 args "--conf-parser --file-name=cli_settings --c-extension=cpp --no-handle-error -u"
 
+text "\nOPTIONS\n"
 option "verbose" v "Verbose output mode - write used SQL commands etc."
     optional
 
-section "Config arguments"
+text "\n Config arguments"
 option "config" - "Config file location"
     string typestr="FILENAME" default="./vtapi.conf"
     optional
@@ -23,7 +24,7 @@ option "user" u "User name"
 option "password" p "User password"
     string
     optional dependon="user"
-option "location" l "Path to data files"
+option "location" l "Base location of data files"
     string typestr="filename"
     optional
 option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. password=..\""
@@ -39,7 +40,7 @@ option "write" w "Write output"
     string typestr="FILENAME"
     optional
 
-section "Context specification (WHERE clause)"
+text "\n Context specification (WHERE clause)"
 option "where" W "explicit WHERE, ex.: --where=\"features is NULL\""
     string typestr="SQLSTRING"
     optional
@@ -61,3 +62,34 @@ option "process" P "Set process to use"
 option "selection" E "Set selection to use"
     string
     optional
+
+text "\nCOMMANDS\n\n"
+text "Enter one command via argument or sequence of them in interactive mode\n\n"
+
+text "query SQLQUERY\n\n"
+text "    * executes custom SQLQUERY\n"
+text "    * ex.: list methods with active processes\n"
+text "                   query SELECT DISTINCT mtname FROM public.processes\n\n"
+
+text "select dataset|sequence|interval|process|method|selection|help [ARGS]\n\n"
+text "    *  selects data and prints them in specified format (-f option)\n"
+text "    *  for detailed help about ARGS, use command \"select help\"\n"
+text "    *  ex.: pick processes of method 'm1'\n"
+text "                   select process method=m1\n\n"
+
+text "insert sequence|interval|process|help [ARGS]\n\n"
+text "    *  inserts data into database\n"
+text "    *  for detailed help about ARGS, use command \"insert help\"\n"
+text "    *  ex.: insert interval in sequence 'seq1'\n"
+text "                   insert interval t1=10 t2=20 sequence=seq1\n\n"
+
+text "update *not implemented in CLI\n\n"
+text "delete *not implemented in CLI\n\n"
+text "show   *not implemented in CLI\n\n"
+
+text "test\n"
+text "    * Tests VTApi methods and prints details\n\n"
+text "help\n"
+text "    * prints this help\n\n"
+text "exit\n"
+text "    * exits interactive mode (or enter EOF)\n"

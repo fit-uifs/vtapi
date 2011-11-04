@@ -7,12 +7,15 @@
 
 #include <cstdlib>
 #include <iostream>
-
+#include <sstream>
 #include "vtcli.h"
+#include "cli_settings.h"
+
 
 using namespace std;
 
 VTCli::VTCli(int argc, char** argv){
+    this->processArgs(argc, argv);
     this->vtapi = new VTApi(argc, argv);
 }
 VTCli::VTCli(const VTApi& api) {
@@ -24,7 +27,7 @@ VTCli::~VTCli() {
 }
 
 int VTCli::run() {
-    this->interact = this->vtapi->un_args.empty();
+    this->interact = this->cmdline.empty();
     if (this->interact) {
         cout << "VTApi is running" << endl;
         cout << "Commands: query, select, insert, update, delete, show, test, help, exit" << endl;
@@ -34,7 +37,7 @@ int VTCli::run() {
     do {
         // get command, if cli is empty then start interactive mode
         if (interact) getline(cin, line);
-        else line = this->vtapi->un_args;
+        else line = this->cmdline;
         // EOF detected
         if (cin.fail()) break;
 
@@ -58,7 +61,7 @@ int VTCli::run() {
             String input = getWord(line);
             // select help
             if (!input.compare("help")) {
-                cout << "helping you with select command " << endl;
+                cout << this->helpStrings["select"];
                 continue;
             }
             // get select params
@@ -127,7 +130,7 @@ int VTCli::run() {
         else if (command.compare("insert") == 0) {
             String input = getWord(line);
             if (!input.compare("help")) {
-                cout << "helping you with insert command " << endl;
+                cout << this->helpStrings["insert"];
                 continue;
             }
 
@@ -149,7 +152,7 @@ int VTCli::run() {
         else if (!command.compare("update")) {
             String input = getWord(line);
             if (!input.compare("help")) {
-                cout << "helping you with update command " << endl;
+                cout << this->helpStrings["update"];
                 continue;
             }
             cout << "todo update" << endl;
@@ -158,7 +161,7 @@ int VTCli::run() {
         else if (!command.compare("delete")) {
             String input = getWord(line);
             if (!input.compare("help")) {
-                cout << "helping you with delete command " << endl;
+                cout << this->helpStrings["delete"];
                 continue;
             }
             cout << "todo delete" << endl;
@@ -167,7 +170,7 @@ int VTCli::run() {
         else if (!command.compare("show")) {
             String input = getWord(line);
             if (!input.compare("help")) {
-                cout << "helping you with show command " << endl;
+                cout << this->helpStrings["show"];
                 continue;
             }
             cout << "todo show" << endl;
@@ -178,13 +181,42 @@ int VTCli::run() {
         }
         // command: help
         else if (!command.compare("help")) {
-            cout << "helping you" << endl;
+            cout << this->helpStrings["all"];
         }
         else this->vtapi->commons->warning("Unknown command");
 
     } while(interact);
 
     return 0;
+}
+/**
+ * Creates help and command strings from arguments
+ * @param argc Argument count
+ * @param argv Argument field
+ * @return 0 on success, -1 on failure
+ */
+int VTCli::processArgs(int argc, char** argv) {
+    gengetopt_args_info args_info;
+    if (cmdline_parser2 (argc, argv, &args_info, 0, 1, 0) != 0) {
+        helpStrings.insert(std::make_pair("all", ""));
+        this->cmdline.clear();
+        return -1;
+    }
+    else {
+        // Construct help string
+        stringstream hss;
+        int i = 0;
+        hss << endl << CMDLINE_PARSER_PACKAGE_NAME <<" "<< CMDLINE_PARSER_VERSION << endl;
+        hss << endl << gengetopt_args_info_usage << endl << endl;
+        while (gengetopt_args_info_help[i])
+            hss << gengetopt_args_info_help[i++] << endl;
+        helpStrings.insert(std::make_pair("all", hss.str()));
+        // Construct command string from unnamed arguments
+        for (int i = 0; i < args_info.inputs_num; i++)
+            cmdline.append(args_info.inputs[i]).append(" ");
+        cmdline_parser_free (&args_info);
+        return 0;
+    }  
 }
 
 /**

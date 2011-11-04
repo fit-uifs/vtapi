@@ -173,7 +173,7 @@ Commons::Commons(const Commons& orig) {
     datasetLocation = orig.datasetLocation;
     sequence  = orig.sequence;
     sequenceLocation  = orig.sequenceLocation;
-    // interval  = orig.interval;
+    interval  = orig.interval;
 
     method    = orig.method;
     process   = orig.process;
@@ -216,10 +216,10 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
     format    = args_info.format_given ? String(args_info.format_arg) : String ("");
     dataset   = args_info.dataset_given ? String(args_info.dataset_arg) : String ("");
     sequence  = args_info.sequence_given ? String(args_info.sequence_arg) : String ("");
-    // interval  = args_info.interval_given ? String(args_info.interval_arg) : String ("");
     method    = args_info.method_given ? String(args_info.method_arg) : String ("");
     process   = args_info.process_given ? String(args_info.process_arg) : String ("");
     selection = args_info.selection_given ? String(args_info.selection_arg) : String ("");
+    // TODO: interval pair
 
     user      = args_info.user_given ? String(args_info.user_arg) : String("");
     format    = args_info.format_given ? String(args_info.format_arg) : String("");

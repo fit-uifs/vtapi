@@ -34,10 +34,6 @@ VTApi::VTApi(int argc, char** argv) {
 
     // Create commons class to store connection etc.
     commons = new Commons(args_info);
-    // Construct string from unnamed arguments
-    for (int i = 0; i < args_info.inputs_num; i++)
-        un_args.append(args_info.inputs[i]).append(" ");
-
     if (warn) commons->warning("Error parsing config arguments");
     cmdline_parser_free (&args_info);
     free (cli_params);
@@ -45,23 +41,16 @@ VTApi::VTApi(int argc, char** argv) {
 
 VTApi::VTApi(const String& configFile) {
     gengetopt_args_info args_info;
-    struct cmdline_parser_params *cli_params;
     bool warn = false;
 
-    // Initialize parser parameters structure and parse config file
-    cli_params = cmdline_parser_params_create();
-    if (cmdline_parser_config_file (configFile.c_str(), &args_info, cli_params)) warn = true;
+    // Parse config file
+    if (cmdline_parser_configfile (configFile.c_str(), &args_info, 0, 1, 1)) warn = true;
     // TODO: user authentization here
 
     // Create commons class to store connection etc.
     commons = new Commons(args_info);
-    // Construct string from unnamed arguments
-    for (int i = 0; i < args_info.inputs_num; i++)
-        un_args.append(args_info.inputs[i]).append(" ");
-
     if (warn) commons->warning("Error parsing config arguments");
     cmdline_parser_free (&args_info);
-    free (cli_params);
 }
 
 VTApi::VTApi(const VTApi& orig)
