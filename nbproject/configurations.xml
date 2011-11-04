@@ -35,7 +35,6 @@
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>postgresql/vt-print.c</itemPath>
       </logicalFolder>
-      <itemPath>cli_insert.cpp</itemPath>
       <itemPath>commons.cpp</itemPath>
       <itemPath>dataset.cpp</itemPath>
       <itemPath>interval.cpp</itemPath>

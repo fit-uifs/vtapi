@@ -8,6 +8,16 @@
 #ifndef INTERNALS_H
 #define	INTERNALS_H
 
+// Using this you can allow using OpenCV
+// #define _OpenCV
+
+#ifdef _OpenCV
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#endif
+
+
 #include <typeinfo>
 #include <map>
 #include <iostream>

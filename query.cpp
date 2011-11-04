@@ -88,7 +88,10 @@ bool Query::keyFloat(const String& key, const float& value, const String& from) 
 bool Query::keyFloatA(const String& key, const float* values, const int size, const String& from) {
     TKey k("float4[]", key, size, from);
     keys.push_back(k);
-    PQputf(param, "%float4[]", values);
+
+    float tmp[size];
+    std::copy(values, values + size, tmp);
+    PQputf(param, "%float4[]", tmp);
 
     executed = false;
     return true;

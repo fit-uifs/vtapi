@@ -12,10 +12,8 @@
 #include "commons.h"
 #include <map>
 
-// next, libraries - OpenCV, (libpq and) libpqtypes
+// next, libraries (libpq and) libpqtypes
 #include "postgresql/libpqtypes.h"
-#include <opencv2/core/core.hpp>
-
 
 // virtual definitions
 class Dataset;
@@ -337,7 +335,7 @@ public:
     bool setIntA(String key, int* value, int size);
     bool setFloat(String key, String value);
     bool setFloat(String key, float value);
-    bool setFloatA(String key, float_t value, int size);
+    bool setFloatA(String key, float* value, int size);
 
     // adders (Insert)
     // TODO: implement
@@ -347,7 +345,7 @@ public:
     bool addIntA(String key, int* value, int size);
     bool addFloat(String key, String value);
     bool addFloat(String key, float value);
-    bool addFloatA(String key, float_t value, int size);
+    bool addFloatA(String key, float* value, int size);
 
 
     // TODO Tomas: u kazde tridy add vytvori objekt te tridy se stejnymi keys, ale bez hodnot a ty se naplni jako set
@@ -419,8 +417,10 @@ public:
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
     Process* newProcess(const String& name = "");
 
+#ifdef _OpenCV
     cv::Mat getImage();
-
+#endif
+    
 protected:
     bool openVideo(const String& name);
     bool openImage(const String& name);

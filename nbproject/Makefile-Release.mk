@@ -41,7 +41,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/main.o \
 	${OBJECTDIR}/cli_settings.o \
 	${OBJECTDIR}/keyvalues.o \
-	${OBJECTDIR}/cli_insert.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/vtcli.o \
 	${OBJECTDIR}/typemap.o \
@@ -113,11 +112,6 @@ ${OBJECTDIR}/keyvalues.o: keyvalues.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
-
-${OBJECTDIR}/cli_insert.o: cli_insert.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_insert.o cli_insert.cpp
 
 ${OBJECTDIR}/process.o: process.cpp 
 	${MKDIR} -p ${OBJECTDIR}
