@@ -13,7 +13,7 @@ NBTMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
 OUTPUT_PATH=../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libvtapi.so
 OUTPUT_BASENAME=libvtapi.so
-PACKAGE_TOP_DIR=/usr/
+PACKAGE_TOP_DIR=libsrc.so/
 
 # Functions
 function checkReturnCode
@@ -58,33 +58,16 @@ mkdir -p ${NBTMPDIR}
 
 # Copy files and create directories and links
 cd "${TOP}"
-makeDirectory "${NBTMPDIR}//usr/lib"
+makeDirectory "${NBTMPDIR}/libsrc.so/lib"
 copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}" 0644
 
 
-# Create control file
+# Generate tar file
 cd "${TOP}"
-CONTROL_FILE=${NBTMPDIR}/DEBIAN/control
-rm -f ${CONTROL_FILE}
-mkdir -p ${NBTMPDIR}/DEBIAN
-
-cd "${TOP}"
-echo 'Package: libvtapi.so' >> ${CONTROL_FILE}
-echo 'Version: 1.0' >> ${CONTROL_FILE}
-echo 'Architecture: i386' >> ${CONTROL_FILE}
-echo 'Maintainer: chmelarp' >> ${CONTROL_FILE}
-echo 'Description: ...' >> ${CONTROL_FILE}
-
-# Create Debian Package
-cd "${TOP}"
-cd "${NBTMPDIR}/.."
-dpkg-deb  --build ${TMPDIRNAME}
+rm -f ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libsrc.so.tar
+cd ${NBTMPDIR}
+tar -vcf ../../../../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libsrc.so.tar *
 checkReturnCode
-cd "${TOP}"
-mkdir -p  ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package
-mv ${NBTMPDIR}.deb ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libsrc.so.deb
-checkReturnCode
-echo Debian: ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libsrc.so.deb
 
 # Cleanup
 cd "${TOP}"

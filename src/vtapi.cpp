@@ -149,12 +149,12 @@ void VTApi::test() {
     
     delete (image);    // if not called execute() or next(), the insert destructor raises a warning
         
-/*    // delete where t1 > 999999 to get rid of the testing value
+    // delete where t1 > 999999 to get rid of the testing value
     cout << "DELETING Image " << sn << endl;
     query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
     cout << "OK: " << query->execute() << endl;
     delete (query);
-*/
+
     delete (interval);
     delete (sequence);
 

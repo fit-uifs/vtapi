@@ -15,7 +15,6 @@
                    displayName="Source Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
-      <itemPath>main.cpp</itemPath>
       <itemPath>vtcli.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -51,8 +50,6 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
-      <item path="main.cpp" ex="true" tool="1">
-      </item>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
