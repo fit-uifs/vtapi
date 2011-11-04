@@ -5,7 +5,7 @@
  * Created on 29. 9. 2011, 10:42
  */
 
-#include "commons.h"
+#include "vtapi_commons.h"
 
 #include "postgresql/libpqtypes.h"
 #include "postgresql/vt-print.h"

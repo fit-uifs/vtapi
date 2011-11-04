@@ -12,7 +12,7 @@ Sequence::Sequence(const KeyValues& orig, const String& name) : KeyValues(orig) 
 
     if (!name.empty()) this->sequence = name;
 
-    select = new Select(*this);
+    select = new Select(orig);
     select->from("sequences", "*");
     select->whereString("seqname", this->sequence);
     // res = PQexecf(connector->getConn(), String("SELECT * FROM "+ getString("dsname") +".sequences;").c_str());

@@ -8,7 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include "cli_settings.h"
+#include "vtapi_settings.h"
 #include "vtapi.h"
 
 
@@ -144,17 +144,17 @@ void VTApi::test() {
     image->add(interval->getSequence(), t1, "nosuchimage.jpg");
     // image->insert->keyFloat("sizeKB", 100.3);
     float kf[] = {1.1, 2.2, 3.3, 4.4, 5.5};
-    // image->insert->keyFloatA("test", kf, 5);
+    image->insert->keyFloatA("test", kf, 5);
     image->insert->execute();     // or next() must be called after inserting all voluntary fields such as above
     
     delete (image);    // if not called execute() or next(), the insert destructor raises a warning
         
-    // delete where t1 > 999999 to get rid of the testing value
+/*    // delete where t1 > 999999 to get rid of the testing value
     cout << "DELETING Image " << sn << endl;
     query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
     cout << "OK: " << query->execute() << endl;
     delete (query);
-
+*/
     delete (interval);
     delete (sequence);
 

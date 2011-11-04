@@ -19,7 +19,7 @@ Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
         warning(313, "No dataset specified");
     }
 
-    select = new Select(*this);
+    select = new Select(orig);
     select->from("public.datasets", "*");
     select->whereString("dsname", this->dataset);
 }

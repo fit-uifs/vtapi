@@ -23,7 +23,7 @@
 
 #include <getopt.h>
 
-#include "cli_settings.h"
+#include "vtapi_settings.h"
 
 const char *gengetopt_args_info_purpose = "";
 

@@ -39,14 +39,14 @@ OBJECTFILES= \
 	${OBJECTDIR}/method.o \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/cli_settings.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/vtcli.o \
 	${OBJECTDIR}/typemap.o \
 	${OBJECTDIR}/query.o \
 	${OBJECTDIR}/postgresql/vt-print.o \
-	${OBJECTDIR}/dataset.o
+	${OBJECTDIR}/dataset.o \
+	${OBJECTDIR}/_ext/1751460206/vtapi_settings.o
 
 
 # C Compiler Flags
@@ -103,11 +103,6 @@ ${OBJECTDIR}/main.o: main.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
 
-${OBJECTDIR}/cli_settings.o: cli_settings.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/cli_settings.o cli_settings.cpp
-
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -142,6 +137,11 @@ ${OBJECTDIR}/dataset.o: dataset.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
+
+${OBJECTDIR}/_ext/1751460206/vtapi_settings.o: /home/chmelarp/Projects/VTApi/vtapi/vtapi_settings.cpp 
+	${MKDIR} -p ${OBJECTDIR}/_ext/1751460206
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1751460206/vtapi_settings.o /home/chmelarp/Projects/VTApi/vtapi/vtapi_settings.cpp
 
 # Subprojects
 .build-subprojects:

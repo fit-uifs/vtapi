@@ -70,7 +70,20 @@ bool Query::keyInt(const String& key, const int& value, const String& from) {
 bool Query::keyIntA(const String& key, const int* values, const int size, const String& from) {
     TKey k("int4[]", key, size, from);
     keys.push_back(k);
-    PQputf(param, "%int4[]", values);
+
+    PGarray arr;
+    arr.ndims = 0; // one dimensional arrays do not require setting dimension info
+    // FIXME: this is a potential bug
+    // arr.lbound[0] = 1;
+    arr.param = PQparamCreate(connector->conn);
+
+    // put the array elements
+    for(int i = 0; i < size; ++i) {
+        PQputf(arr.param, "%int4", values[i]);
+    }
+
+    PQputf(param, "%int4[]", &arr);
+    PQparamClear(arr.param);
 
     executed = false;
     return true;
@@ -89,9 +102,19 @@ bool Query::keyFloatA(const String& key, const float* values, const int size, co
     TKey k("float4[]", key, size, from);
     keys.push_back(k);
 
-    float tmp[size];
-    std::copy(values, values + size, tmp);
-    PQputf(param, "%float4[]", tmp);
+    PGarray arr;
+    arr.ndims = 0; // one dimensional arrays do not require setting dimension info
+    // FIXME: this is a potential bug
+    // arr.lbound[0] = 1;
+    arr.param = PQparamCreate(connector->conn);
+
+    // put the array elements
+    for(int i = 0; i < size; ++i) {
+        PQputf(arr.param, "%float4", values[i]);
+    }
+
+    PQputf(param, "%float4[]", &arr);
+    PQparamClear(arr.param);
 
     executed = false;
     return true;

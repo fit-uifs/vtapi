@@ -9,7 +9,7 @@
 #define	VTAPI_H
 
 // first, include internal classes
-#include "commons.h"
+#include "vtapi_commons.h"
 #include <map>
 
 // next, libraries (libpq and) libpqtypes

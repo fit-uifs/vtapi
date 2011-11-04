@@ -24,7 +24,7 @@ Process::Process(const KeyValues& orig, const String& name) : KeyValues(orig) {
         s += "  WHERE P.prsname='" + name + "'";
     s += ";";
 
-    select = new Select(*this, s.c_str());
+    select = new Select(orig, s.c_str());
 }
 
 

@@ -12,16 +12,16 @@
         <itemPath>postgresql/libpqtypes.h</itemPath>
         <itemPath>postgresql/vt-print.h</itemPath>
       </logicalFolder>
-      <itemPath>commons.h</itemPath>
       <itemPath>vtapi.h</itemPath>
+      <itemPath>/home/chmelarp/Projects/VTApi/vtapi/vtapi_commons.h</itemPath>
+      <itemPath>/home/chmelarp/Projects/VTApi/vtapi/vtapi_settings.h</itemPath>
       <itemPath>vtcli.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
-      <itemPath>cli_settings.cpp</itemPath>
-      <itemPath>cli_settings.h</itemPath>
+      <itemPath>/home/chmelarp/Projects/VTApi/vtapi/README.txt</itemPath>
       <itemPath>vtapi.conf</itemPath>
       <itemPath>vtapi.ggo</itemPath>
     </logicalFolder>
@@ -46,6 +46,7 @@
       <itemPath>sequence.cpp</itemPath>
       <itemPath>typemap.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
+      <itemPath>/home/chmelarp/Projects/VTApi/vtapi/vtapi_settings.cpp</itemPath>
       <itemPath>vtcli.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"

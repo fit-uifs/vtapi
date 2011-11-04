@@ -5,7 +5,7 @@
  * Created on 29. září 2011, 10:54
  */
 
-#include "commons.h"
+#include "vtapi_commons.h"
 
 TypeMap::TypeMap() {
     this->dataloaded = false;

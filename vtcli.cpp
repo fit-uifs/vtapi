@@ -13,7 +13,7 @@
 #include <sstream>
 
 #include "vtcli.h"
-#include "cli_settings.h"
+#include "vtapi_settings.h"
 
 
 using namespace std;

@@ -136,7 +136,7 @@ String KeyValues::getString(int position) {
         PQgetf(select->res, pos, "%varchar", position, &value);
     }
     else {
-       warning(304,"Value is not a string");
+       warning(304,"Type of (" + toString(position) + ") is not a string");
        this->print();
     }
        

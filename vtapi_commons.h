@@ -28,7 +28,7 @@
 #include <string>
 
 #include "postgresql/libpqtypes.h"
-#include "cli_settings.h"
+#include "vtapi_settings.h"
 
 typedef std::string String;
 #define BUFFERSize 255

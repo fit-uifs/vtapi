@@ -17,7 +17,7 @@ using namespace std;
 Method::Method(const KeyValues& orig, const String& name) : KeyValues(orig) {
     thisClass = "Method";
     
-    select = new Select(*this);
+    select = new Select(orig);
     select->from("public.methods", "*");
     select->whereString("mtname", name);
 }

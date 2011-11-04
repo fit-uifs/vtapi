@@ -12,7 +12,7 @@ Interval::Interval(const KeyValues& orig, const String& selection) : KeyValues(o
 
     if (!selection.empty()) this->selection = selection;
 
-    select = new Select(*this);
+    select = new Select(orig);
     select->from(this->selection, "*");
     select->whereString("seqname", this->sequence);
 }
