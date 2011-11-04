@@ -572,3 +572,59 @@ PGtimestamp CLIInsert::getTimestamp() {
     timestamp.time.usec  = 0;
     return timestamp;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * The CLI main function
+ * You can follow the
+ *
+ * @param argc
+ * @param argv
+ * @return sucess
+ */
+int main(int argc, char** argv) {
+
+    VTCli* vtcli = new VTCli(argc, argv);
+
+    vtcli->run();
+
+    delete (vtcli);
+
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+

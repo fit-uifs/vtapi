@@ -1,33 +1,18 @@
 /* 
  * File:   main.cpp
- * Author: Vojtěch Fröml
+ * Author: chmelarp
  *
- * Created on October 9, 2011, 6:58 PM
+ * Created on 4. listopad 2011, 19:26
  */
 
 #include <cstdlib>
-#include <iostream>
-
-#include "vtapi.h"
-#include "vtcli.h"
 
 using namespace std;
 
-/**
- * The CLI main function
- * You can follow the
- *
- * @param argc
- * @param argv
- * @return sucess
+/*
+ * This is a sample main file
  */
 int main(int argc, char** argv) {
-
-    VTCli* vtcli = new VTCli(argc, argv);
-
-    vtcli->run();
-
-    delete vtcli;
 
     return 0;
 }

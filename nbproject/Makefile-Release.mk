@@ -33,20 +33,8 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/sequence.o \
-	${OBJECTDIR}/commons.o \
-	${OBJECTDIR}/interval.o \
-	${OBJECTDIR}/method.o \
-	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/main.o \
-	${OBJECTDIR}/keyvalues.o \
-	${OBJECTDIR}/process.o \
-	${OBJECTDIR}/vtcli.o \
-	${OBJECTDIR}/typemap.o \
-	${OBJECTDIR}/query.o \
-	${OBJECTDIR}/postgresql/vt-print.o \
-	${OBJECTDIR}/dataset.o \
-	${OBJECTDIR}/_ext/1751460206/vtapi_settings.o
+	${OBJECTDIR}/vtcli.o
 
 
 # C Compiler Flags
@@ -73,75 +61,15 @@ dist/Release/GNU-Linux-x86/vtapi: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/vtapi ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/sequence.o: sequence.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/sequence.o sequence.cpp
-
-${OBJECTDIR}/commons.o: commons.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/commons.o commons.cpp
-
-${OBJECTDIR}/interval.o: interval.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
-
-${OBJECTDIR}/method.o: method.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
-
-${OBJECTDIR}/vtapi.o: vtapi.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
-
 ${OBJECTDIR}/main.o: main.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/main.o main.cpp
 
-${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
-
-${OBJECTDIR}/process.o: process.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/process.o process.cpp
-
 ${OBJECTDIR}/vtcli.o: vtcli.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtcli.o vtcli.cpp
-
-${OBJECTDIR}/typemap.o: typemap.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/typemap.o typemap.cpp
-
-${OBJECTDIR}/query.o: query.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/query.o query.cpp
-
-${OBJECTDIR}/postgresql/vt-print.o: postgresql/vt-print.c 
-	${MKDIR} -p ${OBJECTDIR}/postgresql
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/postgresql/vt-print.o postgresql/vt-print.c
-
-${OBJECTDIR}/dataset.o: dataset.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
-
-${OBJECTDIR}/_ext/1751460206/vtapi_settings.o: /home/chmelarp/Projects/VTApi/vtapi/vtapi_settings.cpp 
-	${MKDIR} -p ${OBJECTDIR}/_ext/1751460206
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/_ext/1751460206/vtapi_settings.o /home/chmelarp/Projects/VTApi/vtapi/vtapi_settings.cpp
 
 # Subprojects
 .build-subprojects:

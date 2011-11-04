@@ -1,7 +1,0 @@
-*~
-*.log
-*.[oa]
-build/*
-dist/*
-dist/Debug/*
-

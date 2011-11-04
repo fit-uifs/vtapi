@@ -1,7 +1,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "vt-print.h"
+#include "../include/postgresql/vt-print.h"
 
 #define bool int
 #define false   0
