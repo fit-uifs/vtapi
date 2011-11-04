@@ -21,6 +21,8 @@ public:
     virtual ~VTCli();
 
     int run();
+    int printHelp();
+    int printHelp(const String& what);
 protected:
     VTApi* vtapi;
     bool interact;

@@ -47,7 +47,7 @@ int VTCli::run() {
         // command: general query
         else if (!command.compare("query")) {
             if (!line.substr(0,4).compare("help")) {
-                cout << "helping you with query command" << endl;
+                this->printHelp(command);
                 continue;
             }
             if (line.empty()) continue;
@@ -61,7 +61,7 @@ int VTCli::run() {
             String input = getWord(line);
             // select help
             if (!input.compare("help")) {
-                cout << this->helpStrings["select"];
+                this->printHelp(command);
                 continue;
             }
             // get select params
@@ -130,7 +130,7 @@ int VTCli::run() {
         else if (command.compare("insert") == 0) {
             String input = getWord(line);
             if (!input.compare("help")) {
-                cout << this->helpStrings["insert"];
+                this->printHelp(command);
                 continue;
             }
 
@@ -152,28 +152,28 @@ int VTCli::run() {
         else if (!command.compare("update")) {
             String input = getWord(line);
             if (!input.compare("help")) {
-                cout << this->helpStrings["update"];
+                this->printHelp(command);
                 continue;
             }
-            cout << "todo update" << endl;
+            this->vtapi->commons->warning("update command not implemented");
         }
         // TODO: delete
         else if (!command.compare("delete")) {
             String input = getWord(line);
             if (!input.compare("help")) {
-                cout << this->helpStrings["delete"];
+                this->printHelp(command);
                 continue;
             }
-            cout << "todo delete" << endl;
+            this->vtapi->commons->warning("delete command not implemented");
         }
         // TODO: show
         else if (!command.compare("show")) {
             String input = getWord(line);
             if (!input.compare("help")) {
-                cout << this->helpStrings["show"];
+                this->printHelp(command);
                 continue;
             }
-            cout << "todo show" << endl;
+            this->vtapi->commons->warning("show command not implemented");
         }
         // command: test
         else if (!command.compare("test")) {
@@ -181,7 +181,7 @@ int VTCli::run() {
         }
         // command: help
         else if (!command.compare("help")) {
-            cout << this->helpStrings["all"];
+            this->printHelp();
         }
         else this->vtapi->commons->warning("Unknown command");
 
@@ -189,6 +189,52 @@ int VTCli::run() {
 
     return 0;
 }
+/**
+ * Prints basic help
+ * @return 0 on success, -1 on failure
+ */
+int VTCli::printHelp() {
+    return this->printHelp("all");
+}
+/**
+ * Prints help string
+ * @param what Help context ("all", "select", ...)
+ * @return 0 on success, -1 on failure
+ */
+int VTCli::printHelp(const String& what) {
+    stringstream hss;
+
+    if (this->helpStrings.count(what)) {
+        cout << this->helpStrings[what];
+        return 0;
+    }
+    else if (!what.compare("query")) {
+        hss << "query help";
+    }
+    else if (!what.compare("select")) {
+        hss << "select help";
+    }
+    else if (!what.compare("insert")) {
+        hss << "insert help";
+    }
+    else if (!what.compare("update")) {
+        hss << "update command not implemented";
+    }
+    else if (!what.compare("delete")) {
+        hss << "delete command not implemented";
+    }
+    else if (!what.compare("show")) {
+        hss << "show command not implemented";
+    }
+    else hss.clear(_S_failbit);
+    if (!hss.fail()) {
+        this->helpStrings.insert(std::make_pair(what,hss.str()));
+        cout << hss.str() << endl;
+        return 0;
+    }
+    else return -1;
+}
+
 /**
  * Creates help and command strings from arguments
  * @param argc Argument count
