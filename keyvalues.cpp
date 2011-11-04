@@ -30,15 +30,16 @@ String TKey::print() {
 
 KeyValues::KeyValues(const Commons& orig) 
           : Commons(orig), select(NULL), pos(-1), insert(NULL) {
+    thisClass = "KeyValues(Commons&)";
 }
 
 KeyValues::KeyValues(const KeyValues& orig)
           : Commons(orig), select(NULL), pos(-1), insert(NULL) {
+    thisClass = "KeyValues(KeyValues&)";
 }
 
 
 KeyValues::~KeyValues() {
-    logger->log("~KeyValues()");
     destruct (select);
     destruct (insert);
 
@@ -115,9 +116,13 @@ String KeyValues::getString(int position) {
     else if (typname.compare("varchar") == 0) {
         PQgetf(select->res, pos, "%varchar", position, &value);
     }
+    else if (typname.compare("character varying") == 0) {
+        PQgetf(select->res, pos, "%varchar", position, &value);
+    }
     else if (typname.compare("oid") == 0) {
         value = (PGtext) this->toTypname(this->getInt(position)).c_str();
     }
+    // FIXME Tomas: tady mozna chybi 3. hodnota?
     else if (typname.compare("inouttype") == 0) {
         value = (PGtext) ((this->getInt(position)) ? "out" : "in");
     }

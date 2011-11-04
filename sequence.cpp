@@ -8,6 +8,8 @@
 #include "vtapi.h"
 
 Sequence::Sequence(const KeyValues& orig, const String& name) : KeyValues(orig) {
+    thisClass = "Sequence";
+
     if (!name.empty()) this->sequence = name;
 
     select = new Select(*this);

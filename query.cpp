@@ -10,6 +10,8 @@
 
 Query::Query(const Commons& commons, const String& query, PGparam* param)
 : Commons(commons), queryString(query), param(param), res(NULL), executed(false) {
+    thisClass = "Query";
+
     if (!param) this->param = PQparamCreate(connector->conn);
 }
 
@@ -99,6 +101,7 @@ bool Query::keyFloatA(const String& key, const float* values, const int size, co
 // Select::Select() { }
 Select::Select(const Commons& commons, const String& queryString, PGparam* param)
 : Query(commons, queryString, param), limit(0), offset(0) {
+    thisClass = "Select";
 }
 
 // FIXME: tohle se musi predelat na TKey
@@ -181,6 +184,7 @@ String Select::getQuery() {
 // Insert::Insert() { }
 Insert::Insert(const Commons& commons, const String& queryString, PGparam* param)
 : Query(commons, queryString, param) {
+    thisClass = "Insert";
 }
 
 bool Insert::into(const String& table) {

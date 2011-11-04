@@ -203,7 +203,10 @@ public:
 
     
 protected:
-    String classStr;
+    /**
+     * This should be filled in each constructor of a derived class
+     */
+    String thisClass;
 
     Connector* connector; // this was most probably inherited
     Logger* logger;
@@ -218,7 +221,8 @@ protected:
     String sequence;
     String sequenceLocation;
 
-    String interval;
+    // FIXME Vojta: interval neni definovan jako string, ale jako dvojice intu t1 a t2
+    // String interval;
     String method;
     String process;
     String selection;

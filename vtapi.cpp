@@ -75,6 +75,10 @@ Dataset* VTApi::newDataset(const String& name) {
     return (new Dataset(*commons, name));
 }
 
+
+/**
+ * This might be a HOW-TO function
+ */
 void VTApi::test() {
     // lines starting with cout should be ignored :)
     
@@ -130,7 +134,7 @@ void VTApi::test() {
 
     cout << "DELETING Sequence " << sn << endl;
     Query* query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".sequences WHERE seqname='" + sn + "';");
-    cout << "OK:" << query->execute() << endl;
+    cout << "OK: " << query->execute() << endl;
     delete (query);
 
     cout << "DONE." << endl;
@@ -144,15 +148,22 @@ void VTApi::test() {
     interval->print();
     
     // this has no effect outside ...
-    int t1 = 100000 + rand()%1000;
+    int t1 = 1000000 + rand()%1000;
     cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
     Image* image = new Image(*interval);
+    image->next(); // do not forget this (again :), please
     image->add(interval->getSequence(), t1, "nosuchimage.jpg");
-    // insert->execute() or next() must be called after inserting all voluntary fields such as
     // image->insert->keyFloat("sizeKB", 100.3);
-    // image->insert->execute();
-    delete (image);    // if not called the destructor raises a warning
-    // ... except the database => do not fordet to delete where t1 > 99999 !!!!
+    image->insert->execute();     // or next() must be called after inserting all voluntary fields such as above
+    
+    delete (image);    // if not called execute() or next(), the insert destructor raises a warning
+        
+    // delete where t1 > 999999 to get rid of the testing value
+    cout << "DELETING Image " << sn << endl;
+    query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
+    cout << "OK: " << query->execute() << endl;
+    delete (query);
+
     delete (interval);
     delete (sequence);
 

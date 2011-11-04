@@ -160,7 +160,7 @@ Connector::~Connector() {
 
 /* ************************************************************************** */
 Commons::Commons(const Commons& orig) {
-
+    thisClass = orig.thisClass + "+Commons(Commons&)";
 
     logger    = orig.logger;
     connector = orig.connector;
@@ -173,7 +173,7 @@ Commons::Commons(const Commons& orig) {
     datasetLocation = orig.datasetLocation;
     sequence  = orig.sequence;
     sequenceLocation  = orig.sequenceLocation;
-    interval  = orig.interval;
+    // interval  = orig.interval;
 
     method    = orig.method;
     process   = orig.process;
@@ -184,6 +184,8 @@ Commons::Commons(const Commons& orig) {
 }
 
 Commons::Commons(Connector& orig) {
+    thisClass = "Commons(Connector&)";
+
     logger    = orig.getLogger();
     connector = &orig;
     typemap   = new TypeMap();
@@ -191,6 +193,8 @@ Commons::Commons(Connector& orig) {
 }
 
 Commons::Commons(const String& connStr, const String& logFilename) {
+    thisClass = "Commons(String&, String&)";
+
     logger    = new Logger(logFilename);
     connector = new Connector(connStr, logger);
     typemap   = new TypeMap();
@@ -201,6 +205,8 @@ Commons::Commons(const String& connStr, const String& logFilename) {
  * The most best ever of all VTAPI Commons constructors that should be always used
  */
 Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename) {
+    thisClass = "Commons(gengetopt_args_info&, String&)";
+
     logger    = new Logger(logFilename);
     connector = new Connector(args_info.connection_arg, logger);
     typemap   = new TypeMap();
@@ -210,7 +216,7 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
     format    = args_info.format_given ? String(args_info.format_arg) : String ("");
     dataset   = args_info.dataset_given ? String(args_info.dataset_arg) : String ("");
     sequence  = args_info.sequence_given ? String(args_info.sequence_arg) : String ("");
-    interval  = args_info.interval_given ? String(args_info.interval_arg) : String ("");
+    // interval  = args_info.interval_given ? String(args_info.interval_arg) : String ("");
     method    = args_info.method_given ? String(args_info.method_arg) : String ("");
     process   = args_info.process_given ? String(args_info.process_arg) : String ("");
     selection = args_info.selection_given ? String(args_info.selection_arg) : String ("");
@@ -252,21 +258,21 @@ Logger* Commons::getLogger() {
 
 
 void Commons::error(const String& logline) {
-    logger->log("ERROR! " + logline);
+    logger->log("ERROR at " + thisClass + ": " + logline);
     exit(1);
 }
 
 void Commons::error(int errnum, const String& logline) {
-    logger->log("ERROR " + toString(errnum) + "! " + logline);
+    logger->log("ERROR " + toString(errnum) + " at " + thisClass + ": " + logline);
     exit(1);
 }
 
 void Commons::warning(const String& logline) {
-    logger->log("ERROR! " + logline);
+    logger->log("WARNING at " + thisClass + ": " + logline);
 }
 
 void Commons::warning(int errnum, const String& logline) {
-    logger->log("WARNING " + toString(errnum) + ": " + logline);
+    logger->log("WARNING " + toString(errnum) + " at " + thisClass + ": " + logline);
 }
 
 

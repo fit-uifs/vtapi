@@ -8,16 +8,17 @@
 #include "vtapi.h"
 
 Interval::Interval(const KeyValues& orig, const String& selection) : KeyValues(orig) {
+    thisClass = "Interval";
+
     if (!selection.empty()) this->selection = selection;
 
     select = new Select(*this);
     select->from(this->selection, "*");
     select->whereString("seqname", this->sequence);
-    // res = PQexecf(getConnector()->getConn(), String("SELECT * FROM public.intervals;").c_str());
 }
 
 String Interval::getSequence() {
-    return this->getString("seqname");
+    return this->sequence;
 }
 
 int Interval::getStartTime() {
@@ -54,6 +55,7 @@ String Interval::getDataLocation() {
 
 // ************************************************************************** //
 Image::Image(const KeyValues& orig, const String& selection) : Interval(orig, selection) {
+    thisClass = "Image";
 }
 
 int Image::getTime() {

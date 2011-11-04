@@ -15,14 +15,11 @@ using namespace std;
 
 
 Method::Method(const KeyValues& orig, const String& name) : KeyValues(orig) {
-    // TODO: methodkeys = new TKeys(orig);
+    thisClass = "Method";
     
     select = new Select(*this);
     select->from("public.methods", "*");
     select->whereString("mtname", name);
-}
-
-Method::~Method() {
 }
 
 bool Method::next() {

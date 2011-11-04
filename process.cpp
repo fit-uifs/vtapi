@@ -14,6 +14,8 @@ using namespace std;
 
 
 Process::Process(const KeyValues& orig, const String& name) : KeyValues(orig) {
+    thisClass = "Process";
+
     String s = "SELECT P.*, PA1.relname AS inputs, PA2.relname AS outputs\n"
             "  FROM public.processes P\n"
             "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode\n"
@@ -23,9 +25,6 @@ Process::Process(const KeyValues& orig, const String& name) : KeyValues(orig) {
     s += ";";
 
     select = new Select(*this, s.c_str());
-}
-
-Process::~Process() {
 }
 
 

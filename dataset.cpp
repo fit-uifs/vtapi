@@ -9,6 +9,8 @@
 
 
 Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
+    thisClass = "Dataset";
+
     // set the dataset name
     if (!name.empty()) {
         dataset = name;

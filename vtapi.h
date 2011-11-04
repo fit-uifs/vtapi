@@ -440,6 +440,8 @@ class Interval : public KeyValues {
 public:
     Interval(const KeyValues& orig, const String& selection = "intervals");
 
+    // bool next(); not necessary
+
     String getSequence();
     int getStartTime();
     int getEndTime();
@@ -482,11 +484,10 @@ protected:
 class Method : public KeyValues {
 public:
     Method(const KeyValues& orig, const String& name = "");
-    virtual ~Method();
-
-    String getName();
 
     bool next();
+
+    String getName();
 
     Process* newProcess(const String& name = "");
 
@@ -508,7 +509,8 @@ private:
 class Process : public KeyValues {
 public:
     Process(const KeyValues& orig, const String& name = "");
-    virtual ~Process();
+
+    bool next();
 
     String getName();
     String getInputs();
@@ -516,8 +518,6 @@ public:
 
     // TODO: o tohle bych se ani nepokousel
     // bool add(String name="");
-
-    bool next();
 
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
     Sequence* newSequence(const String& name = "");
@@ -552,6 +552,7 @@ public:
 
     /**
      * For testing and learning purposes
+     * This might be a HOW-TO function
      */
     void test();
 
