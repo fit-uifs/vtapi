@@ -7,11 +7,11 @@
 
 #include <cstdlib>
 #include <iostream>
-<<<<<<< HEAD
+
 #include <time.h>
 #include "vtapi.h"
 #include <sstream>
->>>>>>> c111b316631a6da38846f89051c0f982f7d21586
+
 #include "vtcli.h"
 #include "cli_settings.h"
 
