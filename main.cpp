@@ -8,10 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
+#include "vtapi.h"
 #include "vtcli.h"
 
 using namespace std;
