@@ -231,8 +231,7 @@ protected:
     String sequence;
     String sequenceLocation;
 
-    // FIXME Vojta: interval neni definovan jako string, ale jako dvojice intu t1 a t2
-    // String interval;
+    std::pair<int,int> interval;
     String method;
     String process;
     String selection;

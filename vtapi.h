@@ -569,7 +569,6 @@ public:
      * Commons are common objects to the project.
      */
     Commons* commons;
-    String un_args;
 protected:
 
 };

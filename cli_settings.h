@@ -49,9 +49,9 @@ struct gengetopt_args_info
   char * password_arg;	/**< @brief User password.  */
   char * password_orig;	/**< @brief User password original value given at command line.  */
   const char *password_help; /**< @brief User password help description.  */
-  char * location_arg;	/**< @brief Path to data files.  */
-  char * location_orig;	/**< @brief Path to data files original value given at command line.  */
-  const char *location_help; /**< @brief Path to data files help description.  */
+  char * location_arg;	/**< @brief Base location of data files.  */
+  char * location_orig;	/**< @brief Base location of data files original value given at command line.  */
+  const char *location_help; /**< @brief Base location of data files help description.  */
   char * connection_arg;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\".  */
   char * connection_orig;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" original value given at command line.  */
   const char *connection_help; /**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" help description.  */
