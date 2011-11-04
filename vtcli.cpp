@@ -214,13 +214,60 @@ int VTCli::printHelp(const String& what) {
         return 0;
     }
     else if (!what.compare("query")) {
-        hss << "query help";
+        hss << endl <<
+            "query [SQLSTRING]" << endl << endl <<
+            "     * executes custom SQLQUERY" << endl <<
+            "     * ex.: list methods with active processes" << endl <<
+            "              query SELECT DISTINCT mtname FROM public.processes" << endl ;
     }
     else if (!what.compare("select")) {
-        hss << "select help";
+        hss << endl <<
+            "select dataset|sequence|interval|process|method|selection [ARGS]" << endl << endl <<
+            "Selects data and prints them in specified format (-f option)" << endl << endl <<
+            "ARG format:      arg=value or arg=value1,value2,..." << endl << endl <<
+            " Dataset ARGS:" << endl <<
+            "      name       name of the dataset" << endl <<
+            "  location       base location of the dataset data files (directory)" << endl << endl <<
+            " Sequence ARGS:" << endl <<
+            "      name       name of the sequence" << endl <<
+            "  location       location of the sequence data file(s) (file/directory)" << endl <<
+            "    seqnum       unique number of the sequence" << endl <<
+            "   seqtype       type of the sequence [images, video]" << endl << endl <<
+            "Interval ARGS:" << endl <<
+            "  sequence       name of the sequence containing this interval" << endl <<
+            "        t1       begin time of the interval" << endl <<
+            "        t2       end time of the interval" << endl <<
+            "  location       location of the interval data file (file)" << endl << endl <<
+            "Method ARGS:" << endl <<
+            "      name       name of the method" << endl << endl <<
+            "Process ARGS:" << endl <<
+            "      name       name of the process" << endl <<
+            "    method       name of the method the process is instance of" << endl <<
+            "    inputs       data type of inputs (database table)" << endl <<
+            "   outputs       data type of outputs (database table)" << endl << endl <<
+            "Selection ARGS:" << endl <<
+            "   (not implemented)" << endl;
     }
     else if (!what.compare("insert")) {
-        hss << "insert help";
+        hss << endl <<
+            "insert sequence|interval|process [ARGS]" << endl << endl <<
+            "Inserts data into database" << endl << endl <<
+            "ARG format:      arg=value or arg=value1,value2,..." << endl << endl <<
+            " Sequence ARGS:" << endl <<
+            "      name       name of the sequence *REQUIRED*" << endl <<
+            "  location       location of the sequence data file(s) (file/directory)" << endl <<
+            "    seqnum       unique number of the sequence" << endl <<
+            "   seqtype       type of the sequence [images, video]" << endl << endl <<
+            "Interval ARGS:" << endl <<
+            "  sequence       name of the sequence containing this interval *REQUIRED*" << endl <<
+            "        t1       begin time of the interval *REQUIRED*" << endl <<
+            "        t2       end time of the interval *REQUIRED*" << endl <<
+            "  location       location of the interval data file (file)" << endl << endl <<
+            "Process ARGS:" << endl <<
+            "      name       name of the process *REQUIRED*" << endl <<
+            "    method       name of the method the process is instance of" << endl <<
+            "    inputs       data type of inputs (database table)" << endl <<
+            "   outputs       data type of outputs (database table)" << endl;
     }
     else if (!what.compare("update")) {
         hss << "update command not implemented";
