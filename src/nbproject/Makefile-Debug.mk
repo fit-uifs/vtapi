@@ -67,11 +67,11 @@ LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopen
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Debug.mk ../dist/Debug/GNU-Linux-x86/libvtapi.so
+	"${MAKE}"  -f nbproject/Makefile-Debug.mk ../dist/libvtapi.so
 
-../dist/Debug/GNU-Linux-x86/libvtapi.so: ${OBJECTFILES}
-	${MKDIR} -p ../dist/Debug/GNU-Linux-x86
-	${LINK.cc} -shared -o ../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libvtapi.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
+../dist/libvtapi.so: ${OBJECTFILES}
+	${MKDIR} -p ../dist
+	${LINK.cc} -shared -o ../${CND_DISTDIR}/libvtapi.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/sequence.o: sequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -139,7 +139,7 @@ ${OBJECTDIR}/dataset.o: dataset.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Debug
-	${RM} ../dist/Debug/GNU-Linux-x86/libvtapi.so
+	${RM} ../dist/libvtapi.so
 
 # Subprojects
 .clean-subprojects:

@@ -11,7 +11,7 @@ CND_CONF=Debug
 CND_DISTDIR=dist
 NBTMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/libvtapi.so
+OUTPUT_PATH=../${CND_DISTDIR}/libvtapi.so
 OUTPUT_BASENAME=libvtapi.so
 PACKAGE_TOP_DIR=libsrc.so/
 

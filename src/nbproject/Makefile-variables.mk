@@ -8,9 +8,9 @@ CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
-CND_ARTIFACT_DIR_Debug=../dist/Debug/GNU-Linux-x86
+CND_ARTIFACT_DIR_Debug=../dist
 CND_ARTIFACT_NAME_Debug=libvtapi.so
-CND_ARTIFACT_PATH_Debug=../dist/Debug/GNU-Linux-x86/libvtapi.so
+CND_ARTIFACT_PATH_Debug=../dist/libvtapi.so
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Debug=libsrc.so.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/libsrc.so.tar
