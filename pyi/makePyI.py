@@ -5,18 +5,23 @@ See
 # http://sourceforge.net/projects/pygccxml/
 
 $ sudo apt-get install gccxml python-pygccxml
-$ svn co https://pygccxml.svn.sourceforge.net/viewvc/pygccxml/tags/pyplusplus_dev_1.0.0/ pyplusplus
+$ svn co 
 $ cd pyplusplus && sudo python setup.py install
-$ cd .. && python makaPyI.py
+$ cd .. && python makePyI.py
 """
+
+# nm -C -D -g ../dist/libvtapi.so
+
 import os
 from pyplusplus import module_builder
 
+cwd = os.getcwd() + os.sep;
+
 #Creating an instance of class that will help you to expose your declarations
-mb = module_builder.module_builder_t( [r"/home/chmelarp/Projects/VTApi/vtapi/include/vtapi_commons.h", r"/home/chmelarp/Projects/VTApi/vtapi/include/vtapi.h"]
+mb = module_builder.module_builder_t( [cwd + '../include/vtapi_commons.h', cwd + '../include/vtapi.h']
                                       , gccxml_path=r"gccxml" 
-                                      , working_directory=r"/home/chmelarp/Projects/VTApi/vtapi/include"
-                                      , include_paths=['/home/chmelarp/Projects/VTApi/vtapi', '/home/chmelarp/Projects/VTApi/vtapi/include', '/home/chmelarp/Projects/VTApi/vtapi/include']
+                                      , working_directory= cwd + "../include/"
+                                      , include_paths=[cwd + '../include/', cwd + '../include/postgresql']
                                       , define_symbols=[] )
 
 
@@ -24,7 +29,7 @@ mb = module_builder.module_builder_t( [r"/home/chmelarp/Projects/VTApi/vtapi/inc
 mb.print_declarations()
 
 #Creating code creator. After this step you should not modify/customize declarations.
-mb.build_code_creator( module_name='pyplusplus' )
+mb.build_code_creator( module_name='vtapi' )
 
 #Writing code to file.
-mb.write_module( './vtapi.py' )
+mb.write_module( cwd + 'vtapi.py' )
