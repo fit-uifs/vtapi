@@ -39,7 +39,7 @@ bool Interval::add(const String& sequence, const int t1, const int t2, const Str
     insert->keyInt("t1", t1);
     insert->keyInt("t2", t2);
     if (!location.empty()) {
-        insert->keyString("imglocation", this->getDataLocation() + location);
+        insert->keyString("imglocation", location);
     }
     // that's all, folks ... continue similarly if needed
 }

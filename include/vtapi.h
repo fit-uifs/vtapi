@@ -19,6 +19,7 @@
 class Dataset;
 class Sequence;
 class Interval;
+class Image;
 class Method;
 class Process;
 
@@ -317,6 +318,7 @@ public:
     bool add(String name, String location);
 
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
+    Image* newImage(const String& name = "");
     Process* newProcess(const String& name = "");
 
 #ifdef _OpenCV
