@@ -43,7 +43,7 @@ Interval* Sequence::newInterval(const int t1, const int t2) {
 
 Image* Sequence::newImage(const String& name) {
     Image* image = new Image(*this);
-    image->select->whereString("location", name);
+    image->select->whereString("imglocation", name);
     return image;
 }
 
