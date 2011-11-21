@@ -59,16 +59,16 @@ Sequence* Dataset::newSequence(const String& name) {
 }
 
 /**
- * Create new sequence for current dataset
- * @return pointer to new sequence
+ * Create new method for current dataset
+ * @return pointer to new method
  */
 Method* Dataset::newMethod(const String& name) {
     return (new Method(*this, name));
 }
 
 /**
- * Create new sequence for current dataset
- * @return pointer to new sequence
+ * Create new process for current dataset
+ * @return pointer to new process
  */
 Process* Dataset::newProcess(const String& name) {
     return (new Process(*this, name));

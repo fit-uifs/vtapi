@@ -1,21 +1,76 @@
-/* 
- * File:   VTApi.h
- * Author: chmelarp
+/**
+ * @mainpage
  *
- * Created on 29. sep 2011, 10:42
+ * @section ABOUT What is VTApi
+ * VTApi is a PostgreSQL database and OpenCV API for the VT project.
+ * The project is oriented towards processing of records containing
+ * image and video information – categorization, searching and comparison.
+ *
+ * @section HOMEPAGE VTApi development homepage
+ * https://gitorious.org/vtapi
+ *
+ * @section AUTHORS VTApi Team
+ * The team consists of following people from Faculty of Information Technology, Brno University of Technology, CZ:
+ * @authors Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @authors Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @authors Tomas Volf, ivolf@fit.vutbr.cz
+ *
+ * @section LICENSE License
+ * There will be license information for VTApi.
+ * @copyright &copy; FIT BUT, CZ, 2011
+ *
+ *
+ *
+ * @example vtapi.conf
+ * This file shows an example configuration file for VTApi.
+ * @example vtapi.cpp
+ *
+ *
+ * @file
+ * @authors
+ * VTApi Team, FIT BUT, CZ
+ * Petr Chmelar, chmelarp@fit.vutbr.cz
+ * Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * Tomas Volf, ivolf@fit.vutbr.cz
+ *
+ *
+ * @section LECENSE License
+ *
+ * There will be license information for VTApi.
+ * &copy; FIT BUT, CZ, 2011
+ *
+ *
+ * @section DESCRIPTION Description
+ * 
+ * Main classes which provide a basic functionality of VTApi.
  */
 
 #ifndef VTAPI_H
 #define	VTAPI_H
 
 // first, include internal classes
-#include "vtapi_commons.h"
 #include <map>
 
 // next, libraries (libpq and) libpqtypes
 #include "postgresql/libpqtypes.h"
+#include "vtapi_commons.h"
 
-// virtual definitions
+
+using namespace std;
+
+
+// virtual definitions of classes
+// list of classes, which are contained in this header
+class TKey;
+
+class Query;
+class Select;
+class Insert;
+
+class CLIInsert;
+
+class KeyValues;
+
 class Dataset;
 class Sequence;
 class Interval;
@@ -23,54 +78,91 @@ class Image;
 class Method;
 class Process;
 
+class VTApi;
+
+
 
 /**
- * This is to represent the keys and fields in queries
+ * @brief This is to represent the keys and fields in queries
+ * 
  * ... just for the feeling (and vectors, of course)
- * You can use size=-1 for for NULL :)
+ * @note You can use size=-1 for NULL :)
  */
 class TKey {
+// Members
 public:
-    String type;
-    String key;
-    int size;       // you can use -1 for NULL :)
-    String from;
+    String type; /**< Name of data type */
+    String key;  /**< Name of a column */
+    int size;    /**< "0" is the value right now */   // you can use -1 for NULL :)
+    String from; /**< Distinguish between in/out right now */
 
+// Methods
+public:
+    /**
+     * Constructor for case, where the size is set to the value "-1"
+     */
     TKey() : size(-1) {};
+    /**
+     * Constructor for full specification of arguments
+     * @param type name of data type
+     * @param key name of a column
+     * @param size "0" is the value right now
+     * @param from distinguish between in/out right now
+     */
     TKey(const String& type, const String& key, const int size, const String& from = "")
             : type(type), key(key), from(from), size(size) {};
 
+    /**
+     * Print data and return data that was printed
+     * @return data that was printed
+     */
     String print();
 };
 
 
 /**
- * This is a virtual query class
+ * @brief This is a virtual query class
+ * 
  * TODO: It will be used for delayed queries (store())
  * @see http://libpqtypes.esilo.com/
  *
- * Error codes 20*
+ * @note Error codes 20*
  */ // ********************************************************************** //
 class Query : public Commons {
+// Members
 public:
+    std::vector<TKey> keys; /**< This is where those keys are stored */
+    String queryString; /**< This is used for (direct) queries */
+    PGparam* param; /**< This is used for parameter passing to query */
+    PGresult* res; /**< This is where results are (to be) not NULL */
+    bool executed; /**< This is a flag wheather the query was executed after any change */
+
+// Methods
+public:
+    /**
+     * Construct a query object
+     * @param commons pointer of the existing commons object
+     * @param query query string
+     * @param param parameters for passing to the query
+     */
     Query(const Commons& commons, const String& query = "", PGparam *param = NULL);
+    /**
+     * Destruct query class and also other commons objects
+     */
     virtual ~Query();
 
     /**
      * This expands the query, so you can check it before the execution
-     * @return
+     * @return string value with the query
      */
     virtual String getQuery();
 
     /**
      * This will commit your query
-     * @return 
+     * @return success of the query
      */
     bool execute();
     // TODO? virtual bool prepare();
-
-    /** This is a flag wheather the query was executed after any change */
-    bool executed;
 
     /**
      * This may be hazardeous for someone...
@@ -84,8 +176,7 @@ public:
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times as:
-     *
-     *
+     * @todo
      * @param key
      * @param value
      * @return success
@@ -96,97 +187,120 @@ public:
     bool keyIntA(const String& key, const int* values, const int size, const String& from = "");
     bool keyFloat(const String& key, const float& value, const String& from = "");
     bool keyFloatA(const String& key, const float* values, const int size, const String& from = "");
-    
-    /** This is where those keys are stored */
-    std::vector<TKey> keys;
-    PGparam* param;
-
-    /** This is used for (direct) queries */
-    String queryString;
-
-    /** This is where results are (to be) not NULL */
-    PGresult* res;
 };
 
 /**
- * This is a class where queries are (to be) constructed
+ * @brief This is a class where queries are (to be) constructed
+ *
  * Mechanism: TBD
  *
- * Errors 21*
+ * @note Errors 21*
  *
  */// *********************************************************************** //
 class Select : public Query {
+// Members
 public:
+    // TODO: this->from["intervals"] = "*";
+    // FIXME: use keys
+    std::multimap<String, String> fromList; /**< This is a tuple table and column name */
+
+    // FIXME: see below :(
+    String where; /**< Where conditions for the query */
+
+    String groupby; /**< String for a GROUP BY part of the query */
+    String orderby; /**< String for a ORDER BY part of the query */
+
+    int limit;  /**< Specify a size (a number of rows) of the resultset */
+    int offset; /**< Specify an index of row, where the resultset starts */
+
+// Methods
+public:
+    /**
+     * @todo
+     * @param commons
+     * @param queryString
+     * @param param
+     */
     Select(const Commons& commons, const String& queryString = "", PGparam *param = NULL);
 
     /**
      * This expands the query, so you can check it before the execution
-     * @return query
+     * @return string value with SQL select query
      */
     String getQuery();
 
     /**
      * This is to specify the from clause and the select (column) list
      * It may be called more times.
+     * @param table
+     * @param column
+     * @return
      */
     bool from(const String& table, const String& column);
-    // this is a tuple table and column name
-    // TODO: this->from["intervals"] = "*";
-    // FIXME: use keys
-    std::multimap<String, String> fromList;
 
     // FIXME: use keys instead
     /**
      * This is a persistent function to add where clauses
      * It can be called several times as:
-     *
      * @param column
      * @param value
      * @return success
      */
     bool whereString(const String& key, const String& value, const String& table = "");
-    String where;   // FIXME: see above :(
-
-    String groupby;
-    String orderby;
-
-    int limit;
-    int offset;
 };
 
 /**
- * This is a class where queries are (to be) constructed
+ * @brief This is a class where queries are (to be) constructed
+ * 
  * Mechanism: TBD
  *
- * Error codes 22*
+ * @note Error codes 22*
  *
  */// *********************************************************************** //
 class Insert : public Query {
+// Members
 public:
+    String intoTable; /**< Table into which new data will be inserted */
+    
+// Methods
+public:
+    /**
+     * @todo
+     * @param commons
+     * @param insertString
+     * @param param
+     */
     Insert(const Commons& commons, const String& insertString = "", PGparam *param = NULL);
 
     /**
      * This is to specify the (single) table to be inserted in
-     * @param table
+     * @param table table into which new data will be inserted
      * @return success
      */
     bool into(const String& table);
-    String intoTable;
 
     /**
      * This expands the query, so you can check it before the execution
-     * @return
+     * @return string value with SQL insert command
      */
     String getQuery();
 };
 
 
 /**
- * KeyValues storage class
+ * @brief KeyValues storage class
  *
- * Errors 30*
+ * @note Error codes 30*
  */
 class KeyValues : public Commons {
+// Members
+public:
+    Select* select; /**< Select is (to be) pre-filled by the constructor */
+    int pos;        /**< Tuple of the resultset; initialized to -1 by default */
+    Insert* insert; /**< New insert to insert new data */
+    // some other inherited from @link Commons
+
+// Methods
 public:
     // FIXME: proc jsou tu nutne 2 stejne konstruktory?
     KeyValues(const Commons& orig);
@@ -204,34 +318,120 @@ public:
      */
     KeyValues* next();
 
-    // get a list of all possible columns
+    /**
+     * get a list of all possible columns
+     * @return list of key name and TODO
+     */
     std::map<String,String> getKeys();
 
+    /**
+     * Print a current tuple of resultset
+     */
     void print();
+    /**
+     * Print all tuples of resultset
+     */
     void printAll();
 
-    // getters (Select)
+    // =============== GETTERS (Select) ========================================
+    // =============== GETTERS FOR STRINGS =====================================
+    /**
+     * Get a string value specified by a column key
+     * @param key column key
+     * @return string value
+     */
     String getString(String key);
+    /**
+     * Get a string value specified by an index of a column
+     * @param position index of the column
+     * @return string value
+     */
     String getString(int pos);
 
+    // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==============
+    /**
+     * Get an integer value specified by a column key
+     * @param key column key
+     * @return integer value
+     */
     int getInt(String key);
+    /**
+     * Get an integer value specified by an index of a column
+     * @param position index of column
+     * @return integer value
+     */
     int getInt(int pos);
+    /**
+     * Get an array of integer values specified by a column key
+     * @param key column key
+     * @param size size of the array of integer values
+     * @return array of integer values
+     */
     int* getIntA(String key, int& size);
+    /**
+     * Get an array of integer values specified by an index of a column
+     * @param pos index of column
+     * @param size size of the array of integer values
+     * @return array of integer values
+     */
     int* getIntA(int pos, int& size);
+    /**
+     * Get a vector of integer values specified by a column key
+     * @param key column key
+     * @return  array of integer values
+     */
     std::vector<int> getIntV(int pos);
+    /**
+     * Get a vector of integer values specified by an index of a column
+     * @param position index of column
+     * @return  array of integer values
+     */
     std::vector<int> getIntV(String key);
 
+    // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
+    /**
+     * Get a float value specified by a column key
+     * @param key column key
+     * @return float value
+     */
     float getFloat(String key);
+    /**
+     * Get a float value specified by an index of a column
+     * @param position index of column
+     * @return float value
+     */
     float getFloat(int pos);
+    /**
+     * Get an array of float values specified by a column key
+     * @param key column key
+     * @param size size of the array of float values
+     * @return array of float values
+     */
     float* getFloatA(String key, int& size);
+    /**
+     * Get array of float values specified by index of column
+     * @param position index of column
+     * @param size size of the array of float values
+     * @return array of float values
+     */
     float* getFloatA(int pos, int& size);
 
+    // =============== GETTERS - OTHER =========================================
+    /**
+     * Get a string value from a name data type specified by a column key
+     * @param key column key
+     * @return string value
+     */
     int getOid(String key);
+    /**
+     * Get an integer with an OID value specified by a column key
+     * @param key column key
+     * @return integer with the OID value
+     */
     String getName(String key);
 
-    // setters (Update)
+    // =============== SETTERS (Update) ========================================
     // TODO: overit jestli a jak funguje... jako UPDATE?
-
     bool setString(String key, String value);
     bool setInt(String key, String value);
     bool setInt(String key, int value);
@@ -252,48 +452,65 @@ public:
 
 
     // TODO Tomas: u kazde tridy add vytvori objekt te tridy se stejnymi keys, ale bez hodnot a ty se naplni jako set
-
-    /**
-     * Select is (to be) pre-filled byt the constructor
-     */
-    Select* select;
-    int pos;       // initialized to -1 by default
-
-    Insert* insert;
-    // some other inherited from Commons
 };
 
 
+
 /**
- * This class should always be on the path of your programm...
+ * @brief This class should always be on the path of your programm...
  *
- * Error codes 31*
+ * @note Error codes 31*
  */
 class Dataset : public KeyValues {
 public:
     /**
      * This is the recommended constructor.
      *
-     * WARNING: you can ommit the @name only in these cases:
-     *          1) Don't know the name -> use next
-     *          2) The dataset is in your vtapi.conf
+     * @warning you can ommit the \a name only in these cases:
+     *    -# Don't know the name -> use next
+     *    -# The dataset is in your vtapi.conf
      *
-     * @param orig
-     * @param name
+     * @param orig @todo
+     * @param name @todo
      */
     Dataset(const KeyValues& orig, const String& name = "");
 
     /**
-     * Over-loading next();
-     * @return
+     * Move to a next dataset and set dataset name and location varibles
+     * @return \a true if the next dataset was set as current
+     *         \a false in other cases return
+     * @note Over-loading next() from KeyValues
      */
     bool next();
 
+    /**
+     * Get a dataset name
+     * @return string value with the name of the dataset
+     */
     String getName();
+    /**
+     * Get a dataset location
+     * @return string value with the location of the dataset
+     */
     String getLocation();
 
+    /**
+     * Create new sequence for current dataset
+     * @param name name of new sequence
+     * @return pointer to new sequence
+     */
     Sequence* newSequence(const String& name = "");
+    /**
+     * Create new sequence for current dataset
+     * @param name name of new method
+     * @return pointer to new sequence
+     */
     Method* newMethod(const String& name = "");
+    /**
+     * Create new process for current dataset
+     * @param name name of new process
+     * @return pointer to new process
+     */
     Process* newProcess(const String& name = "");
 
 protected:
@@ -302,23 +519,70 @@ protected:
 
 
 /**
- * A Sequence class manages videos and images
+ * @brief A Sequence class manages videos and images
  *
- * Error codes 32*
+ * @note Error codes 32*
  */
 class Sequence : public KeyValues {
+// Memebers
+protected:
+    String file_name_video; /**< File name of a video */
+    String file_name_image; /**< File name of an image */
+//Methods
 public:
+    /**
+     * Constructor for sequences
+     * @param orig pointer to the parrent
+     * @param name name of sequence, which we can construct
+     */
     Sequence(const KeyValues& orig, const String& name = "");
 
+    /**
+     * Move to a next sequence and set sequence name and location varibles
+     * @return \a true if the next sequence was set as current
+     *         \a false in other cases return
+     * @note Over-loading next() from KeyValues
+     */
     bool next();
 
+    /**
+     * Get a sequence name
+     * @return string value with the name of the sequence
+     */
     String getName();
+    /**
+     * Get a sequence location
+     * @return string value with the location of the sequence
+     */
     String getLocation();
 
+    /**
+     * Add new sequence to a table
+     * @todo Metoda asi neni dokoncena? [TV]
+     * @param name name of the sequence
+     * @param location location of the sequence
+     * @return @todo zatim zrejme nic nevraci [TV]
+     */
     bool add(String name, String location);
 
+    /**
+     * Create a new interval specified by a start time and an end time
+     * @param t1 start time
+     * @param t2 end time
+     * @return pointer to the new interval
+     */
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
+    /**
+     * Create a new image specified by a name
+     * @param name name of the image
+     * @return pointer to the new image
+     */
     Image* newImage(const String& name = "");
+    /**
+     * @todo Not implemented
+     * @param name
+     * @return
+     */
     Process* newProcess(const String& name = "");
 
 #ifdef _OpenCV
@@ -326,38 +590,68 @@ public:
 #endif
     
 protected:
+    /**
+     * @todo Not implemented
+     * @param name
+     * @return
+     */
     bool openVideo(const String& name);
+    /**
+     * @todo Not implemented
+     * @param name
+     * @return
+     */
     bool openImage(const String& name);
-
-    String file_name_video;
-    String file_name_image;
-
 };
 
 
 /**
- * Interval is equivalent to an interval of images
+ * @brief Interval is equivalent to an interval of images
  *
- * Error codes 33*
+ * @note Error codes 33*
  */
 class Interval : public KeyValues {
 public:
+    /**
+     * Constructor for intervals
+     * @param orig pointer to the parrent
+     * @param selection name of a selection table
+     */
     Interval(const KeyValues& orig, const String& selection = "intervals");
 
     // bool next(); not necessary
 
     String getSequence();
+    /**
+     * Get a start time of the current interval
+     * @return start time
+     */
     int getStartTime();
+    /**
+     * Get an end time of the current interval
+     * @return end time
+     */
     int getEndTime();
 
     /**
      * This is most probably what you always wanted...
-     * @return
+     * @return string value with the location of the data
      */
     String getDataLocation();
-    /** This is here just for image name */
+    /**
+     * This is here just for image name
+     * @return string value with the location of the image
+     */
     String getLocation();
-
+    /**
+     * Add new interval to a table
+     * @todo Metoda asi neni dokoncena? [TV]
+     * @param sequence interval name
+     * @param t1 start time
+     * @param t2 end time
+     * @param location of the image
+     * @return @todo zatim zrejme nic nevraci [TV]
+     */
     bool add(const String& sequence, const int t1, const int t2 = -1, const String& location = "");
 
 protected:
@@ -365,11 +659,12 @@ protected:
 };
 
 /**
- * This represents images
- *
- * Error codes 339*
+ * @brief This represents images
+ * @todo Not implemented [TV]
+ * @note Error codes 339*
  */
 class Image : public Interval {
+// Methods
 public:
     Image(const KeyValues& orig, const String& selection = "intervals");
 
@@ -377,53 +672,112 @@ public:
     bool add(const String& sequence, const int t, const String& location);
 
 protected:
-
+    
 };
 
 
 /**
+ * @brief A class which represents methods and gets also their keys
  *
- * Error codes 35*
+ * @note Error codes 35*
  */
 class Method : public KeyValues {
+// Members
 public:
+    std::vector<TKey> methodKeys; /**< A vector of key-value pairs*/
+    
+// Methods
+public:
+    /**
+     * Constructor for methods
+     * @param orig pointer to the parrent
+     * @param name name of method, which we can construct
+     */
     Method(const KeyValues& orig, const String& name = "");
 
+    /**
+     * Move to a next method and set a method name and its methodkeys variables
+     * @return \a true if the next method was set as current
+     *         \a false in other cases return
+     * @note Over-loading next() from KeyValues
+     */
     bool next();
-
+    /**
+     * Get a name of the current method
+     * @return string value with the name of the method
+     */
     String getName();
-
-    Process* newProcess(const String& name = "");
-
     /**
      * This is to refresh the methodKeys vector
      * @return vector<TKey>
      */
     std::vector<TKey> getMethodKeys();
-    std::vector<TKey> methodKeys;
+
+    /**
+     * Create new process for current dataset
+     * @return pointer to new sequence
+     */
+    Process* newProcess(const String& name = "");
 
 private:
+    /**
+     * @todo: NOT IMPLEMENTED? [TV]
+     * @param inout
+     */
     void printData(const String& inout);
 };
 
 /**
+ * @brief A class which represents processes and gets information about them
  *
- * Error codes 36*
+ * @note Error codes 36*
  */
 class Process : public KeyValues {
+// Methods
 public:
     Process(const KeyValues& orig, const String& name = "");
 
+    /**
+     * Individual next() for processes, which stores current process
+     * and selection to commons
+     * @return this or NULL
+     */
     bool next();
 
+
+    /**
+     * Get a process name
+     * @return string value with a process name
+     */
     String getName();
+    /**
+     * Get a name of a table where are stored an input data
+     * @return string value with an input data table name
+     */
     String getInputs();
+    /**
+     * Get a name of a table where are stored an output data
+     * @return string value with an output data table name
+     */
     String getOutputs();
 
     // TODO: o tohle bych se ani nepokousel
     // bool add(String name="");
 
+    /**
+     * Create new interval for process
+     * // TODO: unused t1, t2
+     * @param t1 currently unused
+     * @param t2 currently unused
+     * @return new interval
+     */
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
+    /**
+     * Create new sequence for process
+     * // TODO: not implemented method
+     * @param name sequence name (TODO: is it correct?)
+     * @return new sequence
+     */
     Sequence* newSequence(const String& name = "");
 
 // TODO:    void print();
@@ -431,15 +785,20 @@ public:
 
 
 /**
- * VTApi class manages Commons and processes args[]
+ * @brief VTApi class manages Commons and processes args[]
  * This is how to begin
  *
  * TODO: include http://www.gnu.org/s/gengetopt/gengetopt.html
  *       special interest to the configuration files is needed
  *
- * Error codes 60*
+ * @note Error codes 60*
  */ // ********************************************************************** //
 class VTApi {
+// Members
+public:
+    Commons* commons; /**< Commons are common objects to the project. */
+
+// Methods
 public:
     /**
      * Constructor recomended (in the future)
@@ -466,13 +825,7 @@ public:
      * @return
      */
     Dataset* newDataset(const String& name = "");
-    Method* newMethod(const String& name = "");
-    Process* newProcess(const String& name = "");
 
-    /**
-     * Commons are common objects to the project.
-     */
-    Commons* commons;
 protected:
 
 };
@@ -480,23 +833,29 @@ protected:
 
 // this is just a development branch...
 /**
- * A generic class for storing a single keyvalue type
- * It uses std::copy (memcpy) to maintain the object data (except pointer targets)
- * WARNING: use PDOs only ... @see http://en.wikipedia.org/wiki/Plain_old_data_structure
- * WARNING: if you use pointers, you shouldn't free them
- * You can use size=-1 for NULL :)
+ * @brief A generic class for storing a single keyvalue type
  *
+ * It uses std::copy (memcpy) to maintain the object data (except pointer targets)
+ * 
+ * @warning
+ *     - use PDOs only ... http://en.wikipedia.org/wiki/Plain_old_data_structure <br>
+ *     - if you use pointers, you shouldn't free them
+ * @note You can use size=-1 for NULL :)
+ *
+ * @see http://en.wikipedia.org/wiki/Plain_old_data_structure
  * @see http://www.cplusplus.com/doc/tutorial/templates/
  * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
  * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
  */
 template <class T>
 class TKeyValue : public TKey {
-public:
-    /** This attribute is there for validation */
-    String typein;
+// Members
+public:    
+    String typein; /**< This attribute is there for validation */
     T* values;
 
+// Methods
+public:
     TKeyValue() : TKey(), values(NULL) {};
     TKeyValue(const String& type, const String& key, const T& value, const String& from = "")
             : TKey(type, key, 1, from) {
@@ -515,7 +874,11 @@ public:
     ~TKeyValue () {
         destructall(values);
     }
-
+    
+    /**
+     * Print values from TKey members
+     * @return string which contains a dump of TKey members
+     */
     String print();
 };
 

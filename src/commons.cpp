@@ -1,20 +1,29 @@
-/*
- * File:   VTApi.cpp
- * Author: chmelarp
+/**
+ * @file
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * Created on 29. 9. 2011, 10:42
+ * 
+ * @section DESCRIPTION
+ *
+ * Methods of classes for commons
  */
 
-#include "vtapi_commons.h"
+
+
+#include <fstream>
+#include <iostream>
+#include <map>
+#include <stdlib.h>
 
 #include "postgresql/libpqtypes.h"
 #include "postgresql/vt-print.h"
+
+#include "vtapi_commons.h"
 #include "vtapi.h"
 
-#include <iostream>
-#include <fstream>
-#include <stdlib.h>
-#include <map>
 
 
 /* ************************************************************************** */
@@ -227,7 +236,6 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
     baseLocation = args_info.location_given ? String(args_info.location_arg) : String("");
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 }
-
 
 /**
  * This should be called from any other (virtual) constructor

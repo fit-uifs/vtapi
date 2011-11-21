@@ -23,11 +23,13 @@ VTApi::VTApi(int argc, char** argv) {
     cli_params = cmdline_parser_params_create();
     // Hold check for required arguments until config file is parsed
     cli_params->check_required = 0;
+	// Parse cmdline first
     if (cmdline_parser_ext (argc, argv, &args_info, cli_params)) warn = true;
     // Get the rest of arguments from config file, don't override cmdline
     cli_params->initialize = 0;
     cli_params->override = 0;
     cli_params->check_required = 1;
+	// Parse config file
     if (cmdline_parser_config_file (args_info.config_arg, &args_info, cli_params)) warn = true;
 
     // TODO: user authentization here
@@ -60,6 +62,7 @@ VTApi::VTApi(const VTApi& orig)
 VTApi::~VTApi() {
 }
 
+
 Dataset* VTApi::newDataset(const String& name) {
     return (new Dataset(*commons, name));
 }
@@ -67,6 +70,7 @@ Dataset* VTApi::newDataset(const String& name) {
 
 /**
  * This might be a HOW-TO function
+ * @code
  */
 void VTApi::test() {
     // lines starting with cout should be ignored :)
@@ -136,7 +140,7 @@ void VTApi::test() {
     interval->next();
     interval->print();
     
-    // this has no effect outside ...
+/*    // this has no effect outside ...
     int t1 = 1000000 + rand()%1000;
     cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
     Image* image = new Image(*interval);
@@ -160,7 +164,7 @@ void VTApi::test() {
 
     // process usw.
     cout << "DONE." << endl;
-    cout << endl;
+    cout << endl;*/
     cout << "TESTING Method..." << endl;
 
     Method* method = dataset->newMethod();
@@ -191,3 +195,6 @@ void VTApi::test() {
     delete (dataset);
     cout << "DONE ALL ... see warnings." << endl;
 }
+/**
+ * @endcode
+ */

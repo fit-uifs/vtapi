@@ -5,15 +5,14 @@
  * Created on 29. září 2011, 10:52
  */
 
-#include "vtapi.h"
-#include "postgresql/libpqtypes.h"
 #include <cstdlib>
 #include <iostream>
 
+#include "postgresql/libpqtypes.h"
+#include "vtapi.h"
+
+
 using namespace std;
-
-
-
 
 // ************************************************************************** //
 String TKey::print() {
@@ -87,8 +86,10 @@ void KeyValues::printAll() {
 
 
 
+// =============== GETTERS (Select) ============================================
+// =============== GETTERS FOR STRINGS =========================================
 /**
- * Get string value specified by column key
+ * Get a string value specified by a column key
  * @param key column key
  * @return string value
  */
@@ -97,8 +98,8 @@ String KeyValues::getString(String key) {
 }
 
 /**
- * Get string value spevified by index of column
- * @param position index of column
+ * Get a string value specified by an index of a column
+ * @param position index of the column
  * @return string value
  */
 String KeyValues::getString(int position) {
@@ -149,8 +150,9 @@ String KeyValues::getString(int position) {
 
 
 
+// =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
 /**
- * Get integer value specified by column key
+ * Get an integer value specified by a column key
  * @param key column key
  * @return integer value
  */
@@ -159,7 +161,7 @@ int KeyValues::getInt(String key) {
 }
 
 /**
- * Get integer value specified by index of column
+ * Get an integer value specified by an index of a column
  * @param position index of column
  * @return integer value
  */
@@ -185,9 +187,9 @@ int KeyValues::getInt(int position) {
 }
 
 /**
- * Get array of integer values specified by column key
+ * Get an array of integer values specified by a column key
  * @param key column key
- * @param size size of array of integer values
+ * @param size size of the array of integer values
  * @return array of integer values
  */
 int* KeyValues::getIntA(String key, int& size) {
@@ -195,9 +197,9 @@ int* KeyValues::getIntA(String key, int& size) {
 }
 
 /**
- * Get array of integer values specified by index of column
+ * Get an array of integer values specified by an index of a column
  * @param pos index of column
- * @param size size of array of integer values
+ * @param size size of the array of integer values
  * @return array of integer values
  */
 int* KeyValues::getIntA(int position, int& size) {
@@ -224,7 +226,7 @@ int* KeyValues::getIntA(int position, int& size) {
 }
 
 /**
- * Get vector of integer values specified by column key
+ * Get a vector of integer values specified by a column key
  * @param key column key
  * @return  array of integer values
  */
@@ -233,7 +235,7 @@ std::vector<int> KeyValues::getIntV(String key) {
 }
 
 /**
- * Get vector of integer values specified by index of column
+ * Get a vector of integer values specified by an index of a column
  * @param position index of column
  * @return  array of integer values
  */
@@ -260,8 +262,10 @@ std::vector<int> KeyValues::getIntV(int position) {
 }
 
 
+
+// =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
 /**
- * Get float value specified by column key
+ * Get a float value specified by a column key
  * @param key column key
  * @return float value
  */
@@ -270,7 +274,7 @@ float KeyValues::getFloat(String key) {
 }
 
 /**
- * Get float value specified by index of column
+ * Get a float value specified by an index of a column
  * @param position index of column
  * @return float value
  */
@@ -286,9 +290,9 @@ float KeyValues::getFloat(int position) {
 }
 
 /**
- * Get array of float values specified by column key
+ * Get an array of float values specified by a column key
  * @param key column key
- * @param size size of array of float values
+ * @param size size of the array of float values
  * @return array of float values
  */
 float* KeyValues::getFloatA(String key, int& size) {
@@ -298,7 +302,7 @@ float* KeyValues::getFloatA(String key, int& size) {
 /**
  * Get array of float values specified by index of column
  * @param position index of column
- * @param size size of array of float values
+ * @param size size of the array of float values
  * @return array of float values
  */
 float* KeyValues::getFloatA(int position, int& size) {
@@ -323,6 +327,14 @@ float* KeyValues::getFloatA(int position, int& size) {
     return values;
 }
 
+
+
+// =============== GETTERS - OTHER =============================================
+/**
+ * Get a string value from a name data type specified by a column key
+ * @param key column key
+ * @return string value
+ */
 String KeyValues::getName(String key) {
     PGtext value = (PGtext) "";
 
@@ -335,6 +347,11 @@ String KeyValues::getName(String key) {
     return (String) value;
 }
 
+/**
+ * Get an integer with an OID value specified by a column key
+ * @param key column key
+ * @return integer with the OID value
+ */
 int KeyValues::getOid(String key) {
     PGint4 value;
 
@@ -344,6 +361,9 @@ int KeyValues::getOid(String key) {
 }
 
 
+
+
+// =============== SETTERS (Update) ============================================
 // !!!!!! TODO SETS TODO !!!!!!!
 // TODO: mozna by se dalo premyslet o PQsetvalue
 // FIXME Tomas: to nize (smazano) ma byt pokus o (sebe)vrazdu?
