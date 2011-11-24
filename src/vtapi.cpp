@@ -1,4 +1,4 @@
-/* 
+/*
  * File:   VTApi.cpp
  * Author: chmelarp
  * 
@@ -115,7 +115,6 @@ void VTApi::test() {
     sequence->add(sn, "/test_location");
     sequence->next();
 
-    // FIXME: proc to tady pada????
     delete (sequence);
     sequence = dataset->newSequence();
     sequence->next();   // this can execute and commit (a suicide)
@@ -149,6 +148,10 @@ void VTApi::test() {
     
     delete (image);    // if not called execute() or next(), the insert destructor raises a warning
         
+    image = sequence->newImage("nosuchimage.jpg");
+    image->next();      // in case of update, the next() must be called
+    image->setString("imglocation", "tudlenudle.png");
+
     // delete where t1 > 999999 to get rid of the testing value
     cout << "DELETING Image " << sn << endl;
     query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");

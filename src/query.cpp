@@ -251,3 +251,78 @@ String Insert::getQuery() {
     return queryString;
 }
 
+
+// *****************************************************************************
+Update::Update(const Commons& commons, const String& queryString, PGparam* param)
+       : Query(commons, queryString, param) {
+    thisClass = "Update";
+
+}
+
+bool Update::table(const String& table) {
+    setTable = table; // we can handle only a single table/view at the moment
+    // TODO: check if table exists to return true???
+
+    executed = false;
+    return true;
+}
+
+// FIXME: tohle se musi predelat na TKeyValue
+bool Update::whereString(const String& column, const String& value, const String& table) {
+    if (value.empty()) return false;
+
+    if (value.compare("NULL") == 0) {
+        where += column + " IS NULL ";
+    } else {
+        where += column + " = " + String(PQescapeLiteral(connector->conn, value.c_str(), value.length())) + " AND ";
+    }
+
+    executed = false;
+    return true;
+}
+
+// FIXME: tohle se musi predelat na TKeyValue
+bool Update::whereInt(const String& column, const int value, const String& table) {
+    where += column + " = " + toString(value) + " AND ";
+
+    executed = false;
+    return true;
+}
+
+// FIXME: tohle se musi predelat na TKeyValue
+bool Update::whereFloat(const String& column, const float value, const String& table) {
+    where += column + " = " + toString(value) + " AND ";
+
+    executed = false;
+    return true;
+}
+
+
+String Update::getQuery() {
+    if (keys.empty()) return queryString; // in case of a direct query
+
+    // in case we're lazy, we have the table specified in the queryString
+    if (setTable.empty() && queryString.find("UPDATE") == String::npos) setTable = queryString;
+
+    // add the dataset selected and escape identifiers
+    if (setTable.find(".") == String::npos) {
+        setTable = String(PQescapeIdentifier(connector->conn, this->dataset.c_str(), this->dataset.length())) +
+              "." + String(PQescapeIdentifier(connector->conn, setTable.c_str(), setTable.length()));
+    }
+
+    queryString = "UPDATE " + setTable + "SET ";
+
+    // go through keys
+    for (int i = 0; i < keys.size(); ++i) {
+        queryString += String(PQescapeIdentifier(connector->conn, keys[i].key.c_str(), keys[i].key.length()))
+                + "=$" + toString(i+1) + ", ";
+    }
+    // this is to remove ending separators
+    queryString.erase(queryString.length()-2);
+
+    // MAYBE a where list
+    if (where.length() > 4) where.erase(where.length()-4);
+    queryString += " WHERE " + where + ";";
+
+    return queryString;
+}

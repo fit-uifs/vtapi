@@ -44,6 +44,17 @@ bool Interval::add(const String& sequence, const int t1, const int t2, const Str
     // that's all, folks ... continue similarly if needed
 }
 
+bool Interval::preSet() {
+    destruct(update);
+
+    update = new Update(*this, this->selection);
+    update->whereString("seqname", sequence);
+    
+    update->whereInt("t1", this->getInt("t1"));
+    update->whereInt("t2", this->getInt("t2"));
+}
+
+
 String Interval::getLocation() {
     return this->getString("imglocation");
 }
@@ -72,3 +83,4 @@ int Image::getTime() {
 bool Image::add(const String& sequence, const int t, const String& location) {
     ((Interval*)this)->add(sequence, t, t, location);
 }
+

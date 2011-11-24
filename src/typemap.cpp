@@ -42,9 +42,11 @@ int TypeMap::size() {
 }
 
 int TypeMap::toOid(const String typname) {
+    // TODO: je nutne definovat chovani, kdyz tam typ neni!
     return this->typname2oid[typname];
 }
 
 String TypeMap::toTypname(const int oid) {
+    // TODO: je nutne definovat chovani, kdyz tam typ neni!
     return this->oid2typname[oid];
 }

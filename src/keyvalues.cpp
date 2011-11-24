@@ -29,12 +29,12 @@ String TKey::print() {
 // ************************************************************************** //
 
 KeyValues::KeyValues(const Commons& orig) 
-          : Commons(orig), select(NULL), pos(-1), insert(NULL) {
+          : Commons(orig), select(NULL), pos(-1), insert(NULL), update(NULL) {
     thisClass = "KeyValues(Commons&)";
 }
 
 KeyValues::KeyValues(const KeyValues& orig)
-          : Commons(orig), select(NULL), pos(-1), insert(NULL) {
+          : Commons(orig), select(NULL), pos(-1), insert(NULL), update(NULL) {
     thisClass = "KeyValues(KeyValues&)";
 }
 
@@ -42,6 +42,7 @@ KeyValues::KeyValues(const KeyValues& orig)
 KeyValues::~KeyValues() {
     destruct (select);
     destruct (insert);
+    destruct (update);
 
     this->beDoomed();
 }
@@ -62,6 +63,11 @@ KeyValues* KeyValues::next() {
     // whether should be something inserted
     if (insert && !insert->executed) {
         insert->execute();  // FIXME: here should be the store fun instead
+    }
+
+    // whether should be something updated
+    if (update && !update->executed) {
+        update->execute();  // FIXME: here should be the store fun instead
     }
 
     // TODO: zatim to skonci po konci resultsetu, ale melo by zjistit, jestli je
@@ -95,6 +101,7 @@ void KeyValues::printAll() {
 String KeyValues::getString(String key) {
     return this->getString(PQfnumber(select->res, key.c_str()));
 }
+
 
 /**
  * Get string value spevified by index of column
@@ -146,7 +153,6 @@ String KeyValues::getString(int position) {
 
     return String(value);
 }
-
 
 
 /**
@@ -344,7 +350,26 @@ int KeyValues::getOid(String key) {
 }
 
 
-// !!!!!! TODO SETS TODO !!!!!!!
+// *****************************************************************************
+// SET
 // TODO: mozna by se dalo premyslet o PQsetvalue
-// FIXME Tomas: to nize (smazano) ma byt pokus o (sebe)vrazdu?
+bool KeyValues::preSet() {
+    error(3010, "Set unimplemented at class " + thisClass);
+}
 
+// TODO: how to change binary data???
+bool KeyValues::setString(String key, String value) {
+    // call preset on the
+    this->preSet();
+
+    if (select && select->executed) {
+        // TODO: what to call in the case of binary data???
+        char* tempc = const_cast<char*>(value.c_str()); // stupid C conversions
+        PQsetvalue(select->res, pos, PQfnumber(select->res, key.c_str()), tempc, value.length());
+        // select->res
+    }
+
+    update->keyString(key, value);
+    update->execute();
+    destruct(update);
+}

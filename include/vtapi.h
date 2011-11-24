@@ -180,6 +180,50 @@ public:
     String getQuery();
 };
 
+/**
+ * This is a class where queries are (to be) constructed
+ * Mechanism: TBD
+ * // TODO: in the future version (1.0), this class will use Select (whereKV)
+ * WARNING: This class used unproperly may destroy the life and the universe.
+ * RECOMENDATION: Wait for the version 1.0.
+ *
+ * Error codes 23*
+ *
+ */// *********************************************************************** //
+class Update : public Query {
+public:
+    Update(const Commons& commons, const String& queryString = "", PGparam *param = NULL);
+
+    /**
+     * This is to specify the (single) table to be inserted in
+     * @param table
+     * @return success
+     */
+    bool table(const String& table);
+    String setTable;
+
+    /**
+     * This expands the query, so you can check it before the execution
+     * @return
+     */
+    String getQuery();
+
+    // FIXME: use keys instead
+    /**
+     * This is a persistent function to add where clauses
+     * It can be called several times as:
+     *
+     * @param column
+     * @param value
+     * @return success
+     */
+    bool whereString(const String& key, const String& value, const String& table = "");
+    bool whereInt(const String& key, const int value, const String& table = "");
+    bool whereFloat(const String& key, const float value, const String& table = "");
+    String where;   // FIXME: see above :(
+
+};
+
 
 /**
  * KeyValues storage class
@@ -231,7 +275,6 @@ public:
 
     // setters (Update)
     // TODO: overit jestli a jak funguje... jako UPDATE?
-
     bool setString(String key, String value);
     bool setInt(String key, String value);
     bool setInt(String key, int value);
@@ -239,6 +282,13 @@ public:
     bool setFloat(String key, String value);
     bool setFloat(String key, float value);
     bool setFloatA(String key, float* value, int size);
+    
+    /**
+     * This is to support updates in derived classes
+     * (unimplemented error 3010 in this class)
+     * @return success (in derived classes)
+     */
+    virtual bool preSet();
 
     // adders (Insert)
     // TODO: implement
@@ -260,6 +310,8 @@ public:
     int pos;       // initialized to -1 by default
 
     Insert* insert;
+    Update* update;
+
     // some other inherited from Commons
 };
 
@@ -359,6 +411,7 @@ public:
     String getLocation();
 
     bool add(const String& sequence, const int t1, const int t2 = -1, const String& location = "");
+    bool preSet();
 
 protected:
 
