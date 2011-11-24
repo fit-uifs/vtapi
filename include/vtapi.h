@@ -342,6 +342,7 @@ public:
     Select* select; /**< Select is (to be) pre-filled by the constructor */
     int pos;        /**< Tuple of the resultset; initialized to -1 by default */
     Insert* insert; /**< New insert to insert new data */
+    Update* update;
     // some other inherited from @link Commons
 
 // Methods
@@ -501,17 +502,6 @@ public:
     bool addFloat(String key, float value);
     bool addFloatA(String key, float* value, int size);
 
-
-    /**
-     * Select is (to be) pre-filled byt the constructor
-     */
-    Select* select;
-    int pos;       // initialized to -1 by default
-
-    Insert* insert;
-    Update* update;
-
-    // some other inherited from Commons
 };
 
 

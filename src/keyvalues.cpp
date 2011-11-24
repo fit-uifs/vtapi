@@ -156,11 +156,7 @@ String KeyValues::getString(int position) {
 }
 
 
-<<<<<<< HEAD
-=======
-
 // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
->>>>>>> f82862b9e9ffa2146f525a08f72bfab3c9e3d930
 /**
  * Get an integer value specified by a column key
  * @param key column key
