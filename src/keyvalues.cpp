@@ -32,11 +32,6 @@ KeyValues::KeyValues(const Commons& orig)
     thisClass = "KeyValues(Commons&)";
 }
 
-KeyValues::KeyValues(const KeyValues& orig)
-          : Commons(orig), select(NULL), pos(-1), insert(NULL), update(NULL) {
-    thisClass = "KeyValues(KeyValues&)";
-}
-
 
 KeyValues::~KeyValues() {
     destruct (select);

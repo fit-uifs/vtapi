@@ -347,9 +347,7 @@ public:
 
 // Methods
 public:
-    // FIXME: proc jsou tu nutne 2 stejne konstruktory?
     KeyValues(const Commons& orig);
-    KeyValues(const KeyValues& orig);
 
     /**
      * This destroys the KeyValues

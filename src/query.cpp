@@ -144,7 +144,7 @@ bool Select::whereString(const String& column, const String& value, const String
     if (value.empty()) return false;
 
     if (value.compare("NULL") == 0) {
-        where += column + " IS NULL ";
+        where += column + " IS NULL AND ";
     } else {
         // FIXME: buffer overflow!! use params!
         where += column + " = " + String(PQescapeLiteral(connector->conn, value.c_str(), value.length())) + " AND ";

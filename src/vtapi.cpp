@@ -103,7 +103,14 @@ void VTApi::test() {
     Dataset* dataset = this->newDataset();
     dataset->next();
     dataset->printAll();
-
+/*
+    // how many intervals ara in a sequence???
+    KeyValues* kv = new KeyValues(*dataset);
+    kv->select = new Select("SELECT COUNT(*) FROM "+ dataset->getDataset() + ".sequences");
+    cout << "There are " << kv->select->getQuery() << " sequences in this dataset." << endl;
+    kv->next();
+    int count = kv->getInt(0);
+*/
     cout << "DONE." << endl;
     cout << endl;
     cout << "TESTING Sequence..." << endl;
@@ -112,6 +119,7 @@ void VTApi::test() {
     Sequence* sequence = dataset->newSequence();
     sequence->next();
     sequence->printRes(sequence->select->res); // equivalent to printAll()
+
 
     srand(time(NULL));
     String sn = "test_sequence" + toString(rand()%1000);
@@ -136,10 +144,12 @@ void VTApi::test() {
     
     Interval* interval = sequence->newInterval();
     interval->select->limit = 10;
+    // interval->select->whereString("test", "NULL");
     interval->next();
     interval->print();
-    
-/*    // this has no effect outside ...
+
+
+    // this has no effect outside ...
     int t1 = 1000000 + rand()%1000;
     cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
     Image* image = new Image(*interval);
@@ -149,7 +159,6 @@ void VTApi::test() {
     float kf[] = {1.1, 2.2, 3.3, 4.4, 5.5};
     image->insert->keyFloatA("test", kf, 5);
     image->insert->execute();     // or next() must be called after inserting all voluntary fields such as above
-    
     delete (image);    // if not called execute() or next(), the insert destructor raises a warning
         
     image = sequence->newImage("nosuchimage.jpg");
@@ -167,7 +176,7 @@ void VTApi::test() {
 
     // process usw.
     cout << "DONE." << endl;
-    cout << endl;*/
+    cout << endl;
     cout << "TESTING Method..." << endl;
 
     Method* method = dataset->newMethod();

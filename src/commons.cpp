@@ -113,7 +113,7 @@ bool Connector::reconnect(const String& connectionInfo) {
     conn = PQconnectdb(conninfo.c_str());
 
     if (PQstatus(conn) != CONNECTION_OK) {
-        logger->log("WARNING 122:" + String(PQerrorMessage(conn)));
+        logger->log("WARNING 122: " + String(PQerrorMessage(conn)));
         return false;
     }
 
@@ -282,7 +282,6 @@ void Commons::warning(const String& logline) {
 void Commons::warning(int errnum, const String& logline) {
     logger->log("WARNING " + toString(errnum) + " at " + thisClass + ": " + logline);
 }
-
 
 
 String Commons::getDataset() {
