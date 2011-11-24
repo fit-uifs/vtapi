@@ -1,5 +1,5 @@
 /**
- * File:   internals.h
+ * File:   vtapi_commons.h
  * Author: chmelarp
  *
  * Created on 29. září 2011, 0:26
