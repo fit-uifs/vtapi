@@ -158,7 +158,7 @@ public:
      * A custom API startup constructor
      * This construtors should not cause any doom
      */
-    Commons(const String& connStr, const String& logFilename = "");
+    // Commons(const String& connStr, const String& logFilename = "");
     Commons(const String connStr, const String location, const String user, const String password, const String logFilename = "");
 
     /**

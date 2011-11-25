@@ -201,6 +201,7 @@ Commons::Commons(Connector& orig) {
     doom      = true;       // won't destroy the connector and logger
 }
 
+/*
 Commons::Commons(const String& connStr, const String& logFilename) {
     thisClass = "Commons(String&, String&)";
 
@@ -209,6 +210,7 @@ Commons::Commons(const String& connStr, const String& logFilename) {
     typemap   = new TypeMap();
     doom      = false;        // finally, we can destroy the above objects without any DOOM :D
 }
+*/
 
 /**
  * The most best ever of all VTAPI Commons constructors that should be always used

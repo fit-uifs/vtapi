@@ -67,8 +67,6 @@ class Query;
 class Select;
 class Insert;
 
-class CLIInsert;
-
 class KeyValues;
 
 class Dataset;
@@ -348,6 +346,7 @@ public:
 // Methods
 public:
     KeyValues(const Commons& orig);
+    KeyValues(const KeyValues& orig);   // FIXME: why is this needed? Stupid C++???
 
     /**
      * This destroys the KeyValues
@@ -483,13 +482,6 @@ public:
     bool setFloat(String key, float value);
     bool setFloatA(String key, float* value, int size);
     
-    /**
-     * This is to support updates in derived classes
-     * (unimplemented error 3010 in this class)
-     * @return success (in derived classes)
-     */
-    virtual bool preSet();
-
     // adders (Insert)
     // TODO: implement
     bool addString(String key, String value);
@@ -500,6 +492,13 @@ public:
     bool addFloat(String key, float value);
     bool addFloatA(String key, float* value, int size);
 
+protected:
+    /**
+     * This is to support updates in derived classes
+     * (unimplemented error 3010 in this class)
+     * @return success (in derived classes)
+     */
+    virtual bool preSet();
 };
 
 

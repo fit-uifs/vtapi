@@ -32,6 +32,11 @@ KeyValues::KeyValues(const Commons& orig)
     thisClass = "KeyValues(Commons&)";
 }
 
+KeyValues::KeyValues(const KeyValues& orig)
+          : Commons(orig), select(NULL), pos(-1), insert(NULL), update(NULL) {
+    thisClass = "KeyValues(KeyValues&)";
+}
+
 
 KeyValues::~KeyValues() {
     destruct (select);
@@ -173,6 +178,9 @@ int KeyValues::getInt(int position) {
     if (typname.compare("int4") == 0) {
         PQgetf(select->res, this->pos, "%int4", position, &value);
     }
+    if (typname.compare("int8") == 0) { // TODO: make a long type???
+        PQgetf(select->res, this->pos, "%int8", position, &value);
+    }
     else if (typname.compare("oid") == 0) {
         PQgetf(select->res, this->pos, "%oid", position, &value);
     }
@@ -273,6 +281,8 @@ std::vector<int> KeyValues::getIntV(int position) {
 float KeyValues::getFloat(String key) {
     return this->getFloat(PQfnumber(select->res, key.c_str()));
 }
+
+// TODO: double???
 
 /**
  * Get a float value specified by an index of a column

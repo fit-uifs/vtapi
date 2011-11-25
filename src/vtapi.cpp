@@ -103,23 +103,24 @@ void VTApi::test() {
     Dataset* dataset = this->newDataset();
     dataset->next();
     dataset->printAll();
-/*
-    // how many intervals ara in a sequence???
+
+    // how many intervals are in a sequence???
     KeyValues* kv = new KeyValues(*dataset);
-    kv->select = new Select("SELECT COUNT(*) FROM "+ dataset->getDataset() + ".sequences");
-    cout << "There are " << kv->select->getQuery() << " sequences in this dataset." << endl;
+    kv->select = new Select(*kv, "SELECT COUNT(*) FROM "+ dataset->getDataset() + ".sequences;");
     kv->next();
+    kv->printAll();
     int count = kv->getInt(0);
-*/
+    cout << "There are " << count << " sequences in this dataset." << endl;
+
     cout << "DONE." << endl;
     cout << endl;
+/*
     cout << "TESTING Sequence..." << endl;
     cout << "USING dataset " << dataset->getDataset() << endl;
 
     Sequence* sequence = dataset->newSequence();
     sequence->next();
     sequence->printRes(sequence->select->res); // equivalent to printAll()
-
 
     srand(time(NULL));
     String sn = "test_sequence" + toString(rand()%1000);
@@ -206,7 +207,9 @@ void VTApi::test() {
 
     delete (dataset);
     cout << "DONE ALL ... see warnings." << endl;
-}
-/**
- * @endcode
  */
+}
+
+ /**
+  * @endcode
+  */
