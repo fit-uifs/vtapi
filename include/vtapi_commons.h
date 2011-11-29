@@ -42,6 +42,9 @@ typedef std::string String;
 #define PGF 1
 
 class TypeMap;
+class Printer;
+class Logger;
+class Connector;
 
 /**
  * Standard logger
@@ -220,6 +223,7 @@ protected:
 
     Connector* connector; // this was most probably inherited
     Logger* logger;
+    Printer* printer;
 
     bool verbose;
     String user;
@@ -267,6 +271,36 @@ class TypeMap {
 };
 
 /**
+ * Class printing query output in standard/csv/html/... formats
+ */
+class Printer {
+public:
+    Printer(const String format, Logger*, TypeMap*);
+    virtual ~Printer();
+
+    String thisClass;
+
+    void setFormat(const String format, const String caption = "", const String tableOpt = "");
+    void printAll(PGresult*);
+    void printRow(PGresult*, const int);
+
+protected:
+    enum format_t {STANDARD, CSV, HTML} format;
+    Logger* logger;
+    TypeMap* typemap;
+    String separator;
+    String caption;
+    String tableOpt;
+
+    void printHeader(PGresult*, const std::vector<int>&);
+    void printRowOnly(PGresult*, const int, const std::vector<int>&);
+    void printFooter(PGresult*, const int count = 0);
+
+    std::vector<int> getWidths(PGresult*, const int row = -1);
+};
+
+
+/**
  * A generic function to convert any numeric type to string
  * (any numeric type, e.g. int, float, double, etc.)
  * @param t
@@ -278,6 +312,7 @@ inline String toString(const T& t) {
     strstr << t;
     return strstr.str();
 };
+
 
 
 #endif	/* INTERNALS_H */
