@@ -61,12 +61,9 @@ using namespace std;
 
 // virtual definitions of classes
 // list of classes, which are contained in this header
+class VTApi;
+
 class TKey;
-
-class Query;
-class Select;
-class Insert;
-
 class KeyValues;
 
 class Dataset;
@@ -76,12 +73,13 @@ class Image;
 class Method;
 class Process;
 
-class VTApi;
-
+class Query;
+class Select;
+class Insert;
 
 
 /**
- * @brief This is to represent the keys and fields in queries
+ * @brief This is to represent The Key in fields in queries
  * 
  * ... just for the feeling (and vectors, of course)
  * @note You can use size=-1 for NULL :)
@@ -96,10 +94,11 @@ public:
 
 // Methods
 public:
-    /**
-     * Constructor for case, where the size is set to the value "-1"
+    /** 
+     * Constructor for NULL
      */
     TKey() : size(-1) {};
+
     /**
      * Constructor for full specification of arguments
      * @param type name of data type
@@ -118,14 +117,15 @@ public:
 };
 
 
+// ************************************************************************** //
 /**
- * @brief This is a virtual query class
+ * @brief This is a (virtual) query class
  * 
  * TODO: It will be used for delayed queries (store())
  * @see http://libpqtypes.esilo.com/
  *
  * @note Error codes 20*
- */ // ********************************************************************** //
+ */
 class Query : public Commons {
 // Members
 public:
@@ -181,10 +181,48 @@ public:
      */
     bool keyString(const String& key, const String& value, const String& from = "");
     bool keyStringA(const String& key, const String* values, const int size, const String& from = "");
-    bool keyInt(const String& key, const int& value, const String& from = "");
+    bool keyInt(const String& key, int value, const String& from = "");
     bool keyIntA(const String& key, const int* values, const int size, const String& from = "");
-    bool keyFloat(const String& key, const float& value, const String& from = "");
+    bool keyFloat(const String& key, float value, const String& from = "");
     bool keyFloatA(const String& key, const float* values, const int size, const String& from = "");
+
+    // FIXME: use keys instead of all the below
+    /**
+     * This is to specify the (single) table to be inserted in
+     * @param table table into which new data will be inserted
+     * @return success
+     */
+    bool setTable(const String& table);
+    String table;       /** This is where the (single) table/selection is stored */
+
+    // FIXME: use keys instead of this
+    /**
+     * This is a WHERE statement construction class for "Strings"
+     * It can be called several times as:
+     *
+     * @param key
+     * @param value
+     * @param oper
+     * @param table
+     * @return 
+     */
+    bool whereString(const String& key, const String& value, const String& oper = "=", const String& table = "");
+
+    /**
+     * This is a WHERE statement construction class for integers
+     * It can be called several times and for arrays as:
+     *
+     * @param key
+     * @param value
+     * @param oper
+     * @param table
+     * @return
+     */
+    bool whereInt(const String& key, const int value, const String& oper = "", const String& table = "");
+
+
+    bool whereFloat(const String& key, const float value, const String& oper = "", const String& table = "");
+    String where;   // FIXME: see above :(
 };
 
 /**
@@ -194,16 +232,13 @@ public:
  *
  * @note Errors 21*
  *
- */// *********************************************************************** //
+ */
 class Select : public Query {
 // Members
 public:
     // TODO: this->from["intervals"] = "*";
     // FIXME: use keys
     std::multimap<String, String> fromList; /**< This is a tuple table and column name */
-
-    // FIXME: see below :(
-    String where; /**< Where conditions for the query */
 
     String groupby; /**< String for a GROUP BY part of the query */
     String orderby; /**< String for a ORDER BY part of the query */
@@ -236,15 +271,6 @@ public:
      */
     bool from(const String& table, const String& column);
 
-    // FIXME: use keys instead
-    /**
-     * This is a persistent function to add where clauses
-     * It can be called several times as:
-     * @param column
-     * @param value
-     * @return success
-     */
-    bool whereString(const String& key, const String& value, const String& table = "");
 };
 
 /**
@@ -254,13 +280,8 @@ public:
  *
  * @note Error codes 22*
  *
- */// *********************************************************************** //
+ */
 class Insert : public Query {
-// Members
-public:
-    String intoTable; /**< Table into which new data will be inserted */
-    
-// Methods
 public:
     /**
      * @todo
@@ -269,13 +290,6 @@ public:
      * @param param
      */
     Insert(const Commons& commons, const String& insertString = "", PGparam *param = NULL);
-
-    /**
-     * This is to specify the (single) table to be inserted in
-     * @param table table into which new data will be inserted
-     * @return success
-     */
-    bool into(const String& table);
 
     /**
      * This expands the query, so you can check it before the execution
@@ -293,42 +307,21 @@ public:
  *
  * Error codes 23*
  *
- */// *********************************************************************** //
+ */
 class Update : public Query {
 public:
     Update(const Commons& commons, const String& queryString = "", PGparam *param = NULL);
-
-    /**
-     * This is to specify the (single) table to be inserted in
-     * @param table
-     * @return success
-     */
-    bool table(const String& table);
-    String setTable;
 
     /**
      * This expands the query, so you can check it before the execution
      * @return
      */
     String getQuery();
-
-    // FIXME: use keys instead
-    /**
-     * This is a persistent function to add where clauses
-     * It can be called several times as:
-     *
-     * @param column
-     * @param value
-     * @return success
-     */
-    bool whereString(const String& key, const String& value, const String& table = "");
-    bool whereInt(const String& key, const int value, const String& table = "");
-    bool whereFloat(const String& key, const float value, const String& table = "");
-    String where;   // FIXME: see above :(
-
 };
 
 
+
+// ************************************************************************** //
 /**
  * @brief KeyValues storage class
  *
@@ -382,7 +375,7 @@ public:
      * @param key column key
      * @return string value
      */
-    String getString(String key);
+    String getString(const String& key);
     /**
      * Get a string value specified by an index of a column
      * @param position index of the column
@@ -396,7 +389,7 @@ public:
      * @param key column key
      * @return integer value
      */
-    int getInt(String key);
+    int getInt(const String& key);
     /**
      * Get an integer value specified by an index of a column
      * @param position index of column
@@ -409,7 +402,7 @@ public:
      * @param size size of the array of integer values
      * @return array of integer values
      */
-    int* getIntA(String key, int& size);
+    int* getIntA(const String& key, int& size);
     /**
      * Get an array of integer values specified by an index of a column
      * @param pos index of column
@@ -428,7 +421,7 @@ public:
      * @param position index of column
      * @return  array of integer values
      */
-    std::vector<int> getIntV(String key);
+    std::vector<int> getIntV(const String& key);
 
     // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
     /**
@@ -436,7 +429,7 @@ public:
      * @param key column key
      * @return float value
      */
-    float getFloat(String key);
+    float getFloat(const String& key);
     /**
      * Get a float value specified by an index of a column
      * @param position index of column
@@ -449,7 +442,7 @@ public:
      * @param size size of the array of float values
      * @return array of float values
      */
-    float* getFloatA(String key, int& size);
+    float* getFloatA(const String& key, int& size);
     /**
      * Get array of float values specified by index of column
      * @param position index of column
@@ -460,37 +453,39 @@ public:
 
     // =============== GETTERS - OTHER =========================================
     /**
-     * Get a string value from a name data type specified by a column key
+     * ??????????????????????????????????????
      * @param key column key
      * @return string value
      */
-    int getOid(String key);
+    int getIntOid(const String& key);
     /**
      * Get an integer with an OID value specified by a column key
      * @param key column key
      * @return integer with the OID value
      */
-    String getName(String key);
+    String getName(const String& key);
 
     // =============== SETTERS (Update) ========================================
     // TODO: overit jestli a jak funguje... jako UPDATE?
-    bool setString(String key, String value);
-    bool setInt(String key, String value);
-    bool setInt(String key, int value);
-    bool setIntA(String key, int* value, int size);
-    bool setFloat(String key, String value);
-    bool setFloat(String key, float value);
-    bool setFloatA(String key, float* value, int size);
+    bool setString(const String& key, const String& value);
+    bool setInt(const String& key, const String& value);
+    bool setInt(const String& key, int value);
+    bool setIntA(const String& key, const int* values, int size);
+    bool setFloat(const String& key, const String& value);
+    bool setFloat(const String& key, float value);
+    bool setFloatA(const String& key, const float* values, int size);
+    bool setExecute();
     
     // adders (Insert)
     // TODO: implement
-    bool addString(String key, String value);
-    bool addInt(String key, String value);
-    bool addInt(String key, int value);
-    bool addIntA(String key, int* value, int size);
-    bool addFloat(String key, String value);
-    bool addFloat(String key, float value);
-    bool addFloatA(String key, float* value, int size);
+    bool addString(const String& key, const String& value);
+    bool addInt(const String& key, const String& value);
+    bool addInt(const String& key, int value);
+    bool addIntA(const String& key, int* value, int size);
+    bool addFloat(const String& key, const String& value);
+    bool addFloat(const String& key, float value);
+    bool addFloatA(const String& key, float* value, int size);
+    bool addExecute();
 
 protected:
     /**
@@ -681,16 +676,6 @@ public:
     int getEndTime();
 
     /**
-     * This is most probably what you always wanted...
-     * @return string value with the location of the data
-     */
-    String getDataLocation();
-    /**
-     * This is here just for image name
-     * @return string value with the location of the image
-     */
-    String getLocation();
-    /**
      * Add new interval to a table
      * @todo Metoda asi neni dokoncena? [TV]
      * @param sequence interval name
@@ -700,10 +685,9 @@ public:
      * @return @todo zatim zrejme nic nevraci [TV]
      */
     bool add(const String& sequence, const int t1, const int t2 = -1, const String& location = "");
-    bool preSet();
 
 protected:
-
+    bool preSet();
 };
 
 /**
@@ -717,6 +701,18 @@ public:
     Image(const KeyValues& orig, const String& selection = "intervals");
 
     int getTime();
+
+    /**
+     * This is most probably what you always wanted...
+     * @return string value with the location of the data
+     */
+    String getDataLocation();
+    /**
+     * This is here just for image name
+     * @return string value with the location of the image
+     */
+    String getLocation();
+
     bool add(const String& sequence, const int t, const String& location);
 
 protected:

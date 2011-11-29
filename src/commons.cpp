@@ -355,7 +355,7 @@ void Commons::registerTypes() {
         kv->select->from("pg_catalog.pg_type", "oid, typname");
 
         while (kv->next()) {
-            this->typemap->insert(kv->getOid("oid"), kv->getName("typname"));
+            this->typemap->insert(kv->getIntOid("oid"), kv->getName("typname"));
         }
 
         this->typemap->dataloaded = true;

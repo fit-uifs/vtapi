@@ -29,6 +29,7 @@ int Interval::getEndTime() {
     return this->getInt("t2");
 }
 
+
 bool Interval::add(const String& sequence, const int t1, const int t2, const String& location) {
     destruct(insert);
     int te2 = t2;
@@ -42,25 +43,20 @@ bool Interval::add(const String& sequence, const int t1, const int t2, const Str
         insert->keyString("imglocation", location);
     }
     // that's all, folks ... continue similarly if needed
+
+    return true;
 }
+
 
 bool Interval::preSet() {
     destruct(update);
 
     update = new Update(*this, this->selection);
     update->whereString("seqname", sequence);
-    
     update->whereInt("t1", this->getInt("t1"));
     update->whereInt("t2", this->getInt("t2"));
-}
 
-
-String Interval::getLocation() {
-    return this->getString("imglocation");
-}
-
-String Interval::getDataLocation() {
-    return (((Commons*)this)->getDataLocation() + this->getLocation());
+    return true;
 }
 
 
@@ -84,3 +80,10 @@ bool Image::add(const String& sequence, const int t, const String& location) {
     ((Interval*)this)->add(sequence, t, t, location);
 }
 
+String Image::getLocation() {
+    return this->getString("imglocation");
+}
+
+String Image::getDataLocation() {
+    return (((Commons*)this)->getDataLocation() + this->getLocation());
+}

@@ -38,19 +38,42 @@ KeyValues::KeyValues(const KeyValues& orig)
 }
 
 
+// TODO: decide if this behavior (warnings raised when not executed) is OK for most of us
 KeyValues::~KeyValues() {
+    // whether should be something inserted
+    if (insert) {
+        if (!insert->executed) warning(313, "There should be something inserted: \n" + insert->getQuery());
+        destruct(insert);
+    }
+
+    // whether should be something updated
+    if (update) {
+        if (!update->executed) warning(314, "There should be something updated: \n" + insert->getQuery());
+        destruct(update);
+    }
+
     destruct (select);
-    destruct (insert);
-    destruct (update);
 
     this->beDoomed();
 }
 
 KeyValues* KeyValues::next() {
+    // whether should be something inserted
+    if (insert) {
+        if (!insert->executed) insert->execute();  // FIXME: here should be the store fun instead
+        destruct(insert);
+    }
+
+    // whether should be something updated
+    if (update) {
+        if (!update->executed) update->execute();  // FIXME: here should be the store fun instead
+        destruct(update);
+    }
+
     // check the Select, each subclass is responsible of
     if (!select) error(301, "There is no select class");
 
-    // it is executed here when position == -1
+    // select is executed here when position == -1
     if (pos == -1) {
         if (select->res) {
             PQclear(select->res);
@@ -59,22 +82,12 @@ KeyValues* KeyValues::next() {
         select->execute();
     }
 
-    // whether should be something inserted
-    if (insert && !insert->executed) {
-        insert->execute();  // FIXME: here should be the store fun instead
-    }
-
-    // whether should be something updated
-    if (update && !update->executed) {
-        update->execute();  // FIXME: here should be the store fun instead
-    }
-
-    // TODO: zatim to skonci po konci resultsetu, ale melo by zjistit, jestli je
-    // to na konci nebo neni a spachat kdyztak dalsi dotaz (limit, offset)
     if (select->res && (pos < (PQntuples(select->res) - 1))) {
         pos++;
         return this;
     }
+    // TODO: zatim to skonci po konci resultsetu, ale melo by zjistit, jestli je
+    // to na konci nebo neni a spachat kdyztak dalsi dotaz (limit, offset)
 
     return NULL;
 }
@@ -94,21 +107,11 @@ void KeyValues::printAll() {
 
 // =============== GETTERS (Select) ============================================
 // =============== GETTERS FOR STRINGS =========================================
-/**
- * Get a string value specified by a column key
- * @param key column key
- * @return string value
- */
-String KeyValues::getString(String key) {
+String KeyValues::getString(const String& key) {
     return this->getString(PQfnumber(select->res, key.c_str()));
 }
 
 
-/**
- * Get a string value specified by an index of a column
- * @param position index of the column
- * @return string value
- */
 String KeyValues::getString(int position) {
     PGtext value = (PGtext) "";
     
@@ -157,20 +160,10 @@ String KeyValues::getString(int position) {
 
 
 // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
-/**
- * Get an integer value specified by a column key
- * @param key column key
- * @return integer value
- */
-int KeyValues::getInt(String key) {
+int KeyValues::getInt(const String& key) {
     return this->getInt(PQfnumber(select->res, key.c_str()));
 }
 
-/**
- * Get an integer value specified by an index of a column
- * @param position index of column
- * @return integer value
- */
 int KeyValues::getInt(int position) {
     PGint4 value;
     String typname = this->toTypname(PQftype(select->res, position));
@@ -195,22 +188,10 @@ int KeyValues::getInt(int position) {
     return (int) value;
 }
 
-/**
- * Get an array of integer values specified by a column key
- * @param key column key
- * @param size size of the array of integer values
- * @return array of integer values
- */
-int* KeyValues::getIntA(String key, int& size) {
+int* KeyValues::getIntA(const String& key, int& size) {
     return this->getIntA(PQfnumber(select->res, key.c_str()), size);
 }
 
-/**
- * Get an array of integer values specified by an index of a column
- * @param pos index of column
- * @param size size of the array of integer values
- * @return array of integer values
- */
 int* KeyValues::getIntA(int position, int& size) {
     PGarray tmp;
     int* values;
@@ -234,20 +215,10 @@ int* KeyValues::getIntA(int position, int& size) {
     return values;
 }
 
-/**
- * Get a vector of integer values specified by a column key
- * @param key column key
- * @return  array of integer values
- */
-std::vector<int> KeyValues::getIntV(String key) {
+std::vector<int> KeyValues::getIntV(const String& key) {
     return this->getIntV(PQfnumber(select->res, key.c_str()));
 }
 
-/**
- * Get a vector of integer values specified by an index of a column
- * @param position index of column
- * @return  array of integer values
- */
 std::vector<int> KeyValues::getIntV(int position) {
     PGarray tmp;
     PGint4 value;
@@ -273,22 +244,11 @@ std::vector<int> KeyValues::getIntV(int position) {
 
 
 // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
-/**
- * Get a float value specified by a column key
- * @param key column key
- * @return float value
- */
-float KeyValues::getFloat(String key) {
+float KeyValues::getFloat(const String& key) {
     return this->getFloat(PQfnumber(select->res, key.c_str()));
 }
 
 // TODO: double???
-
-/**
- * Get a float value specified by an index of a column
- * @param position index of column
- * @return float value
- */
 float KeyValues::getFloat(int position) {
     PGfloat4 value;
 
@@ -300,22 +260,10 @@ float KeyValues::getFloat(int position) {
     return (float) value;
 }
 
-/**
- * Get an array of float values specified by a column key
- * @param key column key
- * @param size size of the array of float values
- * @return array of float values
- */
-float* KeyValues::getFloatA(String key, int& size) {
+float* KeyValues::getFloatA(const String& key, int& size) {
     return this->getFloatA(PQfnumber(select->res, key.c_str()), size);
 }
 
-/**
- * Get array of float values specified by index of column
- * @param position index of column
- * @param size size of the array of float values
- * @return array of float values
- */
 float* KeyValues::getFloatA(int position, int& size) {
     PGarray tmp;
     float* values;
@@ -341,12 +289,7 @@ float* KeyValues::getFloatA(int position, int& size) {
 
 
 // =============== GETTERS - OTHER =============================================
-/**
- * Get a string value from a name data type specified by a column key
- * @param key column key
- * @return string value
- */
-String KeyValues::getName(String key) {
+String KeyValues::getName(const String& key) {
     PGtext value = (PGtext) "";
 
     PQgetf(select->res, this->pos, "#name", key.c_str(), &value);
@@ -358,12 +301,7 @@ String KeyValues::getName(String key) {
     return (String) value;
 }
 
-/**
- * Get an integer with an OID value specified by a column key
- * @param key column key
- * @return integer with the OID value
- */
-int KeyValues::getOid(String key) {
+int KeyValues::getIntOid(const String& key) {
     PGint4 value;
 
     PQgetf(select->res, this->pos, "#oid", key.c_str(), &value);
@@ -377,22 +315,49 @@ int KeyValues::getOid(String key) {
 // TODO: mozna by se dalo premyslet o PQsetvalue
 
 bool KeyValues::preSet() {
+    // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
     error(3010, "Set unimplemented at class " + thisClass);
 }
 
 // TODO: how to change binary data???
-bool KeyValues::setString(String key, String value) {
-    // call preset on the
-    this->preSet();
+bool KeyValues::setString(const String& key, const String& value) {
+    // call preset on the derived class
+    if (!update) this->preSet();
 
-    if (select && select->executed) {
+    /* TODO: how to change the res in case of binary data???
+    if (select) {
         // TODO: what to call in the case of binary data???
         char* tempc = const_cast<char*>(value.c_str()); // stupid C conversions
         PQsetvalue(select->res, pos, PQfnumber(select->res, key.c_str()), tempc, value.length());
-        // select->res
-    }
+    } */
 
     update->keyString(key, value);
-    update->execute();
-    destruct(update);
+}
+
+bool KeyValues::setInt(const String& key, int value) {
+    // call preset on the derived class
+    if (!update) this->preSet();
+    update->keyInt(key, value);
+}
+
+bool KeyValues::setIntA(const String& key, const int* values, int size){
+    // call preset on the derived class
+    if (!update) this->preSet();
+    update->keyIntA(key, values, size);
+}
+
+bool KeyValues::setFloat(const String& key, float value){
+    // call preset on the derived class
+    if (!update) this->preSet();
+    update->keyFloat(key, value);
+}
+
+bool KeyValues::setFloatA(const String& key, const float* values, int size){
+    // call preset on the derived class
+    if (!update) this->preSet();
+    update->keyFloatA(key, values, size);
+}
+
+bool KeyValues::setExecute() {
+    return this->update->execute();
 }

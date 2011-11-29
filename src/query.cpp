@@ -36,7 +36,21 @@ bool Query::execute() {
     res = PQparamExec(connector->getConn(), param, queryString.c_str(), PGF);
 
     if (!res) error(200, "Query::execute():\n" + String(PQgeterror()));
-    else executed = true;
+    else {
+        executed = true;
+
+        if (verbose) {
+            if (PQresultStatus(res) == PGRES_TUPLES_OK) {
+                logger->debug(toString(PQntuples(res)) + " row(s) returned");
+            }
+            else if (PQresultStatus(res) == PGRES_COMMAND_OK) {
+                logger->debug(toString(PQcmdTuples(res)) + " row(s) (not)affected");
+            }
+            else {
+                warning(2011, "You should never see this warning since 2011 :(");
+            }
+        }
+    }
 
     return (res);
 }
@@ -58,7 +72,7 @@ bool Query::keyString(const String& key, const String& value, const String& from
     return true;
 }
 
-bool Query::keyInt(const String& key, const int& value, const String& from) {
+bool Query::keyInt(const String& key, int value, const String& from) {
     TKey k("int4", key, 1, from);
     keys.push_back(k);
     PQputf(param, "%int4", value);
@@ -89,7 +103,7 @@ bool Query::keyIntA(const String& key, const int* values, const int size, const 
     return true;
 }
 
-bool Query::keyFloat(const String& key, const float& value, const String& from) {
+bool Query::keyFloat(const String& key, const float value, const String& from) {
     TKey k("float4", key, 1, from);
     keys.push_back(k);
     PQputf(param, "%float4", value);
@@ -122,6 +136,44 @@ bool Query::keyFloatA(const String& key, const float* values, const int size, co
 
 
 
+// FIXME: tohle se musi predelat na TKeyValue
+bool Query::whereString(const String& column, const String& value, const String& oper, const String& table) {
+    if (value.empty()) return false;
+
+    if (!where.empty()) where += " AND ";
+
+    if (value.compare("NULL") == 0) {
+        where += column + " IS NULL";
+    } else {
+        // FIXME: buffer overflow!! use params!
+        where += column + "=" + String(PQescapeLiteral(connector->conn, value.c_str(), value.length()));
+    }
+
+    executed = false;
+    return true;
+}
+
+
+// FIXME: tohle se musi predelat na TKeyValue
+bool Query::whereInt(const String& column, const int value, const String& oper, const String& table) {
+    if (!where.empty()) where += " AND ";
+
+    where += column + "=" + toString(value);
+
+    executed = false;
+    return true;
+}
+
+// FIXME: tohle se musi predelat na TKeyValue
+bool Query::whereFloat(const String& column, const float value, const String& oper, const String& table) {
+    if (!where.empty()) where += " AND ";
+
+    where += column + "=" + toString(value);
+
+    executed = false;
+    return true;
+}
+
 
 // ************************************************************************** //
 // Select::Select() { }
@@ -131,24 +183,10 @@ Select::Select(const Commons& commons, const String& queryString, PGparam* param
 }
 
 // FIXME: tohle se musi predelat na TKey
-
 bool Select::from(const String& table, const String& column) {
+    if (this->table.empty()) this->table = table;
+
     fromList.insert(std::pair<String, String > (table, column));
-
-    executed = false;
-    return true;
-}
-
-// FIXME: tohle se musi predelat na TKeyValue
-bool Select::whereString(const String& column, const String& value, const String& table) {
-    if (value.empty()) return false;
-
-    if (value.compare("NULL") == 0) {
-        where += column + " IS NULL AND ";
-    } else {
-        // FIXME: buffer overflow!! use params!
-        where += column + " = " + String(PQescapeLiteral(connector->conn, value.c_str(), value.length())) + " AND ";
-    }
 
     executed = false;
     return true;
@@ -183,7 +221,6 @@ String Select::getQuery() {
     // FIXME: the rest should be done as above + using params...
     if (!where.empty()) {
         tmpStr = "\n  WHERE " + where;
-        queryString += tmpStr.erase(tmpStr.length() - 5);
     }
 
     if (!groupby.empty()) {
@@ -213,28 +250,19 @@ Insert::Insert(const Commons& commons, const String& queryString, PGparam* param
     thisClass = "Insert";
 }
 
-bool Insert::into(const String& table) {
-    intoTable = table; // we can handle only a single table/view at the moment
-    // TODO: check if table exists to return true???
-
-    executed = false;
-    return true;
-}
-
-
 String Insert::getQuery() {
     if (keys.empty()) return queryString; // in case of a direct query
 
     // in case we're lazy, we have the table specified in the queryString
-    if (intoTable.empty() && queryString.find("INSERT") == String::npos) intoTable = queryString;
+    if (table.empty() && queryString.find("INSERT") == String::npos) table = queryString;
     
     // add the dataset selected and escape identifiers
-    if (intoTable.find(".") == String::npos) {
-        intoTable = String(PQescapeIdentifier(connector->conn, this->dataset.c_str(), this->dataset.length())) +
-              "." + String(PQescapeIdentifier(connector->conn, intoTable.c_str(), intoTable.length()));
+    if (table.find(".") == String::npos) {
+        table = String(PQescapeIdentifier(connector->conn, this->dataset.c_str(), this->dataset.length())) +
+              "." + String(PQescapeIdentifier(connector->conn, table.c_str(), table.length()));
     }
 
-    queryString = "INSERT INTO " + intoTable + "(";
+    queryString = "INSERT INTO " + table + "(";
     String tmpStr;
 
     // go through keys
@@ -259,58 +287,19 @@ Update::Update(const Commons& commons, const String& queryString, PGparam* param
 
 }
 
-bool Update::table(const String& table) {
-    setTable = table; // we can handle only a single table/view at the moment
-    // TODO: check if table exists to return true???
-
-    executed = false;
-    return true;
-}
-
-// FIXME: tohle se musi predelat na TKeyValue
-bool Update::whereString(const String& column, const String& value, const String& table) {
-    if (value.empty()) return false;
-
-    if (value.compare("NULL") == 0) {
-        where += column + " IS NULL ";
-    } else {
-        where += column + " = " + String(PQescapeLiteral(connector->conn, value.c_str(), value.length())) + " AND ";
-    }
-
-    executed = false;
-    return true;
-}
-
-// FIXME: tohle se musi predelat na TKeyValue
-bool Update::whereInt(const String& column, const int value, const String& table) {
-    where += column + " = " + toString(value) + " AND ";
-
-    executed = false;
-    return true;
-}
-
-// FIXME: tohle se musi predelat na TKeyValue
-bool Update::whereFloat(const String& column, const float value, const String& table) {
-    where += column + " = " + toString(value) + " AND ";
-
-    executed = false;
-    return true;
-}
-
-
 String Update::getQuery() {
     if (keys.empty()) return queryString; // in case of a direct query
 
     // in case we're lazy, we have the table specified in the queryString
-    if (setTable.empty() && queryString.find("UPDATE") == String::npos) setTable = queryString;
+    if (table.empty() && queryString.find("UPDATE") == String::npos) table = queryString;
 
     // add the dataset selected and escape identifiers
-    if (setTable.find(".") == String::npos) {
-        setTable = String(PQescapeIdentifier(connector->conn, this->dataset.c_str(), this->dataset.length())) +
-              "." + String(PQescapeIdentifier(connector->conn, setTable.c_str(), setTable.length()));
+    if (table.find(".") == String::npos) {
+        table = String(PQescapeIdentifier(connector->conn, this->dataset.c_str(), this->dataset.length())) +
+              "." + String(PQescapeIdentifier(connector->conn, table.c_str(), table.length()));
     }
 
-    queryString = "UPDATE " + setTable + "SET ";
+    queryString = "UPDATE " + table + "SET ";
 
     // go through keys
     for (int i = 0; i < keys.size(); ++i) {
@@ -321,7 +310,6 @@ String Update::getQuery() {
     queryString.erase(queryString.length()-2);
 
     // MAYBE a where list
-    if (where.length() > 4) where.erase(where.length()-4);
     queryString += " WHERE " + where + ";";
 
     return queryString;

@@ -114,7 +114,7 @@ void VTApi::test() {
 
     cout << "DONE." << endl;
     cout << endl;
-/*
+
     cout << "TESTING Sequence..." << endl;
     cout << "USING dataset " << dataset->getDataset() << endl;
 
@@ -133,6 +133,7 @@ void VTApi::test() {
     sequence->next();   // this can execute and commit (a suicide)
     sequence->printAll();
 
+  
     cout << "DELETING Sequence " << sn << endl;
     Query* query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".sequences WHERE seqname='" + sn + "';");
     cout << "OK: " << query->execute() << endl;
@@ -149,7 +150,6 @@ void VTApi::test() {
     interval->next();
     interval->print();
 
-
     // this has no effect outside ...
     int t1 = 1000000 + rand()%1000;
     cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
@@ -165,6 +165,7 @@ void VTApi::test() {
     image = sequence->newImage("nosuchimage.jpg");
     image->next();      // in case of update, the next() must be called
     image->setString("imglocation", "tudlenudle.png");
+    image->setExecute();  // NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 
     // delete where t1 > 999999 to get rid of the testing value
     cout << "DELETING Image " << sn << endl;
@@ -207,7 +208,6 @@ void VTApi::test() {
 
     delete (dataset);
     cout << "DONE ALL ... see warnings." << endl;
- */
 }
 
  /**
