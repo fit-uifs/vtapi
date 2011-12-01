@@ -220,7 +220,7 @@ String Select::getQuery() {
 
     // FIXME: the rest should be done as above + using params...
     if (!where.empty()) {
-        tmpStr = "\n  WHERE " + where;
+        queryString += "\n  WHERE " + where;
     }
 
     if (!groupby.empty()) {

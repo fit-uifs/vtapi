@@ -118,7 +118,7 @@ void VTApi::test() {
     cout << "TESTING Sequence..." << endl;
     cout << "USING dataset " << dataset->getDataset() << endl;
 
-    Sequence* sequence = dataset->newSequence();
+    Sequence* sequence = dataset->newSequence("s2");
     sequence->next();
     sequence->printRes(sequence->select->res); // equivalent to printAll()
 

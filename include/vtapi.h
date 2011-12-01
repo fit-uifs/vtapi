@@ -487,7 +487,6 @@ public:
     bool addFloatA(const String& key, float* value, int size);
     bool addExecute();
 
-protected:
     /**
      * This is to support updates in derived classes
      * (unimplemented error 3010 in this class)
@@ -686,7 +685,10 @@ public:
      */
     bool add(const String& sequence, const int t1, const int t2 = -1, const String& location = "");
 
-protected:
+    /**
+     * This is to support updates
+     * @return success (in derived classes)
+     */
     bool preSet();
 };
 
