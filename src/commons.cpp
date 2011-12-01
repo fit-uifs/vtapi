@@ -219,7 +219,7 @@ Commons::Commons(const String& connStr, const String& logFilename) {
 Commons::Commons(const gengetopt_args_info& args_info) {
     thisClass = "Commons(gengetopt_args_info&, String&)";
 
-    logger    = new Logger(String(args_info.location_arg)); // has default value
+    logger    = new Logger(String(args_info.log_arg)); // has default value
     connector = new Connector(args_info.connection_arg, logger);
     typemap   = new TypeMap();
     verbose   = args_info.verbose_given;
