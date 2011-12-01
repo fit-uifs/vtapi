@@ -44,9 +44,9 @@ Logger::Logger(const String& filename) {
 
     if (logFilename.empty()) {
         // http://stdcxx.apache.org/doc/stdlibug/34-2.html
-        logStream.copyfmt(std::cout);
-        logStream.clear(std::cout.rdstate());
-        logStream.basic_ios<char>::rdbuf(std::cout.rdbuf());
+        logStream.copyfmt(std::cerr);
+        logStream.clear(std::cerr.rdstate());
+        logStream.basic_ios<char>::rdbuf(std::cerr.rdbuf());
         // FIXME: if this is scrued, we won't log - there are no exceptions necessary :)
     }
 }
@@ -335,7 +335,8 @@ void Commons::registerTypes() {
     if (! this->typemap->dataloaded) {
         KeyValues* kv = new KeyValues(*this);
         kv->select = new Select(*this);
-        kv->select->from("pg_catalog.pg_type", "oid, typname");
+        kv->select->from("pg_catalog.pg_type", "oid");
+        kv->select->from("pg_catalog.pg_type", "typname");
 
         while (kv->next()) {
             this->typemap->insert(kv->getIntOid("oid"), kv->getName("typname"));

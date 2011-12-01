@@ -51,6 +51,28 @@ String Process::getOutputs() {
     return this->getString("outputs");
 }
 
+
+bool Process::add(const String& method, const String& name, const String& selection) {
+    destruct(insert);
+
+    insert = new Insert(*this, "processes");
+    insert->keyString("mtname", method);
+    insert->keyString("prsname", name);
+    insert->keyString("outputs", selection);
+
+    // this is the fun
+    if (insert->execute()) {
+        update = new Update(*this, "ALTER TABLE \""+ selection +"\" ADD COLUMN \""+ name +"\" real[];");
+        bool ok = update->execute();
+        return ok;
+    }
+
+    destruct(insert);
+    destruct(update);
+    return false;
+}
+
+
 Interval* Process::newInterval(const int t1, const int t2) {
     return new Interval(*this);
 }

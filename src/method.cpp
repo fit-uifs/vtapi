@@ -50,7 +50,9 @@ std::vector<TKey> Method::getMethodKeys() {
 
     KeyValues* kv = new KeyValues(*this);
     kv->select = new Select(*this);
-    kv->select->from("methods_keys", "keyname, typname::regtype::oid, inout");
+    kv->select->from("methods_keys", "keyname");
+    kv->select->from("methods_keys", "typname::regtype::oid");
+    kv->select->from("methods_keys", "inout");
     kv->select->whereString("mtname", this->method);
 
     while (kv->next()) {

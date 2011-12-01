@@ -149,7 +149,7 @@ void VTApi::test() {
     // interval->select->whereString("test", "NULL");
     interval->next();
     interval->print();
-
+/*
     // this has no effect outside ...
     int t1 = 1000000 + rand()%1000;
     cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
@@ -172,7 +172,7 @@ void VTApi::test() {
     query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
     cout << "OK: " << query->execute() << endl;
     delete (query);
-
+*/
     delete (interval);
     delete (sequence);
 
@@ -201,6 +201,9 @@ void VTApi::test() {
     Process* process = method->newProcess();
     process->next();
     process->printAll();
+
+    // TODO: tohle doma nezkousejte, nebo vam upadne zadecek
+    // process->add("test", "test");
 
     delete (process);
     delete (method);

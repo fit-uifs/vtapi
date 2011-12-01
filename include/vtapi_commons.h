@@ -214,8 +214,6 @@ public:
     int toOid(String typname);
     String toTypname(int oid);
 
-    
-protected:
     /**
      * This should be filled in each constructor of a derived class
      */

@@ -32,9 +32,10 @@ KeyValues::KeyValues(const Commons& orig)
     thisClass = "KeyValues(Commons&)";
 }
 
-KeyValues::KeyValues(const KeyValues& orig)
+KeyValues::KeyValues(const KeyValues& orig, const String& selection)
           : Commons(orig), select(NULL), pos(-1), insert(NULL), update(NULL) {
     thisClass = "KeyValues(KeyValues&)";
+    this->selection = selection;
 }
 
 
@@ -261,7 +262,9 @@ float KeyValues::getFloat(int position) {
 }
 
 float* KeyValues::getFloatA(const String& key, int& size) {
-    return this->getFloatA(PQfnumber(select->res, key.c_str()), size);
+    int pos = PQfnumber(select->res, key.c_str());
+    if (pos < 0) warning(313, "Column " + toString(key) + " doesn't exist.");
+    return this->getFloatA(pos, size);
 }
 
 float* KeyValues::getFloatA(int position, int& size) {
@@ -311,12 +314,11 @@ int KeyValues::getIntOid(const String& key) {
 
 
 // =============== SETTERS (Update) ============================================
-// !!!!!! TODO SETS TODO !!!!!!!
 // TODO: mozna by se dalo premyslet o PQsetvalue
 
 bool KeyValues::preSet() {
     // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
-    error(3010, "Set unimplemented at class " + thisClass);
+    warning(3010, "Set unimplemented at class " + thisClass);
 }
 
 // TODO: how to change binary data???
@@ -359,5 +361,13 @@ bool KeyValues::setFloatA(const String& key, const float* values, int size){
 }
 
 bool KeyValues::setExecute() {
-    return this->update->execute();
+    if (this->update) return this->update->execute();
+    else return false;
+}
+
+
+// =================== ADDERS (Insert) =========================================
+bool KeyValues::addExecute() {
+    if (this->insert) return this->insert->execute();
+    else return false;
 }

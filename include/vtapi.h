@@ -218,10 +218,10 @@ public:
      * @param table
      * @return
      */
-    bool whereInt(const String& key, const int value, const String& oper = "", const String& table = "");
+    bool whereInt(const String& key, const int value, const String& oper = "=", const String& table = "");
 
 
-    bool whereFloat(const String& key, const float value, const String& oper = "", const String& table = "");
+    bool whereFloat(const String& key, const float value, const String& oper = "=", const String& table = "");
     String where;   // FIXME: see above :(
 };
 
@@ -339,7 +339,7 @@ public:
 // Methods
 public:
     KeyValues(const Commons& orig);
-    KeyValues(const KeyValues& orig);   // FIXME: why is this needed? Stupid C++???
+    KeyValues(const KeyValues& orig, const String& selection = "");   // FIXME: why is this needed? Stupid C++???
 
     /**
      * This destroys the KeyValues
@@ -476,8 +476,8 @@ public:
     bool setFloatA(const String& key, const float* values, int size);
     bool setExecute();
     
-    // adders (Insert)
-    // TODO: implement
+    // =============== ADDERS (Insert) ========================================
+    // TODO: implement?
     bool addString(const String& key, const String& value);
     bool addInt(const String& key, const String& value);
     bool addInt(const String& key, int value);
@@ -808,7 +808,7 @@ public:
     String getOutputs();
 
     // TODO: o tohle bych se ani nepokousel
-    // bool add(String name="");
+    bool add(const String& method, const String& name, const String& selection="intervals");
 
     /**
      * Create new interval for process

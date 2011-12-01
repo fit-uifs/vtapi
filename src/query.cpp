@@ -12,6 +12,7 @@ Query::Query(const Commons& commons, const String& query, PGparam* param)
 : Commons(commons), queryString(query), param(param), res(NULL), executed(false) {
     thisClass = "Query";
 
+    setTable(commons.selection);
     if (!param) this->param = PQparamCreate(connector->conn);
 }
 
@@ -22,6 +23,10 @@ Query::~Query() {
     PQparamClear(param);
 
     this->beDoomed();
+}
+
+bool Query::setTable(const String& table) {
+    this->table = table;
 }
 
 String Query::getQuery() {
@@ -143,10 +148,10 @@ bool Query::whereString(const String& column, const String& value, const String&
     if (!where.empty()) where += " AND ";
 
     if (value.compare("NULL") == 0) {
-        where += column + " IS NULL";
+        where += String(PQescapeIdentifier(connector->conn, column.c_str(), column.length())) + " IS NULL";
     } else {
         // FIXME: buffer overflow!! use params!
-        where += column + "=" + String(PQescapeLiteral(connector->conn, value.c_str(), value.length()));
+        where += String(PQescapeIdentifier(connector->conn, column.c_str(), column.length())) + oper + String(PQescapeLiteral(connector->conn, value.c_str(), value.length()));
     }
 
     executed = false;
@@ -158,7 +163,7 @@ bool Query::whereString(const String& column, const String& value, const String&
 bool Query::whereInt(const String& column, const int value, const String& oper, const String& table) {
     if (!where.empty()) where += " AND ";
 
-    where += column + "=" + toString(value);
+    where += String(PQescapeIdentifier(connector->conn, column.c_str(), column.length())) + oper + toString(value);
 
     executed = false;
     return true;
@@ -168,7 +173,7 @@ bool Query::whereInt(const String& column, const int value, const String& oper, 
 bool Query::whereFloat(const String& column, const float value, const String& oper, const String& table) {
     if (!where.empty()) where += " AND ";
 
-    where += column + "=" + toString(value);
+    where += String(PQescapeIdentifier(connector->conn, column.c_str(), column.length())) + oper + toString(value);
 
     executed = false;
     return true;
@@ -192,23 +197,59 @@ bool Select::from(const String& table, const String& column) {
     return true;
 }
 
-// FIXME: vyuzit params a zauvozovkovat nazvy
+// FIXME: vyuzit params (zauvozovkovat nazvy tabulek a datasetu???)
 String Select::getQuery() {
     if (fromList.empty()) return queryString; // in case of a direct query
 
     queryString = "SELECT ";
     String tmpStr = "\n  FROM ";
 
+    
+    // this is the previous value ... is it the same in this ordered list???
+    std::multimap<String, String>::iterator ilast = fromList.end();
+
     // make the SELECT and FROM statement
     for (std::multimap<String, String>::iterator ii = fromList.begin(); ii != fromList.end(); ++ii) {
         String tmpTable = (*ii).first;
         if (tmpTable.find(".") == String::npos) tmpTable = this->getDataset() + "." + tmpTable;
 
-        queryString += tmpTable + "." + (*ii).second;
-        if ((*ii).second.compare("*") != 0) queryString += " AS " + (*ii).second + ", ";
-        else queryString += ", ";
+        // found a typecast???
+        String tmpColumn = (*ii).second;
+        String tmpCast = "";
+        int tmpint = tmpColumn.find("::");
+        if (tmpint != String::npos) {
+            tmpCast = tmpColumn.substr(tmpint);
+            tmpColumn.erase(tmpint);
+        }
 
-        tmpStr += tmpTable + ", ";
+        // found a function or a subquery?
+        tmpint = tmpColumn.find("(");
+        if (tmpint != String::npos) {
+            tmpColumn.append(tmpCast);
+            tmpCast = tmpColumn;
+            tmpColumn = "";
+        }
+
+        if (tmpColumn.empty()) {
+            if (tmpTable.empty()) queryString += tmpCast;
+            else queryString += tmpTable + "." + tmpCast;
+        }
+        else if (tmpColumn.compare("*") == 0) {
+            queryString += tmpTable + ".*, ";
+        }
+        else {
+            char* escapedIdent = PQescapeIdentifier(connector->conn, tmpColumn.c_str(), tmpColumn.length());
+            queryString += tmpTable + "." + escapedIdent + tmpCast;
+            queryString += toString(" AS ") + escapedIdent + ", ";
+            PQfreemem(escapedIdent);
+        }
+
+        // tables in the from list should not be specified multiple times -> use views instead!
+        if (ilast==fromList.end() || (*ii).first.compare((*ilast).first)!=0) {
+            tmpStr += tmpTable + ", ";
+        }
+
+        ilast = ii;
     }
 
     // if there are some fields
