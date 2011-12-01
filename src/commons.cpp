@@ -15,7 +15,6 @@
 
 #include <fstream>
 #include <iostream>
-#include <iomanip>
 #include <map>
 #include <stdlib.h>
 
@@ -174,7 +173,6 @@ Commons::Commons(const Commons& orig) {
 
     logger    = orig.logger;
     connector = orig.connector;
-    printer   = orig.printer;
     verbose   = orig.verbose;
     user      = orig.user;
     format    = orig.format;
@@ -200,7 +198,7 @@ Commons::Commons(Connector& orig) {
     logger    = orig.getLogger();
     connector = &orig;
     typemap   = new TypeMap();
-    printer   = new Printer("", orig.getLogger(), typemap);
+    format    = STANDARD;
     doom      = true;       // won't destroy the connector and logger
 }
 
@@ -218,13 +216,12 @@ Commons::Commons(const String& connStr, const String& logFilename) {
 /**
  * The most best ever of all VTAPI Commons constructors that should be always used
  */
-Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename) {
+Commons::Commons(const gengetopt_args_info& args_info) {
     thisClass = "Commons(gengetopt_args_info&, String&)";
 
-    logger    = new Logger(logFilename);
+    logger    = new Logger(String(args_info.log_arg)); // has default value
     connector = new Connector(args_info.connection_arg, logger);
     typemap   = new TypeMap();
-    printer   = new Printer("", logger, typemap);
     verbose   = args_info.verbose_given;
 
     dataset   = args_info.dataset_given ? String(args_info.dataset_arg) : String ("");
@@ -235,9 +232,9 @@ Commons::Commons(const gengetopt_args_info& args_info, const String& logFilename
     // TODO: interval pair
 
     user      = args_info.user_given ? String(args_info.user_arg) : String("");
-    format    = args_info.format_given ? String(args_info.format_arg) : String("");
-    if (args_info.format_given) printer->setFormat(toString(args_info.format_arg));
-
+    format    = String(args_info.format_arg).compare("standard") == 0 ? STANDARD :
+               (String(args_info.format_arg).compare("csv") == 0 ? CSV :
+               (String(args_info.format_arg).compare("html") == 0 ? HTML : STANDARD));
 
     baseLocation = args_info.location_given ? String(args_info.location_arg) : String("");
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
@@ -252,7 +249,6 @@ void Commons::beDoomed() {
         destruct(connector);        // the doom is very close     !!!!!
         destruct(logger);           // you shouldn't debug these lines!
         destruct(typemap);
-        destruct(printer);
     }
 }
 
@@ -315,21 +311,21 @@ String Commons::getDataLocation() {
     return (baseLocation + datasetLocation + sequenceLocation);
 }
 
-void Commons::printRes(PGresult* res, const String& format) {
-    printRes(res, -1, format);
-}
-
-void Commons::printRes(PGresult* res, int pTuple, const String& format) {
-    String f = format.empty() ? this->format : format;
-
-    if(res) {
-        this->registerTypes();
-        printer->setFormat(f);
-        if (pTuple < 0) printer->printAll(res);
-        else printer->printRow(res, pTuple);
-    }
-    else warning(158, "No result set to print.\n" + String(PQgeterror()));
-}
+//void Commons::printRes(PGresult* res, const String& format) {
+//    printRes(res, -1, format);
+//}
+//
+//void Commons::printRes(PGresult* res, int pTuple, const String& format) {
+//    String f = format.empty() ? this->format : format;
+//
+//    if(res) {
+//        this->registerTypes();
+//        printer->setFormat(f);
+//        if (pTuple < 0) printer->printAll(res);
+//        else printer->printRow(res, pTuple);
+//    }
+//    else warning(158, "No result set to print.\n" + String(PQgeterror()));
+//}
 
 void Commons::registerTypes() {
     if (! this->typemap->dataloaded) {
@@ -359,151 +355,3 @@ String Commons::toTypname(const int oid) {
     return this->typemap->toTypname(oid);
 }
 
-
-/* ************************************************************************** */
-Printer::Printer(const String format, Logger* logger, TypeMap* typemap) {
-    thisClass = "Printer(const String format, Logger* logger, TypeMap* typemap)";
-    this->logger = logger ? logger : new Logger();
-    this->setFormat(format);
-    this->typemap = typemap;
-}
-
-Printer::~Printer() {
-// TODO: zde destruct(logger), je-li vytvoren v konstruktoru
-}
-
-void Printer::setFormat(const String format, const String caption, const String tableOpt) {
-    if (format.empty() || !format.compare("standard")) {
-        this->format = STANDARD;
-        this->separator = "|";
-    }
-    else if (!format.compare("csv")) {
-        this->format = CSV;
-        this->separator = ",";
-    }
-    else if (!format.compare("html")) {
-        this->format = HTML;
-        this->caption = caption;
-        this->tableOpt = tableOpt;
-    }
-    //TODO: nejaky warning
-
-}
-
-void Printer::printAll(PGresult* res) {
-    int rows = PQntuples(res);
-    std::vector<int> widths;
-    if (format == STANDARD) widths = getWidths(res);
-    printHeader(res, widths);
-    for (int i = 0; i < rows; i++) printRowOnly(res, i, widths);
-    printFooter(res);
-}
-
-void Printer::printRow(PGresult* res , const int row) {
-    std::vector<int> widths;
-    if (format == STANDARD) widths = getWidths(res);
-    printHeader(res, widths);
-    printRowOnly(res, row, widths);
-    printFooter(res, 1);
-}
-
-void Printer::printHeader(PGresult* res, const std::vector<int>& widths) {
-    std::stringstream table, nameln, typeln, border;
-    int cols = PQnfields(res);
-
-    if (format == HTML) {
-        if (tableOpt.empty()) table << "<table>";
-        else table << "<table " << tableOpt << ">";
-        if (!caption.empty()) table << "<caption align=\"top\">" << caption << "</caption>";
-        table << endl << "<tr align=\"center\">";
-    }
-
-    for (int c = 0; c < cols; c++) {
-        if (format == STANDARD) {
-            nameln << left << setw(widths[c]) << PQfname(res, c);
-            typeln << left << setw(widths[c]) << typemap->toTypname(PQftype(res, c));
-            border << setfill('-') << setw(widths[c]) << "";
-            if (c < cols-1) {
-                nameln << '|'; typeln << '|'; border << '+';
-            }
-        }
-        else if (format == CSV) {
-            nameln << PQfname(res,c);
-            if (c < cols-1) nameln << ',';
-        }
-        else if (format == HTML) {
-            table << "<th>" << PQfname(res, c) << "<br/>";
-            table << typemap->toTypname(PQftype(res, c)) << "</th>";
-        }
-    }
-    table << "</tr>" << endl; nameln << endl; typeln << endl; border << endl;
-    if (format == STANDARD) cout << nameln.str() << typeln.str() << border.str();
-    else if (format == CSV) cout << nameln.str();
-    else if (format == HTML)cout << table.str();
-}
-
-void Printer::printFooter(PGresult* res, const int count) {
-    std::stringstream output;
-    if (format == STANDARD) {
-        int rows = PQntuples(res);
-        if (count > 0) output << "(" << count << " of " << rows << " rows)" << endl;
-        else output << "(" << rows << " rows)" << endl;
-    }
-    else if (format == HTML) output << "</table>" << endl;
-    cout << output.str();
-}
-
-void Printer::printRowOnly(PGresult* res, const int row, const std::vector<int>& widths) {
-    std::stringstream output;
-    int cols = PQnfields(res);
-    char* pval;
-
-    if (format == HTML) output << "<tr>";
-    for (int c = 0; c < cols; c++) {
-        //TODO: binarni data, int apod.
-        pval = PQgetvalue(res, row, c);
-        if (format == STANDARD) {
-            output << left << setw(widths[c]) << pval;
-            if (c < cols-1) output << '|';
-        }
-        else if (format == CSV) {
-            output << pval;
-            if (c < cols-1) output << ',';
-        }
-        else if (format == HTML) {
-            output << "<td>" << pval << "</td>";
-        }
-    }
-    if (format == HTML) output << "</tr>";
-    output << endl;
-    cout << output.str();
-}
-
-std::vector<int> Printer::getWidths(PGresult* res, const int row) {
-    std::vector<int> widths;
-    int plen, width;
-    const char *pval;
-    int rows = PQntuples(res);
-    int cols = PQnfields(res);
-
-    for (int c = 0; c < cols; c++) {
-        int r = row < 0 ? 0 : row;
-        int flen = String(PQfname(res, c)).length();
-        int tlen = typemap->toTypname(PQftype(res, c)).length();
-        plen = PQgetlength(res, r, c);
-        pval = PQgetvalue(res, r, c);
-        if (!pval || !*pval) plen = 0;
-        if (plen >= flen && plen >= tlen) width = plen;
-        else if (flen >= plen && flen >= tlen) width = flen;
-        else width = tlen;
-        widths.push_back(width);
-    }
-    if (row < 0) {
-        for (int r = 1; r < rows; r++)
-            for (int c = 0; c < cols; c++) {
-                plen = PQgetlength(res, r, c);
-                if (plen > widths[c]) widths[c] = plen;
-            }
-    }
-    return widths;
-}

@@ -8,7 +8,7 @@ version "0.1"
 usage "vtapi [OPTIONS] [COMMAND]"
 
 # Default gengetopt arguments
-args "--conf-parser --file-name=cli_settings --c-extension=cpp --no-handle-error -u"
+args "--conf-parser --file-name=vtapi_settings --c-extension=cpp --no-handle-error -u"
 
 text "\nOPTIONS\n"
 option "verbose" v "Verbose output mode - write used SQL commands etc."
@@ -17,6 +17,9 @@ option "verbose" v "Verbose output mode - write used SQL commands etc."
 text "\n Config arguments"
 option "config" - "Config file location"
     string typestr="FILENAME" default="./vtapi.conf"
+    optional
+option "log" - "Log file location"
+    string typestr="FILENAME" default="./vtapi.log"
     optional
 option "user" u "User name"
     string

@@ -42,7 +42,6 @@ typedef std::string String;
 #define PGF 1
 
 class TypeMap;
-class Printer;
 class Logger;
 class Connector;
 
@@ -167,7 +166,7 @@ public:
     /**
      * And a shorter one...
      */
-    Commons(const gengetopt_args_info& args_info, const String& logFilename = "");
+    Commons(const gengetopt_args_info& args_info);
 
     /**
      * This should be called from any (virtual) constructor of a derived class
@@ -196,9 +195,7 @@ public:
     void warning(int errnum, const String& logline);
     void warning(const String& message);
 
-    // this is to print the results
-    void printRes(PGresult* res, const String& format);
-    void printRes(PGresult* res, int pTuple = -1, const String& format = "");
+    // future
     void read(const String& format="");
 
     // some functions that may be usefull
@@ -221,11 +218,10 @@ public:
 
     Connector* connector; // this was most probably inherited
     Logger* logger;
-    Printer* printer;
 
     bool verbose;
+    enum format_t {STANDARD, CSV, HTML} format;
     String user;
-    String format;
     String baseLocation;
 
     String dataset;
@@ -266,35 +262,6 @@ class TypeMap {
 
     int toOid(String typname);
     String toTypname(int Oid);
-};
-
-/**
- * Class printing query output in standard/csv/html/... formats
- */
-class Printer {
-public:
-    Printer(const String format, Logger*, TypeMap*);
-    virtual ~Printer();
-
-    String thisClass;
-
-    void setFormat(const String format, const String caption = "", const String tableOpt = "");
-    void printAll(PGresult*);
-    void printRow(PGresult*, const int);
-
-protected:
-    enum format_t {STANDARD, CSV, HTML} format;
-    Logger* logger;
-    TypeMap* typemap;
-    String separator;
-    String caption;
-    String tableOpt;
-
-    void printHeader(PGresult*, const std::vector<int>&);
-    void printRowOnly(PGresult*, const int, const std::vector<int>&);
-    void printFooter(PGresult*, const int count = 0);
-
-    std::vector<int> getWidths(PGresult*, const int row = -1);
 };
 
 
