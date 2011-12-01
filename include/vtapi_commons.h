@@ -166,7 +166,7 @@ public:
     /**
      * And a shorter one...
      */
-    Commons(const gengetopt_args_info& args_info, const String& logFilename = "");
+    Commons(const gengetopt_args_info& args_info);
 
     /**
      * This should be called from any (virtual) constructor of a derived class
