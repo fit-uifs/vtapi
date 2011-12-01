@@ -28,7 +28,7 @@ VTCli::VTCli(const VTApi& api) {
 }
 
 VTCli::~VTCli() {
-    delete(vtapi);
+    destruct(vtapi);
 }
 
 int VTCli::run() {
@@ -58,8 +58,10 @@ int VTCli::run() {
             if (line.empty()) continue;
             Query* query = new Query(*(this->vtapi->commons), line, NULL);
             query->execute();
-            (this->vtapi->commons)->printRes(query->res);
-            delete(query);
+            KeyValues *kv = new KeyValues(*(this->vtapi->commons));
+            kv->printRes(query->res);
+            destruct(kv);
+            destruct(query);
         }
         // command: select
         else if (!command.compare("select")) {
@@ -82,7 +84,7 @@ int VTCli::run() {
                 ds->select->whereString("dslocation", params["location"]);
                 ds->next();
                 ds->printAll();
-                delete(ds);
+                destruct(ds);
             }
             // select sequence
             else if (!input.compare("sequence")) {
@@ -94,7 +96,7 @@ int VTCli::run() {
                 seq->select->whereString("seqtyp", params["seqtype"]);
                 seq->next();
                 seq->printAll();
-                delete(seq);
+                destruct(seq);
             }
             // select interval
             else if (!input.compare("interval")) {
@@ -106,7 +108,7 @@ int VTCli::run() {
                 in->select->whereString("imglocation", params["location"]);
                 in->next();
                 in->printAll();
-                delete(in);
+                destruct(in);
             }
             // select process
             else if (!input.compare("process")) {
@@ -118,7 +120,7 @@ int VTCli::run() {
                 pr->select->whereString("outputs", params["outputs"]);
                 pr->next();
                 pr->printAll();
-                delete(pr);
+                destruct(pr);
             }
             // select method
             else if (!input.compare("method")) {
@@ -128,7 +130,7 @@ int VTCli::run() {
                 me->select->whereString("mtname", params["name"]);
                 me->next();
                 me->printAll();
-                delete(me);
+                destruct(me);
             }
         }
         // command: insert
@@ -151,7 +153,7 @@ int VTCli::run() {
                 cout << "helping you with insert command " << endl;
             }
             insert->execute();
-            delete(insert);
+            destruct(insert);
         }
         // TODO: update
         else if (!command.compare("update")) {
@@ -614,7 +616,7 @@ int main(int argc, char** argv) {
 
     vtcli->run();
 
-    delete (vtcli);
+    destruct (vtcli);
 
     return 0;
 }

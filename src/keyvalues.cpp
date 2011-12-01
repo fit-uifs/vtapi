@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
 
 #include "postgresql/libpqtypes.h"
 #include "vtapi.h"
@@ -92,17 +93,195 @@ KeyValues* KeyValues::next() {
     return NULL;
 }
 
+// =============== PRINT methods =======================================
 
+/**
+ * Prints currently selected row in resultset (Select)
+ */
 void KeyValues::print() {
-    if (select && select->res && pos > -1) this->printRes(select->res, pos);
-    else warning(302, "There is nothing to print (see other messages)");
+    if (!select || !select->res || pos<0) warning(302, "There is nothing to print (see other messages)");
+    else {
+        std::vector< pair<datatype_t,int> > fInfo = getFieldsInfo(select->res, pos);
+        printHeader(select->res, fInfo);
+        printRowOnly(select->res, pos, fInfo);
+        printFooter(select->res, 1);
+    }
 }
-
+/**
+ * Prints all rows in resultset (Select)
+ */
 void KeyValues::printAll() {
-    if (select && select->res) this->printRes(select->res);
-    else warning(303, "There is nothing to print (see other messages)");
+    if (!select) warning(303, "There is nothing to print (see other messages)");
+    else printRes(select->res);
+}
+void KeyValues::printRes(PGresult* res) {
+    if (!res) warning(303, "There is nothing to print (see other messages)");
+    else {
+        int rows = PQntuples(res);
+        std::vector< pair<datatype_t,int> > fInfo = getFieldsInfo(res);
+        printHeader(res, fInfo);
+        for (int i = 0; i < rows; i++) printRowOnly(res, i, fInfo);
+        printFooter(res);
+    }
 }
 
+// =============== PRINT support methods =======================================
+/**
+ * Prints header - field name and data type
+ * @param res Input resultset
+ * @param widths Vector of column widths
+ */
+void KeyValues::printHeader(PGresult* res, const std::vector< pair<datatype_t,int> >& fInfo) {
+    std::stringstream table, nameln, typeln, border;
+    int cols = PQnfields(res);
+
+    if (format == HTML) {
+        if (tableOpt.empty()) table << "<table>";
+        else table << "<table " << tableOpt << ">";
+        if (!caption.empty()) table << "<caption align=\"top\">" << caption << "</caption>";
+        table << endl << "<tr align=\"center\">";
+    }
+
+    for (int c = 0; c < cols; c++) {
+        if (format == STANDARD) {
+            nameln << left << setw(fInfo[c].second) << PQfname(res, c);
+            typeln << left << setw(fInfo[c].second) << typemap->toTypname(PQftype(res, c));
+            border << setfill('-') << setw(fInfo[c].second) << "";
+            if (c < cols-1) {
+                nameln << '|'; typeln << '|'; border << '+';
+            }
+        }
+        else if (format == CSV) {
+            nameln << PQfname(res,c);
+            if (c < cols-1) nameln << ',';
+        }
+        else if (format == HTML) {
+            table << "<th>" << PQfname(res, c) << "<br/>";
+            table << typemap->toTypname(PQftype(res, c)) << "</th>";
+        }
+    }
+    table << "</tr>" << endl; nameln << endl; typeln << endl; border << endl;
+    if (format == STANDARD) cout << nameln.str() << typeln.str() << border.str();
+    else if (format == CSV) cout << nameln.str();
+    else if (format == HTML)cout << table.str();
+}
+/**
+ * Prints footer - number of rows printed
+ * @param res Input resultset
+ * @param count Number of rows printed (0 = all)
+ */
+void KeyValues::printFooter(PGresult* res, const int count) {
+    std::stringstream output;
+    if (format == STANDARD) {
+        int rows = PQntuples(res);
+        if (count > 0) output << "(" << count << " of " << rows << " rows)" << endl;
+        else output << "(" << rows << " rows)" << endl;
+    }
+    else if (format == HTML) output << "</table>" << endl;
+    cout << output.str();
+}
+/**
+ * Prints values in single row
+ * @param res Input resultset
+ * @param row Row number
+ * @param widths Vector of column widths
+ */
+void KeyValues::printRowOnly(PGresult* res, const int row,
+        const std::vector< pair<datatype_t,int> >& fInfo) {
+    std::stringstream output;
+    int cols = PQnfields(res);
+    String value;
+
+    if (format == HTML) output << "<tr>";
+    for (int c = 0; c < cols; c++) {
+        //TODO: POKRACOVAT TADY:: binarni data, int apod.
+        if (fInfo[c].first>INTBEGIN && fInfo[c].first<INTEND) {
+            //value = String getInt();
+
+        }
+        else
+            value = String(PQgetvalue(res, row, c));
+
+        if (format == STANDARD) {
+            output << left << setw(fInfo[c].second) << value;
+            if (c < cols-1) output << '|';
+        }
+        else if (format == CSV) {
+            output << value;
+            if (c < cols-1) output << ',';
+        }
+        else if (format == HTML) {
+            output << "<td>" << value << "</td>";
+        }
+    }
+    if (format == HTML) output << "</tr>";
+    output << endl;
+    cout << output.str();
+}
+/**
+ * Returns data type and desired column width for all fields
+ * @param res Input resultset
+ * @param row Row number to process (0 = all)
+ * @return Vector of column pairs <datatype,width>
+ */
+std::vector< pair<KeyValues::datatype_t,int> >
+KeyValues::getFieldsInfo(PGresult* res, const int row) {
+    std::vector< pair<datatype_t,int> > fInfo;
+    int plen, flen, tlen, width;
+    String typestr;
+    const char *pval;
+    int rows = PQntuples(res);
+    int cols = PQnfields(res);
+
+    for (int c = 0; c < cols; c++) {
+        int r = row < 0 ? 0 : row;
+        typestr = typemap->toTypname(PQftype(res, c));
+        plen = PQgetlength(res, r, c);
+        flen = String(PQfname(res, c)).length();
+        tlen = typestr.length();
+        pval = PQgetvalue(res, r, c);
+        if (!pval || !*pval) plen = 0;
+        if (plen >= flen && plen >= tlen) width = plen;
+        else if (flen >= plen && flen >= tlen) width = flen;
+        else width = tlen;
+        fInfo.push_back(make_pair(recognizeType(typestr),width));
+    }
+    if (row < 0) {
+        for (int r = 1; r < rows; r++)
+            for (int c = 0; c < cols; c++) {
+                plen = PQgetlength(res, r, c);
+                if (plen > fInfo[c].second) fInfo[c].second = plen;
+            }
+    }
+    return fInfo;
+}
+
+KeyValues::datatype_t KeyValues::recognizeType(const String& typestr) {
+    if (!typestr.compare("int2")) return INT2;
+    else if (!typestr.compare("int4")) return INT4;
+    else if (!typestr.compare("int8")) return INT8;
+    else if (!typestr.compare("oid")) return OID;
+    else if (!typestr.compare("inouttype")) return INOUTTYPE;
+    else if (!typestr.compare("float4")) return FLOAT4;
+    else if (!typestr.compare("float8")) return FLOAT8;
+    else if (!typestr.compare("double")) return DOUBLE;
+    else if (!typestr.compare("_int2")) return _INT2;
+    else if (!typestr.compare("_int4")) return _INT4;
+    else if (!typestr.compare("_int8")) return _INT8;
+    else if (!typestr.compare("_float4")) return _FLOAT4;
+    else if (!typestr.compare("_float8")) return _FLOAT8;
+    else if (!typestr.compare("_double")) return _DOUBLE;
+    else if (!typestr.compare("numeric")) return NUMERIC;
+    else if (!typestr.compare("bpchar")) return BPCHAR;
+    else if (!typestr.compare("varchar")) return VARCHAR;
+    else if (!typestr.compare("character varying")) return VARCHAR;
+    else if (!typestr.compare("name")) return NAME;
+    else if (!typestr.compare("text")) return TEXT;
+    else if (!typestr.compare("bytea")) return BYTEA;
+    else if (!typestr.compare("seqtype")) return SEQTYPE;
+    else if (!typestr.compare("regclass")) return REGCLASS;
+    else if (!typestr.compare("timestamp")) return TIMESTAMP;
+}
 
 
 // =============== GETTERS (Select) ============================================
@@ -115,49 +294,30 @@ String KeyValues::getString(const String& key) {
 String KeyValues::getString(int position) {
     PGtext value = (PGtext) "";
     
-    String typname = this->toTypname(PQftype(select->res, position));
-
+    datatype_t typ = recognizeType(toTypname(PQftype(select->res, position)));
     // Several data types are other representation of string, so we must catch all of them
-    if (typname.compare("text") == 0) {
-        PQgetf(select->res, pos, "%text", position, &value);
-    }
-    else if (typname.compare("name") == 0) {
-        PQgetf(select->res, pos, "%name", position, &value);
-    }
-    else if (typname.compare("varchar") == 0) {
-        PQgetf(select->res, pos, "%varchar", position, &value);
-    }
-    else if (typname.compare("character varying") == 0) {
-        PQgetf(select->res, pos, "%varchar", position, &value);
-    }
-    else if (typname.compare("oid") == 0) {
-        value = (PGtext) this->toTypname(this->getInt(position)).c_str();
-    }
-    // FIXME Tomas: tady mozna chybi 3. hodnota?
-    else if (typname.compare("inouttype") == 0) {
-        value = (PGtext) ((this->getInt(position)) ? "out" : "in");
-    }
-    else if (typname.compare("bytea") == 0) {
-        PQgetf(select->res, pos, "%bytea", position, &value);
-    }
-    else if (typname.compare("bpchar") == 0) {
-        PQgetf(select->res, pos, "%bpchar", position, &value);
-    }
-    else if (typname.compare("regclass") == 0) {
-        PQgetf(select->res, pos, "%varchar", position, &value);
-    }
-    else {
-       warning(304,"Type of (" + toString(position) + ") is not a string");
-       this->print();
+    switch (typ) {
+        case NUMERIC: PQgetf(select->res, pos, "%numeric", position, &value); break;
+        case TEXT: PQgetf(select->res, pos, "%text", position, &value); break;
+        case NAME: PQgetf(select->res, pos, "%name", position, &value); break;
+        case VARCHAR: PQgetf(select->res, pos, "%varchar", position, &value); break;
+        case BYTEA: PQgetf(select->res, pos, "%bytea", position, &value); break;
+        case BPCHAR: PQgetf(select->res, pos, "%bpchar", position, &value); break;
+        case REGCLASS: PQgetf(select->res, pos, "%varchar", position, &value); break;
+        case SEQTYPE: PQgetf(select->res, pos, "%varchar", position, &value); break;
+        case OID: value = (PGtext) this->toTypname(this->getInt(position)).c_str(); break;
+        // FIXME: treti typ?
+        case INOUTTYPE: value = (PGtext) ((this->getInt(position)) ? "out" : "in"); break;
+        default:
+            warning(304,"Type of (" + toString(position) + ") is not a string");
+            this->print();
     }
        
-    if (value == NULL) {
-        value = (PGtext) "";
-    }
-
-    return String(value);
+    return value ? String(value) : "";
 }
-
+//
+//TODO: eventuelne dodelat ostatni gettery podobne jako getString
+//
 
 // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
 int KeyValues::getInt(const String& key) {

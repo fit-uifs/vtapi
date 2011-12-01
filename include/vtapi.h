@@ -367,6 +367,12 @@ public:
      * Print all tuples of resultset
      */
     void printAll();
+    /**
+     * Print all tuples of specific resultset
+     * @param Resultset to print
+     */
+    void printRes(PGresult*);
+
 
     // =============== GETTERS (Select) ========================================
     // =============== GETTERS FOR STRINGS =====================================
@@ -493,6 +499,23 @@ public:
      * @return success (in derived classes)
      */
     virtual bool preSet();
+
+protected:
+    // Print datatypes
+    enum datatype_t {UNSPECIFIED=0, INTBEGIN=1,INT2,INT4,INT8,OID,INOUTTYPE,INTEND,
+    FLAOTBEGIN=50,FLOAT4,FLOAT8,DOUBLE, _INT2=100,_INT4,_INT8, _FLOAT4=150,_FLOAT8,_DOUBLE,FLOATEND,
+    STRINGBEGIN=200,NUMERIC,BPCHAR,VARCHAR,NAME,TEXT,BYTEA,SEQTYPE,REGCLASS,STRINGEND, TIMESTAMP=250};
+    // Print options
+    String caption;
+    String tableOpt;
+
+    // Print support methods
+    void printHeader(PGresult* res, const std::vector< pair<datatype_t,int> >& fInfo);
+    void printRowOnly(PGresult* res, const int, const std::vector< pair<datatype_t,int> >& fInfo);
+    void printFooter(PGresult* res, const int count = 0);
+    std::vector< pair<datatype_t,int> > getFieldsInfo(PGresult* res, const int row = -1);
+
+    datatype_t recognizeType(const String&);
 };
 
 
