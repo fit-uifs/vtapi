@@ -834,6 +834,14 @@ public:
     String getOutputs();
 
     // TODO: o tohle bych se ani nepokousel
+    /**
+     * A dangerous and rather discouraged function...
+     * @deprecaded by the human power
+     * @param method
+     * @param name
+     * @param selection
+     * @return
+     */
     bool add(const String& method, const String& name, const String& selection="intervals");
 
     /**
