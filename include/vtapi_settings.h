@@ -61,12 +61,12 @@ struct gengetopt_args_info
   char * format_arg;	/**< @brief Input/output format (default='standard').  */
   char * format_orig;	/**< @brief Input/output format original value given at command line.  */
   const char *format_help; /**< @brief Input/output format help description.  */
-  char * read_arg;	/**< @brief Read input.  */
-  char * read_orig;	/**< @brief Read input original value given at command line.  */
-  const char *read_help; /**< @brief Read input help description.  */
-  char * write_arg;	/**< @brief Write output.  */
-  char * write_orig;	/**< @brief Write output original value given at command line.  */
-  const char *write_help; /**< @brief Write output help description.  */
+  char * input_arg;	/**< @brief Read from specific input.  */
+  char * input_orig;	/**< @brief Read from specific input original value given at command line.  */
+  const char *input_help; /**< @brief Read from specific input help description.  */
+  char * output_arg;	/**< @brief Write to specific output.  */
+  char * output_orig;	/**< @brief Write to specific output original value given at command line.  */
+  const char *output_help; /**< @brief Write to specific output help description.  */
   char * where_arg;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\".  */
   char * where_orig;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\" original value given at command line.  */
   const char *where_help; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\" help description.  */
@@ -99,8 +99,8 @@ struct gengetopt_args_info
   unsigned int location_given ;	/**< @brief Whether location was given.  */
   unsigned int connection_given ;	/**< @brief Whether connection was given.  */
   unsigned int format_given ;	/**< @brief Whether format was given.  */
-  unsigned int read_given ;	/**< @brief Whether read was given.  */
-  unsigned int write_given ;	/**< @brief Whether write was given.  */
+  unsigned int input_given ;	/**< @brief Whether input was given.  */
+  unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int where_given ;	/**< @brief Whether where was given.  */
   unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int sequence_given ;	/**< @brief Whether sequence was given.  */

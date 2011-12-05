@@ -221,6 +221,8 @@ public:
 
     bool verbose;
     enum format_t {STANDARD, CSV, HTML} format;
+    String input;
+    String output;
     String user;
     String baseLocation;
 

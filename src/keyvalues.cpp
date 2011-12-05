@@ -115,14 +115,17 @@ void KeyValues::printAll() {
     if (!select) warning(303, "There is nothing to print (see other messages)");
     else printRes(select->res);
 }
+// TODO: netiskne obecny resultset res, ale vzdy select->res (gettery)
 void KeyValues::printRes(PGresult* res) {
     if (!res) warning(303, "There is nothing to print (see other messages)");
     else {
+        int origpos = this->pos;
         int rows = PQntuples(res);
         std::vector< pair<datatype_t,int> > fInfo = getFieldsInfo(res);
         printHeader(res, fInfo);
         for (int i = 0; i < rows; i++) printRowOnly(res, i, fInfo);
         printFooter(res);
+        this->pos = origpos;
     }
 }
 
@@ -191,28 +194,24 @@ void KeyValues::printRowOnly(PGresult* res, const int row,
         const std::vector< pair<datatype_t,int> >& fInfo) {
     std::stringstream output;
     int cols = PQnfields(res);
-    String value;
+    //TODO: tohle je, protoze gettery vzdy berou select->res, ne obecny resultset
+    this->pos = row;
 
     if (format == HTML) output << "<tr>";
     for (int c = 0; c < cols; c++) {
-        //TODO: POKRACOVAT TADY:: binarni data, int apod.
-        if (fInfo[c].first>INTBEGIN && fInfo[c].first<INTEND) {
-            //value = String getInt();
-
-        }
-        else
-            value = String(PQgetvalue(res, row, c));
+        // obecny getter
+        String val = getValue(c, fInfo[c].first);
 
         if (format == STANDARD) {
-            output << left << setw(fInfo[c].second) << value;
+            output << left << setw(fInfo[c].second) << val;
             if (c < cols-1) output << '|';
         }
         else if (format == CSV) {
-            output << value;
+            output << val;
             if (c < cols-1) output << ',';
         }
         else if (format == HTML) {
-            output << "<td>" << value << "</td>";
+            output << "<td>" << val << "</td>";
         }
     }
     if (format == HTML) output << "</tr>";
@@ -230,33 +229,43 @@ KeyValues::getFieldsInfo(PGresult* res, const int row) {
     std::vector< pair<datatype_t,int> > fInfo;
     int plen, flen, tlen, width;
     String typestr;
-    const char *pval;
+    String value;
     int rows = PQntuples(res);
     int cols = PQnfields(res);
 
+    // header and first row
     for (int c = 0; c < cols; c++) {
-        int r = row < 0 ? 0 : row;
+        //TODO: tohle je, protoze gettery vzdy berou select->res, ne obecny resultset
+        pos = row < 0 ? 0 : row;
         typestr = typemap->toTypname(PQftype(res, c));
-        plen = PQgetlength(res, r, c);
         flen = String(PQfname(res, c)).length();
         tlen = typestr.length();
-        pval = PQgetvalue(res, r, c);
-        if (!pval || !*pval) plen = 0;
+        value = getValue(c, recognizeType(typestr));
+        plen = value.length();
         if (plen >= flen && plen >= tlen) width = plen;
         else if (flen >= plen && flen >= tlen) width = flen;
         else width = tlen;
         fInfo.push_back(make_pair(recognizeType(typestr),width));
     }
+    // rest of the rows
     if (row < 0) {
-        for (int r = 1; r < rows; r++)
+        for (int r = 1; r < rows; r++) {
+            //TODO: tohle je, protoze gettery vzdy berou select->res, ne obecny resultset
+            pos = r;
             for (int c = 0; c < cols; c++) {
-                plen = PQgetlength(res, r, c);
-                if (plen > fInfo[c].second) fInfo[c].second = plen;
+                value = getValue(c, fInfo[c].first);
+                plen = value.length();
+                if (plen > fInfo[c].second) {
+                    cout << "delsi" << endl;
+                    fInfo[c].second = plen;
+                }
             }
+        }
     }
     return fInfo;
 }
 
+//TODO: zrejme docasna funkce, nez manipulaci s typy nejak rozumne integrujem
 KeyValues::datatype_t KeyValues::recognizeType(const String& typestr) {
     if (!typestr.compare("int2")) return INT2;
     else if (!typestr.compare("int4")) return INT4;
@@ -283,6 +292,37 @@ KeyValues::datatype_t KeyValues::recognizeType(const String& typestr) {
     else if (!typestr.compare("regclass")) return REGCLASS;
     else if (!typestr.compare("timestamp")) return TIMESTAMP;
 }
+// TODO: opet zrejme docasna funkce, obecny getter
+String KeyValues::getValue(const int field, const datatype_t typ) {
+    std::stringstream valss;
+    if (typ>INTBEGIN && typ<INTEND)
+        valss << this->getInt(field);
+    else if (typ>FLOATBEGIN && typ<FLOATEND)
+        valss << this->getFloat(field);
+    else if (typ>IARRAYBEGIN && typ<IARRAYEND) {
+        std::vector<int> arr = this->getIntV(field);
+        for (int i = 0; i < arr.size(); i++) {
+            valss << arr[i];
+            if (i < arr.size()-1) valss << ",";
+        }
+    }
+    else if (typ>FARRAYBEGIN && typ<FARRAYEND){
+        std::vector<float> arr = this->getFloatV(field);
+        for (int i = 0; i < arr.size(); i++) {
+            valss << arr[i];
+            if (i < arr.size()-1) valss << ",";
+        }
+    }
+    else if (typ>STRINGBEGIN && typ<STRINGEND)
+        valss << this->getString(field);
+    else if (typ == TIMESTAMP) {
+       struct tm ts = this->getTimestamp(field);
+       valss << ts.tm_year << '-' << ts.tm_mon << '-' << ts.tm_mday << ' ';
+       valss << ts.tm_hour << ':' << ts.tm_min << ':' << ts.tm_sec;
+    }
+    
+    return valss.str();    
+}
 
 
 // =============== GETTERS (Select) ============================================
@@ -292,6 +332,7 @@ String KeyValues::getString(const String& key) {
 }
 
 
+// TODO: this getter is experimental
 String KeyValues::getString(int position) {
     PGtext value = (PGtext) "";
     
@@ -316,9 +357,6 @@ String KeyValues::getString(int position) {
        
     return value ? String(value) : "";
 }
-//
-//TODO: eventuelne dodelat ostatni gettery podobne jako getString
-//
 
 // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
 int KeyValues::getInt(const String& key) {
@@ -328,11 +366,10 @@ int KeyValues::getInt(const String& key) {
 int KeyValues::getInt(int position) {
     PGint4 value;
     String typname = this->toTypname(PQftype(select->res, position));
-
     if (typname.compare("int4") == 0) {
         PQgetf(select->res, this->pos, "%int4", position, &value);
     }
-    if (typname.compare("int8") == 0) { // TODO: make a long type???
+    else if (typname.compare("int8") == 0) { // TODO: make a long type???
         PQgetf(select->res, this->pos, "%int8", position, &value);
     }
     else if (typname.compare("oid") == 0) {
@@ -449,7 +486,51 @@ float* KeyValues::getFloatA(int position, int& size) {
     return values;
 }
 
+std::vector<float> KeyValues::getFloatV(const String& key) {
+    return this->getFloatV(PQfnumber(select->res, key.c_str()));
+}
 
+std::vector<float> KeyValues::getFloatV(int position) {
+    PGarray tmp;
+    PGfloat4 value;
+    std::vector<float> values;
+
+    if (! PQgetf(select->res, this->pos, "%float4[]", position, &tmp)) {
+        warning(308, "Value is not an array of float");
+        this->print();
+    }
+
+    for (int i = 0; i < PQntuples(tmp.res); i++) {
+        if (! PQgetf(tmp.res, i, "%float4", 0, &value)) {
+            warning(309, "Unexpected value in float array");
+            this->print();
+        }
+        values.push_back(value);
+    }
+    PQclear(tmp.res);
+
+    return values;
+}
+
+// =============== GETTERS - TIMESTAMP =========================================
+struct tm KeyValues::getTimestamp(const String& key) {
+    return this->getTimestamp(PQfnumber(select->res, key.c_str()));
+}
+struct tm KeyValues::getTimestamp(int position) {
+    struct tm ts;
+    PGtimestamp timestamp;
+    if (! PQgetf(select->res, this->pos, "%timestamp", position, &timestamp)) {
+        warning(310, "Value is not a timestamp");
+        this->print();
+    }
+    ts.tm_year  = timestamp.date.year;
+    ts.tm_mon   = timestamp.date.mon;
+    ts.tm_mday  = timestamp.date.mday;
+    ts.tm_hour  = timestamp.time.hour;
+    ts.tm_min   = timestamp.time.min;
+    ts.tm_sec   = timestamp.time.sec;
+    return ts;
+}
 
 // =============== GETTERS - OTHER =============================================
 String KeyValues::getName(const String& key) {
@@ -471,7 +552,6 @@ int KeyValues::getIntOid(const String& key) {
 
     return (int) value;
 }
-
 
 // =============== SETTERS (Update) ============================================
 // TODO: mozna by se dalo premyslet o PQsetvalue
