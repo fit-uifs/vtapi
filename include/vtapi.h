@@ -460,6 +460,32 @@ public:
      * @return array of float values
      */
     float* getFloatA(int pos, int& size);
+    /**
+     * Get a vector of float values specified by the column index
+     * @param key column key
+     * @return  array of float values
+     */
+    std::vector<float> getFloatV(int position);
+    /**
+     * Get a vector of integer values specified by column key
+     * @param position index of column
+     * @return  array of integer values
+     */
+    std::vector<float> getFloatV(const String& key);
+
+    // =============== GETTERS - TIMESTAMP =====================================
+    /**
+     * Get timestamp specified by column key
+     * @param key column key
+     * @return Timestamp info
+     */
+    struct tm getTimestamp(const String& key);
+    /**
+     * Get timestamp specified by the column index
+     * @param key column index
+     * @return Timestamp info
+     */
+    struct tm getTimestamp(int position);
 
     // =============== GETTERS - OTHER =========================================
     /**
@@ -523,6 +549,9 @@ protected:
     std::vector< pair<datatype_t,int> > getFieldsInfo(PGresult* res, const int row = -1);
 
     datatype_t recognizeType(const String&);
+    String getValue(const int field, const datatype_t typ);
+
+
 };
 
 

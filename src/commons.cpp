@@ -176,6 +176,8 @@ Commons::Commons(const Commons& orig) {
     verbose   = orig.verbose;
     user      = orig.user;
     format    = orig.format;
+    input     = orig.input;
+    output    = orig.output;
     baseLocation = orig.baseLocation;
 
     dataset   = orig.dataset;
@@ -235,6 +237,8 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     format    = String(args_info.format_arg).compare("standard") == 0 ? STANDARD :
                (String(args_info.format_arg).compare("csv") == 0 ? CSV :
                (String(args_info.format_arg).compare("html") == 0 ? HTML : STANDARD));
+    input     = args_info.input_given ? String(args_info.input_arg) : String("");
+    output    = args_info.output_given ? String(args_info.output_arg) : String("");
 
     baseLocation = args_info.location_given ? String(args_info.location_arg) : String("");
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D

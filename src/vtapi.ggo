@@ -36,10 +36,10 @@ option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. pas
 option "format" f "Input/output format"
     string values="standard","csv", "html", "binary","sparse","html" default="standard"
     optional
-option "read" r "Read input"
+option "input" i "Read from specific input"
     string typestr="FILENAME"
     optional
-option "write" w "Write output"
+option "output" o "Write to specific output"
     string typestr="FILENAME"
     optional
 

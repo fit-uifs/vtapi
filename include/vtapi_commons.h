@@ -193,6 +193,8 @@ public:
 
     bool verbose; /**< Verbose mode - write used SQL queries and commands */
     enum format_t {STANDARD, CSV, HTML} format; /**< Output format */
+    String input; /**< A filename from which we read an input */
+    String output; /**< A filename into which we write an output */
     String user; /**< Logged in user */
     String baseLocation; /**< Base path location @todo */
 
@@ -209,7 +211,7 @@ public:
     TypeMap* typemap;  /**< Bidirectional map with oid <-> typname (datatype) */
 
     bool doom; /**< every derived class will have +1 = (true :) */
-
+    
 // Methods
 public:
     /**

@@ -44,8 +44,8 @@ const char *gengetopt_args_info_help[] = {
   "  -l, --location=filename  Base location of data files",
   "  -c, --connection=STRING  Connection string \"host=.. port=.. dbname=.. \n                             user=.. password=..\"",
   "  -f, --format=STRING      Input/output format  (possible values=\"standard\", \n                             \"csv\", \"html\", \"binary\", \"sparse\", \n                             \"html\" default=`standard')",
-  "  -r, --read=FILENAME      Read input",
-  "  -w, --write=FILENAME     Write output",
+  "  -i, --input=FILENAME     Read from specific input",
+  "  -o, --output=FILENAME    Write to specific output",
   "\n Context specification (WHERE clause)",
   "  -W, --where=SQLSTRING    explicit WHERE, ex.: --where=\"features is NULL\"",
   "  -D, --dataset=STRING     Set dataset to use",
@@ -116,8 +116,8 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->location_given = 0 ;
   args_info->connection_given = 0 ;
   args_info->format_given = 0 ;
-  args_info->read_given = 0 ;
-  args_info->write_given = 0 ;
+  args_info->input_given = 0 ;
+  args_info->output_given = 0 ;
   args_info->where_given = 0 ;
   args_info->dataset_given = 0 ;
   args_info->sequence_given = 0 ;
@@ -145,10 +145,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->connection_orig = NULL;
   args_info->format_arg = gengetopt_strdup ("standard");
   args_info->format_orig = NULL;
-  args_info->read_arg = NULL;
-  args_info->read_orig = NULL;
-  args_info->write_arg = NULL;
-  args_info->write_orig = NULL;
+  args_info->input_arg = NULL;
+  args_info->input_orig = NULL;
+  args_info->output_arg = NULL;
+  args_info->output_orig = NULL;
   args_info->where_arg = NULL;
   args_info->where_orig = NULL;
   args_info->dataset_arg = NULL;
@@ -181,8 +181,8 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->location_help = gengetopt_args_info_help[9] ;
   args_info->connection_help = gengetopt_args_info_help[10] ;
   args_info->format_help = gengetopt_args_info_help[11] ;
-  args_info->read_help = gengetopt_args_info_help[12] ;
-  args_info->write_help = gengetopt_args_info_help[13] ;
+  args_info->input_help = gengetopt_args_info_help[12] ;
+  args_info->output_help = gengetopt_args_info_help[13] ;
   args_info->where_help = gengetopt_args_info_help[15] ;
   args_info->dataset_help = gengetopt_args_info_help[16] ;
   args_info->sequence_help = gengetopt_args_info_help[17] ;
@@ -287,10 +287,10 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->connection_orig));
   free_string_field (&(args_info->format_arg));
   free_string_field (&(args_info->format_orig));
-  free_string_field (&(args_info->read_arg));
-  free_string_field (&(args_info->read_orig));
-  free_string_field (&(args_info->write_arg));
-  free_string_field (&(args_info->write_orig));
+  free_string_field (&(args_info->input_arg));
+  free_string_field (&(args_info->input_orig));
+  free_string_field (&(args_info->output_arg));
+  free_string_field (&(args_info->output_orig));
   free_string_field (&(args_info->where_arg));
   free_string_field (&(args_info->where_orig));
   free_string_field (&(args_info->dataset_arg));
@@ -401,10 +401,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "connection", args_info->connection_orig, 0);
   if (args_info->format_given)
     write_into_file(outfile, "format", args_info->format_orig, cmdline_parser_format_values);
-  if (args_info->read_given)
-    write_into_file(outfile, "read", args_info->read_orig, 0);
-  if (args_info->write_given)
-    write_into_file(outfile, "write", args_info->write_orig, 0);
+  if (args_info->input_given)
+    write_into_file(outfile, "input", args_info->input_orig, 0);
+  if (args_info->output_given)
+    write_into_file(outfile, "output", args_info->output_orig, 0);
   if (args_info->where_given)
     write_into_file(outfile, "where", args_info->where_orig, 0);
   if (args_info->dataset_given)
@@ -691,8 +691,8 @@ cmdline_parser_internal (
         { "location",	1, NULL, 'l' },
         { "connection",	1, NULL, 'c' },
         { "format",	1, NULL, 'f' },
-        { "read",	1, NULL, 'r' },
-        { "write",	1, NULL, 'w' },
+        { "input",	1, NULL, 'i' },
+        { "output",	1, NULL, 'o' },
         { "where",	1, NULL, 'W' },
         { "dataset",	1, NULL, 'D' },
         { "sequence",	1, NULL, 'S' },
@@ -703,7 +703,7 @@ cmdline_parser_internal (
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvu:p:l:c:f:r:w:W:D:S:I:M:P:E:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvu:p:l:c:f:i:o:W:D:S:I:M:P:E:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -791,26 +791,26 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'r':	/* Read input.  */
+        case 'i':	/* Read from specific input.  */
         
         
-          if (update_arg( (void *)&(args_info->read_arg), 
-               &(args_info->read_orig), &(args_info->read_given),
-              &(local_args_info.read_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->input_arg), 
+               &(args_info->input_orig), &(args_info->input_given),
+              &(local_args_info.input_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "read", 'r',
+              "input", 'i',
               additional_error))
             goto failure;
         
           break;
-        case 'w':	/* Write output.  */
+        case 'o':	/* Write to specific output.  */
         
         
-          if (update_arg( (void *)&(args_info->write_arg), 
-               &(args_info->write_orig), &(args_info->write_given),
-              &(local_args_info.write_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->output_arg), 
+               &(args_info->output_orig), &(args_info->output_given),
+              &(local_args_info.output_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "write", 'w',
+              "output", 'o',
               additional_error))
             goto failure;
         

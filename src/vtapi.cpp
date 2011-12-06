@@ -120,7 +120,7 @@ void VTApi::test() {
 
     Sequence* sequence = dataset->newSequence("s2");
     sequence->next();
-    sequence->printRes(sequence->select->res); // equivalent to printAll()
+    //sequence->printRes(sequence->select->res); // equivalent to printAll()
 
     srand(time(NULL));
     String sn = "test_sequence" + toString(rand()%1000);
