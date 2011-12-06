@@ -23,7 +23,6 @@
  *
  * @example vtapi.conf
  * This file shows an example configuration file for VTApi.
- * @example vtapi.cpp
  *
  *
  * @file
@@ -177,6 +176,7 @@ public:
      * @todo
      * @param key
      * @param value
+     * @param from
      * @return success
      */
     bool keyString(const String& key, const String& value, const String& from = "");
@@ -299,13 +299,16 @@ public:
 };
 
 /**
- * This is a class where queries are (to be) constructed
+ * @brief This is a class where queries are (to be) constructed
+ *
  * Mechanism: TBD
- * // TODO: in the future version (1.0), this class will use Select (whereKV)
- * WARNING: This class used unproperly may destroy the life and the universe.
+ * 
+ * @todo: in the future version (1.0), this class will use Select (whereKV)
+ *
+ * @warning This class used unproperly may destroy the life and the universe.
  * RECOMENDATION: Wait for the version 1.0.
  *
- * Error codes 23*
+ * @note Error codes 23*
  *
  */
 class Update : public Query {
@@ -369,7 +372,7 @@ public:
     void printAll();
     /**
      * Print all tuples of specific resultset
-     * @param Resultset to print
+     * @param res Resultset to print
      */
     void printRes(PGresult*);
 
@@ -384,7 +387,7 @@ public:
     String getString(const String& key);
     /**
      * Get a string value specified by an index of a column
-     * @param position index of the column
+     * @param pos index of the column
      * @return string value
      */
     String getString(int pos);
@@ -398,7 +401,7 @@ public:
     int getInt(const String& key);
     /**
      * Get an integer value specified by an index of a column
-     * @param position index of column
+     * @param pos index of column
      * @return integer value
      */
     int getInt(int pos);
@@ -416,15 +419,16 @@ public:
      * @return array of integer values
      */
     int* getIntA(int pos, int& size);
+
     /**
-     * Get a vector of integer values specified by a column key
-     * @param key column key
+     * Get a vector of integer values specified by an index of a column
+     * @param pos index of column
      * @return  array of integer values
      */
     std::vector<int> getIntV(int pos);
     /**
-     * Get a vector of integer values specified by an index of a column
-     * @param position index of column
+     * Get a vector of integer values specified by a column key
+     * @param key column key
      * @return  array of integer values
      */
     std::vector<int> getIntV(const String& key);
@@ -438,7 +442,7 @@ public:
     float getFloat(const String& key);
     /**
      * Get a float value specified by an index of a column
-     * @param position index of column
+     * @param pos index of column
      * @return float value
      */
     float getFloat(int pos);
@@ -451,7 +455,7 @@ public:
     float* getFloatA(const String& key, int& size);
     /**
      * Get array of float values specified by index of column
-     * @param position index of column
+     * @param pos index of column
      * @param size size of the array of float values
      * @return array of float values
      */
@@ -537,8 +541,9 @@ public:
      *    -# Don't know the name -> use next
      *    -# The dataset is in your vtapi.conf
      *
-     * @param orig @todo
-     * @param name @todo
+     * @param orig
+     * @param name
+     * @todo params orig&name in documentation
      */
     Dataset(const KeyValues& orig, const String& name = "");
 

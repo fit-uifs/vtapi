@@ -130,7 +130,9 @@ void KeyValues::printRes(PGresult* res) {
 /**
  * Prints header - field name and data type
  * @param res Input resultset
- * @param widths Vector of column widths
+ * @param fInfo
+ * // param widths Vector of column widths
+ * @todo param fInfo in documentation
  */
 void KeyValues::printHeader(PGresult* res, const std::vector< pair<datatype_t,int> >& fInfo) {
     std::stringstream table, nameln, typeln, border;
@@ -185,7 +187,9 @@ void KeyValues::printFooter(PGresult* res, const int count) {
  * Prints values in single row
  * @param res Input resultset
  * @param row Row number
- * @param widths Vector of column widths
+ * @param fInfo
+ * //param widths Vector of column widths
+ * @todo param fInfo in documentation
  */
 void KeyValues::printRowOnly(PGresult* res, const int row,
         const std::vector< pair<datatype_t,int> >& fInfo) {
