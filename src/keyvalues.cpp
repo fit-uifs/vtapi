@@ -113,18 +113,13 @@ void KeyValues::print() {
  */
 void KeyValues::printAll() {
     if (!select) warning(303, "There is nothing to print (see other messages)");
-    else printRes(select->res);
-}
-// TODO: netiskne obecny resultset res, ale vzdy select->res (gettery)
-void KeyValues::printRes(PGresult* res) {
-    if (!res) warning(303, "There is nothing to print (see other messages)");
     else {
         int origpos = this->pos;
-        int rows = PQntuples(res);
-        std::vector< pair<datatype_t,int> > fInfo = getFieldsInfo(res);
-        printHeader(res, fInfo);
-        for (int i = 0; i < rows; i++) printRowOnly(res, i, fInfo);
-        printFooter(res);
+        int rows = PQntuples(select->res);
+        std::vector< pair<datatype_t,int> > fInfo = getFieldsInfo(select->res);
+        printHeader(select->res, fInfo);
+        for (int i = 0; i < rows; i++) printRowOnly(select->res, i, fInfo);
+        printFooter(select->res);
         this->pos = origpos;
     }
 }
@@ -205,7 +200,6 @@ void KeyValues::printRowOnly(PGresult* res, const int row,
     for (int c = 0; c < cols; c++) {
         // obecny getter
         String val = getValue(c, fInfo[c].first);
-
         if (format == STANDARD) {
             output << left << setw(fInfo[c].second) << val;
             if (c < cols-1) output << '|';
@@ -241,7 +235,7 @@ KeyValues::getFieldsInfo(PGresult* res, const int row) {
     for (int c = 0; c < cols; c++) {
         //TODO: tohle je, protoze gettery vzdy berou select->res, ne obecny resultset
         pos = row < 0 ? 0 : row;
-        typestr = typemap->toTypname(PQftype(res, c));
+        typestr = toTypname(PQftype(res, c));
         flen = String(PQfname(res, c)).length();
         tlen = typestr.length();
         value = getValue(c, recognizeType(typestr));
@@ -259,10 +253,7 @@ KeyValues::getFieldsInfo(PGresult* res, const int row) {
             for (int c = 0; c < cols; c++) {
                 value = getValue(c, fInfo[c].first);
                 plen = value.length();
-                if (plen > fInfo[c].second) {
-                    cout << "delsi" << endl;
-                    fInfo[c].second = plen;
-                }
+                if (plen > fInfo[c].second) fInfo[c].second = plen;
             }
         }
     }
@@ -321,8 +312,9 @@ String KeyValues::getValue(const int field, const datatype_t typ) {
         valss << this->getString(field);
     else if (typ == TIMESTAMP) {
        struct tm ts = this->getTimestamp(field);
-       valss << ts.tm_year << '-' << ts.tm_mon << '-' << ts.tm_mday << ' ';
-       valss << ts.tm_hour << ':' << ts.tm_min << ':' << ts.tm_sec;
+       valss << right << setfill('0');
+       valss << ts.tm_year << '-' << setw(2) << ts.tm_mon << '-' << setw(2) << ts.tm_mday << ' ';
+       valss << setw(2) << ts.tm_hour << ':' << setw(2) << ts.tm_min << ':' << setw(2) << ts.tm_sec;
     }
     
     return valss.str();    
@@ -356,7 +348,7 @@ String KeyValues::getString(int position) {
         case INOUTTYPE: value = (PGtext) ((this->getInt(position)) ? "out" : "in"); break;
         default:
             warning(304,"Type of (" + toString(position) + ") is not a string");
-            this->print();
+//            this->print();
     }
        
     return value ? String(value) : "";
@@ -384,7 +376,7 @@ int KeyValues::getInt(int position) {
     }
     else {
         warning(305, "Value is not an integer");
-        this->print();
+//        this->print();
     }
     
     return (int) value;
@@ -400,7 +392,7 @@ int* KeyValues::getIntA(int position, int& size) {
 
     if (! PQgetf(select->res, this->pos, "%int4[]", position, &tmp)) {
         warning(306, "Value is not an array of integer");
-        this->print();
+//        this->print();
     }
 
     size = PQntuples(tmp.res);
@@ -408,7 +400,7 @@ int* KeyValues::getIntA(int position, int& size) {
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
             warning(307, "Unexpected value in integer array");
-            this->print();
+//            this->print();
 
         }
     }
@@ -428,13 +420,13 @@ std::vector<int> KeyValues::getIntV(int position) {
 
     if (! PQgetf(select->res, this->pos, "%int4[]", position, &tmp)) {
         warning(308, "Value is not an array of integer");
-        this->print();
+//        this->print();
     }
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
             warning(309, "Unexpected value in integer array");
-            this->print();
+//            this->print();
         }
         values.push_back(value);
     }
@@ -456,7 +448,7 @@ float KeyValues::getFloat(int position) {
 
     if (! PQgetf(select->res, this->pos, "%float4", position, &value)) {
         warning(310, "Value is not a float");
-        this->print();
+//        this->print();
     }
 
     return (float) value;
@@ -474,7 +466,7 @@ float* KeyValues::getFloatA(int position, int& size) {
 
     if (! PQgetf(select->res, this->pos, "%float4[]", position, &tmp)) {
         warning(311, "Value is not an array of float");
-        this->print();
+//        this->print();
     }
 
     size = PQntuples(tmp.res);
@@ -482,7 +474,7 @@ float* KeyValues::getFloatA(int position, int& size) {
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
             warning(312, "Unexpected value in float array");
-            this->print();
+//            this->print();
         }
     }
     PQclear(tmp.res);
@@ -501,13 +493,13 @@ std::vector<float> KeyValues::getFloatV(int position) {
 
     if (! PQgetf(select->res, this->pos, "%float4[]", position, &tmp)) {
         warning(308, "Value is not an array of float");
-        this->print();
+//        this->print();
     }
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &value)) {
             warning(309, "Unexpected value in float array");
-            this->print();
+//            this->print();
         }
         values.push_back(value);
     }
@@ -521,18 +513,21 @@ struct tm KeyValues::getTimestamp(const String& key) {
     return this->getTimestamp(PQfnumber(select->res, key.c_str()));
 }
 struct tm KeyValues::getTimestamp(int position) {
-    struct tm ts;
+    struct tm ts = {0};
     PGtimestamp timestamp;
     if (! PQgetf(select->res, this->pos, "%timestamp", position, &timestamp)) {
         warning(310, "Value is not a timestamp");
-        this->print();
+//        this->print();
     }
+    else {
     ts.tm_year  = timestamp.date.year;
     ts.tm_mon   = timestamp.date.mon;
     ts.tm_mday  = timestamp.date.mday;
     ts.tm_hour  = timestamp.time.hour;
     ts.tm_min   = timestamp.time.min;
     ts.tm_sec   = timestamp.time.sec;
+    }
+
     return ts;
 }
 

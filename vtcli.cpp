@@ -41,7 +41,10 @@ int VTCli::run() {
     // command cycle
     do {
         // get command, if cli is empty then start interactive mode
-        if (interact) getline(cin, line);
+        if (interact) {
+            cout << endl << "> "; cout.flush();
+            getline(cin, line);
+        }
         else line = this->cmdline;
         // EOF detected
         if (cin.fail()) break;
