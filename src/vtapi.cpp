@@ -150,7 +150,7 @@ void VTApi::test() {
     interval->next();
     interval->print();
 
-    // get a list of keys
+    // get a list of keys in the result
     cout << endl << "Printing interval TKeys" << endl;
     std::vector<TKey>* vtk = interval->getKeys();
     for (int i = 0; i < vtk->size(); ++i) (*vtk)[i].print();
@@ -164,13 +164,23 @@ void VTApi::test() {
     image->next(); // do not forget this (again :), please
     image->add(interval->getSequence(), t1, "nosuchimage.jpg");
     // image->insert->keyFloat("sizeKB", 100.3);
+/*
     float kf[] = {1.1, 2.2, 3.3, 4.4, 5.5};
     image->insert->keyFloatA("test", kf, 5);
+*/
     image->insert->execute();     // or next() must be called after inserting all voluntary fields such as above
     delete (image);    // if not called execute() or next(), the insert destructor raises a warning
         
     image = sequence->newImage("nosuchimage.jpg");
     image->next();      // in case of update, the next() must be called
+    
+ /* // vypis pole floatu
+    int kfl = 0;
+    float* kf2 = image->getFloatA("test", kfl);
+    for (int i=0; i < kfl; ++i) cout << kf2[i] << " ";
+    cout << endl;
+    destructall(kf2);
+*/
     image->setString("imglocation", "tudlenudle.png");
     image->setExecute();  // NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 
@@ -210,7 +220,7 @@ void VTApi::test() {
     process->next();
     process->printAll();
 
-    // TODO: tohle doma nezkousejte, nebo vam upadne zadecek
+    // tohle doma nezkousejte, nebo vam upadne zadecek
     // process->add("test", "test");
 
     delete (process);
