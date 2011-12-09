@@ -56,14 +56,15 @@ std::vector<TKey> Method::getMethodKeys() {
     kv->select->whereString("mtname", this->method);
 
     while (kv->next()) {
-        TKey* mk = new TKey();
-        mk->key = kv->getString("keyname");
-        mk->type = kv->getString("typname");
-        mk->size = 0;   // 0 is for the definition
-        mk->from = kv->getString("inout");
+        TKey mk;
+        mk.key = kv->getString("keyname");
+        mk.type = kv->getString("typname");
+        mk.size = 0;   // 0 is for the definition
+        mk.from = kv->getString("inout");
 
-        methodKeys.push_back(*mk);
+        methodKeys.push_back(mk);
     }
 
+    delete (kv);
     return methodKeys;
 }

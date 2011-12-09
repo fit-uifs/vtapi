@@ -149,7 +149,14 @@ void VTApi::test() {
     // interval->select->whereString("test", "NULL");
     interval->next();
     interval->print();
-/*
+
+    // get a list of keys
+    cout << endl << "Printing interval TKeys" << endl;
+    std::vector<TKey>* vtk = interval->getKeys();
+    for (int i = 0; i < vtk->size(); ++i) (*vtk)[i].print();
+    destruct(vtk);
+    cout << endl;
+
     // this has no effect outside ...
     int t1 = 1000000 + rand()%1000;
     cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
@@ -172,7 +179,7 @@ void VTApi::test() {
     query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
     cout << "OK: " << query->execute() << endl;
     delete (query);
-*/
+
     delete (interval);
     delete (sequence);
 
@@ -188,6 +195,7 @@ void VTApi::test() {
     cout << endl;
     cout << "TESTING  MethodKeys" << endl;
     cout << "USING method " << method->getName() << endl;
+
     cout << "Printing methodKeys (" << method->methodKeys.size() << ")" << endl;
 
     for (int i = 0; i < method->methodKeys.size(); i++) {

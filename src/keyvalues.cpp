@@ -17,8 +17,8 @@ using namespace std;
 
 // ************************************************************************** //
 String TKey::print() {
-    String ret = "TKey type=" + type + ", key=" + key + ", size=" + toString(size) + ", from=" + from + "\n";
-    std::cout << ret;
+    String ret = "TKey type=" + type + ", key=" + key + ", size=" + toString(size) + ", from=" + from;
+    std::cout << ret << std::endl;
     return (ret);
 }
 
@@ -93,6 +93,24 @@ KeyValues* KeyValues::next() {
 
     return NULL;
 }
+
+
+
+std::vector<TKey>* KeyValues::getKeys() {
+    std::vector<TKey>* vtk = new std::vector<TKey>;
+    if (!select || !select->res) return NULL;
+
+    int cols = PQnfields(select->res);
+    for (int c = 0; c < cols; c++) {
+        String name = PQfname(select->res, c);
+        String type = typemap->toTypname(PQftype(select->res, c));
+        TKey tk (name, type, -1);
+        vtk->push_back(tk);
+    }
+
+    return vtk;
+}
+
 
 // =============== PRINT methods =======================================
 

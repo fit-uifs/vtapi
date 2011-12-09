@@ -99,6 +99,13 @@ public:
     TKey() : size(-1) {};
 
     /**
+     * Copy constructor
+     * @param orig
+     */
+    TKey(const TKey& orig) 
+            : type(orig.type), key(orig.key), from(orig.from), size(orig.size) {};
+
+    /**
      * Constructor for full specification of arguments
      * @param type name of data type
      * @param key name of a column
@@ -106,7 +113,9 @@ public:
      * @param from distinguish between in/out right now
      */
     TKey(const String& type, const String& key, const int size, const String& from = "")
-            : type(type), key(key), from(from), size(size) {};
+            : type(type), key(key), size(size), from(from) {};
+
+    
 
     /**
      * Print data and return data that was printed
@@ -357,10 +366,10 @@ public:
     KeyValues* next();
 
     /**
-     * get a list of all possible columns
+     * Get a list of all possible columns as TKeys
      * @return list of key name and TODO
      */
-    std::map<String,String> getKeys();
+    std::vector<TKey>* getKeys();
 
     /**
      * Print a current tuple of resultset
