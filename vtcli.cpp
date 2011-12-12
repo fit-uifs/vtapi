@@ -62,7 +62,7 @@ int VTCli::run() {
             Query* query = new Query(*(this->vtapi->commons), line, NULL);
             query->execute();
             KeyValues *kv = new KeyValues(*(this->vtapi->commons));
-            kv->printRes(query->res);
+            kv->printAll(); // printRes(query->res);
             destruct(kv);
             destruct(query);
         }

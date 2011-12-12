@@ -434,13 +434,13 @@ public:
      * @param pos index of column
      * @return  array of integer values
      */
-    std::vector<int> getIntV(int pos);
+    std::vector<int>* getIntV(int pos);
     /**
      * Get a vector of integer values specified by a column key
      * @param key column key
      * @return  array of integer values
      */
-    std::vector<int> getIntV(const String& key);
+    std::vector<int>* getIntV(const String& key);
 
     // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
     /**
@@ -474,13 +474,13 @@ public:
      * @param key column key
      * @return  array of float values
      */
-    std::vector<float> getFloatV(int position);
+    std::vector<float>* getFloatV(int position);
     /**
      * Get a vector of integer values specified by column key
      * @param position index of column
      * @return  array of integer values
      */
-    std::vector<float> getFloatV(const String& key);
+    std::vector<float>* getFloatV(const String& key);
 
     // =============== GETTERS - TIMESTAMP =====================================
     /**

@@ -118,7 +118,7 @@ void VTApi::test() {
     cout << "TESTING Sequence..." << endl;
     cout << "USING dataset " << dataset->getDataset() << endl;
 
-    Sequence* sequence = dataset->newSequence("s2");
+    Sequence* sequence = dataset->newSequence("s2"); // s2
     sequence->next();
     //sequence->printRes(sequence->select->res); // equivalent to printAll()
 
@@ -128,8 +128,8 @@ void VTApi::test() {
     sequence->add(sn, "/test_location");
     sequence->next();
 
-    delete (sequence);
-    sequence = dataset->newSequence();
+    destruct (sequence);
+    sequence = dataset->newSequence("iacc.1.tv11.devel.kf");
     sequence->next();   // this can execute and commit (a suicide)
     sequence->printAll();
 
@@ -160,8 +160,20 @@ void VTApi::test() {
     // this has no effect outside ...
     int t1 = 1000000 + rand()%1000;
     cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
-    Image* image = new Image(*interval);
+    Image* image = sequence->newImage("shot10000_1.jpg"); // new Image(*interval);
     image->next(); // do not forget this (again :), please
+    cout << image->getLocation() << endl;
+    int cnt = 0;
+
+    // this is hoe to print arrays
+    int* tags = image->getIntA("tags", cnt);
+    for (int i=0; i<cnt && i<10; ++i) {
+        if (i >= 9) cout << "...";
+        else cout << tags[i] << ", ";
+    }
+    cout << endl;
+    destructall (tags);
+
     image->add(interval->getSequence(), t1, "nosuchimage.jpg");
     // image->insert->keyFloat("sizeKB", 100.3);
 /*
@@ -169,7 +181,7 @@ void VTApi::test() {
     image->insert->keyFloatA("test", kf, 5);
 */
     image->insert->execute();     // or next() must be called after inserting all voluntary fields such as above
-    delete (image);    // if not called execute() or next(), the insert destructor raises a warning
+    destruct (image);    // if not called execute() or next(), the insert destructor raises a warning
         
     image = sequence->newImage("nosuchimage.jpg");
     image->next();      // in case of update, the next() must be called

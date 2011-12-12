@@ -313,18 +313,20 @@ String KeyValues::getValue(const int field, const datatype_t typ) {
     else if (typ>FLOATBEGIN && typ<FLOATEND)
         valss << this->getFloat(field);
     else if (typ>IARRAYBEGIN && typ<IARRAYEND) {
-        std::vector<int> arr = this->getIntV(field);
-        for (int i = 0; i < arr.size(); i++) {
-            valss << arr[i];
-            if (i < arr.size()-1) valss << ",";
+        std::vector<int>* arr = this->getIntV(field);
+        if (arr) for (int i = 0; i < (*arr).size(); i++) {
+            valss << (*arr)[i];
+            if (i < (*arr).size()-1) valss << ",";
         }
+        destruct (arr);
     }
     else if (typ>FARRAYBEGIN && typ<FARRAYEND){
-        std::vector<float> arr = this->getFloatV(field);
-        for (int i = 0; i < arr.size(); i++) {
-            valss << arr[i];
-            if (i < arr.size()-1) valss << ",";
+        std::vector<float>* arr = this->getFloatV(field);
+        if (arr) for (int i = 0; i < (*arr).size(); i++) {
+            valss << (*arr)[i];
+            if (i < (*arr).size()-1) valss << ",";
         }
+        destruct (arr);
     }
     else if (typ>STRINGBEGIN && typ<STRINGEND)
         valss << this->getString(field);
@@ -366,7 +368,7 @@ String KeyValues::getString(int position) {
         case INOUTTYPE: value = (PGtext) ((this->getInt(position)) ? "out" : "in"); break;
         default:
             warning(304,"Type of (" + toString(position) + ") is not a string");
-//            this->print();
+        // this->print();
     }
        
     return value ? String(value) : "";
@@ -394,7 +396,7 @@ int KeyValues::getInt(int position) {
     }
     else {
         warning(305, "Value is not an integer");
-//        this->print();
+        // this->print();
     }
     
     return (int) value;
@@ -406,20 +408,19 @@ int* KeyValues::getIntA(const String& key, int& size) {
 
 int* KeyValues::getIntA(int position, int& size) {
     PGarray tmp;
-    int* values;
-
     if (! PQgetf(select->res, this->pos, "%int4[]", position, &tmp)) {
         warning(306, "Value is not an array of integer");
-//        this->print();
+        size = -1;
+        return NULL;
     }
 
     size = PQntuples(tmp.res);
-    values = new int(size);
+    int* values = new int [size];
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
             warning(307, "Unexpected value in integer array");
-//            this->print();
-
+            size = -1;
+            return NULL;
         }
     }
     PQclear(tmp.res);
@@ -427,26 +428,27 @@ int* KeyValues::getIntA(int position, int& size) {
     return values;
 }
 
-std::vector<int> KeyValues::getIntV(const String& key) {
+std::vector<int>* KeyValues::getIntV(const String& key) {
     return this->getIntV(PQfnumber(select->res, key.c_str()));
 }
 
-std::vector<int> KeyValues::getIntV(int position) {
+std::vector<int>* KeyValues::getIntV(int position) {
     PGarray tmp;
-    PGint4 value;
-    std::vector<int> values;
-
     if (! PQgetf(select->res, this->pos, "%int4[]", position, &tmp)) {
         warning(308, "Value is not an array of integer");
-//        this->print();
+        return NULL;
     }
+
+    PGint4 value;
+    std::vector<int>* values = new std::vector<int>;
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
             warning(309, "Unexpected value in integer array");
-//            this->print();
+            destruct (values);
+            return NULL;
         }
-        values.push_back(value);
+        values->push_back(value);
     }
     PQclear(tmp.res);
 
@@ -480,19 +482,19 @@ float* KeyValues::getFloatA(const String& key, int& size) {
 
 float* KeyValues::getFloatA(int position, int& size) {
     PGarray tmp;
-    float* values;
-
     if (! PQgetf(select->res, this->pos, "%float4[]", position, &tmp)) {
         warning(311, "Value is not an array of float");
-//        this->print();
+        size = -1;
+        return NULL;
     }
 
     size = PQntuples(tmp.res);
-    values = new float(size);
+    float* values = new float [size];
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
             warning(312, "Unexpected value in float array");
-//            this->print();
+            size = -1;
+            return NULL;
         }
     }
     PQclear(tmp.res);
@@ -500,26 +502,26 @@ float* KeyValues::getFloatA(int position, int& size) {
     return values;
 }
 
-std::vector<float> KeyValues::getFloatV(const String& key) {
+std::vector<float>* KeyValues::getFloatV(const String& key) {
     return this->getFloatV(PQfnumber(select->res, key.c_str()));
 }
 
-std::vector<float> KeyValues::getFloatV(int position) {
+std::vector<float>* KeyValues::getFloatV(int position) {
     PGarray tmp;
-    PGfloat4 value;
-    std::vector<float> values;
-
     if (! PQgetf(select->res, this->pos, "%float4[]", position, &tmp)) {
         warning(308, "Value is not an array of float");
-//        this->print();
+        return NULL;
     }
 
+    PGfloat4 value;
+    std::vector<float>* values = new std::vector<float>;
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &value)) {
             warning(309, "Unexpected value in float array");
-//            this->print();
+            destruct (values);
+            return NULL;
         }
-        values.push_back(value);
+        values->push_back(value);
     }
     PQclear(tmp.res);
 
@@ -535,15 +537,15 @@ struct tm KeyValues::getTimestamp(int position) {
     PGtimestamp timestamp;
     if (! PQgetf(select->res, this->pos, "%timestamp", position, &timestamp)) {
         warning(310, "Value is not a timestamp");
-//        this->print();
+        return ts;
     }
     else {
-    ts.tm_year  = timestamp.date.year;
-    ts.tm_mon   = timestamp.date.mon;
-    ts.tm_mday  = timestamp.date.mday;
-    ts.tm_hour  = timestamp.time.hour;
-    ts.tm_min   = timestamp.time.min;
-    ts.tm_sec   = timestamp.time.sec;
+        ts.tm_year  = timestamp.date.year;
+        ts.tm_mon   = timestamp.date.mon;
+        ts.tm_mday  = timestamp.date.mday;
+        ts.tm_hour  = timestamp.time.hour;
+        ts.tm_min   = timestamp.time.min;
+        ts.tm_sec   = timestamp.time.sec;
     }
 
     return ts;
