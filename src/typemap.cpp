@@ -64,7 +64,6 @@ void TypeMap::loadTypes() {
                 0, &oid, 1, &typname, 2, &ti.category, 3, &ti.length, 4, &ti.elemoid);
             typesname[String(typname)] = make_pair(oid, ti);
             typesoid[oid] = make_pair(String(typname), ti);
-            if (i == 3) cout << ti.category << ti.length << ti.elemoid << endl;
         }
         dataloaded = true;
         PQclear(res);
