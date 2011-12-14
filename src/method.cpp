@@ -51,7 +51,7 @@ std::vector<TKey> Method::getMethodKeys() {
     KeyValues* kv = new KeyValues(*this);
     kv->select = new Select(*this);
     kv->select->from("methods_keys", "keyname");
-    kv->select->from("methods_keys", "typname::regtype::oid");
+    kv->select->from("methods_keys", "typname");
     kv->select->from("methods_keys", "inout");
     kv->select->whereString("mtname", this->method);
 
@@ -61,7 +61,6 @@ std::vector<TKey> Method::getMethodKeys() {
         mk.type = kv->getString("typname");
         mk.size = 0;   // 0 is for the definition
         mk.from = kv->getString("inout");
-
         methodKeys.push_back(mk);
     }
 

@@ -21,6 +21,7 @@ TypeMap::~TypeMap() {
 void TypeMap::clear() {
     typesname.clear();
     typesoid.clear();
+    reftables.clear();
     dataloaded = false;
 }
 
@@ -40,14 +41,14 @@ int TypeMap::size() {
 }
 
 int TypeMap::toOid(const String typname) {
-    // TODO: je nutne definovat chovani, kdyz tam typ neni!
-    if (!dataloaded) loadTypes();
+    loadTypes();
+    if (!typesname.count(typname) > 0) return -1;
     return this->typesname[typname].first;
 }
 
 String TypeMap::toTypname(const int oid) {
-    // TODO: je nutne definovat chovani, kdyz tam typ neni!
-    if (!dataloaded) loadTypes();
+    loadTypes();
+    if (!typesoid.count(oid) > 0) return "";
     return this->typesoid[oid].first;
 }
 
@@ -55,7 +56,7 @@ void TypeMap::loadTypes() {
     if (!dataloaded) {
         PGresult* res = PQexec(connector->getConn(),
             "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type");
-
+        // load data types
         for (int i = 0; i < PQntuples(res); i++) {
             struct typeinfo ti;
             PGint4 oid;
@@ -65,7 +66,53 @@ void TypeMap::loadTypes() {
             typesname[String(typname)] = make_pair(oid, ti);
             typesoid[oid] = make_pair(String(typname), ti);
         }
+        // load defined reference types
+        loadRefTypes();
         dataloaded = true;
         PQclear(res);
     }
+}
+void TypeMap::loadRefTypes() {
+    reftables["regproc"] = make_pair("pg_catalog.pg_proc", "proname");
+    reftables["regprocedure"] = make_pair("pg_catalog.pg_proc", "proname");
+    reftables["regoper"] = make_pair("pg_catalog.pg_operator", "oprname");
+    reftables["regoperator"] = make_pair("pg_catalog.pg_operator", "oprname");
+    reftables["regtype"] = make_pair("pg_catalog.pg_type", "typname");
+    reftables["regclass"] = make_pair("pg_catalog.pg_class", "relname");
+}
+bool TypeMap::isRefType(String name) {
+    loadTypes();
+    return (reftables.count(name) > 0);
+}
+bool TypeMap::isEnumType(String name) {
+    loadTypes();
+    return (typesname.count(name) > 0) ? (typesname[name].second.category == 'E') : false;
+}
+pair<String,String> TypeMap::getRefTable(String name) {
+    loadTypes();
+    return (reftables.count(name) > 0) ? reftables[name] : make_pair(String(""),String(""));
+}
+char TypeMap::getCategory (String name) {
+    loadTypes();
+    return typesname[name].second.category;
+}
+char TypeMap::getCategory (int oid) {
+    loadTypes();
+    return typesoid[oid].second.category;
+}
+short TypeMap::getLength (String name) {
+    loadTypes();
+    return typesname[name].second.length;
+}
+short TypeMap::getLength (int oid) {
+    loadTypes();
+    return typesoid[oid].second.length;
+}
+int TypeMap::getElemOID (String name) {
+    loadTypes();
+    return typesname[name].second.elemoid;
+}
+int TypeMap::getElemOID (int oid) {
+    loadTypes();
+    return typesoid[oid].second.elemoid;
 }

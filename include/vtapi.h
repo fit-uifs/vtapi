@@ -366,6 +366,12 @@ public:
     KeyValues* next();
 
     /**
+     * Get key of a single table column
+     * @param pos Column index
+     * @return Column key
+     */
+    TKey getKey(int col);
+    /**
      * Get a list of all possible columns as TKeys
      * @return list of key name and TODO
      */
@@ -379,11 +385,6 @@ public:
      * Print all tuples of resultset
      */
     void printAll();
-    /**
-     * Print all tuples of specific resultset
-     * @param res Resultset to print
-     */
-    void printRes(PGresult*);
 
 
     // =============== GETTERS (Select) ========================================
@@ -393,25 +394,25 @@ public:
      * @param key column key
      * @return character
      */
-    char getChar(const String& key);
+    char getChar(const String key);
     /**
      * Get single character specified by column index
-     * @param pos column index
+     * @param col column index
      * @return character
      */
-    char getChar(int pos);
+    char getChar(const int pos);
     /**
      * Get a string value specified by a column key
      * @param key column key
      * @return string value
      */
-    String getString(const String& key);
+    String getString(const String key);
     /**
      * Get a string value specified by an index of a column
-     * @param pos index of the column
+     * @param col column index
      * @return string value
      */
-    String getString(int pos);
+    String getString(const int col);
 
     // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==============
     /**
@@ -419,40 +420,40 @@ public:
      * @param key column key
      * @return integer value
      */
-    int getInt(const String& key);
+    int getInt(const String key);
     /**
      * Get an integer value specified by an index of a column
-     * @param pos index of column
+     * @param col index of column
      * @return integer value
      */
-    int getInt(int pos);
+    int getInt(const int col);
     /**
      * Get an array of integer values specified by a column key
      * @param key column key
      * @param size size of the array of integer values
      * @return array of integer values
      */
-    int* getIntA(const String& key, int& size);
+    int* getIntA(const String key, int *size);
     /**
      * Get an array of integer values specified by an index of a column
-     * @param pos index of column
+     * @param col index of column
      * @param size size of the array of integer values
      * @return array of integer values
      */
-    int* getIntA(int pos, int& size);
+    int* getIntA(const int col, int *size);
 
     /**
      * Get a vector of integer values specified by an index of a column
-     * @param pos index of column
+     * @param col index of column
      * @return  array of integer values
      */
-    std::vector<int>* getIntV(int pos);
+    std::vector<int>* getIntV(const int col);
     /**
      * Get a vector of integer values specified by a column key
      * @param key column key
      * @return  array of integer values
      */
-    std::vector<int>* getIntV(const String& key);
+    std::vector<int>* getIntV(const String key);
 
     // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
     /**
@@ -460,39 +461,39 @@ public:
      * @param key column key
      * @return float value
      */
-    float getFloat(const String& key);
+    float getFloat(const String key);
     /**
      * Get a float value specified by an index of a column
-     * @param pos index of column
+     * @param col index of column
      * @return float value
      */
-    float getFloat(int pos);
+    float getFloat(const int col);
     /**
      * Get an array of float values specified by a column key
      * @param key column key
      * @param size size of the array of float values
      * @return array of float values
      */
-    float* getFloatA(const String& key, int& size);
+    float* getFloatA(const String key, int *size);
     /**
      * Get array of float values specified by index of column
-     * @param pos index of column
+     * @param col index of column
      * @param size size of the array of float values
      * @return array of float values
      */
-    float* getFloatA(int pos, int& size);
+    float* getFloatA(const int col, int *size);
+    /**
+     * Get a vector of integer values specified by column key
+     * @param col index of column
+     * @return  array of integer values
+     */
+    std::vector<float>* getFloatV(const int col);
     /**
      * Get a vector of float values specified by the column index
      * @param key column key
      * @return  array of float values
      */
-    std::vector<float>* getFloatV(int position);
-    /**
-     * Get a vector of integer values specified by column key
-     * @param position index of column
-     * @return  array of integer values
-     */
-    std::vector<float>* getFloatV(const String& key);
+    std::vector<float>* getFloatV(const String key);
 
     // =============== GETTERS - TIMESTAMP =====================================
     /**
@@ -500,13 +501,13 @@ public:
      * @param key column key
      * @return Timestamp info
      */
-    struct tm getTimestamp(const String& key);
+    struct tm getTimestamp(const String key);
     /**
      * Get timestamp specified by the column index
-     * @param key column index
+     * @param col column index
      * @return Timestamp info
      */
-    struct tm getTimestamp(int position);
+    struct tm getTimestamp(const int col);
 
     // =============== GETTERS - OTHER =========================================
     /**
@@ -514,13 +515,13 @@ public:
      * @param key column key
      * @return string value
      */
-    int getIntOid(const String& key);
+    int getIntOid(const String key);
     /**
      * Get an integer with an OID value specified by a column key
      * @param key column key
      * @return integer with the OID value
      */
-    String getName(const String& key);
+    String getName(const String key);
 
     // =============== SETTERS (Update) ========================================
     // TODO: overit jestli a jak funguje... jako UPDATE?
@@ -552,25 +553,17 @@ public:
     virtual bool preSet();
 
 protected:
-    // Print datatypes
-    enum datatype_t {UNSPECIFIED=0, INTBEGIN=1,INT2,INT4,INT8,OID,INOUTTYPE,INTEND,
-    FLOATBEGIN=50,FLOAT4,FLOAT8,DOUBLE,FLOATEND,
-    IARRAYBEGIN=100, _INT2,_INT4,_INT8,IARRAYEND,
-    FARRAYBEGIN=150,_FLOAT4,_FLOAT8,_DOUBLE,FARRAYEND,
-    STRINGBEGIN=200,NUMERIC,BPCHAR,VARCHAR,NAME,TEXT,BYTEA,SEQTYPE,REGCLASS,STRINGEND,
-    TIMESTAMP=250};
     // Print options
     String caption;
     String tableOpt;
 
     // Print support methods
-    void printHeader(PGresult* res, const std::vector< pair<datatype_t,int> >& fInfo);
-    void printRowOnly(PGresult* res, const int, const std::vector< pair<datatype_t,int> >& fInfo);
-    void printFooter(PGresult* res, const int count = 0);
-    std::vector< pair<datatype_t,int> > getFieldsInfo(PGresult* res, const int row = -1);
+    void printHeader(const pair< vector<TKey>,vector<int> >* fInfo);
+    void printRowOnly(const int row, const vector<int>* widths);
+    void printFooter(const int count = 0);
+    std::pair< std::vector<TKey>,std::vector<int> > getFieldsInfo(const int row = -1);
 
-    datatype_t recognizeType(const String&);
-    String getValue(const int field, const datatype_t typ);
+    String getValue(const int col);
 
 
 };

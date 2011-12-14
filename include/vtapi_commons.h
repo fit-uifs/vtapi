@@ -357,6 +357,7 @@ private:
     };
     std::map<int,std::pair<String,struct typeinfo> > typesoid; /**< types indexed by their OID */
     std::map<String, std::pair<int,struct typeinfo> > typesname; /**< types indexed by their name */
+    std::map<String, std::pair<String,String> > reftables;
 
     Connector * connector; /**< Database connector object */
     bool dataloaded; /**< Indicator whether map has loaded types*/
@@ -374,6 +375,11 @@ public:
      * Load types into map
      */
     void loadTypes();
+    /**
+     * Load reference types
+     */
+    void loadRefTypes();
+
     /**
      * Clear the bidirectional map - size of the map will be 0
      */
@@ -407,6 +413,18 @@ public:
      * @return name of the datatype
      */
     String toTypname(int Oid);
+
+    bool isRefType(String name);
+    bool isEnumType(String name);
+    std::pair<String,String> getRefTable(String name);
+
+    char getCategory (String name);
+    char getCategory (int oid);
+    short getLength (String name);
+    short getLength (int oid);
+    int getElemOID (String name);
+    int getElemOID (int oid);
+
 };
 
 

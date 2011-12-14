@@ -16,15 +16,21 @@ using namespace std;
 Process::Process(const KeyValues& orig, const String& name) : KeyValues(orig) {
     thisClass = "Process";
 
-    String s = "SELECT P.*, PA1.relname AS inputs, PA2.relname AS outputs\n"
-            "  FROM public.processes P\n"
-            "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode\n"
-            "  LEFT JOIN pg_catalog.pg_class PA2 ON P.outputs::regclass = PA2.relfilenode";
-    if (!name.empty())
-        s += "  WHERE P.prsname='" + name + "'";
-    s += ";";
+    if (!name.empty()) this->process = name;
 
-    select = new Select(orig, s.c_str());
+    select = new Select(orig);
+    select->from("processes", "*");
+    select->whereString("prsname", this->process);
+
+//    String s = "SELECT P.*, PA1.relname AS inputs, PA2.relname AS outputs\n"
+//            "  FROM public.processes P\n"
+//            "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode\n"
+//            "  LEFT JOIN pg_catalog.pg_class PA2 ON P.outputs::regclass = PA2.relfilenode";
+//    if (!name.empty())
+//        s += "  WHERE P.prsname='" + name + "'";
+//    s += ";";
+//
+//    select = new Select(orig, s.c_str());
 }
 
 
