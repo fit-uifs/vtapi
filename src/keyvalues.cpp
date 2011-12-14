@@ -342,7 +342,23 @@ String KeyValues::getValue(const int field, const datatype_t typ) {
 
 
 // =============== GETTERS (Select) ============================================
-// =============== GETTERS FOR STRINGS =========================================
+// =============== GETTERS FOR CHAR, STRINGS ===================================
+char KeyValues::getChar(const String& key) {
+    return this->getChar(PQfnumber(select->res, key.c_str()));
+}
+char KeyValues::getChar(int position) {
+    PGchar value = '\0';
+    String typname = this->toTypname(PQftype(select->res, position));
+    if (typname.compare("char") == 0) {
+        PQgetf(select->res, this->pos, "%char", position, &value);
+    }
+    else {
+        warning(304, "Value is not an char");
+        // this->print();
+    }
+    return value;
+}
+
 String KeyValues::getString(const String& key) {
     return this->getString(PQfnumber(select->res, key.c_str()));
 }

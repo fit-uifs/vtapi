@@ -21,7 +21,7 @@
 #include "postgresql/vt-print.h"
 
 #include "vtapi_commons.h"
-#include "vtapi.h"
+
 
 
 
@@ -198,7 +198,7 @@ Commons::Commons(Connector& orig) {
 
     logger    = orig.getLogger();
     connector = &orig;
-    typemap   = new TypeMap();
+    typemap   = new TypeMap(connector);
     format    = STANDARD;
     doom      = true;       // won't destroy the connector and logger
 }
@@ -222,7 +222,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
 
     logger    = new Logger(String(args_info.log_arg)); // has default value
     connector = new Connector(args_info.connection_arg, logger);
-    typemap   = new TypeMap();
+    typemap   = new TypeMap(connector);
     verbose   = args_info.verbose_given;
 
     dataset   = args_info.dataset_given ? String(args_info.dataset_arg) : String ("");
@@ -330,31 +330,31 @@ String Commons::getDataLocation() {
 //    else warning(158, "No result set to print.\n" + String(PQgeterror()));
 //}
 
-void Commons::registerTypes() {
-    if (! this->typemap->dataloaded) {
-        KeyValues* kv = new KeyValues(*this);
-        kv->select = new Select(*this);
-        kv->select->from("pg_catalog.pg_type", "oid");
-        kv->select->from("pg_catalog.pg_type", "typname");
-
-        while (kv->next()) {
-            this->typemap->insert(kv->getIntOid("oid"), kv->getName("typname"));
-        }
-
-        this->typemap->dataloaded = true;
-
-        delete kv;
-    }
-
-}
+//void Commons::registerTypes() {
+//    if (! this->typemap->dataloaded) {
+//        KeyValues* kv = new KeyValues(*this);
+//        kv->select = new Select(*this);
+//        kv->select->from("pg_catalog.pg_type", "oid");
+//        kv->select->from("pg_catalog.pg_type", "typname");
+//
+//        while (kv->next()) {
+//            this->typemap->insert(kv->getIntOid("oid"), kv->getName("typname"));
+//        }
+//
+//        this->typemap->dataloaded = true;
+//
+//        delete kv;
+//    }
+//
+//}
 
 int Commons::toOid(String typname) {
-    this->registerTypes();
+    //this->registerTypes();
     return this->typemap->toOid(typname);
 }
 
 String Commons::toTypname(const int oid) {
-    this->registerTypes();
+    //this->registerTypes();
     return this->typemap->toTypname(oid);
 }
 

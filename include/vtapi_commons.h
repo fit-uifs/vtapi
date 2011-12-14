@@ -341,7 +341,7 @@ public:
     /**
      * Load datatypes from PostgreSQL and register to the VTApi
      */
-    void registerTypes();
+    //void registerTypes();
 };
 
 /**
@@ -350,22 +350,30 @@ public:
 class TypeMap {
 // Members
 private:
-    std::map<int, String> oid2typname; /**< Pair of int, datatype to get a datatype from the integer representation */
-    std::map<String, int> typname2oid; /**< Pair of datatype, int to get an integer representation from the datatype */
-public:
-    bool dataloaded;
+    struct typeinfo {
+        char category;
+        short length;
+        int elemoid;
+    };
+    std::map<int,std::pair<String,struct typeinfo> > typesoid; /**< types indexed by their OID */
+    std::map<String, std::pair<int,struct typeinfo> > typesname; /**< types indexed by their name */
 
-// Methods
+    Connector * connector; /**< Database connector object */
+    bool dataloaded; /**< Indicator whether map has loaded types*/
+    
 public:
     /**
      * Construct a bidirectional map
      */
-    TypeMap();
+    TypeMap(Connector* connector);
     /**
      * Destruct the bidirectional map
      */
     virtual ~TypeMap();
-
+    /**
+     * Load types into map
+     */
+    void loadTypes();
     /**
      * Clear the bidirectional map - size of the map will be 0
      */
@@ -375,18 +383,12 @@ public:
      * @return emptiness of the bidirectional map
      */
     bool empty();
-    /**
-     * Insert a pair of <int, datatype> to bidirectional map
-     * @param oid OID of the datatype
-     * @param typname name of the datatype
-     */
-    void insert(int oid, String typname);
-    /**
-     * Insert a pair of <datatype, int> to bidirectional map
-     * @param typname name of the type
-     * @param oid OID of the type
-     */
-    void insert(String typname, int oid);
+//    /**
+//     * Insert a pair of <int, datatype> to bidirectional map
+//     * @param oid OID of the datatype
+//     * @param typname name of the datatype
+//     */
+//    void insert(int oid, String typname);
     /**
      * Get a size of the bidirectional map
      * @return size of the bidirectional map

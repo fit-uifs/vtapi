@@ -387,7 +387,19 @@ public:
 
 
     // =============== GETTERS (Select) ========================================
-    // =============== GETTERS FOR STRINGS =====================================
+    // =============== GETTERS FOR CHAR, STRINGS ===============================
+    /**
+     * Get single character specified by a column key
+     * @param key column key
+     * @return character
+     */
+    char getChar(const String& key);
+    /**
+     * Get single character specified by column index
+     * @param pos column index
+     * @return character
+     */
+    char getChar(int pos);
     /**
      * Get a string value specified by a column key
      * @param key column key
