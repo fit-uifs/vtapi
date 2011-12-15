@@ -8,7 +8,11 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
+#if defined(WIN32) || defined(WIN64)
+#include <Winsock2.h>
+#else
 #include <netinet/in.h>
+#endif
 #include "postgresql/libpqtypes.h"
 #include "vtapi.h"
 

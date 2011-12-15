@@ -391,8 +391,8 @@ public:
     bool empty();
 //    /**
 //     * Insert a pair of <int, datatype> to bidirectional map
-//     * @param oid OID of the datatype
-//     * @param typname name of the datatype
+//     * param oid OID of the datatype
+//     * param typname name of the datatype
 //     */
 //    void insert(int oid, String typname);
     /**

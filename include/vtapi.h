@@ -6,14 +6,48 @@
  * The project is oriented towards processing of records containing
  * image and video information – categorization, searching and comparison.
  *
+ * @section PREREQUSITIES Prerequisities
+ *    - OS Windows, Linux, 32 and 64bit
+ *    - GCC 4.4.6, 4.5.2+
+ *    - PostgreSQL 9.1 – libpq
+ *    - libpqtypes 1.5
+ *    - OpenCV 2.3 (mandatory)
+ *
+ * @note For more information visit https://gitorious.org/vtapi/pages/Install .
+
+ *
+ * @section LOGICAL Logical model of VTApi
+ * @image html minimal_logical_data_model_small.png "Logical model of VTApi"
+ * @image latex minimal_logical_data_model.png "Logical model of VTApi"
+ * @image rtf minimal_logical_data_model.png "Logical model of VTApi"
+ *
+ * @subsection LOGICAL_DATASET Dataset
+ * Dataset is main storing center. This is used as folders with video files or as folders
+ * with images folders. There are stored also metadata for each multimedial data.
+ *
+ * @subsection LOGICAL_SEQUENCE Sequence
+ * Sequences are the basic unit of datasets. This can be represent as video or as folder
+ * of images.
+ *
+ * @subsection LOGICAL_INTERVAL Interval
+ * 
+ *
+ * @subsection LOGICAL_SELECTION Selection
+ * @subsection LOGICAL_KEYVALUES KeyValues
+ * @subsection LOGICAL_METHOD Method
+ * @subsection LOGICAL_PROCESS Process
+ * @subsection LOGICAL_SELECTION Selection
+ *
+ *
+ *
  * @section HOMEPAGE VTApi development homepage
  * https://gitorious.org/vtapi
  *
  * @section AUTHORS VTApi Team
  * The team consists of following people from Faculty of Information Technology, Brno University of Technology, CZ:
- * @authors Petr Chmelar, chmelarp@fit.vutbr.cz
- * @authors Vojtech Froml, xfroml00@stud.fit.vutbr.cz
- * @authors Tomas Volf, ivolf@fit.vutbr.cz
+ * @authors Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @authors Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @authors Tomas Volf, ivolf (at) fit.vutbr.cz
  *
  * @section LICENSE License
  * There will be license information for VTApi.
@@ -28,9 +62,9 @@
  * @file
  * @authors
  * VTApi Team, FIT BUT, CZ
- * Petr Chmelar, chmelarp@fit.vutbr.cz
- * Vojtech Froml, xfroml00@stud.fit.vutbr.cz
- * Tomas Volf, ivolf@fit.vutbr.cz
+ * Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * Tomas Volf, ivolf (at) fit.vutbr.cz
  *
  *
  * @section LECENSE License
@@ -884,7 +918,7 @@ public:
     // TODO: o tohle bych se ani nepokousel
     /**
      * A dangerous and rather discouraged function...
-     * @deprecaded by the human power
+     * @deprecated by the human power
      * @param method
      * @param name
      * @param selection
