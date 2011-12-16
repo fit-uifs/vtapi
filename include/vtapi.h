@@ -428,7 +428,7 @@ public:
      * @param key column key
      * @return character
      */
-    char getChar(const String key);
+    char getChar(const String& key);
     /**
      * Get single character specified by column index
      * @param col column index
@@ -440,7 +440,7 @@ public:
      * @param key column key
      * @return string value
      */
-    String getString(const String key);
+    String getString(const String& key);
     /**
      * Get a string value specified by an index of a column
      * @param col column index
@@ -454,7 +454,7 @@ public:
      * @param key column key
      * @return integer value
      */
-    int getInt(const String key);
+    int getInt(const String& key);
     /**
      * Get an integer value specified by an index of a column
      * @param col index of column
@@ -467,14 +467,14 @@ public:
      * @param size size of the array of integer values
      * @return array of integer values
      */
-    int* getIntA(const String key, int *size);
+    int* getIntA(const String& key, int& size);
     /**
      * Get an array of integer values specified by an index of a column
      * @param col index of column
      * @param size size of the array of integer values
      * @return array of integer values
      */
-    int* getIntA(const int col, int *size);
+    int* getIntA(const int col, int& size);
 
     /**
      * Get a vector of integer values specified by an index of a column
@@ -487,7 +487,7 @@ public:
      * @param key column key
      * @return  array of integer values
      */
-    std::vector<int>* getIntV(const String key);
+    std::vector<int>* getIntV(const String& key);
 
     // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
     /**
@@ -495,7 +495,7 @@ public:
      * @param key column key
      * @return float value
      */
-    float getFloat(const String key);
+    float getFloat(const String& key);
     /**
      * Get a float value specified by an index of a column
      * @param col index of column
@@ -508,14 +508,14 @@ public:
      * @param size size of the array of float values
      * @return array of float values
      */
-    float* getFloatA(const String key, int *size);
+    float* getFloatA(const String& key, int& size);
     /**
      * Get array of float values specified by index of column
      * @param col index of column
      * @param size size of the array of float values
      * @return array of float values
      */
-    float* getFloatA(const int col, int *size);
+    float* getFloatA(const int col, int& size);
     /**
      * Get a vector of integer values specified by column key
      * @param col index of column
@@ -527,7 +527,7 @@ public:
      * @param key column key
      * @return  array of float values
      */
-    std::vector<float>* getFloatV(const String key);
+    std::vector<float>* getFloatV(const String& key);
 
     // =============== GETTERS - TIMESTAMP =====================================
     /**
@@ -535,7 +535,7 @@ public:
      * @param key column key
      * @return Timestamp info
      */
-    struct tm getTimestamp(const String key);
+    struct tm getTimestamp(const String& key);
     /**
      * Get timestamp specified by the column index
      * @param col column index
@@ -549,13 +549,13 @@ public:
      * @param key column key
      * @return string value
      */
-    int getIntOid(const String key);
+    int getIntOid(const String& key);
     /**
      * Get an integer with an OID value specified by a column key
      * @param key column key
      * @return integer with the OID value
      */
-    String getName(const String key);
+    String getName(const String& key);
 
     // =============== SETTERS (Update) ========================================
     // TODO: overit jestli a jak funguje... jako UPDATE?
@@ -592,10 +592,10 @@ protected:
     String tableOpt;
 
     // Print support methods
-    void printHeader(const pair< vector<TKey>,vector<int> >* fInfo);
+    void printHeader(const pair< vector<TKey>*,vector<int>* > fInfo);
     void printRowOnly(const int row, const vector<int>* widths);
     void printFooter(const int count = 0);
-    std::pair< std::vector<TKey>,std::vector<int> > getFieldsInfo(const int row = -1);
+    std::pair< std::vector<TKey>*,std::vector<int>* > getFieldsInfo(const int row = -1);
 
     String getValue(const int col);
 

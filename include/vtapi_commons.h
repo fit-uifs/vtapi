@@ -357,7 +357,7 @@ private:
     };
     std::map<int,std::pair<String,struct typeinfo> > typesoid; /**< types indexed by their OID */
     std::map<String, std::pair<int,struct typeinfo> > typesname; /**< types indexed by their name */
-    std::map<String, std::pair<String,String> > reftables;
+    std::set<String> reftypes;
 
     Connector * connector; /**< Database connector object */
     bool dataloaded; /**< Indicator whether map has loaded types*/
@@ -416,7 +416,6 @@ public:
 
     bool isRefType(String name);
     bool isEnumType(String name);
-    std::pair<String,String> getRefTable(String name);
 
     char getCategory (String name);
     char getCategory (int oid);

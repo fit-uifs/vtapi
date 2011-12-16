@@ -166,7 +166,7 @@ void VTApi::test() {
     int cnt = 0;
 
     // this is how to print arrays
-    int* tags = image->getIntA("tags", &cnt);
+    int* tags = image->getIntA("tags", cnt);
     for (int i=0; i<cnt && i<10; ++i) {
         if (i >= 9) cout << "...";
         else cout << tags[i] << ", ";

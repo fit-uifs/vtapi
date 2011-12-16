@@ -35,7 +35,7 @@ int VTCli::run() {
     this->interact = this->cmdline.empty();
     if (this->interact) {
         cout << "VTApi is running" << endl;
-        cout << "Commands: query, select, insert, update, delete, show, test, help, exit" << endl;
+        cout << "Commands: query, select, insert, update, delete, show, test, help, exit";
     }
     String line, command;
     // command cycle
@@ -59,12 +59,19 @@ int VTCli::run() {
                 continue;
             }
             if (line.empty()) continue;
-            Query* query = new Query(*(this->vtapi->commons), line, NULL);
-            query->execute();
-            KeyValues *kv = new KeyValues(*(this->vtapi->commons));
-            kv->printAll(); // printRes(query->res);
-            destruct(kv);
-            destruct(query);
+            else {
+                PGresult* qres = PQexec(vtapi->commons->getConnector()->getConn(), line.c_str());
+                if (!qres) cerr << "Query failed: " << line << endl; 
+                else {
+                    KeyValues* kv = new KeyValues(*(vtapi->commons));
+                    kv->select = new Select(*(vtapi->commons));
+                    kv->select->res = qres;
+                    kv->printAll();
+                    destruct(kv);
+                    //PQclear(qres);
+                }
+            }
+
         }
         // command: select
         else if (!command.compare("select")) {

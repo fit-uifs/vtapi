@@ -21,7 +21,7 @@ TypeMap::~TypeMap() {
 void TypeMap::clear() {
     typesname.clear();
     typesoid.clear();
-    reftables.clear();
+    reftypes.clear();
     dataloaded = false;
 }
 
@@ -30,12 +30,6 @@ bool TypeMap::empty() {
     if (isEmpty) this->clear();
     return isEmpty;
 }
-
-//void TypeMap::insert(int oid, String typname) {
-//    this->oid2typname[oid] = typname;
-//    this->typname2oid[typname] = oid;
-//}
-
 int TypeMap::size() {
     return typesoid.size();
 }
@@ -73,25 +67,23 @@ void TypeMap::loadTypes() {
     }
 }
 void TypeMap::loadRefTypes() {
-    reftables["regproc"] = make_pair("pg_catalog.pg_proc", "proname");
-    reftables["regprocedure"] = make_pair("pg_catalog.pg_proc", "proname");
-    reftables["regoper"] = make_pair("pg_catalog.pg_operator", "oprname");
-    reftables["regoperator"] = make_pair("pg_catalog.pg_operator", "oprname");
-    reftables["regtype"] = make_pair("pg_catalog.pg_type", "typname");
-    reftables["regclass"] = make_pair("pg_catalog.pg_class", "relname");
+    reftypes.insert("regproc");
+    reftypes.insert("regprocedure");
+    reftypes.insert("regoper");
+    reftypes.insert("regoperator");
+    reftypes.insert("regtype");
+    reftypes.insert("regclass");
 }
+
 bool TypeMap::isRefType(String name) {
     loadTypes();
-    return (reftables.count(name) > 0);
+    return (reftypes.count(name) > 0);
 }
 bool TypeMap::isEnumType(String name) {
     loadTypes();
     return (typesname.count(name) > 0) ? (typesname[name].second.category == 'E') : false;
 }
-pair<String,String> TypeMap::getRefTable(String name) {
-    loadTypes();
-    return (reftables.count(name) > 0) ? reftables[name] : make_pair(String(""),String(""));
-}
+
 char TypeMap::getCategory (String name) {
     loadTypes();
     return typesname[name].second.category;
