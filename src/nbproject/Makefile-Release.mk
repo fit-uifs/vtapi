@@ -17,8 +17,8 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=gfortran
-AS=
+FC=
+AS=as
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86
@@ -39,7 +39,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/method.o \
 	${OBJECTDIR}/vtapi.o \
-	${OBJECTDIR}/vt-print.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/typemap.o \
@@ -100,11 +99,6 @@ ${OBJECTDIR}/vtapi.o: vtapi.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
-
-${OBJECTDIR}/vt-print.o: vt-print.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vt-print.o vt-print.c
 
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}

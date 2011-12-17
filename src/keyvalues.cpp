@@ -519,7 +519,7 @@ std::vector<int>* KeyValues::getIntV(const int col) {
 
 // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
 float KeyValues::getFloat(const String& key) {
-    return this->getFloat(PQfnumber(select->res, key.c_str()));
+    return this->getFloat(PQfnumber(select->res, String("\"" + key + "\"").c_str()));
 }
 float KeyValues::getFloat(const int col) {
     PGfloat4 value;
@@ -532,7 +532,7 @@ float KeyValues::getFloat(const int col) {
 }
 
 float* KeyValues::getFloatA(const String& key, int& size) {
-    int pos = PQfnumber(select->res, key.c_str());
+    int pos = PQfnumber(select->res, String("\"" + key + "\"").c_str());
     if (pos < 0) warning(313, "Column " + toString(key) + " doesn't exist.");
     return this->getFloatA(pos, size);
 }

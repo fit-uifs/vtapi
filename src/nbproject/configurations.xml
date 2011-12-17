@@ -37,7 +37,6 @@
       <itemPath>query.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>
       <itemPath>typemap.cpp</itemPath>
-      <itemPath>vt-print.c</itemPath>
       <itemPath>vtapi.cpp</itemPath>
       <itemPath>vtapi_settings.cpp</itemPath>
     </logicalFolder>
