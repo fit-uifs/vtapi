@@ -230,7 +230,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     method    = args_info.method_given ? String(args_info.method_arg) : String ("");
     process   = args_info.process_given ? String(args_info.process_arg) : String ("");
     selection = args_info.selection_given ? String(args_info.selection_arg) : String ("");
-    // TODO: interval pair
+    // TODO: VOJTA: interval pair (LIMIT)
 
     user      = args_info.user_given ? String(args_info.user_arg) : String("");
     format    = String(args_info.format_arg).compare("standard") == 0 ? STANDARD :

@@ -55,6 +55,7 @@ String Process::getOutputs() {
 
 bool Process::add(const String& method, const String& name, const String& selection) {
     destruct(insert);
+    bool ok = false;
 
     insert = new Insert(*this, "processes");
     insert->keyString("mtname", method);
@@ -63,14 +64,14 @@ bool Process::add(const String& method, const String& name, const String& select
 
     // this is the fun
     if (insert->execute()) {
+
         update = new Update(*this, "ALTER TABLE \""+ selection +"\" ADD COLUMN \""+ name +"\" real[];");
-        bool ok = update->execute();
-        return ok;
+        ok = update->execute();
     }
 
     destruct(insert);
     destruct(update);
-    return false;
+    return ok;
 }
 
 
