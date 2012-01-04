@@ -6,6 +6,9 @@
  * The project is oriented towards processing of records containing
  * image and video information – categorization, searching and comparison.
  *
+ * @section HOMEPAGE VTApi development homepage
+ * https://gitorious.org/vtapi
+ *
  * @section PREREQUSITIES Prerequisities
  *    - OS Windows, Linux, 32 and 64bit
  *    - GCC 4.4.6, 4.5.2+
@@ -21,27 +24,36 @@
  * @image latex minimal_logical_data_model.png "Logical model of VTApi"
  * @image rtf minimal_logical_data_model.png "Logical model of VTApi"
  *
+ * @section BASIC_TERMS Basic terms
  * @subsection LOGICAL_DATASET Dataset
- * Dataset is main storing center. This is used as folders with video files or as folders
- * with images folders. There are stored also metadata for each multimedial data.
+ * The dataset is the main storing center. This is used as a folder with video
+ * files or as a folder with folders of images. There are stored also the 
+ * metadata for each multimedial data.
  *
  * @subsection LOGICAL_SEQUENCE Sequence
- * Sequences are the basic unit of datasets. This can be represent as video or as folder
- * of images.
+ * The sequence is the basic unit of the datasets. This can be represent as
+ * a set of images (video) or as a folder of images.
  *
  * @subsection LOGICAL_INTERVAL Interval
- * 
+ * The interval is a subset of sequence (set of images) with the same metadata,
+ * It can be a continuous interval of video (frames) or a sequence of images.
+ * The metadata can be generally various, but they are always created by
+ * a process.
  *
- * @subsection LOGICAL_SELECTION Selection
- * @subsection LOGICAL_KEYVALUES KeyValues
  * @subsection LOGICAL_METHOD Method
+ * The method defines the the structure of data.
+ *
  * @subsection LOGICAL_PROCESS Process
+ * The process is a specific instance of method. The process inserts data.
+ *
  * @subsection LOGICAL_SELECTION Selection
+ * The selection is a subset of logically related metadata. Thanks to this, the
+ * operations are effective and the processes can be chained. The intervals
+ * or the tags are special use of selection.
  *
- *
- *
- * @section HOMEPAGE VTApi development homepage
- * https://gitorious.org/vtapi
+ * @subsection LOGICAL_KEYVALUES KeyValues
+ * The KeyValue is a basic mechanism of organization metadata in VTApi. It is
+ * data structure, which allows you to store metadata into pair <key, value>.
  *
  * @section AUTHORS VTApi Team
  * The team consists of following people from Faculty of Information Technology, Brno University of Technology, CZ:
@@ -52,8 +64,6 @@
  * @section LICENSE License
  * There will be license information for VTApi.
  * @copyright &copy; FIT BUT, CZ, 2011
- *
- *
  *
  * @example vtapi.conf
  * This file shows an example configuration file for VTApi.
@@ -112,7 +122,7 @@ class Insert;
 
 
 /**
- * @brief This is to represent The Key in fields in queries
+ * @brief This is to represent the Key in fields in queries
  * 
  * ... just for the feeling (and vectors, of course)
  * @note You can use size=-1 for NULL :)
@@ -141,7 +151,7 @@ public:
 
     /**
      * Constructor for full specification of arguments
-     * @param type name of data type
+     * @param type name of a data type
      * @param key name of a column
      * @param size "0" is the value right now
      * @param from distinguish between in/out right now
@@ -150,10 +160,9 @@ public:
             : type(type), key(key), size(size), from(from) {};
 
     
-
     /**
      * Print data and return data that was printed
-     * @return data that was printed
+     * @return data of TKey that was printed
      */
     String print();
 };
@@ -626,8 +635,7 @@ public:
 
     /**
      * Move to a next dataset and set dataset name and location varibles
-     * @return \a true if the next dataset was set as current
-     *         \a false in other cases return
+     * @return success
      * @note Over-loading next() from KeyValues
      */
     bool next();
@@ -688,8 +696,7 @@ public:
 
     /**
      * Move to a next sequence and set sequence name and location varibles
-     * @return \a true if the next sequence was set as current
-     *         \a false in other cases return
+     * @return success
      * @note Over-loading next() from KeyValues
      */
     bool next();
@@ -707,10 +714,9 @@ public:
 
     /**
      * Add new sequence to a table
-     * @todo Metoda asi neni dokoncena? [TV]
      * @param name name of the sequence
      * @param location location of the sequence
-     * @return @todo zatim zrejme nic nevraci [TV]
+     * @return success
      */
     bool add(String name, String location);
 
@@ -784,12 +790,12 @@ public:
 
     /**
      * Add new interval to a table
-     * @todo Metoda asi neni dokoncena? [TV]
+     * @todo return always true
      * @param sequence interval name
      * @param t1 start time
      * @param t2 end time
      * @param location of the image
-     * @return @todo zatim zrejme nic nevraci [TV]
+     * @return success
      */
     bool add(const String& sequence, const int t1, const int t2 = -1, const String& location = "");
 
@@ -851,8 +857,7 @@ public:
 
     /**
      * Move to a next method and set a method name and its methodkeys variables
-     * @return \a true if the next method was set as current
-     *         \a false in other cases return
+     * @return success
      * @note Over-loading next() from KeyValues
      */
     bool next();
@@ -894,7 +899,7 @@ public:
     /**
      * Individual next() for processes, which stores current process
      * and selection to commons
-     * @return this or NULL
+     * @return success
      */
     bool next();
 

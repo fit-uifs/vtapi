@@ -55,9 +55,10 @@ typedef std::string String;
 // format: 0=text, 1=binary
 #define PGF 1
 
-class TypeMap;
-class Logger;
+class Commons;
 class Connector;
+class Logger;
+class TypeMap;
 
 /**
  * @brief Standard logger
