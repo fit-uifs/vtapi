@@ -97,6 +97,7 @@ void VTApi::test() {
 
     // dataset usw.
     cout << "DONE testing generic classes." << endl;
+    this->commons->logger->debug("No bugs so far... ");
     cout << endl << endl;
     cout << "TESTING  Dataset..." << endl;
 
@@ -146,6 +147,8 @@ void VTApi::test() {
     
     Interval* interval = sequence->newInterval();
     interval->select->limit = 10;
+    interval->select->from("intervals", "DESC_DENSE16_CSIFT_NoA_UNC_K32_o10_L01_KM_L12[1]");
+    interval->select->whereFloat("DESC_DENSE16_CSIFT_NoA_UNC_K32_o10_L01_KM_L12[1]", 0.0, ">");
     // interval->select->whereString("test", "NULL");
     interval->next();
     interval->print();

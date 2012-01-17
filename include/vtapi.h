@@ -272,9 +272,11 @@ public:
      */
     bool whereInt(const String& key, const int value, const String& oper = "=", const String& table = "");
 
-
     bool whereFloat(const String& key, const float value, const String& oper = "=", const String& table = "");
     String where;   // FIXME: see above :(
+
+protected:
+    String escapeColumn(const String& key, const String& table = "");
 };
 
 /**
@@ -319,9 +321,16 @@ public:
      * It may be called more times.
      * @param table
      * @param column
-     * @return
+     * @return success
      */
     bool from(const String& table, const String& column);
+
+    /**
+     * This is to join tables if they can be performed automatically.
+     * If not, returns false (no quarantee before version 2).
+     * @return success
+     */
+    bool join();
 
 };
 
