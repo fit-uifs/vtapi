@@ -58,7 +58,7 @@
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
-        <platform>2</platform>
+        <platform>3</platform>
       </toolsSet>
       <compileType>
         <ccTool>
@@ -101,7 +101,7 @@
       <toolsSet>
         <developmentServer>localhost</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
-        <platform>2</platform>
+        <platform>3</platform>
       </toolsSet>
       <compileType>
         <cTool>
@@ -117,6 +117,49 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+    </conf>
+    <conf name="Windows" type="2">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>MinGW|MinGW</compilerSet>
+        <platform>3</platform>
+      </toolsSet>
+      <compileType>
+        <ccTool>
+          <incDir>
+            <pElem>../include</pElem>
+            <pElem>../include/postgresql</pElem>
+          </incDir>
+          <preprocessorList>
+            <Elem>_DEBUG</Elem>
+          </preprocessorList>
+        </ccTool>
+        <fortranCompilerTool>
+          <commandlineTool>
+</commandlineTool>
+        </fortranCompilerTool>
+        <asmTool>
+          <commandlineTool>as
+</commandlineTool>
+        </asmTool>
+        <linkerTool>
+          <output>../${CND_DISTDIR}/libvtapi.so</output>
+          <linkerLibItems>
+            <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lws2_32</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
+      </compileType>
+      <packaging>
+        <packType>Tar</packType>
+        <packFileList>
+          <packFileListElem type="File"
+                            to="${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}"
+                            from="${OUTPUT_PATH}"
+                            perm="644"
+                            owner="root"
+                            group="bin"/>
+        </packFileList>
+      </packaging>
     </conf>
   </confs>
 </configurationDescriptor>
