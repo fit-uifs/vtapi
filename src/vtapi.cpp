@@ -147,8 +147,8 @@ void VTApi::test() {
     
     Interval* interval = sequence->newInterval();
     interval->select->limit = 10;
-    interval->select->from("intervals", "DESC_DENSE16_CSIFT_NoA_UNC_K32_o10_L01_KM_L12[1]");
-    interval->select->whereFloat("DESC_DENSE16_CSIFT_NoA_UNC_K32_o10_L01_KM_L12[1]", 0.0, ">");
+    // interval->select->from("intervals", "DESC_DENSE16_CSIFT_NoA_UNC_K32_o10_L01_KM_L12[1]");
+    // interval->select->whereFloat("DESC_DENSE16_CSIFT_NoA_UNC_K32_o10_L01_KM_L12[1]", 0.0, ">");
     // interval->select->whereString("test", "NULL");
     interval->next();
     interval->print();
@@ -159,13 +159,15 @@ void VTApi::test() {
     for (int i = 0; i < vtk->size(); ++i) (*vtk)[i].print();
     destruct(vtk);
     cout << endl;
-
+/*
     // this has no effect outside ...
     int t1 = 1000000 + rand()%1000;
-    cout << "ADING Image on " << interval->getSequence() << " [" << t1 << ", " << t1 << "]" << endl;
+    cout << "ADING Image on " << interval->getSequenceName() << " [" << t1 << ", " << t1 << "]" << endl;
     Image* image = sequence->newImage("shot10000_1.jpg"); // new Image(*interval);
     image->next(); // do not forget this (again :), please
     cout << image->getLocation() << endl;
+    Sequence* tmpSeq = image->getSequence();
+    tmpSeq->print();
     int cnt = 0;
 
     // this is how to print arrays
@@ -177,25 +179,24 @@ void VTApi::test() {
     cout << endl;
     destructall (tags);
 
-    image->add(interval->getSequence(), t1, "nosuchimage.jpg");
+    image->add(interval->getSequenceName(), t1, "nosuchimage.jpg");
     // image->insert->keyFloat("sizeKB", 100.3);
-/*
+
     float kf[] = {1.1, 2.2, 3.3, 4.4, 5.5};
     image->insert->keyFloatA("test", kf, 5);
-*/
+
     image->insert->execute();     // or next() must be called after inserting all voluntary fields such as above
     destruct (image);    // if not called execute() or next(), the insert destructor raises a warning
         
     image = sequence->newImage("nosuchimage.jpg");
-    image->next();      // in case of update, the next() must be called
-    
- /* // vypis pole floatu
+    image->next();      // in case of update, the next() must be called    
+    // vypis pole floatu
     int kfl = 0;
     float* kf2 = image->getFloatA("test", kfl);
     for (int i=0; i < kfl; ++i) cout << kf2[i] << " ";
     cout << endl;
     destructall(kf2);
-*/
+
     image->setString("imglocation", "tudlenudle.png");
     image->setExecute();  // NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 
@@ -204,7 +205,7 @@ void VTApi::test() {
     query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
     cout << "OK: " << query->execute() << endl;
     delete (query);
-
+*/
     delete (interval);
     delete (sequence);
 

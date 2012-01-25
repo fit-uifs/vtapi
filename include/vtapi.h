@@ -753,19 +753,14 @@ public:
     cv::Mat getImage();
 #endif
     
-protected:
     /**
-     * @todo Not implemented
+     * @todo Test
      * @param name
      * @return
      */
-    bool openVideo(const String& name);
-    /**
-     * @todo Not implemented
-     * @param name
-     * @return
-     */
-    bool openImage(const String& name);
+    bool openVideo(const String& name="");
+
+
 };
 
 
@@ -776,6 +771,11 @@ protected:
  */
 class Interval : public KeyValues {
 public:
+    /** This is because of image and video load && getSequence() documented. */
+    Sequence* parentSequence;   // TODO: destroy in destructor if doom
+    bool parentSequenceDoom;    // this is whwether do destroy the above
+
+public:
     /**
      * Constructor for intervals
      * @param orig pointer to the parrent
@@ -785,7 +785,21 @@ public:
 
     // bool next(); not necessary
 
-    String getSequence();
+    /**
+     * This is to (fast)
+     * @return sequence string
+     */
+    String getSequenceName();
+    
+    /**
+     * WARNING: This function has changed the return signature in version pre2!
+     *          You may use getSequenceName()...
+     *
+     * This is to query (if needed) the Sequences (may be slow for continuous use) to
+     * @return sequence object
+     */
+    Sequence* getSequence();
+
     /**
      * Get a start time of the current interval
      * @return start time

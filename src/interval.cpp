@@ -15,11 +15,37 @@ Interval::Interval(const KeyValues& orig, const String& selection) : KeyValues(o
     select = new Select(orig);
     select->from(this->selection, "*");
     select->whereString("seqname", this->sequence);
+
+    // thi is to detect if derived from a Sequence (highly recommended)
+    parentSequence = NULL;
+    parentSequenceDoom = true;
+    if (!orig.sequenceLocation.empty()) {
+        parentSequence = (Sequence*)&orig;
+        parentSequenceDoom = false;
+    }
 }
 
-String Interval::getSequence() {
+
+
+String Interval::getSequenceName() {
+    // TODO: possibly empty... possible warning 332
     return this->sequence;
 }
+
+
+Sequence* Interval::getSequence() {
+    if (parentSequence && this->sequence.compare(parentSequence->sequence) == 0) {
+        return this->parentSequence;
+    }
+    else {  // TODO: This is not OK... should be a query
+        this->error(333, "The use of getSequence() function is not recomended without using the Sequence first.");
+        // TODO: doom it here && query for next one??? (just in case when needed)
+    }
+
+    return NULL;
+}
+
+
 
 int Interval::getStartTime() {
     return this->getInt("t1");
