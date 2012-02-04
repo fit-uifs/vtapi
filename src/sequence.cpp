@@ -56,3 +56,5 @@ bool Sequence::add(String name, String location) {
     insert->keyString("seqlocation", location);
     // that's all, folks ... continue similarly if needed
 }
+
+

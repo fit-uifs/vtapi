@@ -38,6 +38,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/vtapi_settings.o \
 	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/method.o \
+	${OBJECTDIR}/video.o \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
@@ -94,6 +95,11 @@ ${OBJECTDIR}/method.o: method.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
+
+${OBJECTDIR}/video.o: video.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
 
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}

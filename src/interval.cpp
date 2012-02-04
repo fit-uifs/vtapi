@@ -70,6 +70,8 @@ bool Interval::add(const String& sequence, const int t1, const int t2, const Str
     }
     // that's all, folks ... continue similarly if needed
 
+    // TODO: image && storage checking??
+
     return true;
 }
 
