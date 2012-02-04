@@ -22,9 +22,6 @@
 
 #include "vtapi_commons.h"
 
-// comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
-#define __COPYRDBUF
-
 
 /* ************************************************************************** */
 

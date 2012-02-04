@@ -31,11 +31,19 @@
 #include <typeinfo>
 #include <vector>
 
-// probably, you need the libproc-dev paackage to make this work
+#include "postgresql/libpqtypes.h"
+
+// *****************************************************************************
+// probably, you need the libproc-dev package to make this work (else you should comment this)
 #include <proc/readproc.h>
 
-#include "postgresql/libpqtypes.h"
+// comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
+#define __COPYRDBUF
+// *****************************************************************************
+
 #include "vtapi_settings.h"
+
+
 
 typedef std::string String;
 #define BUFFERSize 255
@@ -47,6 +55,9 @@ typedef std::string String;
 
 // format: 0=text, 1=binary
 #define PGF 1
+
+
+
 
 class Commons;
 class Connector;

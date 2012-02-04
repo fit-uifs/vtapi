@@ -103,7 +103,7 @@ void VTApi::test() {
     // lines starting with cout should be ignored :)
     TimExer* timex = new TimExer();
 #ifdef PROCPS_PROC_READPROC_H
-    cout << "This process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory, I guess." << endl << endl;
+    cout << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory." << endl << endl;
 #else
     cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes..." << endl;
 #endif
@@ -297,11 +297,11 @@ void VTApi::test() {
 
 
 #ifdef PROCPS_PROC_READPROC_H
-    cout << endl << "This process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory, I guess." << endl;
+    cout << endl << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory." << endl;
 #else
     cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes..." << endl;
 #endif
-    cout << "This took " << timex->getClock() << " s of processor and " << timex->getTime()  << " s of real time, I guess." << endl << endl;
+    cout << "This took " << timex->getClock() << " s of processor and " << timex->getTime()  << " s of real time." << endl << endl;
     destruct(timex);
 
 
