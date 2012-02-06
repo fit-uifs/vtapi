@@ -56,6 +56,12 @@ bool Query::execute() {
                 warning(2011, "You should never see this warning since 2011 :(");
             }
         }
+
+        //TODO: toto sporne, ale asi je treba vyNULLovat res, kdyz nevrati nic
+        if (PQntuples(res) == 0) {
+            PQclear(res);
+            res = NULL;
+        }
     }
 
     return (res);
@@ -221,8 +227,11 @@ bool Query::whereFloat(const String& key, const float value, const String& oper,
 // ************************************************************************** //
 // Select::Select() { }
 Select::Select(const Commons& commons, const String& queryString, PGparam* param)
-: Query(commons, queryString, param), limit(0), offset(0) {
+: Query(commons, queryString, param) {
     thisClass = "Select";
+
+    limit = commons.queryLimit;
+    offset = 0;
 }
 
 // FIXME: tohle se musi predelat na TKey
@@ -300,6 +309,15 @@ String Select::getQuery() {
     }
     queryString += ";";
     return (queryString);
+}
+
+bool Select::executeNext() {
+    if (limit > 0) {
+        if (res) PQclear(res);
+        offset += limit;
+        return this->execute();
+    }
+    else return false;
 }
 
 

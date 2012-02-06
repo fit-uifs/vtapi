@@ -76,35 +76,35 @@ void TypeMap::loadRefTypes() {
 }
 
 bool TypeMap::isRefType(String name) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     return (reftypes.count(name) > 0);
 }
 bool TypeMap::isEnumType(String name) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     return (typesname.count(name) > 0) ? (typesname[name].second.category == 'E') : false;
 }
 
 char TypeMap::getCategory (String name) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     return typesname[name].second.category;
 }
 char TypeMap::getCategory (int oid) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     return typesoid[oid].second.category;
 }
 short TypeMap::getLength (String name) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     return typesname[name].second.length;
 }
 short TypeMap::getLength (int oid) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     return typesoid[oid].second.length;
 }
 int TypeMap::getElemOID (String name) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     return typesname[name].second.elemoid;
 }
 int TypeMap::getElemOID (int oid) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     return typesoid[oid].second.elemoid;
 }

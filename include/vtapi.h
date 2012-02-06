@@ -336,6 +336,13 @@ public:
      */
     bool join();
 
+    /**
+     * This is to discard current resultset and fetch next one with updated
+     * OFFSET value
+     * @return success
+     */
+    bool executeNext();
+
 };
 
 /**
@@ -444,6 +451,14 @@ public:
 
 
     // =============== GETTERS (Select) ========================================
+
+     /**
+     * Generic getter - fetches any value from resultset and returns it as string
+     * @param col column index
+     * @return String representation of field value
+     */
+    String getValue(const int col);
+
     // =============== GETTERS FOR CHAR, STRINGS ===============================
     /**
      * Get single character specified by a column key
@@ -483,6 +498,18 @@ public:
      * @return integer value
      */
     int getInt(const int col);
+    /**
+     * Get long value specified by a column key
+     * @param key column key
+     * @return integer value
+     */
+    long getInt8(const String& key);
+    /**
+     * Get long value specified by an index of a column
+     * @param col index of column
+     * @return integer value
+     */
+    long getInt8(const int col);
     /**
      * Get an array of integer values specified by a column key
      * @param key column key
@@ -524,6 +551,18 @@ public:
      * @return float value
      */
     float getFloat(const int col);
+    /**
+     * Get a double value specified by a column key
+     * @param key column key
+     * @return float value
+     */
+    double getFloat8(const String& key);
+    /**
+     * Get a double value specified by an index of a column
+     * @param col index of column
+     * @return float value
+     */
+    double getFloat8(const int col);
     /**
      * Get an array of float values specified by a column key
      * @param key column key
@@ -567,17 +606,11 @@ public:
 
     // =============== GETTERS - OTHER =========================================
     /**
-     * ??????????????????????????????????????
-     * @param key column key
-     * @return string value
-     */
-    int getIntOid(const String& key);
-    /**
      * Get an integer with an OID value specified by a column key
      * @param key column key
      * @return integer with the OID value
      */
-    String getName(const String& key);
+    int getIntOid(const String& key);
 
     // =============== SETTERS (Update) ========================================
     /**
@@ -616,19 +649,39 @@ public:
     bool checkStorage();
 
 protected:
-    // Print options
+    // table caption
     String caption;
+    // custom table options (border, padding, whatever..)
     String tableOpt;
 
-    // Print support methods
-    void printHeader(const std::pair< std::vector<TKey>*, std::vector<int>* > fInfo);
+    ////////////// Print support methods
+
+    /**
+     * Prints table header.
+     * @param fInfo Metadata for print, pair consisting of two vectors:
+     *  a) Tkeys - column types etc., b) ints - column widths
+     */
+    void printHeader(const std::pair< std::vector<TKey>*,std::vector<int>* > fInfo);
+    /**
+     * Prints one row of resultset.
+     * @param row Which row of resultset to print
+     * @param widths Metadata - vector of column widths
+     */
     void printRowOnly(const int row, const std::vector<int>* widths);
+    /**
+     * Prints table footer and info about printed rows
+     * @param count How many rows were printed (0 = single row was printed)
+     */
+
     void printFooter(const int count = 0);
+    /**
+     * This goes through result set and retrieves metadate necessary for print.
+     * It needs to be done before every print.
+     * @param row If not set to -1, this indicates single row print.
+     * @return Metadata for print, pair consisting of two vectors:
+     *  a) Tkeys - column types etc., b) ints - column widths
+     */
     std::pair< std::vector<TKey>*,std::vector<int>* > getFieldsInfo(const int row = -1);
-
-    String getValue(const int col);
-
-
 };
 
 

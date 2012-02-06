@@ -202,6 +202,7 @@ public:
     String output; /**< A filename into which we write an output */
     String user; /**< Logged in user */
     String baseLocation; /**< Base path location @todo */
+    int queryLimit; /**< Limit number of rows fetched at once */
 
     // THESE ARE USED IN THE UNDERLYING CLASSES HIERARCHY FOR ANYTHING NECESSARY
     String dataset;          /**< Current dataset name */
