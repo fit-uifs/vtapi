@@ -178,6 +178,7 @@ Commons::Commons(const Commons& orig) {
     input     = orig.input;
     output    = orig.output;
     baseLocation = orig.baseLocation;
+    queryLimit = orig.queryLimit;
 
     dataset   = orig.dataset;
     datasetLocation = orig.datasetLocation;
@@ -238,7 +239,8 @@ Commons::Commons(const gengetopt_args_info& args_info) {
                (String(args_info.format_arg).compare("html") == 0 ? HTML : STANDARD));
     input     = args_info.input_given ? String(args_info.input_arg) : String("");
     output    = args_info.output_given ? String(args_info.output_arg) : String("");
-
+    queryLimit= args_info.querylimit_given ? args_info.querylimit_arg : 0;
+    
     baseLocation = args_info.location_given ? String(args_info.location_arg) : String("");
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 }

@@ -67,6 +67,9 @@ struct gengetopt_args_info
   char * output_arg;	/**< @brief Write to specific output.  */
   char * output_orig;	/**< @brief Write to specific output original value given at command line.  */
   const char *output_help; /**< @brief Write to specific output help description.  */
+  int querylimit_arg;	/**< @brief Limit number of rows fetched at once (0 - unlimited).  */
+  char * querylimit_orig;	/**< @brief Limit number of rows fetched at once (0 - unlimited) original value given at command line.  */
+  const char *querylimit_help; /**< @brief Limit number of rows fetched at once (0 - unlimited) help description.  */
   char * where_arg;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\".  */
   char * where_orig;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\" original value given at command line.  */
   const char *where_help; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\" help description.  */
@@ -101,6 +104,7 @@ struct gengetopt_args_info
   unsigned int format_given ;	/**< @brief Whether format was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
+  unsigned int querylimit_given ;	/**< @brief Whether querylimit was given.  */
   unsigned int where_given ;	/**< @brief Whether where was given.  */
   unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int sequence_given ;	/**< @brief Whether sequence was given.  */

@@ -46,6 +46,7 @@ const char *gengetopt_args_info_help[] = {
   "  -f, --format=STRING      Input/output format  (possible values=\"standard\", \n                             \"csv\", \"html\", \"binary\", \"sparse\", \n                             \"html\" default=`standard')",
   "  -i, --input=FILENAME     Read from specific input",
   "  -o, --output=FILENAME    Write to specific output",
+  "      --querylimit=INT     Limit number of rows fetched at once (0 - unlimited)",
   "\n Context specification (WHERE clause)",
   "  -W, --where=SQLSTRING    explicit WHERE, ex.: --where=\"features is NULL\"",
   "  -D, --dataset=STRING     Set dataset to use",
@@ -60,6 +61,7 @@ const char *gengetopt_args_info_help[] = {
 
 typedef enum {ARG_NO
   , ARG_STRING
+  , ARG_INT
 } cmdline_parser_arg_type;
 
 static
@@ -118,6 +120,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->format_given = 0 ;
   args_info->input_given = 0 ;
   args_info->output_given = 0 ;
+  args_info->querylimit_given = 0 ;
   args_info->where_given = 0 ;
   args_info->dataset_given = 0 ;
   args_info->sequence_given = 0 ;
@@ -149,6 +152,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->input_orig = NULL;
   args_info->output_arg = NULL;
   args_info->output_orig = NULL;
+  args_info->querylimit_orig = NULL;
   args_info->where_arg = NULL;
   args_info->where_orig = NULL;
   args_info->dataset_arg = NULL;
@@ -183,13 +187,14 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->format_help = gengetopt_args_info_help[11] ;
   args_info->input_help = gengetopt_args_info_help[12] ;
   args_info->output_help = gengetopt_args_info_help[13] ;
-  args_info->where_help = gengetopt_args_info_help[15] ;
-  args_info->dataset_help = gengetopt_args_info_help[16] ;
-  args_info->sequence_help = gengetopt_args_info_help[17] ;
-  args_info->interval_help = gengetopt_args_info_help[18] ;
-  args_info->method_help = gengetopt_args_info_help[19] ;
-  args_info->process_help = gengetopt_args_info_help[20] ;
-  args_info->selection_help = gengetopt_args_info_help[21] ;
+  args_info->querylimit_help = gengetopt_args_info_help[14] ;
+  args_info->where_help = gengetopt_args_info_help[16] ;
+  args_info->dataset_help = gengetopt_args_info_help[17] ;
+  args_info->sequence_help = gengetopt_args_info_help[18] ;
+  args_info->interval_help = gengetopt_args_info_help[19] ;
+  args_info->method_help = gengetopt_args_info_help[20] ;
+  args_info->process_help = gengetopt_args_info_help[21] ;
+  args_info->selection_help = gengetopt_args_info_help[22] ;
   
 }
 
@@ -291,6 +296,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->input_orig));
   free_string_field (&(args_info->output_arg));
   free_string_field (&(args_info->output_orig));
+  free_string_field (&(args_info->querylimit_orig));
   free_string_field (&(args_info->where_arg));
   free_string_field (&(args_info->where_orig));
   free_string_field (&(args_info->dataset_arg));
@@ -405,6 +411,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "input", args_info->input_orig, 0);
   if (args_info->output_given)
     write_into_file(outfile, "output", args_info->output_orig, 0);
+  if (args_info->querylimit_given)
+    write_into_file(outfile, "querylimit", args_info->querylimit_orig, 0);
   if (args_info->where_given)
     write_into_file(outfile, "where", args_info->where_orig, 0);
   if (args_info->dataset_given)
@@ -611,6 +619,9 @@ int update_arg(void *field, char **orig_field,
     val = possible_values[found];
 
   switch(arg_type) {
+  case ARG_INT:
+    if (val) *((int *)field) = strtol (val, &stop_char, 0);
+    break;
   case ARG_STRING:
     if (val) {
       string_field = (char **)field;
@@ -623,6 +634,17 @@ int update_arg(void *field, char **orig_field,
     break;
   };
 
+  /* check numeric conversion */
+  switch(arg_type) {
+  case ARG_INT:
+    if (val && !(stop_char && *stop_char == '\0')) {
+      fprintf(stderr, "%s: invalid numeric value: %s\n", package_name, val);
+      return 1; /* failure */
+    }
+    break;
+  default:
+    ;
+  };
 
   /* store the original value */
   switch(arg_type) {
@@ -693,6 +715,7 @@ cmdline_parser_internal (
         { "format",	1, NULL, 'f' },
         { "input",	1, NULL, 'i' },
         { "output",	1, NULL, 'o' },
+        { "querylimit",	1, NULL, 0 },
         { "where",	1, NULL, 'W' },
         { "dataset",	1, NULL, 'D' },
         { "sequence",	1, NULL, 'S' },
@@ -925,6 +948,20 @@ cmdline_parser_internal (
                 &(local_args_info.log_given), optarg, 0, "./vtapi.log", ARG_STRING,
                 check_ambiguity, override, 0, 0,
                 "log", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Limit number of rows fetched at once (0 - unlimited).  */
+          else if (strcmp (long_options[option_index].name, "querylimit") == 0)
+          {
+          
+          
+            if (update_arg( (void *)&(args_info->querylimit_arg), 
+                 &(args_info->querylimit_orig), &(args_info->querylimit_given),
+                &(local_args_info.querylimit_given), optarg, 0, 0, ARG_INT,
+                check_ambiguity, override, 0, 0,
+                "querylimit", '-',
                 additional_error))
               goto failure;
           

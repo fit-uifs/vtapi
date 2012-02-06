@@ -42,6 +42,9 @@ option "input" i "Read from specific input"
 option "output" o "Write to specific output"
     string typestr="FILENAME"
     optional
+option "querylimit" - "Limit number of rows fetched at once (0 - unlimited)"
+    int
+    optional
 
 text "\n Context specification (WHERE clause)"
 option "where" W "explicit WHERE, ex.: --where=\"features is NULL\""
