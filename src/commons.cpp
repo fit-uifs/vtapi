@@ -184,7 +184,7 @@ Commons::Commons(const Commons& orig) {
     output    = orig.output;
     baseLocation = orig.baseLocation;
     queryLimit = orig.queryLimit;
-    colWidth  = orig.colWidth;
+    arrayLimit  = orig.arrayLimit;
 
     dataset   = orig.dataset;
     datasetLocation = orig.datasetLocation;
@@ -237,7 +237,6 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     method    = args_info.method_given ? String(args_info.method_arg) : String ("");
     process   = args_info.process_given ? String(args_info.process_arg) : String ("");
     selection = args_info.selection_given ? String(args_info.selection_arg) : String ("");
-    // TODO: VOJTA: interval pair (LIMIT)
 
     user      = args_info.user_given ? String(args_info.user_arg) : String("");
     format    = String(args_info.format_arg).compare("standard") == 0 ? STANDARD :
@@ -246,7 +245,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     input     = args_info.input_given ? String(args_info.input_arg) : String("");
     output    = args_info.output_given ? String(args_info.output_arg) : String("");
     queryLimit= args_info.querylimit_given ? args_info.querylimit_arg : 0;
-    colWidth  = args_info.colwidth_given ? args_info.colwidth_arg : 0;
+    arrayLimit= args_info.arraylimit_given ? args_info.arraylimit_arg : 0;
     
     baseLocation = args_info.location_given ? String(args_info.location_arg) : String("");
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D

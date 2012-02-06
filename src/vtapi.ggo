@@ -45,7 +45,7 @@ option "output" o "Write to specific output"
 option "querylimit" - "Limit number of rows fetched at once (0 - unlimited)"
     int
     optional
-option "colwidth" - "Limit width of columns when printing (string length / array elements)"
+option "arraylimit" - "Limit amount of printed array elements"
     int
     optional
 

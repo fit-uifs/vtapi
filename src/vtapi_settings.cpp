@@ -47,7 +47,7 @@ const char *gengetopt_args_info_help[] = {
   "  -i, --input=FILENAME     Read from specific input",
   "  -o, --output=FILENAME    Write to specific output",
   "      --querylimit=INT     Limit number of rows fetched at once (0 - unlimited)",
-  "      --colwidth=INT       Limit width of columns when printing (string length \n                             / array elements)",
+  "      --arraylimit=INT     Limit amount of printed array elements",
   "\n Context specification (WHERE clause)",
   "  -W, --where=SQLSTRING    explicit WHERE, ex.: --where=\"features is NULL\"",
   "  -D, --dataset=STRING     Set dataset to use",
@@ -122,7 +122,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->input_given = 0 ;
   args_info->output_given = 0 ;
   args_info->querylimit_given = 0 ;
-  args_info->colwidth_given = 0 ;
+  args_info->arraylimit_given = 0 ;
   args_info->where_given = 0 ;
   args_info->dataset_given = 0 ;
   args_info->sequence_given = 0 ;
@@ -155,7 +155,7 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->output_arg = NULL;
   args_info->output_orig = NULL;
   args_info->querylimit_orig = NULL;
-  args_info->colwidth_orig = NULL;
+  args_info->arraylimit_orig = NULL;
   args_info->where_arg = NULL;
   args_info->where_orig = NULL;
   args_info->dataset_arg = NULL;
@@ -191,7 +191,7 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->input_help = gengetopt_args_info_help[12] ;
   args_info->output_help = gengetopt_args_info_help[13] ;
   args_info->querylimit_help = gengetopt_args_info_help[14] ;
-  args_info->colwidth_help = gengetopt_args_info_help[15] ;
+  args_info->arraylimit_help = gengetopt_args_info_help[15] ;
   args_info->where_help = gengetopt_args_info_help[17] ;
   args_info->dataset_help = gengetopt_args_info_help[18] ;
   args_info->sequence_help = gengetopt_args_info_help[19] ;
@@ -301,7 +301,7 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->output_arg));
   free_string_field (&(args_info->output_orig));
   free_string_field (&(args_info->querylimit_orig));
-  free_string_field (&(args_info->colwidth_orig));
+  free_string_field (&(args_info->arraylimit_orig));
   free_string_field (&(args_info->where_arg));
   free_string_field (&(args_info->where_orig));
   free_string_field (&(args_info->dataset_arg));
@@ -418,8 +418,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "output", args_info->output_orig, 0);
   if (args_info->querylimit_given)
     write_into_file(outfile, "querylimit", args_info->querylimit_orig, 0);
-  if (args_info->colwidth_given)
-    write_into_file(outfile, "colwidth", args_info->colwidth_orig, 0);
+  if (args_info->arraylimit_given)
+    write_into_file(outfile, "arraylimit", args_info->arraylimit_orig, 0);
   if (args_info->where_given)
     write_into_file(outfile, "where", args_info->where_orig, 0);
   if (args_info->dataset_given)
@@ -723,7 +723,7 @@ cmdline_parser_internal (
         { "input",	1, NULL, 'i' },
         { "output",	1, NULL, 'o' },
         { "querylimit",	1, NULL, 0 },
-        { "colwidth",	1, NULL, 0 },
+        { "arraylimit",	1, NULL, 0 },
         { "where",	1, NULL, 'W' },
         { "dataset",	1, NULL, 'D' },
         { "sequence",	1, NULL, 'S' },
@@ -974,16 +974,16 @@ cmdline_parser_internal (
               goto failure;
           
           }
-          /* Limit width of columns when printing (string length / array elements).  */
-          else if (strcmp (long_options[option_index].name, "colwidth") == 0)
+          /* Limit amount of printed array elements.  */
+          else if (strcmp (long_options[option_index].name, "arraylimit") == 0)
           {
           
           
-            if (update_arg( (void *)&(args_info->colwidth_arg), 
-                 &(args_info->colwidth_orig), &(args_info->colwidth_given),
-                &(local_args_info.colwidth_given), optarg, 0, 0, ARG_INT,
+            if (update_arg( (void *)&(args_info->arraylimit_arg), 
+                 &(args_info->arraylimit_orig), &(args_info->arraylimit_given),
+                &(local_args_info.arraylimit_given), optarg, 0, 0, ARG_INT,
                 check_ambiguity, override, 0, 0,
-                "colwidth", '-',
+                "arraylimit", '-',
                 additional_error))
               goto failure;
           

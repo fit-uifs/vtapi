@@ -334,7 +334,7 @@ String KeyValues::getValue(const int col) {
                 std::vector<int>* arr = this->getIntV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
-                    if (i == colWidth) break;
+                    if (i == arrayLimit) break;
                     if (i < (*arr).size()-1) valss << ",";
                 }
                 destruct (arr);
@@ -343,7 +343,7 @@ String KeyValues::getValue(const int col) {
                 std::vector<float>* arr = this->getFloatV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
-                    if (i == colWidth) break;
+                    if (i == arrayLimit) break;
                     if (i < (*arr).size()-1) valss << ",";
                 }
                 destruct (arr);
@@ -389,7 +389,7 @@ String KeyValues::getValue(const int col) {
         case 'S': { // string
             // char has length 1
             if (typlen == 1) valss << getChar(col);
-            else return getString(col).substr(0, colWidth);
+            else return getString(col);
             } break;
         case 'T': { // timespan
             //valss << 'T';
