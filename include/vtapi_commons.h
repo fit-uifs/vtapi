@@ -32,17 +32,17 @@
 #include <vector>
 
 #include "postgresql/libpqtypes.h"
+#include "vtapi_settings.h"
 
-// *****************************************************************************
-// probably, you need the libproc-dev package to make this work (else you should comment this)
+// ** CHOOSE and COMMENT *******************************************************
+
+// probably, you need the libproc-dev (sometimes procps-devel) package to make this work (else you should comment the following)
 #include <proc/readproc.h>
 
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
 #define __COPYRDBUF
-// *****************************************************************************
 
-#include "vtapi_settings.h"
-
+// ** END of CHOICES ***********************************************************
 
 
 typedef std::string String;
