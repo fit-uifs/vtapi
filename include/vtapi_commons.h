@@ -35,7 +35,7 @@
 
 // *****************************************************************************
 // probably, you need the libproc-dev package to make this work (else you should comment this)
-//#include <proc/readproc.h>
+#include <proc/readproc.h>
 
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
 #define __COPYRDBUF
