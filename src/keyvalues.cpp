@@ -694,6 +694,7 @@ int KeyValues::getIntOid(const String& key) {
 bool KeyValues::preSet() {
     // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
     warning(3010, "Set unimplemented at class " + thisClass);
+    return false;
 }
 
 // TODO: how to change binary data???
@@ -745,4 +746,14 @@ bool KeyValues::setExecute() {
 bool KeyValues::addExecute() {
     if (this->insert) return this->insert->execute();
     else return false;
+}
+
+// =================== CHECKERS (Storage) ======================================
+bool KeyValues::checkStorage() {
+    warning(3018, "Check might fail at class " + thisClass);
+
+    if (!sequence.empty() && fileExists(getDataLocation())) return true;
+    else if (!dataset.empty() && fileExists(getDataLocation())) return true;
+
+    return false;
 }

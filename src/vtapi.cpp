@@ -38,7 +38,7 @@ VTApi::VTApi(int argc, char** argv) {
     commons = new Commons(args_info);
     if (warn) commons->warning("Error parsing config arguments");
     cmdline_parser_free (&args_info);
-    free (cli_params);
+    destruct (cli_params);
 }
 
 VTApi::VTApi(const String& configFile) {
@@ -68,13 +68,46 @@ Dataset* VTApi::newDataset(const String& name) {
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * This might be a HOW-TO function
  * @code
  */
 void VTApi::test() {
     // lines starting with cout should be ignored :)
-    
+    TimExer* timex = new TimExer();
+#ifdef PROCPS_PROC_READPROC_H
+    cout << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory." << endl << endl;
+#else
+    cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes..." << endl;
+#endif
+
     cout << "TESTING generic classes..." << endl;
     TKeyValue<float> tkvf ("float", "number", 32156.7, "test");
     cout << "TKeyValue<float> tkvf (32156.7) ... typeid: " << typeid(tkvf).name() << endl;
@@ -97,6 +130,7 @@ void VTApi::test() {
 
     // dataset usw.
     cout << "DONE testing generic classes." << endl;
+
     this->commons->logger->debug("No bugs so far... ");
     cout << endl << endl;
     cout << "TESTING  Dataset..." << endl;
@@ -104,6 +138,7 @@ void VTApi::test() {
     Dataset* dataset = this->newDataset();
     dataset->next();
     dataset->printAll();
+
 
     // how many intervals are in a sequence???
     KeyValues* kv = new KeyValues(*dataset);
@@ -138,7 +173,7 @@ void VTApi::test() {
     cout << "DELETING Sequence " << sn << endl;
     Query* query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".sequences WHERE seqname='" + sn + "';");
     cout << "OK: " << query->execute() << endl;
-    delete (query);
+    destruct (query);
 
     cout << "DONE." << endl;
     cout << endl;
@@ -159,6 +194,7 @@ void VTApi::test() {
     for (int i = 0; i < vtk->size(); ++i) (*vtk)[i].print();
     destruct(vtk);
     cout << endl;
+
 /*
     // this has no effect outside ...
     int t1 = 1000000 + rand()%1000;
@@ -204,13 +240,32 @@ void VTApi::test() {
     cout << "DELETING Image " << sn << endl;
     query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
     cout << "OK: " << query->execute() << endl;
-    delete (query);
+    destruct (query);
 */
-    delete (interval);
-    delete (sequence);
+    destruct (interval);
+    destruct (sequence);
 
-    // process usw.
-    cout << "DONE." << endl;
+    // TEST VIDEO //////////////////////////////////////////////////////////
+    cout << endl << "Testing Video" << endl;
+    Video* video = dataset->newVideo();
+    video->next();
+    video->print();
+
+    cout << endl << "Should be playing video " << video->getName() << " ... press any key to exit." << endl;
+    VideoPlayer* player = new VideoPlayer(*video);
+    player->play();
+
+    cout << endl << "Adding video 'MCTTR0201a-XXXX' to the dataset" << endl;
+    video->add("MCTTR0201a-XXXX", "MCT_TR_02/MCTTR02a/MCTTR0201a.mov.deint.mpeg");
+    video->addExecute();
+    // FIXME: Vojta kdyz tam je, tak to pise std::badalloc... asi zvalgrindovat
+    cout << "OK, deleting the video... " << endl;
+    query = new Query(*video, "DELETE FROM "+ dataset->getDataset() + ".sequences WHERE seqname='MCTTR0201a-XXXX';");
+    cout << "OK: " << query->execute() << endl;
+    destruct (query);
+
+    // TEST PROCESS usw. ////////////////////////////////////////////////////////////
+    cout << endl << "DONE." << endl;
     cout << endl;
     cout << "TESTING Method..." << endl;
 
@@ -228,6 +283,7 @@ void VTApi::test() {
         method->methodKeys[i].print();
     }
 
+
     cout << "DONE." << endl;
     cout << endl;
     cout << "TESTING Process" << endl;
@@ -239,11 +295,21 @@ void VTApi::test() {
     // tohle doma nezkousejte, nebo vam upadne zadecek
     // process->add("test", "test");
 
-    delete (process);
-    delete (method);
+
+#ifdef PROCPS_PROC_READPROC_H
+    cout << endl << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory." << endl;
+#else
+    cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes..." << endl;
+#endif
+    cout << "This took " << timex->getClock() << " s of processor and " << timex->getTime()  << " s of real time." << endl << endl;
+    destruct(timex);
+
+
+    destruct (process);
+    destruct (method);
     cout << "DONE." << endl;
 
-    delete (dataset);
+    destruct (dataset);
     cout << "DONE ALL ... see warnings." << endl;
 }
 

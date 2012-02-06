@@ -23,8 +23,6 @@
 #include "vtapi_commons.h"
 
 
-
-
 /* ************************************************************************** */
 
 Logger::Logger(const String& filename) {
@@ -40,13 +38,20 @@ Logger::Logger(const String& filename) {
         }
     }
 
+// The if is here for the case your compiler is screwed somehow, so you must log into a file
     if (logFilename.empty()) {
+#ifdef __COPYRDBUF
         // http://stdcxx.apache.org/doc/stdlibug/34-2.html
         logStream.copyfmt(std::cerr);
         logStream.clear(std::cerr.rdstate());
         logStream.basic_ios<char>::rdbuf(std::cerr.rdbuf());
         // FIXME: if this is scrued, we won't log - there are no exceptions necessary :)
+#else
+        std::cerr << timestamp() << ": ERROR 102! Logger cannot open the file specified, NO LOGGING ENABLED." << std::endl;
+#endif
     }
+
+
 }
 
 void Logger::write(const String& logline) {
@@ -309,8 +314,8 @@ String Commons::getSelection() {
 
 
 String Commons::getDataLocation() {
-    if (baseLocation.empty()) error(156, "No (base) location specified");
-    if (datasetLocation.empty()) error(156, "No (dataset) location specified");
+    if (baseLocation.empty()) warning(156, "No (base) location specified");
+    if (datasetLocation.empty()) warning(156, "No (dataset) location specified");
     if (sequenceLocation.empty()) warning(156, "No sequence location specified");
     
     return (baseLocation + datasetLocation + sequenceLocation);
@@ -360,3 +365,78 @@ String Commons::toTypname(const int oid) {
     return this->typemap->toTypname(oid);
 }
 
+
+// static
+bool Commons::fileExists(const String& filename) {
+    std::ifstream ifile(filename.c_str());
+    return (bool) ifile;
+    // FIXME: tady to psalo <incomplete_type>
+}
+
+
+
+
+// TimExer /////////////////////////////////////////////////////////////////////
+TimExer::TimExer() {
+    reStart();
+}
+
+/**
+ * (Re)starts the timer
+ */
+void TimExer::reStart() {
+    startTime = time(NULL);
+    meanTime = startTime;
+    startClock = clock();
+    meanClock = startTime;
+}
+
+
+double TimExer::getTime() {
+    meanTime = time(NULL);
+    return (double)  difftime(meanTime, startTime);
+}
+
+double TimExer::getMeanTime() {
+    time_t newMeanTime = time(NULL);
+    double ret = (double) difftime(newMeanTime, meanTime);
+    meanTime = newMeanTime;
+    return ret;
+}
+
+double TimExer::getClock() {
+    meanClock = clock();
+    return ((double) meanClock - startClock) / ((double) CLOCKS_PER_SEC);
+}
+
+double TimExer::getMeanClock() {
+    clock_t newMeanClock = clock();
+    double ret = ((double) newMeanClock - meanClock) / ((double) CLOCKS_PER_SEC);
+    meanTime = newMeanClock;
+    return ret;
+}
+
+// using libproc-dev??
+#ifdef PROCPS_PROC_READPROC_H
+
+int TimExer::getPID() {
+    struct proc_t usage;
+    look_up_our_self(&usage);
+    return usage.ppid;
+}
+
+double TimExer::getVirtMemory() {
+    struct proc_t usage;
+    look_up_our_self(&usage);
+    // this is 1024*1024 (however, should be in pages :)
+    return (double) usage.vsize / 1048576;
+}
+
+double TimExer::getMemory() {
+    struct proc_t usage;
+    look_up_our_self(&usage);
+    // this is rss * 4096 / 1024*1024 (pages of 4KB ... $ getconf PAGESIZE)
+    return (double) usage.rss / 256;
+}
+
+#endif

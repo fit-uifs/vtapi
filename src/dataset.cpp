@@ -59,6 +59,15 @@ Sequence* Dataset::newSequence(const String& name) {
 }
 
 /**
+ * Create new sequence for current dataset
+ * @return pointer to new sequence
+ */
+Video* Dataset::newVideo(const String& name) {
+    return (new Video(*this, name));
+}
+
+
+/**
  * Create new method for current dataset
  * @return pointer to new method
  */

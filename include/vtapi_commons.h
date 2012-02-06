@@ -19,18 +19,8 @@
  *
  */
 
-#ifndef INTERNALS_H
-#define	INTERNALS_H
-
-// Using this you can allow using OpenCV
-// #define _OpenCV
-
-#ifdef _OpenCV
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#endif
-
+#ifndef VTAPI_COMMONS_H
+#define	VTAPI_COMMONS_H
 
 #include <fstream>
 #include <iostream>
@@ -42,7 +32,18 @@
 #include <vector>
 
 #include "postgresql/libpqtypes.h"
+
+// *****************************************************************************
+// probably, you need the libproc-dev package to make this work (else you should comment this)
+#include <proc/readproc.h>
+
+// comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
+#define __COPYRDBUF
+// *****************************************************************************
+
 #include "vtapi_settings.h"
+
+
 
 typedef std::string String;
 #define BUFFERSize 255
@@ -54,6 +55,9 @@ typedef std::string String;
 
 // format: 0=text, 1=binary
 #define PGF 1
+
+
+
 
 class Commons;
 class Connector;
@@ -200,6 +204,7 @@ public:
     String baseLocation; /**< Base path location @todo */
     int queryLimit; /**< Limit number of rows fetched at once */
 
+    // THESE ARE USED IN THE UNDERLYING CLASSES HIERARCHY FOR ANYTHING NECESSARY
     String dataset;          /**< Current dataset name */
     String datasetLocation;  /**< Current dataset location */
     String sequence;         /**< Current sequence name */
@@ -344,6 +349,14 @@ public:
      * Load datatypes from PostgreSQL and register to the VTApi
      */
     //void registerTypes();
+
+
+    /**
+     * This is to check whether a file exists or not
+     * @param filename
+     * @return exists
+     */
+    static bool fileExists(const String& filename);
 };
 
 /**
@@ -443,5 +456,69 @@ inline String toString(const T& t) {
 };
 
 
+/**
+ * A general experiment timer++ class...
+ * each time called getTime() returns time used by the program so far (user time + system time)
+ * Plus you can use meantime.
+ * PlusPlus, you can get the PID, virtual and resident memory.
+ * Well, some may use process information /proc/$pid/status instead of libproc_dev.
+ */
+class TimExer {
+private:
+    time_t startTime;  // this is the original time
+    time_t meanTime;   // this is the time of last getTime() or getMeanTime() call
+    clock_t startClock;  // this is the original time
+    clock_t meanClock;   // this is the time of last getTime() or getMeanTime() call
 
-#endif	/* INTERNALS_H */
+public:
+    TimExer();
+
+    /** 
+     * (Re)starts the timer
+     */
+    void reStart();
+
+    /** 
+     * @return time [s] passed accordgin to the theory of relativity
+     */
+    double getTime();
+
+    /**
+     * @return meantime [s] from the beginning or the last time or meantime (mezicas)
+     */
+    double getMeanTime();
+
+    /**
+     * @return time [s] used by the program so far (user time + system time)
+     */
+    double getClock();
+
+    /**
+     * @return meantime [s] from the beginning or the last time or meantime (mezicas)
+     */
+    double getMeanClock();
+
+
+#ifdef PROCPS_PROC_READPROC_H
+
+    /**
+     * @return PID
+     */
+    int getPID();
+
+    /**
+     * @return total [MB] of virtual memory
+     */
+    double getVirtMemory();
+
+    /**
+     * @return total [MB] of (resident) memory
+     */
+    double getMemory();
+
+#endif
+
+};
+
+
+#endif	/* VTAPI_COMMONS_H */

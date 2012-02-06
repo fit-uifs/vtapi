@@ -98,8 +98,11 @@
 #include "postgresql/libpqtypes.h"
 #include "vtapi_commons.h"
 
+// uncomment this if not necessary to have the VTApi more lightweight
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
-using namespace std;
 
 
 // virtual definitions of classes
@@ -111,6 +114,7 @@ class KeyValues;
 
 class Dataset;
 class Sequence;
+class Video;
 class Interval;
 class Image;
 class Method;
@@ -609,6 +613,14 @@ public:
     int getIntOid(const String& key);
 
     // =============== SETTERS (Update) ========================================
+    /**
+     * This is to support updates in derived classes
+     * (unimplemented error 3010 in this class)
+     * @return success (in derived classes)
+     */
+    virtual bool preSet();
+
+
     // TODO: overit jestli a jak funguje... jako UPDATE?
     bool setString(const String& key, const String& value);
     bool setInt(const String& key, const String& value);
@@ -631,11 +643,10 @@ public:
     bool addExecute();
 
     /**
-     * This is to support updates in derived classes
-     * (unimplemented error 3010 in this class)
-     * @return success (in derived classes)
+     * This is to check whether the underlying dataset, sequence (directory / video) or interval (image) exists
+     * @return found
      */
-    virtual bool preSet();
+    bool checkStorage();
 
 protected:
     // table caption
@@ -650,17 +661,18 @@ protected:
      * @param fInfo Metadata for print, pair consisting of two vectors:
      *  a) Tkeys - column types etc., b) ints - column widths
      */
-    void printHeader(const pair< vector<TKey>*,vector<int>* > fInfo);
+    void printHeader(const std::pair< std::vector<TKey>*,std::vector<int>* > fInfo);
     /**
      * Prints one row of resultset.
      * @param row Which row of resultset to print
      * @param widths Metadata - vector of column widths
      */
-    void printRowOnly(const int row, const vector<int>* widths);
+    void printRowOnly(const int row, const std::vector<int>* widths);
     /**
      * Prints table footer and info about printed rows
      * @param count How many rows were printed (0 = single row was printed)
      */
+
     void printFooter(const int count = 0);
     /**
      * This goes through result set and retrieves metadate necessary for print.
@@ -712,22 +724,32 @@ public:
      */
     String getLocation();
 
+
     /**
-     * Create new sequence for current dataset
-     * @param name name of new sequence
-     * @return pointer to new sequence
+     * Get new sequence(s) of the current dataset
+     * @param name of the sequence (none for all)
+     * @return sequence
      */
     Sequence* newSequence(const String& name = "");
     /**
-     * Create new sequence for current dataset
-     * @param name name of new method
-     * @return pointer to new sequence
+     * Get new video(s) of current dataset
+     * @param name (none for all)
+     * @return video
+     */
+    Video* newVideo(const String& name = "");
+
+    
+    /**
+     * Get new method(s) of the current dataset
+     * @param name of the method (none for all)
+     * @return method
      */
     Method* newMethod(const String& name = "");
+
     /**
-     * Create new process for current dataset
-     * @param name name of new process
-     * @return pointer to new process
+     * Get new process of the current dataset
+     * @param name of new process
+     * @return process
      */
     Process* newProcess(const String& name = "");
 
@@ -742,10 +764,10 @@ protected:
  * @note Error codes 32*
  */
 class Sequence : public KeyValues {
-// Memebers
+/* Memebers
 protected:
-    String file_name_video; /**< File name of a video */
-    String file_name_image; /**< File name of an image */
+    String file_name_video; // < File name of a video
+    String file_name_image; // < File name of an image */
 //Methods
 public:
     /**
@@ -788,12 +810,14 @@ public:
      * @return pointer to the new interval
      */
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
+
     /**
      * Create a new image specified by a name
      * @param name name of the image
      * @return pointer to the new image
      */
     Image* newImage(const String& name = "");
+
     /**
      * @todo Not implemented
      * @param name
@@ -801,19 +825,112 @@ public:
      */
     Process* newProcess(const String& name = "");
 
-#ifdef _OpenCV
-    cv::Mat getImage();
+#ifdef __OPENCV_CORE_HPP__
+    cv::Mat getNextImage();
 #endif
-    
+
+};
+
+
+/**
+ * @brief Video class manages videos
+ *
+ * @note Error codes 321*
+ */
+class Video : public Sequence {
+public:
+    /**
+     * Constructor for Video
+     * @param orig -in class (parent)
+     * @param name of the sequence
+     */    
+    Video(const KeyValues& orig, const String& name);
+
+    /**
+     * Create a new frame specified by the frame number
+     * @param name name of the image
+     * @return pointer to the new image
+     */
+    Image* newFrame(const int frame = 1);
+
+    /**
+     * This is most probably what you always wanted...
+     * @return string value with the location of the video data
+     */
+    String getDataLocation();
+
+
+    /**
+     * Add new video to the dataset
+     * @param name of the video
+     * @param location of the video
+     * @return success
+     */
+    bool add(String name, String location);
+
+
+#ifdef __OPENCV_CORE_HPP__
     /**
      * @todo Test
      * @param name
      * @return
      */
-    bool openVideo(const String& name="");
+    bool openVideo();
 
+    cv::Mat getNextImage();
+#endif
 
 };
+
+
+
+#ifdef __OPENCV_HIGHGUI_HPP__
+/**
+ * @brief This is the ever-simplest video player...
+ *
+ * VideoPlayer makes copies of each object, so it doesn't affect nexts() performed elsewhere,
+ * however, it may fail in case of next, where are hundreds of thousands of tuples (@see Keyvalues)
+ * // TODO: This behavior might be chenged later
+ *
+ *  @note Error codes 16*
+ */
+class VideoPlayer : public Commons {
+protected:
+    String videoOutput;
+    //
+
+    std::vector<Image> images;
+    std::vector<Video> videos;
+    std::vector<Interval> intervals;
+
+public:
+    /**
+     * A void construcotr - plays nothing at all at the moment
+     * @param orig
+     */
+    VideoPlayer(Commons& orig);
+    VideoPlayer(Image& image);
+    VideoPlayer(Video& video);
+    VideoPlayer(Interval& interval);
+
+    bool playerAdd(Image& image);
+    bool playerAdd(Video& video);
+    bool playerAdd(Interval& interval);
+
+    bool setPlayerOutput(String filename);
+    String getPlayerOutput();
+
+    /**
+     * This function simply plays what added before
+     * ... or a default capture in cese of none (can be used to store the capture)
+     * @return
+     */
+    bool play();
+};
+
+#endif
+
+
 
 
 /**
@@ -891,6 +1008,10 @@ class Image : public Interval {
 public:
     Image(const KeyValues& orig, const String& selection = "intervals");
 
+    /**
+     * Get a sequence (order) number of the current image (interval)
+     * @return number or 0
+     */
     int getTime();
 
     /**
@@ -904,6 +1025,13 @@ public:
      */
     String getLocation();
 
+    /**
+     * Simply adds an image (interval) to the sequence (no checking)
+     * @param sequence
+     * @param t
+     * @param location
+     * @return success
+     */
     bool add(const String& sequence, const int t, const String& location);
 
 protected:
@@ -1071,6 +1199,8 @@ public:
 protected:
 
 };
+
+
 
 
 // this is just a development branch...
