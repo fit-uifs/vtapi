@@ -379,16 +379,12 @@ TimExer::TimExer() {
     reStart();
 }
 
-/**
- * (Re)starts the timer
- */
 void TimExer::reStart() {
-    startTime = time(NULL);
+    startTime = time(NULL); // TODO: use rather gettimeofday?
     meanTime = startTime;
     startClock = clock();
     meanClock = startTime;
 }
-
 
 double TimExer::getTime() {
     meanTime = time(NULL);
@@ -414,7 +410,7 @@ double TimExer::getMeanClock() {
     return ret;
 }
 
-// using libproc-dev??
+// have libproc-dev?
 #ifdef PROCPS_PROC_READPROC_H
 
 int TimExer::getPID() {
