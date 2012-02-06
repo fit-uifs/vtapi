@@ -70,6 +70,9 @@ struct gengetopt_args_info
   int querylimit_arg;	/**< @brief Limit number of rows fetched at once (0 - unlimited).  */
   char * querylimit_orig;	/**< @brief Limit number of rows fetched at once (0 - unlimited) original value given at command line.  */
   const char *querylimit_help; /**< @brief Limit number of rows fetched at once (0 - unlimited) help description.  */
+  int colwidth_arg;	/**< @brief Limit width of columns when printing (string length / array elements).  */
+  char * colwidth_orig;	/**< @brief Limit width of columns when printing (string length / array elements) original value given at command line.  */
+  const char *colwidth_help; /**< @brief Limit width of columns when printing (string length / array elements) help description.  */
   char * where_arg;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\".  */
   char * where_orig;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\" original value given at command line.  */
   const char *where_help; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\" help description.  */
@@ -105,6 +108,7 @@ struct gengetopt_args_info
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int querylimit_given ;	/**< @brief Whether querylimit was given.  */
+  unsigned int colwidth_given ;	/**< @brief Whether colwidth was given.  */
   unsigned int where_given ;	/**< @brief Whether where was given.  */
   unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int sequence_given ;	/**< @brief Whether sequence was given.  */

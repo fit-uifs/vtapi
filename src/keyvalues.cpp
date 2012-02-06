@@ -333,6 +333,7 @@ String KeyValues::getValue(const int col) {
                 std::vector<int>* arr = this->getIntV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
+                    if (i == colWidth) break;
                     if (i < (*arr).size()-1) valss << ",";
                 }
                 destruct (arr);
@@ -341,6 +342,7 @@ String KeyValues::getValue(const int col) {
                 std::vector<float>* arr = this->getFloatV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
+                    if (i == colWidth) break;
                     if (i < (*arr).size()-1) valss << ",";
                 }
                 destruct (arr);
@@ -356,9 +358,11 @@ String KeyValues::getValue(const int col) {
         case 'D': { // date/time
             struct tm ts = getTimestamp(col);
             valss << right << setfill('0');
+            //TODO: microseconds?
             if (ts.tm_year > 0)
-                valss << ts.tm_year << '-' << setw(2) << ts.tm_mon << '-' << setw(2) << ts.tm_mday << ' ';
-            valss << setw(2) << ts.tm_hour << ':' << setw(2) << ts.tm_min << ':' << setw(2) << ts.tm_sec;
+                valss << setw(4) << ts.tm_year << '-' << setw(2) << ts.tm_mon <<
+                  '-' << setw(2) << ts.tm_mday << ' ' << setw(2) << ts.tm_hour <<
+                  ':' << setw(2) << ts.tm_min << ':' << setw(2) << ts.tm_sec;
             } break;
         case 'E': { // enum
             // can get name
@@ -384,7 +388,7 @@ String KeyValues::getValue(const int col) {
         case 'S': { // string
             // char has length 1
             if (typlen == 1) valss << getChar(col);
-            else valss << getString(col);
+            else return getString(col).substr(0, colWidth);
             } break;
         case 'T': { // timespan
             //valss << 'T';

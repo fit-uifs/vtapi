@@ -203,6 +203,7 @@ public:
     String user; /**< Logged in user */
     String baseLocation; /**< Base path location @todo */
     int queryLimit; /**< Limit number of rows fetched at once */
+    int colWidth; /**< Limit width of columns when printing (string length / array elements)*/
 
     // THESE ARE USED IN THE UNDERLYING CLASSES HIERARCHY FOR ANYTHING NECESSARY
     String dataset;          /**< Current dataset name */
