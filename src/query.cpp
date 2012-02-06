@@ -57,11 +57,6 @@ bool Query::execute() {
             }
         }
 
-        //TODO: toto sporne, ale asi je treba vyNULLovat res, kdyz nevrati nic
-        if (PQntuples(res) == 0) {
-            PQclear(res);
-            res = NULL;
-        }
     }
 
     return (res);

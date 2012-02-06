@@ -91,7 +91,8 @@ KeyValues* KeyValues::next() {
     // check if end of resultset has been reached
     if (select->res) {
         int rows = PQntuples(select->res) - 1;
-        if (pos < rows) pos++;      // continue
+        if (rows < 0) return NULL;
+        else if (pos < rows) pos++;      // continue
         else if (pos >= queryLimit) {     // fetch new resultset
             if (select->executeNext()) pos = 0;
         }

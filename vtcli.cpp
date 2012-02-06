@@ -60,7 +60,7 @@ int VTCli::run() {
             }
             if (line.empty()) continue;
             else {
-                PGresult* qres = PQexec(vtapi->commons->getConnector()->getConn(), line.c_str());
+                PGresult* qres = PQparamExec(vtapi->commons->getConnector()->getConn(), NULL, line.c_str(), PGF);
                 if (!qres) cerr << "Query failed: " << line << endl; 
                 else {
                     KeyValues* kv = new KeyValues(*(this->vtapi->commons));
