@@ -40,10 +40,10 @@
 #include <proc/readproc.h>
 
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
-#define __COPYRDBUF
+#define COPYRDBUF
 
 // comment this, if there is no PostGIS extension in the database
-#define __POSTGIS
+#define POSTGIS
 
 // ** END of CHOICES ***********************************************************
 

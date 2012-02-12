@@ -40,7 +40,7 @@ Logger::Logger(const String& filename) {
 
 // The if is here for the case your compiler is screwed somehow, so you must log into a file
     if (logFilename.empty()) {
-#ifdef __COPYRDBUF
+#ifdef COPYRDBUF
         // http://stdcxx.apache.org/doc/stdlibug/34-2.html
         logStream.copyfmt(std::cerr);
         logStream.clear(std::cerr.rdstate());
