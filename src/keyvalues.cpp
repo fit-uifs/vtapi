@@ -248,7 +248,9 @@ void KeyValues::printRowOnly(const int row, const vector<int>* widths) {
             if (c < cols-1) output << '|';
         }
         else if (format == CSV) {
-            output << val;
+            if (val.find(',') != string::npos) output << "\"" << val << "\"";
+            //TODO: escape quotation marks ""
+            else output << val;
             if (c < cols-1) output << ',';
         }
         else if (format == HTML) {
@@ -348,7 +350,6 @@ String KeyValues::getValue(const int col) {
                 }
                 destruct (arr);
             }
-            //else valss << 'A';
             } break;
         case 'B': { // boolean
             //valss << 'B';
