@@ -137,7 +137,7 @@ std::vector<TKey>* KeyValues::getKeys() {
  * Prints currently selected row in resultset (Select)
  */
 void KeyValues::print() {
-    if (!select || !select->res || pos<0 || PQntuples(select->res) <= 0)
+    if (!select || !select->res || pos < 0)
         warning(302, "There is nothing to print (see other messages)");
     else {
         int origpos = this->pos;
@@ -156,7 +156,7 @@ void KeyValues::print() {
  * Prints all rows in resultset (Select)
  */
 void KeyValues::printAll() {
-    if (!select || !select->res || PQntuples(select->res) <= 0)
+    if (!select || !select->res)
         warning(303, "There is nothing to print (see other messages)");
     else {
         int origpos = this->pos;
@@ -331,12 +331,15 @@ String KeyValues::getValue(const int col) {
     // Call different getters for different categories of types
     switch (typcategory) {
         case 'A': { // array
-            //TODO: dodelat array
+            //TODO: arrays of other types than int4 and float4
             if (!typemap->toTypname(typelemoid).compare("int4")) {
                 std::vector<int>* arr = this->getIntV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
-                    if (i == arrayLimit) break;
+                    if (i == arrayLimit) {
+                        valss << "...";
+                        break;
+                    }
                     if (i < (*arr).size()-1) valss << ",";
                 }
                 destruct (arr);
@@ -345,18 +348,20 @@ String KeyValues::getValue(const int col) {
                 std::vector<float>* arr = this->getFloatV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
-                    if (i == arrayLimit) break;
+                    if (i == arrayLimit) {
+                        valss << "...";
+                        break;
+                    }
                     if (i < (*arr).size()-1) valss << ",";
                 }
                 destruct (arr);
             }
             } break;
         case 'B': { // boolean
-            //valss << 'B';
             } break;
         case 'C': { // composite
-            //valss << 'C';
             } break;
+
         case 'D': { // date/time
             struct tm ts = getTimestamp(col);
             valss << right << setfill('0');
@@ -366,16 +371,59 @@ String KeyValues::getValue(const int col) {
                   '-' << setw(2) << ts.tm_mday << ' ' << setw(2) << ts.tm_hour <<
                   ':' << setw(2) << ts.tm_min << ':' << setw(2) << ts.tm_sec;
             } break;
+
         case 'E': { // enum
-            // can get name
-            valss << getString(col);
+            valss << getString(col); // 'name' data type is numeric
             } break;
         case 'G': { // geometric
-            //valss << 'G';
+            if (!colkey.type.compare("point")) {
+                PGpoint point = getPoint(col);
+                valss << point.x << " , " << point.y;
+            }
+            else if (!colkey.type.compare("box")) {
+                PGbox box = getBox(col);
+                valss << '(' << box.low.x << " , " << box.low.y << ") , ";
+                valss << '(' << box.high.x << " , " << box.high.y << ')';
+            }
+            else if (!colkey.type.compare("lseg")) {
+                PGlseg lseg = getLineSegment(col);
+                valss << '(' << lseg.pts[0].x << " , " << lseg.pts[0].y << ") ";
+                valss << '(' << lseg.pts[1].x << " , " << lseg.pts[1].y << ')';
+            }
+            else if (!colkey.type.compare("circle")) {
+                PGcircle circle = getCircle(col);
+                valss << '(' << circle.center.x << " , " << circle.center.y;
+                valss << ") , " << circle.radius;
+            }
+            else if (!colkey.type.compare("path")) {
+                PGpath path = getPath(col);
+                for (int i = 0; i < path.npts; i++) {
+                    valss << '(' << path.pts[i].x << " , " << path.pts[i].y << ')';
+                    if (i == arrayLimit) {
+                        valss << "...";
+                        break;
+                    }
+                    if (i < path.npts-1) valss << " , ";
+                }
+            }
+            else if (!colkey.type.compare("polygon")) {
+                PGpolygon polygon = getPolygon(col);
+                for (int i = 0; i < polygon.npts; i++) {
+                    valss << '(' << polygon.pts[i].x << " , " << polygon.pts[i].y << ')';
+                    if (i == arrayLimit) {
+                        valss << "...";
+                        break;
+                    }
+                    if (i < polygon.npts-1) valss << " , ";
+                }
+            }
+            else if (!colkey.type.compare("cube")) {
+
+            }
             } break;
         case 'I': { // network address
-            //valss << 'I';
             } break;
+
         case 'N': { // numeric
             // this detects if type is oid reference (regtype, regclass...)
             // if (typemap->isRefType(colkey.type)) {}
@@ -385,32 +433,50 @@ String KeyValues::getValue(const int col) {
                 typlen < 8 ? valss << getInt(col) : valss << getInt8(col);
             } break;
         case 'P': { // pseudo
-            //valss << 'P';
             } break;
+
         case 'S': { // string
-            // char has length 1
-            if (typlen == 1) valss << getChar(col);
+            if (typlen == 1) valss << getChar(col); // char has length 1
             else return getString(col);
             } break;
         case 'T': { // timespan
-            //valss << 'T';
             } break;
-        case 'U': { // user-defined
-            //valss << 'U';
+
+        case 'U': { // user-defined (postGIS types!!)
+            if (!colkey.type.compare("geometry")) { // geometry type
+//                geos::geom::Geometry *geo;
+//                geos::geom::GeometryFactory *factory = new geos::geom::GeometryFactory();
+//                geos::io::WKBReader *wkbreader = new geos::io::WKBReader();
+//
+//                int len = PQgetlength(select->res, pos, col);
+//                std::stringbuf sb;
+//                sb.sputn(PQgetvalue(select->res, pos, col), len);
+//                istream is(&sb);
+//
+//                //TODO: zrejme bug v GEOSu ve funkci readHex!
+//                //wkbreader->printHEX(is, std::cout);
+//                //cout << hexss.str().length() << endl;
+//                geo = wkbreader->readHEX(is);
+//
+//                valss << geo->getGeometryType();
+//
+//                factory->destroyGeometry(geo);
+//                destruct(factory);
+    
+            }
+            else if (!colkey.type.compare("cube")) {
+
+            }
             } break;
         case 'V': { // bit-string
-            //valss << 'V';
-            } break;
+        } break;
         case 'X': { // unknown
-            //valss << "unknown";
-            } break;
-        default: {
-            valss << "undef";
-            } break;
+        } break;
+        default: { // undefined
+        } break;
     }
     return valss.str();    
 }
-
 
 // =============== GETTERS FOR CHAR, STRINGS ===================================
 char KeyValues::getChar(const String& key) {
@@ -430,7 +496,6 @@ String KeyValues::getString(const String& key) {
 }
 
 String KeyValues::getString(const int col) {
-    int ret = 0;
     PGtext value = (PGtext) "";
     TKey colkey = getKey(col);
     if (!select->res) return "";
@@ -440,23 +505,11 @@ String KeyValues::getString(const int col) {
     else if (typemap->isEnumType(colkey.type))     // enum types
         value = PQgetvalue(select->res, pos, col);
     else if(typemap->isRefType(colkey.type)) {  // reference types (regtype, regclass..)
-
     }
-//        if (!colkey.type.compare("regclass")) { }
-//        else if (!colkey.type.compare("regtype")) {
-//            Oid oid = ntohl(*(Oid *)PQgetvalue(select->res, pos, col));
-//            return typemap->toTypname(oid);
-//        }
-//        else {
-//            stringstream wss;
-//            wss << "Referenced type " << colkey.type << " not supported";
-//            warning(305, wss.str());
-//        }
-//    }
     else {
         stringstream wss;
         wss << "Value of type " << colkey.type << " isn't a string";
-        warning(306, wss.str());
+        warning(305, wss.str());
     }
     return value ? String(value) : String("");
 }
@@ -470,13 +523,13 @@ int KeyValues::getInt(const int col) {
     int value = 0;
     short length = typemap->getLength(getKey(col).type);
 
-    if (length < 0) {
+    if (length < 0) { // conversion if length == -1
         stringstream iss (PQgetvalue(select->res, pos, col));
         iss >> value;
     }
-    else if (length == 2)
+    else if (length == 2) // short int
         value = ntohl(*(PGint2 *)PQgetvalue(select->res, pos, col));
-    else if (length == 4)
+    else if (length == 4) // int
         value = ntohl(*(PGint4 *)PQgetvalue(select->res, pos, col));
     else {
         stringstream wss;
@@ -494,7 +547,7 @@ long KeyValues::getInt8(const String& key) {
 long KeyValues::getInt8(const int col) {
     long value = 0;
     short length = typemap->getLength(getKey(col).type);
-
+        // extract long or call getInt if value is integer
     if (length == 8) value = ntohl(*(PGint8 *)PQgetvalue(select->res, pos, col));
     else if (length < 8) value = (long) getInt(col);
     else {
@@ -512,7 +565,7 @@ int* KeyValues::getIntA(const String& key, int& size) {
 int* KeyValues::getIntA(const int col, int& size) {
     PGarray tmp;
     if (! PQgetf(select->res, this->pos, "%int4[]", col, &tmp)) {
-        warning(306, "Value is not an array of integer");
+        warning(307, "Value is not an array of integer");
         size = -1;
         return NULL;
     }
@@ -521,7 +574,7 @@ int* KeyValues::getIntA(const int col, int& size) {
     int* values = new int [size];
     for (int i = 0; i < size; i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
-            warning(307, "Unexpected value in integer array");
+            warning(308, "Unexpected value in integer array");
             size = -1;
             return NULL;
         }
@@ -537,7 +590,7 @@ std::vector<int>* KeyValues::getIntV(const String& key) {
 std::vector<int>* KeyValues::getIntV(const int col) {
     PGarray tmp;
     if (! PQgetf(select->res, this->pos, "%int4[]", col, &tmp)) {
-        warning(308, "Value is not an array of integer");
+        warning(307, "Value is not an array of integer");
         return NULL;
     }
 
@@ -546,7 +599,7 @@ std::vector<int>* KeyValues::getIntV(const int col) {
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
-            warning(309, "Unexpected value in integer array");
+            warning(308, "Unexpected value in integer array");
             destruct (values);
             return NULL;
         }
@@ -565,7 +618,7 @@ float KeyValues::getFloat(const String& key) {
 float KeyValues::getFloat(const int col) {
     float value = 0;
     short length = typemap->getLength(getKey(col).type);
-    if (length < 0) {
+    if (length < 0) { // conversion if length == -1
         stringstream iss (PQgetvalue(select->res, pos, col));
         iss >> value;
     }
@@ -577,7 +630,7 @@ float KeyValues::getFloat(const int col) {
         stringstream wss;
         if (length == 8) wss << "Use getFloat8(col) to fetch float8 values.";
         else wss << "Float value of length " << length << " is not supported";
-        warning(313, wss.str());
+        warning(309, wss.str());
     }
     return value;
 }
@@ -595,14 +648,14 @@ double KeyValues::getFloat8(const int col) {
     else {
         stringstream wss;
         wss << "Float value of length " << length << " is not supported";
-        warning(313, wss.str());
+        warning(309, wss.str());
     }
     return value;
 }
 
 float* KeyValues::getFloatA(const String& key, int& size) {
     int pos = PQfnumber(select->res, String("\"" + key + "\"").c_str());
-    if (pos < 0) warning(313, "Column " + toString(key) + " doesn't exist.");
+    if (pos < 0) warning(310, "Column " + toString(key) + " doesn't exist.");
     return this->getFloatA(pos, size);
 }
 float* KeyValues::getFloatA(const int col, int& size) {
@@ -633,7 +686,7 @@ std::vector<float>* KeyValues::getFloatV(const String& key) {
 std::vector<float>* KeyValues::getFloatV(const int col) {
     PGarray tmp;
     if (! PQgetf(select->res, this->pos, "%float4[]", col, &tmp)) {
-        warning(308, "Value is not an array of float");
+        warning(311, "Value is not an array of float");
         return NULL;
     }
 
@@ -641,7 +694,7 @@ std::vector<float>* KeyValues::getFloatV(const int col) {
     std::vector<float>* values = new std::vector<float>;
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &value)) {
-            warning(309, "Unexpected value in float array");
+            warning(312, "Unexpected value in float array");
             destruct (values);
             return NULL;
         }
@@ -680,10 +733,87 @@ struct tm KeyValues::getTimestamp(const int col) {
     else {
         stringstream wss;
         wss << "Data type " << dtype << " not yet supported";
-        warning(310, wss.str());
+        warning(313, wss.str());
     }
     return ts;
 }
+
+// =============== GETTERS - GEOMETRIC TYPES ===============================
+PGpoint KeyValues::getPoint(const String& key) {
+    return this->getPoint(PQfnumber(select->res, key.c_str()));
+}
+PGpoint KeyValues::getPoint(const int col) {
+    PGpoint point;
+    memset(&point, 0, sizeof(PGpoint));
+    if (! PQgetf(select->res, this->pos, "%point", col, &point)) {
+        warning(314, "Value is not a point");
+    }
+    return point;
+}
+PGlseg KeyValues::getLineSegment(const String& key) {
+    return this->getLineSegment(PQfnumber(select->res, key.c_str()));
+}
+PGlseg KeyValues::getLineSegment(const int col){
+    PGlseg lseg;
+    memset(&lseg, 0, sizeof(PGlseg));
+    if (! PQgetf(select->res, this->pos, "%lseg", col, &lseg)) {
+        warning(315, "Value is not a line segment");
+    }
+    return lseg;
+}
+
+PGbox KeyValues::getBox(const String& key){
+    return this->getBox(PQfnumber(select->res, key.c_str()));
+}
+PGbox KeyValues::getBox(const int col){
+    PGbox box;
+    memset(&box, 0, sizeof(PGbox));
+    if (! PQgetf(select->res, this->pos, "%box", col, &box)) {
+        warning(316, "Value is not a box");
+    }
+    return box;
+}
+
+PGcircle KeyValues::getCircle(const String& key){
+    return this->getCircle(PQfnumber(select->res, key.c_str()));
+
+}
+PGcircle KeyValues::getCircle(const int col){
+    PGcircle circle;
+    memset(&circle, 0, sizeof(PGcircle));
+    if (! PQgetf(select->res, this->pos, "%circle", col, &circle)) {
+        warning(317, "Value is not a circle");
+    }
+    return circle;
+}
+
+PGpolygon KeyValues::getPolygon(const String& key){
+    return this->getPolygon(PQfnumber(select->res, key.c_str()));
+
+}
+PGpolygon KeyValues::getPolygon(const int col){
+    PGpolygon polygon;
+    memset(&polygon, 0, sizeof(PGpolygon));
+    if (! PQgetf(select->res, this->pos, "%polygon", col, &polygon)) {
+        warning(318, "Value is not a polygon");
+    }
+    return polygon;
+}
+
+PGpath KeyValues::getPath(const String& key){
+    return this->getPath(PQfnumber(select->res, key.c_str()));
+
+}
+PGpath KeyValues::getPath(const int col){
+    PGpath path;
+    memset(&path, 0, sizeof(PGpath));
+    if (! PQgetf(select->res, this->pos, "%path", col, &path)) {
+        warning(319, "Value is not a path");
+    }
+    return path;
+}
+
+//TODO: cube
 
 // =============== GETTERS - OTHER =============================================
 int KeyValues::getIntOid(const String& key) {

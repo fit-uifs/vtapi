@@ -94,8 +94,13 @@
 // first, include internal classes
 #include <map>
 
-// next, libraries (libpq and) libpqtypes
+// next, libraries (libpq, libpqtypes and geos)
 #include "postgresql/libpqtypes.h"
+//#include <geos/geom/Geometry.h>
+//#include <geos/geom/GeometryFactory.h>
+//#include <geos/geom/Point.h>
+//#include <geos/io/WKBReader.h>
+
 #include "vtapi_commons.h"
 
 // uncomment this if not necessary to have the VTApi more lightweight
@@ -603,6 +608,93 @@ public:
      * @return Timestamp info
      */
     struct tm getTimestamp(const int col);
+
+
+    // =============== GETTERS - GEOMETRIC TYPES ===============================
+    /**
+     * Get 2D point specified by the column key
+     * @param col column index
+     * @return 2D Point
+     */
+    PGpoint getPoint(const String& key);
+    /**
+     * Get 2D point specified by the column index
+     * @param col column index
+     * @return 2D Point
+     */
+    PGpoint getPoint(const int col);
+    /**
+     * Get line segment specified by the column key
+     * @param col column index
+     * @return Line segment
+     */
+    PGlseg getLineSegment(const String& key);
+    /**
+     * Get line segment specified by the column index
+     * @param col column index
+     * @return Line segment
+     */ 
+    PGlseg getLineSegment(const int col);
+    /**
+     * Get box specified by the column key
+     * @param col column index
+     * @return Box
+     */
+    PGbox getBox(const String& key);
+    /**
+     * Get box specified by the column index
+     * @param col column index
+     * @return Box
+     */ 
+    PGbox getBox(const int col);
+    /**
+     * Get circle specified by the column key
+     * @param col column index
+     * @return Circle
+     */
+    PGcircle getCircle(const String& key);
+    /**
+     * Get circle specified by the column index
+     * @param col column index
+     * @return Circle
+     */ 
+    PGcircle getCircle(const int col);
+    /**
+     * Get polygon specified by the column key
+     * note: polygon.pts must be copied out if needed after clearing resultset
+     *          copy_points(polygon.npts, polygon.pts, ...);
+     * @param col column index
+     * @return Polygon
+     */
+    PGpolygon getPolygon(const String& key);
+    /**
+     * Get polygon specified by the column index
+     * note: polygon.pts must be copied out if needed after clearing resultset
+     *          copy_points(polygon.npts, polygon.pts, ...);
+     * @param col column index
+     * @return Polygon
+     */ 
+    PGpolygon getPolygon(const int col);
+    /**
+     * Get path specified by the column key
+     * note: path.pts must be copied out if needed after clearing resultset
+     *          copy_points(path.npts, path.pts, ...);
+     * @param col column index
+     * @return 2D Point
+     */
+    PGpath getPath(const String& key);
+    /**
+     * Get path specified by the column index
+     * note: path.pts must be copied out if needed after clearing resultset
+     *          copy_points(path.npts, path.pts, ...);
+     * @param col column index
+     * @return 2D Point
+     */ 
+    PGpath getPath(const int col);
+
+    //TODO:
+    //PGcube getCube(const String& key);
+    //PGcube getCube(const int col);
 
     // =============== GETTERS - OTHER =========================================
     /**

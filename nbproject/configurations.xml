@@ -46,7 +46,7 @@
         <linkerTool>
           <output>${CND_DISTDIR}/vtapi</output>
           <linkerLibItems>
-            <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lproc</linkerOptionItem>
+            <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lproc -lgeos</linkerOptionItem>
             <linkerLibFileItem>dist/libvtapi.so</linkerLibFileItem>
           </linkerLibItems>
         </linkerTool>
