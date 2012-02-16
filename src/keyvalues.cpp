@@ -141,8 +141,9 @@ void KeyValues::print() {
         warning(302, "There is nothing to print (see other messages)");
     else {
         int origpos = this->pos;
-        pair< vector<TKey>*,vector<int>* > fInfo = getFieldsInfo(pos);
-        if (fInfo.first && fInfo.second) {
+        int get_widths = (format == STANDARD);
+        pair< vector<TKey>*,vector<int>* > fInfo = getFieldsInfo(pos, get_widths);
+        if (fInfo.first && (format != STANDARD || fInfo.second)) {
             printHeader(fInfo);
             printRowOnly(pos, fInfo.second);
             printFooter(1);
@@ -160,8 +161,9 @@ void KeyValues::printAll() {
         warning(303, "There is nothing to print (see other messages)");
     else {
         int origpos = this->pos;
-        pair< vector<TKey>*,vector<int>* > fInfo = getFieldsInfo();
-        if (fInfo.first && fInfo.second) {
+        int get_widths = (format == STANDARD);
+        pair< vector<TKey>*,vector<int>* > fInfo = getFieldsInfo(-1, get_widths);
+        if (fInfo.first && (format != STANDARD || fInfo.second)) {
             printHeader(fInfo);
             for (int r = 0; r < PQntuples(select->res); r++) printRowOnly(r, fInfo.second);
             printFooter();
@@ -267,18 +269,20 @@ void KeyValues::printRowOnly(const int row, const vector<int>* widths) {
  * @param row Row number to process (0 = all)
  * @return Pair of vectors <TKey,widths> (TKey includes data type and field name)
  */
-pair< vector<TKey>*,vector<int>* > KeyValues::getFieldsInfo(const int row) {
+pair< vector<TKey>*,vector<int>* > KeyValues::getFieldsInfo(const int row, int get_widths) {
     int plen, flen, tlen, width;
-    vector<int> *widths = new vector<int>();
+    vector<int> *widths = get_widths ? new vector<int>() : NULL;
     vector<TKey> *keys = getKeys();
     int rows = PQntuples(select->res);
     int cols = PQnfields(select->res);
 
-    if (!widths || !keys || cols!=keys->size() || cols == 0) {
+    if (!get_widths && keys) return make_pair(keys, widths);
+    else if (!widths || !keys || cols!=keys->size() || cols == 0 || rows == 0) {
         destruct(widths);
         destruct(keys);
         return make_pair((vector<TKey>*)NULL, (vector<int>*)NULL);
     }
+
     // header and first row
     for (int c = 0; c < cols; c++) {
         // don't forget to save original value of pos beforehand!
@@ -291,6 +295,7 @@ pair< vector<TKey>*,vector<int>* > KeyValues::getFieldsInfo(const int row) {
         else width = tlen;
         widths->push_back(width);
     }
+
     // rest of the rows
     if (row < 0) {
         for (int r = 1; r < rows; r++) {
@@ -336,7 +341,7 @@ String KeyValues::getValue(const int col) {
                 std::vector<int>* arr = this->getIntV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
-                    if (i == arrayLimit) {
+                    if (arrayLimit && i == arrayLimit) {
                         valss << "...";
                         break;
                     }
@@ -348,7 +353,7 @@ String KeyValues::getValue(const int col) {
                 std::vector<float>* arr = this->getFloatV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
-                    if (i == arrayLimit) {
+                    if (arrayLimit && i == arrayLimit) {
                         valss << "...";
                         break;
                     }
@@ -399,7 +404,7 @@ String KeyValues::getValue(const int col) {
                 PGpath path = getPath(col);
                 for (int i = 0; i < path.npts; i++) {
                     valss << '(' << path.pts[i].x << " , " << path.pts[i].y << ')';
-                    if (i == arrayLimit) {
+                    if (arrayLimit && i == arrayLimit) {
                         valss << "...";
                         break;
                     }
@@ -410,15 +415,12 @@ String KeyValues::getValue(const int col) {
                 PGpolygon polygon = getPolygon(col);
                 for (int i = 0; i < polygon.npts; i++) {
                     valss << '(' << polygon.pts[i].x << " , " << polygon.pts[i].y << ')';
-                    if (i == arrayLimit) {
+                    if (arrayLimit && i == arrayLimit) {
                         valss << "...";
                         break;
                     }
                     if (i < polygon.npts-1) valss << " , ";
                 }
-            }
-            else if (!colkey.type.compare("cube")) {
-
             }
             } break;
         case 'I': { // network address
@@ -442,30 +444,30 @@ String KeyValues::getValue(const int col) {
         case 'T': { // timespan
             } break;
 
-        case 'U': { // user-defined (postGIS types!!)
-            if (!colkey.type.compare("geometry")) { // geometry type
-//                geos::geom::Geometry *geo;
-//                geos::geom::GeometryFactory *factory = new geos::geom::GeometryFactory();
-//                geos::io::WKBReader *wkbreader = new geos::io::WKBReader();
-//
-//                int len = PQgetlength(select->res, pos, col);
-//                std::stringbuf sb;
-//                sb.sputn(PQgetvalue(select->res, pos, col), len);
-//                istream is(&sb);
-//
-//                //TODO: zrejme bug v GEOSu ve funkci readHex!
-//                //wkbreader->printHEX(is, std::cout);
-//                //cout << hexss.str().length() << endl;
-//                geo = wkbreader->readHEX(is);
-//
-//                valss << geo->getGeometryType();
-//
-//                factory->destroyGeometry(geo);
-//                destruct(factory);
-    
-            }
-            else if (!colkey.type.compare("cube")) {
+        case 'U': { // user-defined (cube + postGIS types!!)
+            if (!colkey.type.compare("geometry")) { // postGIS geometry type
+                char* value = PQgetvalue(select->res, pos, col);
 
+                //TODO: toto
+            }
+            else if (!colkey.type.compare("cube")) { // cube type
+                PGcube cube = getCube(col);
+                int lim = cube.dim * 2;
+                if (arrayLimit && (lim > arrayLimit/2)) lim = arrayLimit/2;
+                valss << '(';
+                for (int i = 0; i < lim; i++) {
+                    valss << cube.x[i];
+                    if (i < lim-1) valss << ',';
+                }
+                valss << ')';
+                if (cube.x[cube.dim]) {
+                    valss << ",(";
+                    for (int i = 0; i < lim; i++) {
+                        valss << cube.x[i+cube.dim];
+                        if (i < lim-1) valss << ',';
+                    }
+                    valss << ')';
+                }
             }
             } break;
         case 'V': { // bit-string
@@ -813,7 +815,17 @@ PGpath KeyValues::getPath(const int col){
     return path;
 }
 
-//TODO: cube
+PGcube KeyValues::getCube(const String& key) {
+    return this->getCube(PQfnumber(select->res, key.c_str()));
+}
+PGcube KeyValues::getCube(const int col) {
+    PGcube cube;
+    memset(&cube, 0, sizeof(PGcube));
+    if (! PQgetf(select->res, this->pos, "%cube", col, &cube)) {
+        warning(320, "Value is not a cube");
+    }
+    return cube;
+}
 
 // =============== GETTERS - OTHER =============================================
 int KeyValues::getIntOid(const String& key) {

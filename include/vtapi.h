@@ -91,24 +91,8 @@
 #ifndef VTAPI_H
 #define	VTAPI_H
 
-// first, include internal classes
-#include <map>
-
-// next, libraries (libpq, libpqtypes and geos)
-#include "postgresql/libpqtypes.h"
-//#include <geos/geom/Geometry.h>
-//#include <geos/geom/GeometryFactory.h>
-//#include <geos/geom/Point.h>
-//#include <geos/io/WKBReader.h>
-
+#include "vtapi_config.h"
 #include "vtapi_commons.h"
-
-// uncomment this if not necessary to have the VTApi more lightweight
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-
 
 // virtual definitions of classes
 // list of classes, which are contained in this header
@@ -692,9 +676,22 @@ public:
      */ 
     PGpath getPath(const int col);
 
-    //TODO:
-    //PGcube getCube(const String& key);
-    //PGcube getCube(const int col);
+    /**
+     * Get cube specified by the column index
+     * Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
+     * Points may have 1-100(CUBE_MAX_DIM) dimensions
+     * @param col column index
+     * @return Circle
+     */
+    PGcube getCube(const String& key);
+    /**
+     * Get cube specified by the column key
+     * Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
+     * Points may have 1-100(CUBE_MAX_DIM) dimensions
+     * @param col column index
+     * @return Circle
+     */
+    PGcube getCube(const int col);
 
     // =============== GETTERS - OTHER =========================================
     /**
@@ -770,10 +767,11 @@ protected:
      * This goes through result set and retrieves metadate necessary for print.
      * It needs to be done before every print.
      * @param row If not set to -1, this indicates single row print.
+     * @param indicator whether column widths will be required
      * @return Metadata for print, pair consisting of two vectors:
      *  a) Tkeys - column types etc., b) ints - column widths
      */
-    std::pair< std::vector<TKey>*,std::vector<int>* > getFieldsInfo(const int row = -1);
+    std::pair< std::vector<TKey>*,std::vector<int>* > getFieldsInfo(const int row = -1, int get_widths = 1);
 };
 
 

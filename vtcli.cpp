@@ -60,12 +60,14 @@ int VTCli::run() {
             }
             if (line.empty()) continue;
             else {
+                // binary/pgf
                 PGresult* qres = PQparamExec(vtapi->commons->getConnector()->getConn(), NULL, line.c_str(), PGF);
-                if (!qres) cerr << "Query failed: " << line << endl; 
+                if (!qres) cerr << PQgeterror();
                 else {
                     KeyValues* kv = new KeyValues(*(this->vtapi->commons));
                     kv->select = new Select(*(this->vtapi->commons));
                     kv->select->res = qres;
+                    kv->select->executed = true;
                     kv->printAll();
                     destruct(kv);
                     //PQclear(qres);
