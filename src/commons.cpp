@@ -122,6 +122,7 @@ bool Connector::reconnect(const String& connectionInfo) {
 
     PQinitTypes(conn);  // libpqtypes ... http://libpqtypes.esilo.com/
 
+
     return true; // success
 }
 
@@ -206,6 +207,7 @@ Commons::Commons(Connector& orig) {
     logger    = orig.getLogger();
     connector = &orig;
     typemap   = new TypeMap(connector);
+    typemap->registerTypes();
     format    = STANDARD;
     doom      = true;       // won't destroy the connector and logger
 }
@@ -230,6 +232,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     logger    = new Logger(String(args_info.log_arg)); // has default value
     connector = new Connector(args_info.connection_arg, logger);
     typemap   = new TypeMap(connector);
+    typemap->registerTypes();
     verbose   = args_info.verbose_given;
 
     dataset   = args_info.dataset_given ? String(args_info.dataset_arg) : String ("");

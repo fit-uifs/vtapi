@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/method.o \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/video.o \
+	${OBJECTDIR}/vtapi_libpq.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/typemap.o \
@@ -107,6 +108,11 @@ ${OBJECTDIR}/video.o: video.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
+
+${OBJECTDIR}/vtapi_libpq.o: vtapi_libpq.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_libpq.o vtapi_libpq.c
 
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}

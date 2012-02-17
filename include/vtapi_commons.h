@@ -31,21 +31,10 @@
 #include <typeinfo>
 #include <vector>
 
-#include "postgresql/libpqtypes.h"
+
 #include "vtapi_settings.h"
+#include "vtapi_config.h"
 
-// ** CHOOSE and COMMENT ** this is to be in vtapi_config.h ********************
-
-// probably, you need the libproc-dev (sometimes procps-devel) package to make this work (else you should comment the following)
-#include <proc/readproc.h>
-
-// comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
-#define COPYRDBUF
-
-// comment this, if there is no PostGIS extension in the database
-#define POSTGIS
-
-// ** END of CHOICES ***********************************************************
 
 
 typedef std::string String;
@@ -391,6 +380,10 @@ public:
      */
     virtual ~TypeMap();
     /**
+     * Register user-defined type
+     */
+    void registerTypes();
+    /**
      * Load types into map
      */
     void loadTypes();
@@ -442,9 +435,7 @@ public:
     short getLength (int oid);
     int getElemOID (String name);
     int getElemOID (int oid);
-
 };
-
 
 /**
  * A generic function to convert any numeric type to string

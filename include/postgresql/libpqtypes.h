@@ -130,6 +130,8 @@ struct pg_typeargs
  * ----------------
  */
 
+
+
 typedef char *PGtext;
 typedef char *PGvarchar;
 typedef char *PGbpchar;

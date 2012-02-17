@@ -20,6 +20,8 @@
       </logicalFolder>
       <itemPath>../include/vtapi.h</itemPath>
       <itemPath>../include/vtapi_commons.h</itemPath>
+      <itemPath>../include/vtapi_config.h</itemPath>
+      <itemPath>../include/vtapi_libpq.h</itemPath>
       <itemPath>../include/vtapi_settings.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -45,6 +47,7 @@
       <itemPath>typemap.cpp</itemPath>
       <itemPath>video.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
+      <itemPath>vtapi_libpq.c</itemPath>
       <itemPath>vtapi_settings.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -106,6 +109,8 @@
                             group="bin"/>
         </packFileList>
       </packaging>
+      <item path="vtapi_libpq.c" ex="false" tool="1">
+      </item>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>

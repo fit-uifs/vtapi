@@ -47,25 +47,32 @@ String TypeMap::toTypname(const int oid) {
 }
 
 void TypeMap::loadTypes() {
-    if (!dataloaded) {
-        PGresult* res = PQexec(connector->getConn(),
-            "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type");
-        // load data types
-        for (int i = 0; i < PQntuples(res); i++) {
-            struct typeinfo ti;
-            PGint4 oid;
-            PGtext typname;
-            PQgetf(res, i, "%oid %name %char %int2 %oid",
-                0, &oid, 1, &typname, 2, &ti.category, 3, &ti.length, 4, &ti.elemoid);
-            typesname[String(typname)] = make_pair(oid, ti);
-            typesoid[oid] = make_pair(String(typname), ti);
-        }
-        // load defined reference types
-        loadRefTypes();
-        dataloaded = true;
-        PQclear(res);
+
+    PGresult* res = PQexec(connector->getConn(),
+        "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type");
+    // load data types
+    for (int i = 0; i < PQntuples(res); i++) {
+        struct typeinfo ti;
+        PGint4 oid;
+        PGtext typname;
+        PQgetf(res, i, "%oid %name %char %int2 %oid",
+            0, &oid, 1, &typname, 2, &ti.category, 3, &ti.length, 4, &ti.elemoid);
+        typesname[String(typname)] = make_pair(oid, ti);
+        typesoid[oid] = make_pair(String(typname), ti);
     }
+    // load defined reference types
+    loadRefTypes();
+    dataloaded = true;
+    PQclear(res);
 }
+
+void TypeMap::registerTypes() {
+    PGregisterType cube = {"cube", cube_put, cube_get};
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, &cube, 1, 0))
+        cerr << "Cube type not registered." << endl;
+}
+
+
 void TypeMap::loadRefTypes() {
     reftypes.insert("regproc");
     reftypes.insert("regprocedure");
