@@ -35,13 +35,13 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/sequence.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/vtapi_settings.o \
-	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/method.o \
-	${OBJECTDIR}/video.o \
 	${OBJECTDIR}/vtapi.o \
+	${OBJECTDIR}/video.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/typemap.o \
@@ -73,6 +73,11 @@ LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopen
 	${MKDIR} -p ../dist
 	${LINK.cc} -shared -o ../${CND_DISTDIR}/libvtapi.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
+${OBJECTDIR}/interval.o: interval.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
+
 ${OBJECTDIR}/sequence.o: sequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -88,25 +93,20 @@ ${OBJECTDIR}/vtapi_settings.o: vtapi_settings.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_settings.o vtapi_settings.cpp
 
-${OBJECTDIR}/interval.o: interval.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
-
 ${OBJECTDIR}/method.o: method.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
 
-${OBJECTDIR}/video.o: video.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
-
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
+
+${OBJECTDIR}/video.o: video.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
 
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}
