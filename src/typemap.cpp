@@ -70,6 +70,9 @@ void TypeMap::registerTypes() {
     PGregisterType cube = {"cube", cube_put, cube_get};
     if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, &cube, 1, 0))
         cerr << "Cube type not registered." << endl;
+    PGregisterType geometry = {"geometry", geometry_put, geometry_get};
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, &geometry, 1, 0))
+        cerr << "Geometry type not registered." << endl;
 }
 
 

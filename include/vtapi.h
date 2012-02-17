@@ -693,6 +693,19 @@ public:
      */
     PGcube getCube(const int col);
 
+    /**
+     * Get geometry type by the column key
+     * @param col column index
+     * @return Circle
+     */
+    geos::geom::Geometry *getGeometry(const String& key);
+    /**
+     * Get geometry type by the column index
+     * @param col column index
+     * @return Circle
+     */
+    geos::geom::Geometry *getGeometry(const int col);
+
     // =============== GETTERS - OTHER =========================================
     /**
      * Get an integer with an OID value specified by a column key

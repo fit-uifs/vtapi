@@ -43,10 +43,13 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
+// postGIS
+//#include "postgis/liblwgeom.h"
+
 // GEOS 3.2.3 (http://trac.osgeo.org/geos/)
-#include <geos/geom/Geometry.h>
 #include <geos/geom/GeometryFactory.h>
-#include <geos/geom/Point.h>
+#include <geos/geom/Geometry.h>
+//#include <geos/geom/Point.h>
 
 #endif	/* VTAPI_CONFIG_H */
 

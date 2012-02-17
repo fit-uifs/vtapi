@@ -58,6 +58,41 @@ int cube_get (PGtypeArgs *args) {
     return 0;
 }
 
+int geometry_put (PGtypeArgs *args) {
+    return 0;
+}
+
+int geometry_get (PGtypeArgs *args) {
+    /* get received value and its length */
+    char *val = PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
+    int len = PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
+    ewkb_t *ewkb = va_arg(args->ap, ewkb_t *);
+    ewkb_t * ewkb2 = (ewkb_t *) val;
+    int ix_val = 0;
+/*
+    ewkb->endian = val[ix_val];
+    ix_val++;
+        ewkb->gflags = *(int *) &val[ix_val];
+    ix_val += sizeof(ewkb->gflags);
+    ewkb->size = val[ix_val];
+    ix_val += sizeof(ewkb->size);
+
+    //pq_swap8(ewkb->x, &val[ix_val], 1);
+
+    printf("endian: %d; ", ewkb->endian);
+    printf("gtype: %d; ", ewkb->gflags && 0xFF);
+    printf("size: %d; ", ewkb->size);
+    printf("endian: %d; ", ewkb2->endian);
+    printf("gtype: %d; ", ewkb2->gflags && 0xFF);
+    printf("size: %d; ", ewkb2->size);
+    //printf("1st: %f; ", ewkb->x[0]);
+
+    //for (int i = 0; i < 20; i++) printf("%d ", val[i]);
+    printf("\n");
+*/
+
+    return 0;
+}
 
 
 

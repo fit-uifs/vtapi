@@ -446,7 +446,7 @@ String KeyValues::getValue(const int col) {
 
         case 'U': { // user-defined (cube + postGIS types!!)
             if (!colkey.type.compare("geometry")) { // postGIS geometry type
-                char* value = PQgetvalue(select->res, pos, col);
+                getGeometry(col);
 
                 //TODO: toto
             }
@@ -825,6 +825,23 @@ PGcube KeyValues::getCube(const int col) {
         warning(320, "Value is not a cube");
     }
     return cube;
+}
+
+geos::geom::Geometry *KeyValues::getGeometry(const String& key) {
+    return this->getGeometry(PQfnumber(select->res, key.c_str()));
+}
+geos::geom::Geometry *KeyValues::getGeometry(const int col) {
+    geos::geom::GeometryFactory *gfac = new geos::geom::GeometryFactory();
+    geos::geom::Geometry *geo = gfac->createEmptyGeometry();
+
+    ewkb_t ewkb;
+    if (! PQgetf(select->res, this->pos, "%geometry", col, &ewkb)) {
+        warning(321, "Value is not a geometry");
+    }
+
+    gfac->destroyGeometry(geo);
+    delete(gfac);
+    return geo;
 }
 
 // =============== GETTERS - OTHER =============================================
