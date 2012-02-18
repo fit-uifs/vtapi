@@ -35,13 +35,13 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/sequence.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/vtapi_settings.o \
+	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/method.o \
-	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/video.o \
+	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/vtapi_libpq.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
@@ -64,20 +64,17 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lgeos
+LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lgeos ../dist/liblwgeom.so
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-Debug.mk ../dist/libvtapi.so
 
+../dist/libvtapi.so: ../dist/liblwgeom.so
+
 ../dist/libvtapi.so: ${OBJECTFILES}
 	${MKDIR} -p ../dist
 	${LINK.cc} -shared -o ../${CND_DISTDIR}/libvtapi.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
-
-${OBJECTDIR}/interval.o: interval.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
 
 ${OBJECTDIR}/sequence.o: sequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -94,20 +91,25 @@ ${OBJECTDIR}/vtapi_settings.o: vtapi_settings.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_settings.o vtapi_settings.cpp
 
+${OBJECTDIR}/interval.o: interval.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
+
 ${OBJECTDIR}/method.o: method.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
 
-${OBJECTDIR}/vtapi.o: vtapi.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
-
 ${OBJECTDIR}/video.o: video.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
+
+${OBJECTDIR}/vtapi.o: vtapi.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
 
 ${OBJECTDIR}/vtapi_libpq.o: vtapi_libpq.c 
 	${MKDIR} -p ${OBJECTDIR}

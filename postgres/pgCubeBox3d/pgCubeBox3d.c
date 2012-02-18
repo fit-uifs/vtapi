@@ -11,8 +11,8 @@
 #include "postgres.h"           // general Postgres declarations
 #include "fmgr.h"               // Postgres function manager and function-call interface
 
-#include "include/liblwgeom.h"  // Geometry representations
-#include "include/cubedata.h"
+#include "../liblwgeom/liblwgeom.h"  // Geometry representations
+#include "../cube/cubedata.h"
 
 #ifdef PG_MODULE_MAGIC
 PG_MODULE_MAGIC;		// identification

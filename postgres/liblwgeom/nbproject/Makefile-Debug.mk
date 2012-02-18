@@ -87,11 +87,11 @@ LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Debug.mk ../../dist/libliblwgeom.so
+	"${MAKE}"  -f nbproject/Makefile-Debug.mk ../../dist/liblwgeom.so
 
-../../dist/libliblwgeom.so: ${OBJECTFILES}
+../../dist/liblwgeom.so: ${OBJECTFILES}
 	${MKDIR} -p ../../dist
-	${LINK.c} -shared -o ../../dist/libliblwgeom.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.c} -shared -o ../../dist/liblwgeom.so -fPIC ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/lwsegmentize.o: lwsegmentize.c 
 	${MKDIR} -p ${OBJECTDIR}
@@ -269,7 +269,7 @@ ${OBJECTDIR}/lwgeom_api.o: lwgeom_api.c
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Debug
-	${RM} ../../dist/libliblwgeom.so
+	${RM} ../../dist/liblwgeom.so
 
 # Subprojects
 .clean-subprojects:

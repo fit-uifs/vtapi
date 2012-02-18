@@ -33,13 +33,13 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/sequence.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/vtapi_settings.o \
+	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/method.o \
-	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/video.o \
+	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/vtapi_libpq.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
@@ -72,11 +72,6 @@ dist/Release/GNU-Linux-x86/src: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/src ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/interval.o: interval.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
-
 ${OBJECTDIR}/sequence.o: sequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -92,20 +87,25 @@ ${OBJECTDIR}/vtapi_settings.o: vtapi_settings.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_settings.o vtapi_settings.cpp
 
+${OBJECTDIR}/interval.o: interval.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
+
 ${OBJECTDIR}/method.o: method.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
 
-${OBJECTDIR}/vtapi.o: vtapi.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
-
 ${OBJECTDIR}/video.o: video.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
+
+${OBJECTDIR}/vtapi.o: vtapi.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
 
 ${OBJECTDIR}/vtapi_libpq.o: vtapi_libpq.c 
 	${MKDIR} -p ${OBJECTDIR}

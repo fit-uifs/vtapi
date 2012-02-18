@@ -81,7 +81,7 @@
       </toolsSet>
       <compileType>
         <linkerTool>
-          <output>../../dist/libliblwgeom.so</output>
+          <output>../../dist/liblwgeom.so</output>
         </linkerTool>
       </compileType>
     </conf>

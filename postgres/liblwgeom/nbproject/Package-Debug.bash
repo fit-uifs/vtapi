@@ -11,8 +11,8 @@ CND_CONF=Debug
 CND_DISTDIR=dist
 NBTMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=../../dist/libliblwgeom.so
-OUTPUT_BASENAME=libliblwgeom.so
+OUTPUT_PATH=../../dist/liblwgeom.so
+OUTPUT_BASENAME=liblwgeom.so
 PACKAGE_TOP_DIR=libliblwgeom.so/
 
 # Functions
