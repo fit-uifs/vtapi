@@ -46,10 +46,10 @@
 // postGIS
 //#include "postgis/liblwgeom.h"
 
-// GEOS 3.2.3 (http://trac.osgeo.org/geos/)
-#include <geos/geom/GeometryFactory.h>
-#include <geos/geom/Geometry.h>
-//#include <geos/geom/Point.h>
+// GEOS 3.2.3 (http://trac.osgeo.org/geos/) - C wrapper
+// TODO: take correct version of the header and move it into 'include'
+#include <geos_c.h>
+
 
 #endif	/* VTAPI_CONFIG_H */
 

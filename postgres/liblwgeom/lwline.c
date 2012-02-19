@@ -260,7 +260,7 @@ lwgeom_size_line(const uchar *serialized_line)
 	const uchar *loc;
 	uint32 npoints;
 
-	LWDEBUG(2, "lwgeom_size_line called");
+        LWDEBUG(2, "lwgeom_size_line called");
 
 	if ( lwgeom_getType(type) != LINETYPE)
 		lwerror("lwgeom_size_line::attempt to find the length of a non-line");

@@ -681,7 +681,7 @@ public:
      * Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
      * Points may have 1-100(CUBE_MAX_DIM) dimensions
      * @param col column index
-     * @return Circle
+     * @return Cube
      */
     PGcube getCube(const String& key);
     /**
@@ -689,22 +689,34 @@ public:
      * Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
      * Points may have 1-100(CUBE_MAX_DIM) dimensions
      * @param col column index
-     * @return Circle
+     * @return Cube
      */
     PGcube getCube(const int col);
 
     /**
-     * Get geometry type by the column key
+     * Get GEOS geometry type by the column key
      * @param col column index
-     * @return Circle
+     * @return GEOS geometry
      */
-    geos::geom::Geometry *getGeometry(const String& key);
+    GEOSGeometry *getGeometry(const String& key);
     /**
-     * Get geometry type by the column index
+     * Get GEOS geometry type by the column index
      * @param col column index
-     * @return Circle
+     * @return GEOS geometry
      */
-    geos::geom::Geometry *getGeometry(const int col);
+    GEOSGeometry *getGeometry(const int col);
+    /**
+     * Get GEOS geometry (linestring) type by the column key
+     * @param col column index
+     * @return GEOS geometry
+     */
+    GEOSGeometry *getLineString(const String& key);
+    /**
+     * Get GEOS geometry (linestring) type by the column index
+     * @param col column index
+     * @return GEOS geometry
+     */
+    GEOSGeometry *getLineString(const int col);
 
     // =============== GETTERS - OTHER =========================================
     /**

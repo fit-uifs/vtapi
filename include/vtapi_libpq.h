@@ -12,26 +12,45 @@
 extern "C" {
 #endif
 
-//#include "postgis/liblwgeom.h"
+#include <malloc.h>
+#include <math.h>
+
+#include <geos_c.h>
+
+#include "postgis/liblwgeom.h"
 #include "postgresql/libpqtypes.h"
 
-/* cube struct */
+/* postgres headers format */
+typedef union
+{
+    struct                      /* Normal varlena (4-byte length) */
+    {
+    uint32      va_header;
+    char        va_data[1];
+    }           va_4byte;
+    struct                      /* Compressed-in-line format */
+    {
+         uint32      va_header;
+         uint32      va_rawsize; /* Original data size (excludes header) */
+         char        va_data[1]; /* Compressed data */
+    }           va_compressed;
+} varattrib_4b;
+
+/* some useful macros extracted from postgres.h */
+#define SET_VARSIZE(PTR, len) \
+(((varattrib_4b *) (PTR))->va_4byte.va_header = (len) & 0x3FFFFFFF)
+#define VARDATA(PTR)            (((varattrib_4b *) (PTR))->va_4byte.va_data)
+#define VARHDRSZ		((int32) sizeof(int32))
+#define SERIALIZED_FORM(x) ((uchar *)VARDATA((x)))
+
+
+/* custom cube struct */
 typedef struct
 {
-    int vl_len;
     unsigned int dim; /* number of cube dimensions */
     double *x;  /* coordinates */
 } PGcube;
 
-typedef struct
-{
-	unsigned char endian; /* 1 byte - endian indicator */
-	unsigned char gtype; /* 1 byte - geom type, 3 bytes - flags */
-        unsigned int size; /* size of array */
-        //double *x; /* coordinates */
-	//char flags; /* HasZ, HasM, HasBBox, IsGeodetic */
-	//char *data;
-} ewkb_t;
 
 /**
  * Cube type libpqtypes put handler
@@ -72,6 +91,33 @@ void pq_swap4(void *, void *, int);
  * @param Indicator of swapping type (0 - htonl, 1 - ntohl)
  */
 void pq_swap8(void *, void *, int);
+
+/**
+ * liblwgeom requires this to be implemented
+ */
+void lwgeom_init_allocators();
+
+/**
+ * Extract serialized PG_LWGEOM geometry from EWKB binary
+ * @param ewkb serialized input
+ * @param flags
+ * @param ewkblen length
+ * @return
+ */
+PG_LWGEOM * pglwgeom_from_ewkb(uchar *ewkb, int flags, size_t ewkblen);
+/**
+ * Convert LWGEOM type geometry to GEOSGeometry format
+ * @param g
+ * @return
+ */
+GEOSGeometry * LWGEOM2GEOS(LWGEOM *g);
+/**
+ * Convert POINTARRAY of coordinates to GEOSCoordSeq format
+ * @param
+ * @return 
+ */
+GEOSCoordSeq ptarray_to_GEOSCoordSeq(POINTARRAY *);
+
 
 #ifdef	__cplusplus
 }

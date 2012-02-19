@@ -446,25 +446,40 @@ String KeyValues::getValue(const int col) {
 
         case 'U': { // user-defined (cube + postGIS types!!)
             if (!colkey.type.compare("geometry")) { // postGIS geometry type
-                getGeometry(col);
+                GEOSGeometry *geo;
+                GEOSWKTWriter *geo_writer;
+                char * geo_string;
 
-                //TODO: toto
+                if (!(geo = getGeometry(col))) break;
+                if (! (geo_writer  =  GEOSWKTWriter_create())) {
+                    GEOSGeom_destroy(geo);
+                    break;
+                }
+
+                //GEOSWKTWriter_setRoundingPrecision(geo_writer, 4);
+                geo_string = GEOSWKTWriter_write(geo_writer, geo);
+                valss << geo_string;
+                
+                GEOSFree(geo_string);
+                GEOSGeom_destroy(geo);
             }
             else if (!colkey.type.compare("cube")) { // cube type
                 PGcube cube = getCube(col);
-                int lim = cube.dim * 2;
-                if (arrayLimit && (lim > arrayLimit/2)) lim = arrayLimit/2;
-                valss << '(';
-                for (int i = 0; i < lim; i++) {
-                    valss << cube.x[i];
-                    if (i < lim-1) valss << ',';
-                }
-                valss << ')';
-                if (cube.x[cube.dim]) {
-                    valss << ",(";
+                int lim = cube.dim;
+                if (arrayLimit && (2 * lim > arrayLimit)) lim = arrayLimit/2;
+                if (cube.x && cube.dim > 0) {
+                    valss << '(';
                     for (int i = 0; i < lim; i++) {
-                        valss << cube.x[i+cube.dim];
+                        valss << cube.x[i];
                         if (i < lim-1) valss << ',';
+                    }
+                    valss << ')';
+                    if (cube.x[lim]) {
+                        valss << ",(";
+                        for (int i = lim; i < 2 * lim; i++) {
+                            valss << cube.x[i];
+                            if (i < lim-1) valss << ',';
+                        }
                     }
                     valss << ')';
                 }
@@ -827,21 +842,29 @@ PGcube KeyValues::getCube(const int col) {
     return cube;
 }
 
-geos::geom::Geometry *KeyValues::getGeometry(const String& key) {
+GEOSGeometry *KeyValues::getGeometry(const String& key) {
     return this->getGeometry(PQfnumber(select->res, key.c_str()));
 }
-geos::geom::Geometry *KeyValues::getGeometry(const int col) {
-    geos::geom::GeometryFactory *gfac = new geos::geom::GeometryFactory();
-    geos::geom::Geometry *geo = gfac->createEmptyGeometry();
-
-    ewkb_t ewkb;
-    if (! PQgetf(select->res, this->pos, "%geometry", col, &ewkb)) {
-        warning(321, "Value is not a geometry");
+GEOSGeometry *KeyValues::getGeometry(const int col) {
+    GEOSGeometry *geo;
+    if (! PQgetf(select->res, this->pos, "%geometry", col, &geo)) {
+        warning(321, "Value is not a geometry type");
     }
-
-    gfac->destroyGeometry(geo);
-    delete(gfac);
     return geo;
+}
+
+GEOSGeometry *KeyValues::getLineString(const String& key) {
+    return this->getLineString(PQfnumber(select->res, key.c_str()));
+}
+GEOSGeometry *KeyValues::getLineString(const int col) {
+    GEOSGeometry *ls;
+    if (! PQgetf(select->res, this->pos, "%geometry", col, &ls)) {
+        warning(322, "Value is not a geometry type");
+    }
+    else if (ls && GEOSGeomTypeId(ls) != GEOS_LINESTRING) {
+        warning(323, "Value is not a linestring");
+    }
+    return ls;
 }
 
 // =============== GETTERS - OTHER =============================================

@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <iostream>
 
+#include "vtapi_libpq.h"
 #include "vtapi_settings.h"
 #include "vtapi.h"
 
@@ -60,6 +61,7 @@ VTApi::VTApi(const VTApi& orig)
 }
 
 VTApi::~VTApi() {
+    finishGEOS();
 }
 
 
