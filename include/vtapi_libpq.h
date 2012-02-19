@@ -12,13 +12,13 @@
 extern "C" {
 #endif
 
+#include "vtapi_config.h"
+
+#ifdef POSTGIS
+
 #include <malloc.h>
 #include <math.h>
 
-#include <geos_c.h>
-
-#include "postgis/liblwgeom.h"
-#include "postgresql/libpqtypes.h"
 
 /* postgres headers format */
 typedef union
@@ -95,7 +95,8 @@ void pq_swap8(void *, void *, int);
 /**
  * liblwgeom requires this to be implemented
  */
-void lwgeom_init_allocators();
+// void lwgeom_init_allocators();
+// FIXME: tohle hlasi konflikt
 
 /**
  * Extract serialized PG_LWGEOM geometry from EWKB binary
@@ -118,6 +119,8 @@ GEOSGeometry * LWGEOM2GEOS(LWGEOM *g);
  */
 GEOSCoordSeq ptarray_to_GEOSCoordSeq(POINTARRAY *);
 
+
+#endif /* POSTGIS */
 
 #ifdef	__cplusplus
 }

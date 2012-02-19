@@ -17,8 +17,8 @@ RANLIB=ranlib
 CC=gcc
 CCC=g++
 CXX=g++
-FC=gfortran
-AS=
+FC=
+AS=as
 
 # Macros
 CND_PLATFORM=GNU-Linux-x86
@@ -50,13 +50,15 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lproc -lgeos -lgeos_c dist/libvtapi.so
+LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lproc -lgeos -lgeos_c dist/libvtapi.so dist/liblwgeom.so
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-Debug.mk dist/vtapi
 
 dist/vtapi: dist/libvtapi.so
+
+dist/vtapi: dist/liblwgeom.so
 
 dist/vtapi: ${OBJECTFILES}
 	${MKDIR} -p dist

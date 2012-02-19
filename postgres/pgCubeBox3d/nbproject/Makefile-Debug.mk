@@ -63,7 +63,7 @@ LDLIBSOPTIONS=
 ${OBJECTDIR}/pgCubeBox3d.o: pgCubeBox3d.c 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.c) -g -I`pg_config --includedir-server` -I`pg_config --includedir` -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/pgCubeBox3d.o pgCubeBox3d.c
+	$(COMPILE.c) -g -I/usr/include -I/usr/include/postgresql -I/usr/include/postgresql/9.1/server -I\'pg_config\ --includedir-server\' -I\'pg_config\ --includedir\' -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/pgCubeBox3d.o pgCubeBox3d.c
 
 # Subprojects
 .build-subprojects:

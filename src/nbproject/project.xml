@@ -10,9 +10,7 @@
             <header-extensions>h</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
-            <sourceRootList>
-                <sourceRootElem>/media/data/vutbr/vidte/vtapi/postgres/liblwgeom</sourceRootElem>
-            </sourceRootList>
+            <sourceRootList/>
             <confList>
                 <confElem>Debug</confElem>
                 <confElem>Release</confElem>

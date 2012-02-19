@@ -33,19 +33,13 @@
       <compileType>
         <cTool>
           <incDir>
-            <pElem>`pg_config --includedir-server`</pElem>
-            <pElem>`pg_config --includedir`</pElem>
-          </incDir>
-        </cTool>
-        <ccTool>
-          <incDir>
             <pElem>/usr/include</pElem>
             <pElem>/usr/include/postgresql</pElem>
             <pElem>/usr/include/postgresql/9.1/server</pElem>
             <pElem>'pg_config --includedir-server'</pElem>
             <pElem>'pg_config --includedir'</pElem>
           </incDir>
-        </ccTool>
+        </cTool>
         <linkerTool>
           <output>../../dist/libpgCubeBox3d.so</output>
         </linkerTool>
@@ -72,8 +66,11 @@
         <cTool>
           <developmentMode>5</developmentMode>
           <incDir>
-            <pElem>`pg_config --includedir-server`</pElem>
-            <pElem>`pg_config --includedir`</pElem>
+            <pElem>/usr/include</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/include/postgresql/9.1/server</pElem>
+            <pElem>'pg_config --includedir-server'</pElem>
+            <pElem>'pg_config --includedir'</pElem>
           </incDir>
         </cTool>
         <ccTool>

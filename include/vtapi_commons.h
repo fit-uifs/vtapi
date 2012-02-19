@@ -22,20 +22,19 @@
 #ifndef VTAPI_COMMONS_H
 #define	VTAPI_COMMONS_H
 
+#include "vtapi_settings.h"
+#include "vtapi_config.h"
+#include "vtapi_libpq.h"
+
 #include <fstream>
 #include <iostream>
 #include <map>
 #include <set>
-#include <sstream>
-#include <string>
-#include <typeinfo>
 #include <vector>
+#include <string>
+#include <sstream>
 
-
-#include "vtapi_settings.h"
-#include "vtapi_config.h"
-
-
+#include <typeinfo>
 
 typedef std::string String;
 #define BUFFERSize 255
