@@ -6,12 +6,14 @@
 
 # Macros
 TOP=`pwd`
-PLATFORM=GNU-Linux-x86
-TMPDIR=build/Debug/${PLATFORM}/tmp-packaging
+CND_PLATFORM=GNU-Linux-x86
+CND_CONF=Debug
+CND_DISTDIR=dist
+NBTMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=dist/libpgSiftOrder.so
-OUTPUT_BASENAME=libpgSiftOrder.so
-PACKAGE_TOP_DIR=libpgSiftOrder.so/
+OUTPUT_PATH=../../dist/libpgCubeBox3d.so
+OUTPUT_BASENAME=libpgCubeBox3d.so
+PACKAGE_TOP_DIR=libpgCubeBox3d.so/
 
 # Functions
 function checkReturnCode
@@ -50,23 +52,23 @@ function copyFileToTmpDir
 
 # Setup
 cd "${TOP}"
-mkdir -p dist/Debug/${PLATFORM}/package
-rm -rf ${TMPDIR}
-mkdir -p ${TMPDIR}
+mkdir -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package
+rm -rf ${NBTMPDIR}
+mkdir -p ${NBTMPDIR}
 
 # Copy files and create directories and links
 cd "${TOP}"
-makeDirectory ${TMPDIR}/libpgSiftOrder.so/lib
-copyFileToTmpDir "${OUTPUT_PATH}" "${TMPDIR}/${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}" 0644
+makeDirectory "${NBTMPDIR}/libpgCubeBox3d.so/lib"
+copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}" 0644
 
 
 # Generate zip file
 cd "${TOP}"
-rm -f dist/Debug/${PLATFORM}/package/libpgSiftOrder.so.zip
-cd ${TMPDIR}
-zip -r  ../../../../dist/Debug/${PLATFORM}/package/libpgSiftOrder.so.zip *
+rm -f ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libpgCubeBox3d.so.zip
+cd ${NBTMPDIR}
+zip -r  ../../../../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libpgCubeBox3d.so.zip *
 checkReturnCode
 
 # Cleanup
 cd "${TOP}"
-rm -rf ${TMPDIR}
+rm -rf ${NBTMPDIR}

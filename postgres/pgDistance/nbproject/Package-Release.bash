@@ -6,12 +6,14 @@
 
 # Macros
 TOP=`pwd`
-PLATFORM=GNU-Linux-x86
-TMPDIR=build/Release/${PLATFORM}/tmp-packaging
+CND_PLATFORM=GNU-Linux-x86
+CND_CONF=Release
+CND_DISTDIR=dist
+NBTMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=dist/Release/${PLATFORM}/libpgSiftOrder.so
-OUTPUT_BASENAME=libpgSiftOrder.so
-PACKAGE_TOP_DIR=libpgSiftOrder.so/
+OUTPUT_PATH=../../dist/libpgDistance.so
+OUTPUT_BASENAME=libpgDistance.so
+PACKAGE_TOP_DIR=libpgDistance.so/
 
 # Functions
 function checkReturnCode
@@ -50,23 +52,23 @@ function copyFileToTmpDir
 
 # Setup
 cd "${TOP}"
-mkdir -p dist/Release/${PLATFORM}/package
-rm -rf ${TMPDIR}
-mkdir -p ${TMPDIR}
+mkdir -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package
+rm -rf ${NBTMPDIR}
+mkdir -p ${NBTMPDIR}
 
 # Copy files and create directories and links
 cd "${TOP}"
-makeDirectory ${TMPDIR}/libpgSiftOrder.so/lib
-copyFileToTmpDir "${OUTPUT_PATH}" "${TMPDIR}/${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}" 0644
+makeDirectory "${NBTMPDIR}/libpgDistance.so/lib"
+copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}" 0644
 
 
-# Generate zip file
+# Generate tar file
 cd "${TOP}"
-rm -f dist/Release/${PLATFORM}/package/libpgSiftOrder.so.zip
-cd ${TMPDIR}
-zip -r  ../../../../dist/Release/${PLATFORM}/package/libpgSiftOrder.so.zip *
+rm -f ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libpgDistance.so.tar
+cd ${NBTMPDIR}
+tar -vcf ../../../../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libpgDistance.so.tar *
 checkReturnCode
 
 # Cleanup
 cd "${TOP}"
-rm -rf ${TMPDIR}
+rm -rf ${NBTMPDIR}

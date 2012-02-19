@@ -5,7 +5,7 @@
 
 
 /* Global variables */
-// #include "../postgis_config.h"
+#include "../postgis_config.h"
 #include "liblwgeom.h"
 
 void *init_allocator(size_t size);
