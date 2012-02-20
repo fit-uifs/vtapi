@@ -10,17 +10,13 @@
  * Methods of classes for commons
  */
 
-
+#include "vtapi_commons.h"
 
 #include <fstream>
 #include <iostream>
-#include <map>
 #include <stdlib.h>
-
-#include "postgresql/libpqtypes.h"
-#include "postgresql/vt-print.h"
-
-#include "vtapi_commons.h"
+#include <fstream>
+#include <iostream>
 
 
 /* ************************************************************************** */
@@ -265,6 +261,8 @@ void Commons::beDoomed() {
         destruct(connector);        // the doom is very close     !!!!!
         destruct(logger);           // you shouldn't debug these lines!
         destruct(typemap);
+
+        finishGEOS();
     }
 }
 

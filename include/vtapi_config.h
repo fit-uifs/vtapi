@@ -24,31 +24,31 @@
 #define VTAPI_CONFIG_H
 
 
+// comment this, if there is no PostGIS extension in the database
+#define POSTGIS
+
+// comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
+#define COPYRDBUF
+
 // libpqtypes
-#include "postgresql/libpqtypes.h"
-#include "vtapi_libpq.h"
+#include <libpqtypes.h> // tohle se pak poresi configure
 
 // libproc library
 // for this you need the libproc-dev (sometimes procps-devel) package
 #include <proc/readproc.h>
 
-// comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
-#define COPYRDBUF
-
-// comment this, if there is no PostGIS extension in the database
-#define POSTGIS
-
 // openCV 
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
-
-// postGIS
-//#include "postgis/liblwgeom.h"
+//#include <opencv2/core/core.hpp>
+//#include <opencv2/imgproc/imgproc.hpp>
+//#include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.2.2 (http://trac.osgeo.org/geos/) - C wrapper
 #include "geos_c.h"
 
+// postGIS
+#include "../postgres/liblwgeom/liblwgeom.h"
+#include "../postgres/cube/cubedata.h"
+// TODO: rozhodnout se, co s timhle kodem udelat ... ?
 
 #endif	/* VTAPI_CONFIG_H */
 

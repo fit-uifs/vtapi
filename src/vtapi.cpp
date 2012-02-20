@@ -61,7 +61,7 @@ VTApi::VTApi(const VTApi& orig)
 }
 
 VTApi::~VTApi() {
-    finishGEOS();
+    if (!commons->doom) destruct(commons);
 }
 
 
@@ -253,9 +253,13 @@ void VTApi::test() {
     video->next();
     video->print();
 
+#ifdef __OPENCV_HIGHGUI_HPP__
     cout << endl << "Should be playing video " << video->getName() << " ... press any key to exit." << endl;
     VideoPlayer* player = new VideoPlayer(*video);
     player->play();
+#else
+    cout << endl << "You should use OpenCV to play video " << video->getName() << " ." << endl;
+#endif
 
     cout << endl << "Adding video 'MCTTR0201a-XXXX' to the dataset" << endl;
     video->add("MCTTR0201a-XXXX", "MCT_TR_02/MCTTR02a/MCTTR0201a.mov.deint.mpeg");

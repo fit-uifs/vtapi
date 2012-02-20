@@ -5,19 +5,18 @@
  * Created on 29. září 2011, 10:52
  */
 
-#include <cstdlib>
-#include <iostream>
-#include <iomanip>
 #if defined(WIN32) || defined(WIN64)
 #include <Winsock2.h>
 #else
 #include <netinet/in.h>
 #endif
-#include "postgresql/libpqtypes.h"
+
 #include "vtapi.h"
 
-
-using namespace std;
+#include <cstdlib>
+#include <iostream>
+#include <iomanip>
+#include <string.h>
 
 // ************************************************************************** //
 String TKey::print() {
@@ -131,190 +130,6 @@ std::vector<TKey>* KeyValues::getKeys() {
 }
 
 
-// =============== PRINT methods =======================================
-
-/**
- * Prints currently selected row in resultset (Select)
- */
-void KeyValues::print() {
-    if (!select || !select->res || pos < 0)
-        warning(302, "There is nothing to print (see other messages)");
-    else {
-        int origpos = this->pos;
-        int get_widths = (format == STANDARD);
-        pair< vector<TKey>*,vector<int>* > fInfo = getFieldsInfo(pos, get_widths);
-        if (fInfo.first && (format != STANDARD || fInfo.second)) {
-            printHeader(fInfo);
-            printRowOnly(pos, fInfo.second);
-            printFooter(1);
-        }
-        else cout << "(no output)" << endl;
-        destruct(fInfo.first); destruct(fInfo.second);
-        this->pos = origpos;
-    }
-}
-/**
- * Prints all rows in resultset (Select)
- */
-void KeyValues::printAll() {
-    if (!select || !select->res)
-        warning(303, "There is nothing to print (see other messages)");
-    else {
-        int origpos = this->pos;
-        int get_widths = (format == STANDARD);
-        pair< vector<TKey>*,vector<int>* > fInfo = getFieldsInfo(-1, get_widths);
-        if (fInfo.first && (format != STANDARD || fInfo.second)) {
-            printHeader(fInfo);
-            for (int r = 0; r < PQntuples(select->res); r++) printRowOnly(r, fInfo.second);
-            printFooter();
-        }
-        else cout << "(no output)" << endl;
-        destruct(fInfo.first); destruct(fInfo.second);
-        this->pos = origpos;
-    }
-}
-
-// =============== PRINT support methods =======================================
-/**
- * Prints header - field name and data type
- * @param res Input resultset
- * @param fInfo Column types and widths
- */
-void KeyValues::printHeader(const pair< vector<TKey>*,vector<int>* > fInfo) {
-    std::stringstream table, nameln, typeln, border;
-    int cols = PQnfields(select->res);
-
-    if (format == HTML) {
-        if (tableOpt.empty()) table << "<table>";
-        else table << "<table " << tableOpt << ">";
-        if (!caption.empty()) table << "<caption align=\"top\">" << caption << "</caption>";
-        table << endl << "<tr align=\"center\">";
-    }
-    for (int c = 0; c < cols; c++) {
-        if (format == STANDARD) {
-            nameln << left << setw((*fInfo.second)[c]) << (*fInfo.first)[c].key;
-            typeln << left << setw((*fInfo.second)[c]) << (*fInfo.first)[c].type;
-            border << setfill('-') << setw((*fInfo.second)[c]) << "";
-            if (c < cols-1) {
-                nameln << '|'; typeln << '|'; border << '+';
-            }
-        }
-        else if (format == CSV) {
-            nameln << (*fInfo.first)[c].key;
-            if (c < cols-1) nameln << ',';
-        }
-        else if (format == HTML) {
-            table << "<th>" << (*fInfo.first)[c].key << "<br/>";
-            table << (*fInfo.first)[c].type << "</th>";
-        }
-    }
-    table << "</tr>" << endl; nameln << endl; typeln << endl; border << endl;
-    if (format == STANDARD) cout << nameln.str() << typeln.str() << border.str();
-    else if (format == CSV) cout << nameln.str();
-    else if (format == HTML)cout << table.str();
-}
-/**
- * Prints footer - number of rows printed
- * @param res Input resultset
- * @param count Number of rows printed (0 = all)
- */
-void KeyValues::printFooter(const int count) {
-    std::stringstream output;
-    if (format == STANDARD) {
-        int rows = PQntuples(select->res);
-        if (count > 0) output << "(" << count << " of " << rows << " rows)" << endl;
-        else output << "(" << rows << " rows)" << endl;
-    }
-    else if (format == HTML) output << "</table>" << endl;
-    cout << output.str();
-}
-/**
- * Prints values in single row
- * @param res Input resultset
- * @param row Row number
- * @param widths Vector of column widths
- */
-void KeyValues::printRowOnly(const int row, const vector<int>* widths) {
-    std::stringstream output;
-    int cols = PQnfields(select->res);
-    
-    //for (int i = 0; i < cols-(widths->size()); i++) widths->push_back(0);
-    // don't forget to save original value of pos beforehand!
-    this->pos = row;
-    if (format == HTML) output << "<tr>";
-    for (int c = 0; c < cols; c++) {
-        // obecny getter
-        String val = getValue(c);
-        if (format == STANDARD) {
-            output << left << setw((*widths)[c]) << val;
-            if (c < cols-1) output << '|';
-        }
-        else if (format == CSV) {
-            if (val.find(',') != string::npos) output << "\"" << val << "\"";
-            //TODO: escape quotation marks ""
-            else output << val;
-            if (c < cols-1) output << ',';
-        }
-        else if (format == HTML) {
-            output << "<td>" << val << "</td>";
-        }
-    }
-    if (format == HTML) output << "</tr>";
-    output << endl;
-    cout << output.str();
-}
-/**
- * Returns data types, field names and desired column widths for all fields
- * @param res Input resultset
- * @param row Row number to process (0 = all)
- * @return Pair of vectors <TKey,widths> (TKey includes data type and field name)
- */
-pair< vector<TKey>*,vector<int>* > KeyValues::getFieldsInfo(const int row, int get_widths) {
-    int plen, flen, tlen, width;
-    vector<int> *widths = get_widths ? new vector<int>() : NULL;
-    vector<TKey> *keys = getKeys();
-    int rows = PQntuples(select->res);
-    int cols = PQnfields(select->res);
-
-    if (!get_widths && keys) return make_pair(keys, widths);
-    else if (!widths || !keys || cols!=keys->size() || cols == 0 || rows == 0) {
-        destruct(widths);
-        destruct(keys);
-        return make_pair((vector<TKey>*)NULL, (vector<int>*)NULL);
-    }
-
-    // header and first row
-    for (int c = 0; c < cols; c++) {
-        // don't forget to save original value of pos beforehand!
-        this->pos = row < 0 ? 0 : row;
-        flen = (*keys)[c].key.length();  // field name length
-        tlen = (*keys)[c].type.length(); // data type string length
-        plen = getValue(c).length();     // field value string length
-        if (plen >= flen && plen >= tlen) width = plen;
-        else if (flen >= plen && flen >= tlen) width = flen;
-        else width = tlen;
-        widths->push_back(width);
-    }
-
-    // rest of the rows
-    if (row < 0) {
-        for (int r = 1; r < rows; r++) {
-            // very ugly manipulation with pos, it needs to be reset after print
-            this->pos = r;
-            for (int c = 0; c < cols; c++) {
-                plen = getValue(c).length();
-                if (plen > (*widths)[c]) (*widths)[c] = plen;
-            }
-        }
-    }
-    if (widths->size() != keys->size()) {
-        destruct(widths);
-        destruct(keys);
-        return make_pair((vector<TKey>*)NULL, (vector<int>*)NULL);
-    }
-    else return make_pair(keys, widths);
-}
-
 // =============== GETTERS (Select) ============================================
 //TODO: optimalize getters, keys and metadata are sometimes retrieved twice
 
@@ -325,7 +140,7 @@ pair< vector<TKey>*,vector<int>* > KeyValues::getFieldsInfo(const int row, int g
  */
 String KeyValues::getValue(const int col) {
 
-    stringstream valss; //return stringstream
+    std::stringstream valss; //return stringstream
     TKey colkey = getKey(col); // get column type via its key
     if (colkey.size < 0) return "";
     // get type metadata (its category, length in bytes and possibly array type)
@@ -369,12 +184,12 @@ String KeyValues::getValue(const int col) {
 
         case 'D': { // date/time
             struct tm ts = getTimestamp(col);
-            valss << right << setfill('0');
+            valss << std::right << std::setfill('0');
             //TODO: microseconds?
             if (ts.tm_year > 0)
-                valss << setw(4) << ts.tm_year << '-' << setw(2) << ts.tm_mon <<
-                  '-' << setw(2) << ts.tm_mday << ' ' << setw(2) << ts.tm_hour <<
-                  ':' << setw(2) << ts.tm_min << ':' << setw(2) << ts.tm_sec;
+                valss << std::setw(4) << ts.tm_year << '-' << std::setw(2) << ts.tm_mon <<
+                  '-' << std::setw(2) << ts.tm_mday << ' ' << std::setw(2) << ts.tm_hour <<
+                  ':' << std::setw(2) << ts.tm_min  << ':' << std::setw(2) << ts.tm_sec;
             } break;
 
         case 'E': { // enum
@@ -524,7 +339,7 @@ String KeyValues::getString(const int col) {
     else if(typemap->isRefType(colkey.type)) {  // reference types (regtype, regclass..)
     }
     else {
-        stringstream wss;
+        std::stringstream wss;
         wss << "Value of type " << colkey.type << " isn't a string";
         warning(305, wss.str());
     }
@@ -541,7 +356,7 @@ int KeyValues::getInt(const int col) {
     short length = typemap->getLength(getKey(col).type);
 
     if (length < 0) { // conversion if length == -1
-        stringstream iss (PQgetvalue(select->res, pos, col));
+        std::stringstream iss (PQgetvalue(select->res, pos, col));
         iss >> value;
     }
     else if (length == 2) // short int
@@ -549,7 +364,7 @@ int KeyValues::getInt(const int col) {
     else if (length == 4) // int
         value = ntohl(*(PGint4 *)PQgetvalue(select->res, pos, col));
     else {
-        stringstream wss;
+        std::stringstream wss;
         if (length == 8) wss << "Use getInt8(col) to fetch int8 values.";
         else wss << "Integer value of length " << length << " is not supported";
         warning(306, wss.str());
@@ -568,7 +383,7 @@ long KeyValues::getInt8(const int col) {
     if (length == 8) value = ntohl(*(PGint8 *)PQgetvalue(select->res, pos, col));
     else if (length < 8) value = (long) getInt(col);
     else {
-        stringstream wss;
+        std::stringstream wss;
         wss << "Integer value of length " << length << " is not supported";
         warning(306, wss.str());
     }
@@ -636,15 +451,15 @@ float KeyValues::getFloat(const int col) {
     float value = 0;
     short length = typemap->getLength(getKey(col).type);
     if (length < 0) { // conversion if length == -1
-        stringstream iss (PQgetvalue(select->res, pos, col));
+        std::stringstream iss (PQgetvalue(select->res, pos, col));
         iss >> value;
     }
     else if (length == 4) {
         value = ntohl(*(PGfloat4 *)PQgetvalue(select->res, pos, col));
-        cout << value << endl;
+        std::cout << value << std::endl;
     }
     else {
-        stringstream wss;
+        std::stringstream wss;
         if (length == 8) wss << "Use getFloat8(col) to fetch float8 values.";
         else wss << "Float value of length " << length << " is not supported";
         warning(309, wss.str());
@@ -663,7 +478,7 @@ double KeyValues::getFloat8(const int col) {
     if (length == 8) value = ntohl(*(PGfloat8 *)PQgetvalue(select->res, pos, col));
     else if (length < 8) value = (double) getFloat(col);
     else {
-        stringstream wss;
+        std::stringstream wss;
         wss << "Float value of length " << length << " is not supported";
         warning(309, wss.str());
     }
@@ -748,7 +563,7 @@ struct tm KeyValues::getTimestamp(const int col) {
         ts.tm_sec   = timestamp.time.sec;
     }
     else {
-        stringstream wss;
+        std::stringstream wss;
         wss << "Data type " << dtype << " not yet supported";
         warning(313, wss.str());
     }
@@ -944,4 +759,197 @@ bool KeyValues::checkStorage() {
     else if (!dataset.empty() && fileExists(getDataLocation())) return true;
 
     return false;
+}
+
+
+
+
+
+
+
+
+
+
+// =============== PRINT methods =======================================
+
+/**
+ * Prints currently selected row in resultset (Select)
+ */
+void KeyValues::print() {
+    if (!select || !select->res || pos < 0)
+        warning(302, "There is nothing to print (see other messages)");
+    else {
+        int origpos = this->pos;
+        int get_widths = (format == STANDARD);
+        std::pair< std::vector<TKey>*, std::vector<int>* > fInfo = getFieldsInfo(pos, get_widths);
+        if (fInfo.first && (format != STANDARD || fInfo.second)) {
+            printHeader(fInfo);
+            printRowOnly(pos, fInfo.second);
+            printFooter(1);
+        }
+        else std::cout << "(no output)" << std::endl;
+        destruct(fInfo.first); destruct(fInfo.second);
+        this->pos = origpos;
+    }
+}
+/**
+ * Prints all rows in resultset (Select)
+ */
+void KeyValues::printAll() {
+    if (!select || !select->res)
+        warning(303, "There is nothing to print (see other messages)");
+    else {
+        int origpos = this->pos;
+        int get_widths = (format == STANDARD);
+        std::pair< std::vector<TKey>*, std::vector<int>* > fInfo = getFieldsInfo(-1, get_widths);
+        if (fInfo.first && (format != STANDARD || fInfo.second)) {
+            printHeader(fInfo);
+            for (int r = 0; r < PQntuples(select->res); r++) printRowOnly(r, fInfo.second);
+            printFooter();
+        }
+        else std::cout << "(no output)" << std::endl;
+        destruct(fInfo.first); destruct(fInfo.second);
+        this->pos = origpos;
+    }
+}
+
+// =============== PRINT support methods =======================================
+/**
+ * Prints header - field name and data type
+ * @param res Input resultset
+ * @param fInfo Column types and widths
+ */
+void KeyValues::printHeader(const std::pair< std::vector<TKey>*, std::vector<int>* > fInfo) {
+    std::stringstream table, nameln, typeln, border;
+    int cols = PQnfields(select->res);
+
+    if (format == HTML) {
+        if (tableOpt.empty()) table << "<table>";
+        else table << "<table " << tableOpt << ">";
+        if (!caption.empty()) table << "<caption align=\"top\">" << caption << "</caption>";
+        table << std::endl << "<tr align=\"center\">";
+    }
+    for (int c = 0; c < cols; c++) {
+        if (format == STANDARD) {
+            nameln << std::left << std::setw((*fInfo.second)[c]) << (*fInfo.first)[c].key;
+            typeln << std::left << std::setw((*fInfo.second)[c]) << (*fInfo.first)[c].type;
+            border << std::setfill('-') << std::setw((*fInfo.second)[c]) << "";
+            if (c < cols-1) {
+                nameln << '|'; typeln << '|'; border << '+';
+            }
+        }
+        else if (format == CSV) {
+            nameln << (*fInfo.first)[c].key;
+            if (c < cols-1) nameln << ',';
+        }
+        else if (format == HTML) {
+            table << "<th>" << (*fInfo.first)[c].key << "<br/>";
+            table << (*fInfo.first)[c].type << "</th>";
+        }
+    }
+    table << "</tr>" << std::endl; nameln << std::endl; typeln << std::endl; border << std::endl;
+    if (format == STANDARD) std::cout << nameln.str() << typeln.str() << border.str();
+    else if (format == CSV) std::cout << nameln.str();
+    else if (format == HTML) std::cout << table.str();
+}
+/**
+ * Prints footer - number of rows printed
+ * @param res Input resultset
+ * @param count Number of rows printed (0 = all)
+ */
+void KeyValues::printFooter(const int count) {
+    std::stringstream output;
+    if (format == STANDARD) {
+        int rows = PQntuples(select->res);
+        if (count > 0) output << "(" << count << " of " << rows << " rows)" << std::endl;
+        else output << "(" << rows << " rows)" << std::endl;
+    }
+    else if (format == HTML) output << "</table>" << std::endl;
+    std::cout << output.str();
+}
+/**
+ * Prints values in single row
+ * @param res Input resultset
+ * @param row Row number
+ * @param widths Vector of column widths
+ */
+void KeyValues::printRowOnly(const int row, const std::vector<int>* widths) {
+    std::stringstream output;
+    int cols = PQnfields(select->res);
+
+    //for (int i = 0; i < cols-(widths->size()); i++) widths->push_back(0);
+    // don't forget to save original value of pos beforehand!
+    this->pos = row;
+    if (format == HTML) output << "<tr>";
+    for (int c = 0; c < cols; c++) {
+        // obecny getter
+        String val = getValue(c);
+        if (format == STANDARD) {
+            output << std::left << std::setw((*widths)[c]) << val;
+            if (c < cols-1) output << '|';
+        }
+        else if (format == CSV) {
+            if (val.find(',') != String::npos) output << "\"" << val << "\"";
+            //TODO: escape quotation marks ""
+            else output << val;
+            if (c < cols-1) output << ',';
+        }
+        else if (format == HTML) {
+            output << "<td>" << val << "</td>";
+        }
+    }
+    if (format == HTML) output << "</tr>";
+    output << std::endl;
+    std::cout << output.str();
+}
+/**
+ * Returns data types, field names and desired column widths for all fields
+ * @param res Input resultset
+ * @param row Row number to process (0 = all)
+ * @return Pair of vectors <TKey,widths> (TKey includes data type and field name)
+ */
+std::pair< std::vector<TKey>*, std::vector<int>* > KeyValues::getFieldsInfo(const int row, int get_widths) {
+    int plen, flen, tlen, width;
+    std::vector<int> *widths = get_widths ? new std::vector<int>() : NULL;
+    std::vector<TKey> *keys = getKeys();
+    int rows = PQntuples(select->res);
+    int cols = PQnfields(select->res);
+
+    if (!get_widths && keys) return std::make_pair(keys, widths);
+    else if (!widths || !keys || cols!=keys->size() || cols == 0 || rows == 0) {
+        destruct(widths);
+        destruct(keys);
+        return std::make_pair((std::vector<TKey>*)NULL, (std::vector<int>*)NULL);
+    }
+
+    // header and first row
+    for (int c = 0; c < cols; c++) {
+        // don't forget to save original value of pos beforehand!
+        this->pos = row < 0 ? 0 : row;
+        flen = (*keys)[c].key.length();  // field name length
+        tlen = (*keys)[c].type.length(); // data type string length
+        plen = getValue(c).length();     // field value string length
+        if (plen >= flen && plen >= tlen) width = plen;
+        else if (flen >= plen && flen >= tlen) width = flen;
+        else width = tlen;
+        widths->push_back(width);
+    }
+
+    // rest of the rows
+    if (row < 0) {
+        for (int r = 1; r < rows; r++) {
+            // very ugly manipulation with pos, it needs to be reset after print
+            this->pos = r;
+            for (int c = 0; c < cols; c++) {
+                plen = getValue(c).length();
+                if (plen > (*widths)[c]) (*widths)[c] = plen;
+            }
+        }
+    }
+    if (widths->size() != keys->size()) {
+        destruct(widths);
+        destruct(keys);
+        return std::make_pair((std::vector<TKey>*)NULL, (std::vector<int>*)NULL);
+    }
+    else return std::make_pair(keys, widths);
 }

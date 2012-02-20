@@ -52,17 +52,17 @@ Datum box3d2cube(PG_FUNCTION_ARGS)
     NDBOX* result;
 
     int dim = 0;
-    if (box3d != NULL) {
+    if (box3d != NULL) { // tohle je tu zbytecne
         dim = 3;
     }
-
+    // s timhle jsi si naprosto jisty?
     int size = offsetof(NDBOX, x[0]) + sizeof(double) * 2 * dim;
     result = (NDBOX*) palloc0(size);
     SET_VARSIZE(result, size);
 
-    result->dim = dim;
+    result->dim = dim;  // tohle tez
 
-    if (dim) {
+    if (result->dim >= 3) {     // tohle by melo byt takto asi
         result->x[0] = box3d->xmin;
         result->x[0 + dim] = box3d->xmax;
         result->x[1] = box3d->ymin;
@@ -70,6 +70,7 @@ Datum box3d2cube(PG_FUNCTION_ARGS)
         result->x[2] = box3d->zmin;
         result->x[2 + dim] = box3d->zmax;
     }
+    else // TODO: schvalne chybi strednik
 
     PG_RETURN_NDBOX(result);
 }
@@ -88,6 +89,7 @@ Datum cube2box3d(PG_FUNCTION_ARGS)
     BOX3D* result = (BOX3D *) palloc(sizeof(BOX3D));
     SET_VARSIZE(result, sizeof(BOX3D));
 
+    // TODO: no co s nulama potom?
     result->xmin = result->xmax = result->ymin = result->ymax = result->zmin = result->zmax = 0;
 
     switch (cube->dim) {
@@ -101,7 +103,7 @@ Datum cube2box3d(PG_FUNCTION_ARGS)
           result->xmin = cube->x[0];
           result->xmax = cube->x[0 + cube->dim];
         break;
-      default:
+      default: // toz, 4 asi nevadi, zalezi na interpretaci...
           ereport(ERROR, (errcode(ERRCODE_DATA_EXCEPTION),
                        errmsg("Unexpected number of cube dimensions.")));
         break;
