@@ -9,6 +9,7 @@
                      displayName="postgis"
                      projectFiles="true"
                      kind="SOURCE_LOGICAL_FOLDER">
+        <itemPath>../include/postgis/geos_c.h</itemPath>
         <itemPath>../include/postgis/liblwgeom.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f1"
@@ -63,7 +64,7 @@
     </logicalFolder>
   </logicalFolder>
   <sourceRootList>
-    <Elem>/media/data/vutbr/vidte/vtapi/postgres/liblwgeom</Elem>
+    <Elem>../postgres/liblwgeom</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -95,7 +96,6 @@
           <output>../${CND_DISTDIR}/libvtapi.so</output>
           <linkerLibItems>
             <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lgeos -lgeos_c</linkerOptionItem>
-            <linkerLibFileItem>../dist/liblwgeom.so</linkerLibFileItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

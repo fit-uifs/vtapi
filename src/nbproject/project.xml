@@ -11,7 +11,7 @@
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
             <sourceRootList>
-                <sourceRootElem>/media/data/vutbr/vidte/vtapi/postgres/liblwgeom</sourceRootElem>
+                <sourceRootElem>../postgres/liblwgeom</sourceRootElem>
             </sourceRootList>
             <confList>
                 <confElem>Debug</confElem>

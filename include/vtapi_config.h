@@ -46,9 +46,8 @@
 // postGIS
 //#include "postgis/liblwgeom.h"
 
-// GEOS 3.2.3 (http://trac.osgeo.org/geos/) - C wrapper
-// TODO: take correct version of the header and move it into 'include'
-#include <geos_c.h>
+// GEOS 3.2.2 (http://trac.osgeo.org/geos/) - C wrapper
+#include "geos_c.h"
 
 
 #endif	/* VTAPI_CONFIG_H */
