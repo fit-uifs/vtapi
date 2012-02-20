@@ -318,3 +318,18 @@ void pq_swap8(void *outp, void *inp, int tonet)
 void lwgeom_init_allocators() {
     lwgeom_install_default_allocators();
 }
+
+void geos_notice (const char * fmt, ...) {
+      char *msg;
+      va_list ap;
+      va_start (ap, fmt);
+
+      if (!vasprintf (&msg, fmt, ap))
+      {
+            va_end (ap);
+            return;
+      }
+      printf("%s\n", msg);
+      va_end(ap);
+      free(msg);
+}

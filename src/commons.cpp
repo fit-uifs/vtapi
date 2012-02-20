@@ -249,7 +249,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     baseLocation = args_info.location_given ? String(args_info.location_arg) : String("");
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 
-    initGEOS(lwnotice,lwnotice); // initialize GEOS stuff
+    initGEOS(geos_notice, geos_notice); // initialize GEOS stuff
 }
 
 /**

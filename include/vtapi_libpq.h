@@ -43,7 +43,6 @@ typedef union
 #define VARHDRSZ		((int32) sizeof(int32))
 #define SERIALIZED_FORM(x) ((uchar *)VARDATA((x)))
 
-
 /* custom cube struct */
 typedef struct
 {
@@ -118,6 +117,13 @@ GEOSGeometry * LWGEOM2GEOS(LWGEOM *g);
  * @return 
  */
 GEOSCoordSeq ptarray_to_GEOSCoordSeq(POINTARRAY *);
+
+/**
+ * GEOS notice and error handler
+ * @param msg
+ */
+void geos_notice (const char * fmt, ...);
+
 
 
 #endif /* POSTGIS */
