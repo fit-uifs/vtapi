@@ -192,6 +192,10 @@ default_errorreporter(const char *fmt, va_list ap)
 }
 
 
+void lwgeom_init_allocators() {
+    lwgeom_install_default_allocators();
+}
+
 /*
  * This function should be called from lwgeom_init_allocators() by programs
  * which wish to use the default allocators above

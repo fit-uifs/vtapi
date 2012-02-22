@@ -1,7 +1,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#if defined(WIN32) || defined(WIN64)
+#include <Winsock2.h>
+#else
 #include <netinet/in.h>
+#endif
 #include "vtapi_libpq.h"
 
 /* cube type handlers */
@@ -315,16 +319,19 @@ void pq_swap8(void *outp, void *inp, int tonet)
     }
 }
 
+/*
+ * This is in liblwgeom/lwutil.c right now
 void lwgeom_init_allocators() {
     lwgeom_install_default_allocators();
 }
+*/
 
 void geos_notice (const char * fmt, ...) {
       char *msg;
       va_list ap;
       va_start (ap, fmt);
 
-      if (!vasprintf (&msg, fmt, ap))
+      if (!vsprintf (msg, fmt, ap))
       {
             va_end (ap);
             return;
