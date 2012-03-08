@@ -146,13 +146,14 @@ String KeyValues::getValue(const int col) {
     // get type metadata (its category, length in bytes and possibly array type)
     char typcategory = typemap->getCategory(colkey.type);
     short typlen = typemap->getLength(colkey.type);
-    int typelemoid = typemap->getElemOID(colkey.type); //if array, this shows element type
+     //if array, this shows element type
+    int typelemoid = typcategory == 'A' ? typemap->getElemOID(colkey.type) : -1;
 
     // Call different getters for different categories of types
     switch (typcategory) {
         case 'A': { // array
             //TODO: arrays of other types than int4 and float4
-            if (!typemap->toTypname(typelemoid).compare("int4")) {
+            if (typelemoid == typemap->toOid("int4")) {
                 std::vector<int>* arr = this->getIntV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
@@ -164,7 +165,7 @@ String KeyValues::getValue(const int col) {
                 }
                 destruct (arr);
             }
-            else if (!typemap->toTypname(typelemoid).compare("float4")) {
+            else if (typelemoid == typemap->toOid("float4")) {
                 std::vector<float>* arr = this->getFloatV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
@@ -176,10 +177,21 @@ String KeyValues::getValue(const int col) {
                 }
                 destruct (arr);
             }
+            else if (typelemoid == typemap->toOid("char")) {
+                int arr_size;
+                char *arr = this->getCharA(col, arr_size);
+                for (int i = 0; i < arr_size; i++) valss << arr[i];
+                destruct (arr);
+            }
             } break;
         case 'B': { // boolean
             } break;
         case 'C': { // composite
+            if (!colkey.type.compare("cvmat")) {
+                CvMat *mat = getCvMat(col);
+                valss << cvGetElemType(mat);
+                cvReleaseMat(&mat);
+            }
             } break;
 
         case 'D': { // date/time
@@ -310,7 +322,7 @@ String KeyValues::getValue(const int col) {
     return valss.str();    
 }
 
-// =============== GETTERS FOR CHAR, STRINGS ===================================
+// =============== GETTERS FOR CHAR, CHAR ARRAYS AND STRINGS ===================
 char KeyValues::getChar(const String& key) {
     return this->getChar(PQfnumber(select->res, key.c_str()));
 }
@@ -323,6 +335,35 @@ char KeyValues::getChar(const int col) {
     }
     else return value;
 }
+
+char *KeyValues::getCharA(const String& key, int& size) {
+    return this->getCharA(PQfnumber(select->res, key.c_str()), size);
+}
+
+char *KeyValues::getCharA(const int col, int& size) {
+    PGarray tmp;
+    if (! PQgetf(select->res, this->pos, "%char[]", col, &tmp)) {
+        warning(304, "Value is not an array of chars");
+        size = -1;
+        return NULL;
+    }
+
+    size = PQntuples(tmp.res);
+    char* values = new char [size];
+    for (int i = 0; i < size; i++) {
+        if (! PQgetf(tmp.res, i, "%char", 0, &values[i])) {
+            warning(304, "Unexpected value in char array");
+            size = -1;
+            PQclear(tmp.res);
+            destruct (values);
+            return NULL;
+        }
+    }
+    PQclear(tmp.res);
+
+    return values;
+}
+
 String KeyValues::getString(const String& key) {
     return this->getString(PQfnumber(select->res, key.c_str()));
 }
@@ -408,6 +449,8 @@ int* KeyValues::getIntA(const int col, int& size) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
             warning(308, "Unexpected value in integer array");
             size = -1;
+            PQclear(tmp.res);
+            destruct (values);
             return NULL;
         }
     }
@@ -432,6 +475,7 @@ std::vector<int>* KeyValues::getIntV(const int col) {
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
             warning(308, "Unexpected value in integer array");
+            PQclear(tmp.res);
             destruct (values);
             return NULL;
         }
@@ -504,6 +548,8 @@ float* KeyValues::getFloatA(const int col, int& size) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
             warning(312, "Unexpected value in float array");
             size = -1;
+            PQclear(tmp.res);
+            destruct (values);
             return NULL;
         }
     }
@@ -527,6 +573,7 @@ std::vector<float>* KeyValues::getFloatV(const int col) {
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%float4", 0, &value)) {
             warning(312, "Unexpected value in float array");
+            PQclear(tmp.res);
             destruct (values);
             return NULL;
         }
@@ -536,7 +583,179 @@ std::vector<float>* KeyValues::getFloatV(const int col) {
 
     return values;
 }
+// =============== GETTERS - OpenCV MATRICES ===============================
 
+CvMat *KeyValues::getCvMat(const String& key) {
+    return this->getCvMat(PQfnumber(select->res, key.c_str()));
+}
+
+CvMat *KeyValues::getCvMat(const int col) {
+    CvMat *mat = NULL;
+    PGresult *mres;
+    PGarray step_arr;
+    int type, rows, cols, dims, step_size, data_len;
+    char *data_loc;
+    int *step;
+    void *data;
+
+    // get CvMat header structure
+    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
+        warning(324, "Value is not a correct cvmat type");
+        return NULL;
+    }
+
+    // parse CvMat header fields
+    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
+        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
+        warning(325, "Incorrect cvmat type");
+        PQclear(mres);
+        return NULL;
+    }
+    // sometimes data type returns with apostrophes ('type')
+    if (data_loc && data_loc[0] == '\'') {
+        int len = strlen(data_loc);
+        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
+        data_loc++;
+    }
+
+    // construct step[] array
+    step_size = PQntuples(step_arr.res);
+    step = new int [step_size];
+    for (int i = 0; i < step_size; i++) {
+        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
+            warning(310, "Unexpected value in int array");
+            destruct (step);
+            PQclear(step_arr.res);
+            PQclear(mres);
+            return NULL;
+        }
+    }
+    PQclear(step_arr.res);
+
+    // get matrix data from specified column
+    int dataloc_col = PQfnumber(select->res, data_loc);
+    int data_oid;
+    if (dataloc_col < 0) {
+        warning(325, "Invalid column for CvMat user data");
+        data = NULL;
+    }
+    else data_oid = typemap->getElemOID(PQftype(select->res, dataloc_col));
+
+    // could be char, short, int, float, double
+    if (data_oid == typemap->toOid("char")) {
+        //TODO: maybe fix alignment (every row to 4B) ?
+        data = getCharA(dataloc_col, data_len);
+    }
+    else if (data_oid == typemap->toOid("float4") ||
+            data_oid == typemap->toOid("real")) {
+        data = getFloatA(dataloc_col, data_len);
+    }
+    else {
+        warning(326, "Unexpected type of CvMat data");
+        data = NULL;
+    }
+
+    // create CvMat header and set user data
+    if (dims > 0 && data && step) {
+        mat = cvCreateMatHeader(rows, cols, type);
+        cvSetData(mat, data, step[dims-1]);
+    }
+
+    destruct (step);
+    PQclear(mres);
+
+    return mat;
+}
+
+CvMatND *KeyValues::getCvMatND(const String& key) {
+    return this->getCvMatND(PQfnumber(select->res, key.c_str()));
+}
+
+CvMatND *KeyValues::getCvMatND(const int col) {
+    CvMatND *mat = NULL;
+    PGresult *mres;
+    PGarray step_arr;
+    int type, rows, cols, dims, step_size, data_len;
+    char *data_loc;
+    int *step, *sizes;
+    void *data;
+
+    // get CvMat header structure
+    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
+        warning(324, "Value is not a correct cvmat type");
+        return NULL;
+    }
+
+    // parse CvMat header fields
+    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
+        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
+        warning(325, "Incorrect cvmat type");
+        PQclear(mres);
+        return NULL;
+    }
+    // sometimes data type returns with apostrophes ('type')
+    if (data_loc && data_loc[0] == '\'') {
+        int len = strlen(data_loc);
+        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
+        data_loc++;
+    }
+
+    // construct step[] array
+    step_size = PQntuples(step_arr.res);
+    step = new int [step_size];
+    sizes = new int [step_size];
+    for (int i = 0; i < step_size; i++) {
+        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
+            warning(310, "Unexpected value in int array");
+            destruct (step);
+            destruct (sizes);
+            PQclear(step_arr.res);
+            PQclear(mres);
+            return NULL;
+        }
+    }
+    PQclear(step_arr.res);
+
+    // get matrix data from specified column
+    int dataloc_col = PQfnumber(select->res, data_loc);
+    int data_oid = -1;
+    if (dataloc_col < 0) {
+        warning(325, "Invalid column for CvMat user data");
+        data = NULL;
+    }
+    else data_oid = typemap->getElemOID(PQftype(select->res, dataloc_col));
+
+    // could be char, short, int, float, double
+    if (data_oid == typemap->toOid("char")) {
+        //TODO: maybe fix alignment (every row to 4B) ?
+        //TODO: not sure if sizes are counted correctly
+        data = getCharA(dataloc_col, data_len);
+        for (int i = 0; i < step_size; i++)
+            sizes[i] = data_len / step[i];
+    }
+    else if (data_oid == typemap->toOid("float4") ||
+            data_oid == typemap->toOid("real")) {
+        //TODO: not sure if sizes are counted correctly
+        data = getFloatA(dataloc_col, data_len);
+        for (int i = 0; i < step_size; i++)
+            sizes[i] = (data_len * sizeof(float)) / step[i];
+    }
+    else {
+        warning(326, "Unexpected type of CvMat data");
+        data = NULL;
+    }
+
+    // create CvMatND header and set user data
+    if (dims > 0 && data && sizes && step) {
+        mat = cvCreateMatNDHeader(dims, sizes, type);
+        cvSetData(mat, data, step[dims-1]);
+    }
+
+    destruct (step);
+    PQclear(mres);
+
+    return mat;
+}
 // =============== GETTERS - TIMESTAMP =========================================
 struct tm KeyValues::getTimestamp(const String& key) {
     return this->getTimestamp(PQfnumber(select->res, key.c_str()));

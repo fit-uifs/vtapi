@@ -67,12 +67,18 @@ void TypeMap::loadTypes() {
 }
 
 void TypeMap::registerTypes() {
-    PGregisterType cube = {"cube", cube_put, cube_get};
-    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, &cube, 1, 0))
-        cerr << "Cube type not registered." << endl;
-    PGregisterType geometry = {"geometry", geometry_put, geometry_get};
-    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, &geometry, 1, 0))
-        cerr << "Geometry type not registered." << endl;
+    PGregisterType user_def[] = {
+        {"cube", cube_put, cube_get},
+        {"geometry", geometry_put, geometry_get}
+    };
+    PGregisterType comp[] = {
+        {"cvmat", NULL, NULL}
+    };
+
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 2,0))
+        cerr << "User defined types not registered." << endl;
+    if (!PQregisterTypes(connector->getConn(), PQT_COMPOSITE, comp, 1, 0))
+        cerr << "Composite types not registered." << endl;
 }
 
 
