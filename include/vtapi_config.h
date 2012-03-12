@@ -35,15 +35,19 @@
 
 // libproc library
 // for this you need the libproc-dev (sometimes procps-devel) package
+#if ! (defined(WIN32) || defined(WIN64))
 #include <proc/readproc.h>
+#endif
 
 // OpenCV
 //#include <opencv2/core/core.hpp>
+#include <opencv2/core/core_c.h>
+#include <opencv2/core/types_c.h>
 //#include <opencv2/imgproc/imgproc.hpp>
 //#include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.2.2 (http://trac.osgeo.org/geos/) - C wrapper
-#include "geos_c.h"
+#include <geos_c.h>
 
 // postGIS
 #include "../postgres/liblwgeom/liblwgeom.h"

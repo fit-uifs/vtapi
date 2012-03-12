@@ -448,7 +448,7 @@ public:
      */
     String getValue(const int col);
 
-    // =============== GETTERS FOR CHAR, STRINGS ===============================
+    // =============== GETTERS FOR CHAR, CHAR ARRAYS AND STRINGS ===============
     /**
      * Get single character specified by a column key
      * @param key column key
@@ -461,6 +461,20 @@ public:
      * @return character
      */
     char getChar(const int pos);
+    /**
+     * Get character array specified by column key
+     * @param col column key
+     * @param size size of the array of char values
+     * @return character
+     */
+    char *getCharA(const String& key, int& size);
+    /**
+     * Get character array specified by column index
+     * @param col column index
+     * @param size size of the array of char values
+     * @return character
+     */
+    char *getCharA(const int pos, int& size);
     /**
      * Get a string value specified by a column key
      * @param key column key
@@ -593,11 +607,36 @@ public:
      */
     struct tm getTimestamp(const int col);
 
+    // =============== GETTERS - OpenCV MATRICES ===============================
+    /**
+     * Get OpenCv matrix (cvMat) specified by the column key
+     * @param key column key
+     * @return CvMat structure
+     */
+    CvMat *getCvMat(const String& key);
+    /**
+     * Get OpenCv matrix (cvMat) specified by the column index
+     * @param col column index
+     * @return CvMat structure
+     */
+    CvMat *getCvMat(const int col);
+    /**
+     * Get OpenCv matrix (cvMatND) specified by the column key
+     * @param key column key
+     * @return CvMatND structure
+     */
+    CvMatND *getCvMatND(const String& key);
+    /**
+     * Get OpenCv matrix (cvMatND) specified by the column index
+     * @param col column index
+     * @return CvMatND structure
+     */
+    CvMatND *getCvMatND(const int col);
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
     /**
      * Get 2D point specified by the column key
-     * @param col column index
+     * @param key column key
      * @return 2D Point
      */
     PGpoint getPoint(const String& key);
@@ -609,7 +648,7 @@ public:
     PGpoint getPoint(const int col);
     /**
      * Get line segment specified by the column key
-     * @param col column index
+     * @param key column key
      * @return Line segment
      */
     PGlseg getLineSegment(const String& key);
@@ -621,7 +660,7 @@ public:
     PGlseg getLineSegment(const int col);
     /**
      * Get box specified by the column key
-     * @param col column index
+     * @param key column key
      * @return Box
      */
     PGbox getBox(const String& key);
@@ -633,7 +672,7 @@ public:
     PGbox getBox(const int col);
     /**
      * Get circle specified by the column key
-     * @param col column index
+     * @param key column key
      * @return Circle
      */
     PGcircle getCircle(const String& key);
@@ -647,7 +686,7 @@ public:
      * Get polygon specified by the column key
      * note: polygon.pts must be copied out if needed after clearing resultset
      *          copy_points(polygon.npts, polygon.pts, ...);
-     * @param col column index
+     * @param key column key
      * @return Polygon
      */
     PGpolygon getPolygon(const String& key);
@@ -663,7 +702,7 @@ public:
      * Get path specified by the column key
      * note: path.pts must be copied out if needed after clearing resultset
      *          copy_points(path.npts, path.pts, ...);
-     * @param col column index
+     * @param key column key
      * @return 2D Point
      */
     PGpath getPath(const String& key);
@@ -680,7 +719,7 @@ public:
      * Get cube specified by the column index
      * Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
      * Points may have 1-100(CUBE_MAX_DIM) dimensions
-     * @param col column index
+     * @param key column key
      * @return Cube
      */
     PGcube getCube(const String& key);
@@ -695,7 +734,7 @@ public:
 
     /**
      * Get GEOS geometry type by the column key
-     * @param col column index
+     * @param key column key
      * @return GEOS geometry
      */
     GEOSGeometry *getGeometry(const String& key);
@@ -707,7 +746,7 @@ public:
     GEOSGeometry *getGeometry(const int col);
     /**
      * Get GEOS geometry (linestring) type by the column key
-     * @param col column index
+     * @param key column key
      * @return GEOS geometry
      */
     GEOSGeometry *getLineString(const String& key);
