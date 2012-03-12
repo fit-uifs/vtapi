@@ -186,6 +186,9 @@ bool Query::whereString(const String& key, const String& value, const String& op
     // FIXME: buffer overflow!! use params!
     if (value.compare("NULL") == 0) {
         where += "IS NULL";
+    }
+    else if (value.compare("NOT NULL") == 0) {
+        where += "IS NOT NULL";
     } else {
         where += oper + " " + String(PQescapeLiteral(connector->conn, value.c_str(), value.length()));
     }
@@ -242,7 +245,14 @@ bool Select::from(const String& table, const String& column) {
 
 // FIXME: vyuzit params (zauvozovkovat nazvy tabulek a datasetu???)
 String Select::getQuery() {
-    if (fromList.empty()) return queryString; // in case of a direct query
+    if (fromList.empty()) {
+        if (!queryString.empty()) return queryString; // in case of a direct query
+        // else add * from this->table
+        else if (!table.empty()) {
+            this->from(table, "*");
+        }
+        else warning(2012, "No table specified - don't know how to make a query.");
+    }
 
     queryString = "SELECT ";
     String tmpStr = "";
