@@ -608,6 +608,7 @@ public:
     struct tm getTimestamp(const int col);
 
     // =============== GETTERS - OpenCV MATRICES ===============================
+#ifdef __OPENCV_CORE_C_H__
     /**
      * Get OpenCv matrix (cvMat) specified by the column key
      * @param key column key
@@ -632,7 +633,7 @@ public:
      * @return CvMatND structure
      */
     CvMatND *getCvMatND(const int col);
-
+#endif
     // =============== GETTERS - GEOMETRIC TYPES ===============================
     /**
      * Get 2D point specified by the column key

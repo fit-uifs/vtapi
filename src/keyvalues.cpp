@@ -187,11 +187,13 @@ String KeyValues::getValue(const int col) {
         case 'B': { // boolean
             } break;
         case 'C': { // composite
+#ifdef __OPENCV_CORE_C_H__
             if (!colkey.type.compare("cvmat")) {
                 CvMat *mat = getCvMat(col);
                 valss << cvGetElemType(mat);
                 cvReleaseMat(&mat);
             }
+#endif
             } break;
 
         case 'D': { // date/time
@@ -584,6 +586,7 @@ std::vector<float>* KeyValues::getFloatV(const int col) {
     return values;
 }
 // =============== GETTERS - OpenCV MATRICES ===============================
+#ifdef __OPENCV_CORE_C_H__
 
 CvMat *KeyValues::getCvMat(const String& key) {
     return this->getCvMat(PQfnumber(select->res, key.c_str()));
@@ -756,6 +759,7 @@ CvMatND *KeyValues::getCvMatND(const int col) {
 
     return mat;
 }
+#endif
 // =============== GETTERS - TIMESTAMP =========================================
 struct tm KeyValues::getTimestamp(const String& key) {
     return this->getTimestamp(PQfnumber(select->res, key.c_str()));
