@@ -89,15 +89,16 @@ KeyValues* KeyValues::next() {
 
     // check if end of resultset has been reached
     if (select->res) {
-        int rows = PQntuples(select->res) - 1;
-        if (rows < 0) return NULL;
+        int rows = PQntuples(select->res);
+        if (rows <= 0) return NULL;
         else if (pos < rows) pos++;      // continue
-        else if (pos >= queryLimit) {     // fetch new resultset
-            if (select->executeNext()) pos = 0;
+        else if (pos >= select->limit) {     // fetch new resultset
+            if (select->executeNext()) {
+                pos = 0;
+                return this;
+            }
         }
-        else return NULL;   // end of result
-        
-        return this;
+        else return NULL;   // end of result        
     }
 
     return NULL;

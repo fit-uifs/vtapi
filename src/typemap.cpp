@@ -76,9 +76,9 @@ void TypeMap::registerTypes() {
     };
 
     if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 2,0))
-        cerr << "User defined types not registered." << endl;
+        cerr << "Register types: " << PQgeterror() << endl;
     if (!PQregisterTypes(connector->getConn(), PQT_COMPOSITE, comp, 1, 0))
-        cerr << "Composite types not registered." << endl;
+        cerr << "Register types: " << PQgeterror() << endl;
 }
 
 
