@@ -88,11 +88,8 @@ Dataset* VTApi::newDataset(const String& name) {
 
 
 
-
-
-
-
-
+// gets rid of annoying "deprecated conversion from string constant blah blah" warning
+#pragma GCC diagnostic ignored "-Wwrite-strings"
 
 
 
@@ -120,7 +117,8 @@ void VTApi::test() {
     v.push_back(&tkvf);
     TKey* kv2 = new  TKeyValue<String> ("varchar", "string", "whatever", "test");
     v.push_back(kv2);
-    
+
+    // this causes annoying "deprecated conversion from string constant blah blah" warning
     char* chs[] = {"1", "2", "3", "ctyri", "5"};
     TKeyValue<char*> tki ("varchar[]", "array", chs, 5);
     v.push_back(&tki);

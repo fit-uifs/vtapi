@@ -8,6 +8,7 @@
  *
  * It is necessary to create procedures for binary input/output of data. This is
  * specified by data type arguments SEND and RECEIVE.
+ * TODO: Vojto, tohle prosim lepe i s odkazem, co se kde ma pridat a kde je priklad.
  *
  * 
  * @section 2. Register data type
@@ -106,6 +107,7 @@ int geometry_put (PGtypeArgs *);
  */
 int geometry_get (PGtypeArgs *);
 
+//TODO: priste pouzij FIXME, at to tu nehledam jak blbec...
 //int seqtype_put (PGtypeArgs *);
 //int seqtype_get (PGtypeArgs *);
 

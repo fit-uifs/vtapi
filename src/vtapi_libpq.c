@@ -103,6 +103,7 @@ int geometry_get (PGtypeArgs *args) {
     return 0;
 }
 
+// TODO: to FIXME!!!
 /*
 int seqtype_put (PGtypeArgs *args) {
 
@@ -115,6 +116,8 @@ int seqtype_put (PGtypeArgs *args) {
     return len;
 }
 
+
+// TODO: no bez getu to mohlo tezko jet, ne?
 int seqtype_get (PGtypeArgs *args) {
     //TODO
     return 0;

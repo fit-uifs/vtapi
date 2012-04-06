@@ -31,7 +31,6 @@
 #define COPYRDBUF
 
 // libpqtypes
-
 #include <libpqtypes.h> // tohle se pak poresi configure
 
 // libproc library
@@ -41,17 +40,17 @@
 #endif
 
 // OpenCV
-#include <opencv2/core/core.hpp>
-#include <opencv2/core/core_c.h>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/core/core.hpp>
+// #include <opencv2/core/core_c.h>
+// #include <opencv2/imgproc/imgproc.hpp>
+// #include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.2.2 (http://trac.osgeo.org/geos/) - C wrapper
 #include <geos_c.h>
 
 // postGIS ... nove je verze 2.0.0
-//#include "../postgres/liblwgeom/liblwgeom.h"
-//#include "../postgres/cube/cubedata.h"
+#include "../postgres/liblwgeom/liblwgeom.h"
+#include "../postgres/cube/cubedata.h"
 // TODO: rozhodnout se, co s timhle kodem udelat ... ?
 
 #endif	/* VTAPI_CONFIG_H */
