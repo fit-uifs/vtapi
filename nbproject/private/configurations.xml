@@ -8,7 +8,7 @@
         <configurationname>GizmoSimple</configurationname>
       </gizmo_options>
       <runprofile version="6">
-        <args></args>
+        <args>insert sequence name=a type=video location=/ahoj</args>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <console-type>1</console-type>

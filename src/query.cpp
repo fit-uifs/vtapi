@@ -141,6 +141,16 @@ bool Query::keyFloatA(const String& key, const float* values, const int size, co
     return true;
 }
 
+bool Query::keySeqtype(const String& key, const String& value, const String& from) {
+    TKey k("seqtype", key, 1, from);
+    keys.push_back(k);
+    int ret = PQputf(param, "%seqtype", value.c_str());
+
+    if (!ret) std::cerr << PQgeterror();
+    executed = false;
+    return true;
+}
+
 String Query::escapeColumn(const String& key, const String& table) {
     executed = false;
 

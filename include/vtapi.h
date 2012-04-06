@@ -230,6 +230,7 @@ public:
     bool keyIntA(const String& key, const int* values, const int size, const String& from = "");
     bool keyFloat(const String& key, float value, const String& from = "");
     bool keyFloatA(const String& key, const float* values, const int size, const String& from = "");
+    bool keySeqtype(const String& key, const String& value, const String& from = "");
 
     // FIXME: use keys instead of all the below
     /**
@@ -954,9 +955,10 @@ public:
      * Add new sequence to a table
      * @param name name of the sequence
      * @param location location of the sequence
+     * @param type type of the sequence
      * @return success
      */
-    bool add(String name, String location);
+    bool add(String name, String location, String type);
 
     /**
      * Create a new interval specified by a start time and an end time

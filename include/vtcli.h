@@ -23,6 +23,7 @@ public:
     int run();
     int printHelp();
     int printHelp(const String& what);
+
 protected:
     VTApi* vtapi;
     bool interact;
@@ -33,6 +34,13 @@ protected:
     String getWord(String& line);
     String getCSV(String& word);
     std::pair<String,String> createParam(String word);
+
+    void queryCommand(String& line);
+    void selectCommand(String& line);
+    void insertCommand(String& line);
+    void updateCommand(String& line);
+    void deleteCommand(String& line);
+    void showCommand(String& line);
 
 };
 

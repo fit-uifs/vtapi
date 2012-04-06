@@ -149,6 +149,7 @@ String KeyValues::getValue(const int col) {
     short typlen = typemap->getLength(colkey.type);
      //if array, this shows element type
     int typelemoid = typcategory == 'A' ? typemap->getElemOID(colkey.type) : -1;
+    int precision = 4;
 
     // Call different getters for different categories of types
     switch (typcategory) {
@@ -286,7 +287,8 @@ String KeyValues::getValue(const int col) {
                     break;
                 }
 
-                //GEOSWKTWriter_setRoundingPrecision(geo_writer, 4);
+                //TODO: 2.2 zrejme neumi
+                //GEOSWKTWriter_setRoundingPrecision(geo_writer, precision);
                 geo_string = GEOSWKTWriter_write(geo_writer, geo);
                 valss << geo_string;
                 
