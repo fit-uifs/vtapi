@@ -26,8 +26,8 @@
 #include "vtapi_config.h"
 #include "vtapi_libpq.h"
 
-#include <fstream>
 #include <iostream>
+#include <fstream>
 #include <map>
 #include <set>
 #include <vector>

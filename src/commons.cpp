@@ -12,8 +12,6 @@
 
 #include "vtapi_commons.h"
 
-#include <fstream>
-#include <iostream>
 #include <stdlib.h>
 #include <fstream>
 #include <iostream>
@@ -249,7 +247,9 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     baseLocation = args_info.location_given ? String(args_info.location_arg) : String("");
     doom      = false;           // finally, we can destroy the above objects without any DOOM :D
 
+#ifdef POSTGIS
     initGEOS(geos_notice, geos_notice); // initialize GEOS stuff
+#endif
 }
 
 /**

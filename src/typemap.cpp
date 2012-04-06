@@ -67,10 +67,15 @@ void TypeMap::loadTypes() {
 }
 
 void TypeMap::registerTypes() {
+#ifdef POSTGIS
     PGregisterType user_def[] = {
         {"cube", cube_put, cube_get},
         {"geometry", geometry_put, geometry_get}
     };
+#endif
+
+// TODO: Vojto: tohle se musi poradne zaifdefovat (Petr)
+#ifdef __OPEN
     PGregisterType comp[] = {
         {"cvmat", NULL, NULL}
     };
@@ -79,6 +84,7 @@ void TypeMap::registerTypes() {
         cerr << "User defined types not registered." << endl;
     if (!PQregisterTypes(connector->getConn(), PQT_COMPOSITE, comp, 1, 0))
         cerr << "Composite types not registered." << endl;
+#endif
 }
 
 

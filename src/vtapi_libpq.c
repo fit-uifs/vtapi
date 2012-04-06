@@ -8,6 +8,8 @@
 #endif
 #include "vtapi_libpq.h"
 
+#ifdef POSTGIS
+
 /* cube type handlers */
 int cube_put (PGtypeArgs *args) {
 
@@ -340,3 +342,5 @@ void geos_notice (const char * fmt, ...) {
       va_end(ap);
       free(msg);
 }
+
+#endif

@@ -25,17 +25,18 @@
 
 
 // comment this, if there is no PostGIS extension in the database
-#define POSTGIS
+// #define POSTGIS
 
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
 #define COPYRDBUF
 
 // libpqtypes
+
 #include <libpqtypes.h> // tohle se pak poresi configure
 
 // libproc library
 // for this you need the libproc-dev (sometimes procps-devel) package
-#if ! (defined(WIN32) || defined(WIN64))
+#if !(defined(WIN32) || defined(WIN64))
 #include <proc/readproc.h>
 #endif
 
@@ -49,8 +50,8 @@
 #include <geos_c.h>
 
 // postGIS
-#include "../postgres/liblwgeom/liblwgeom.h"
-#include "../postgres/cube/cubedata.h"
+//#include "../postgres/liblwgeom/liblwgeom.h"
+//#include "../postgres/cube/cubedata.h"
 // TODO: rozhodnout se, co s timhle kodem udelat ... ?
 
 #endif	/* VTAPI_CONFIG_H */

@@ -210,6 +210,7 @@ String KeyValues::getValue(const int col) {
             valss << getString(col); // 'name' data type is numeric
             } break;
         case 'G': { // geometric
+#ifdef POSTGIS
             if (!colkey.type.compare("point")) {
                 PGpoint point = getPoint(col);
                 valss << point.x << " , " << point.y;
@@ -251,6 +252,7 @@ String KeyValues::getValue(const int col) {
                     if (i < polygon.npts-1) valss << " , ";
                 }
             }
+#endif
             } break;
         case 'I': { // network address
             } break;
@@ -274,6 +276,7 @@ String KeyValues::getValue(const int col) {
             } break;
 
         case 'U': { // user-defined (cube + postGIS types!!)
+#ifdef POSTGIS
             if (!colkey.type.compare("geometry")) { // postGIS geometry type
                 GEOSGeometry *geo;
                 GEOSWKTWriter *geo_writer;
@@ -313,6 +316,7 @@ String KeyValues::getValue(const int col) {
                     valss << ')';
                 }
             }
+#endif
             } break;
         case 'V': { // bit-string
         } break;
@@ -794,6 +798,7 @@ struct tm KeyValues::getTimestamp(const int col) {
 }
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
+#ifdef POSTGIS
 PGpoint KeyValues::getPoint(const String& key) {
     return this->getPoint(PQfnumber(select->res, key.c_str()));
 }
@@ -904,6 +909,7 @@ GEOSGeometry *KeyValues::getLineString(const int col) {
     }
     return ls;
 }
+#endif
 
 // =============== GETTERS - OTHER =============================================
 int KeyValues::getIntOid(const String& key) {

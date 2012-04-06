@@ -634,7 +634,9 @@ public:
      */
     CvMatND *getCvMatND(const int col);
 #endif
+    
     // =============== GETTERS - GEOMETRIC TYPES ===============================
+#ifdef POSTGIS
     /**
      * Get 2D point specified by the column key
      * @param key column key
@@ -757,6 +759,7 @@ public:
      * @return GEOS geometry
      */
     GEOSGeometry *getLineString(const int col);
+#endif
 
     // =============== GETTERS - OTHER =========================================
     /**
@@ -780,9 +783,11 @@ public:
     bool setInt(const String& key, const String& value);
     bool setInt(const String& key, int value);
     bool setIntA(const String& key, const int* values, int size);
+    bool setIntV(const String& key, const std::vector<int> values);
     bool setFloat(const String& key, const String& value);
     bool setFloat(const String& key, float value);
     bool setFloatA(const String& key, const float* values, int size);
+    bool setFloatV(const String& key, const std::vector<float> values);
     bool setExecute();
     
     // =============== ADDERS (Insert) ========================================
