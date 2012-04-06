@@ -1,8 +1,38 @@
-/* 
- * File:   vtapi_libpq.h
- * Author: vojca
+/**
+ * This page describes proper installation and usage of custom data types in VTApi.
  *
- * Created on February 15, 2012, 2:19 PM
+ * @section 1. Define new data type
+ * Execute CREATE TYPE in your PostgreSQL database to install a data type.
+ * Reference manual is found here:
+ *      http://www.postgresql.org/docs/9.1/static/sql-createtype.html
+ *
+ * It is necessary to create procedures for binary input/output of data. This is
+ * specified by data type arguments SEND and RECEIVE.
+ *
+ * 
+ * @section 2. Register data type
+ * Data manipulation on a client side is handled by libpqtypes (1.7) system.
+ *      http://libpqtypes.esilo.com/
+ *
+ * All non-standard data types must be registered before any manipulation with
+ * them occurs. This is done by PGregisterTypes() function. Types may require
+ * definition of handler functions (get, put) depending on what type category
+ * they are - user-defined (necessary), composite (not) or subclass (optional).
+ *
+ * Reference manual on data types registering (with example):
+ *      http://libpqtypes.esilo.com/man3/PQregisterTypes.html
+ *
+ * Writing data type handlers (with examples):
+ *      http://libpqtypes.esilo.com/man3/pqt-handlers.html
+ *
+ *
+ * @section 3. Using a data type
+ * Retrieve values from a resultset using PQgetf() function. Put values using
+ * parametrized queries and PQputf() function.
+ *
+ * Reference manual on putting and getting data types (with examples):
+ *      http://libpqtypes.esilo.com/man3/pqt-specs.html
+ * 
  */
 
 #ifndef VTAPI_LIBPQ_H
@@ -75,6 +105,9 @@ int geometry_put (PGtypeArgs *);
  * @return
  */
 int geometry_get (PGtypeArgs *);
+
+//int seqtype_put (PGtypeArgs *);
+//int seqtype_get (PGtypeArgs *);
 
 /**
  * Endian swapper for 4-byte long types

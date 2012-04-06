@@ -7,11 +7,10 @@
 
 #include <cstdlib>
 #include <iostream>
-
-#include <time.h>
-#include "vtapi.h"
 #include <sstream>
+#include <time.h>
 
+#include "vtapi.h"
 #include "vtcli.h"
 #include "vtapi_settings.h"
 
@@ -28,186 +27,228 @@ VTCli::VTCli(const VTApi& api) {
 }
 
 VTCli::~VTCli() {
-    destruct(vtapi);
+    destruct(this->vtapi);
 }
 
 int VTCli::run() {
+
+    String line, command;
+    bool do_help = false;
+
+    // without arguments, VTCli will be interactive (cycle)
     this->interact = this->cmdline.empty();
+
     if (this->interact) {
         cout << "VTApi is running" << endl;
-        cout << "Commands: query, select, insert, update, delete, show, test, help, exit";
+        cout << "Commands: query, select, insert, update, delete, show, test, "
+                "help, exit";
     }
-    String line, command;
+    
     // command cycle
     do {
         // get command, if cli is empty then start interactive mode
-        if (interact) {
+        if (this->interact) {
             cout << endl << "> "; cout.flush();
             getline(cin, line);
         }
         else line = this->cmdline;
-        // EOF detected
-        if (cin.fail()) break;
+        if (cin.fail()) break;        // EOF detected
 
         command = getWord(line);
-        // command: exit
-        if (!command.compare("exit")) break;
-        // command: general query
-        else if (!command.compare("query")) {
-            if (!line.substr(0,4).compare("help")) {
-                this->printHelp(command);
-                continue;
-            }
-            if (line.empty()) continue;
-            else {
-                // binary/pgf
-                PGresult* qres = PQparamExec(vtapi->commons->getConnector()->getConn(), NULL, line.c_str(), PGF);
-                if (!qres) cerr << PQgeterror();
-                else {
-                    KeyValues* kv = new KeyValues(*(this->vtapi->commons));
-                    kv->select = new Select(*(this->vtapi->commons));
-                    kv->select->res = qres;
-                    kv->select->executed = true;
-                    kv->printAll();
-                    destruct(kv);
-                    //PQclear(qres);
-                }
-            }
+        do_help = (line.substr(0,4).compare("help") == 0) ;
 
+        // command-specific help
+        if (do_help) {
+            printHelp (command);
         }
-        // command: select
-        else if (!command.compare("select")) {
-            String input = getWord(line);
-            // select help
-            if (!input.compare("help")) {
-                this->printHelp(command);
-                continue;
-            }
-            // get select params
-            std::map<String,String> params;
-            while (!line.empty()) params.insert(createParam(getWord(line)));
-
-            // TODO: udelat pres Tkey
-            // select dataset
-            if (!input.compare("dataset")) {
-                Dataset* ds = new Dataset(*(this->vtapi->commons));
-                ds->select->where.clear();
-                ds->select->whereString("dsname", params["name"]);
-                ds->select->whereString("dslocation", params["location"]);
-                ds->next();
-                ds->printAll();
-                destruct(ds);
-            }
-            // select sequence
-            else if (!input.compare("sequence")) {
-                Sequence* seq = new Sequence(*(this->vtapi->commons));
-                seq->select->where.clear();
-                seq->select->whereString("seqname", params["name"]);
-                //seq->select->whereInt("seqnum", atoi(params["seqnum"]));
-                seq->select->whereString("seqlocation", params["location"]);
-                seq->select->whereString("seqtyp", params["seqtype"]);
-                seq->next();
-                seq->printAll();
-                destruct(seq);
-            }
-            // select interval
-            else if (!input.compare("interval")) {
-                Interval* in = new Interval(*(this->vtapi->commons));
-                in->select->where.clear();
-                in->select->whereString("seqname", params["sequence"]);
-                //in->select->whereInt(t1, params["t1"]);
-                //in->select->whereInt(t1, params["t1"]);
-                in->select->whereString("imglocation", params["location"]);
-                in->next();
-                in->printAll();
-                destruct(in);
-            }
-            // select process
-            else if (!input.compare("process")) {
-                Process* pr = new Process(*(this->vtapi->commons));
-                pr->select->where.clear();
-                pr->select->whereString("prsname", params["name"]);
-                pr->select->whereString("mtname", params["method"]);
-                pr->select->whereString("inputs", params["inputs"]);
-                pr->select->whereString("outputs", params["outputs"]);
-                pr->next();
-                pr->printAll();
-                destruct(pr);
-            }
-            // select method
-            else if (!input.compare("method")) {
-                Method* me = new Method(*(this->vtapi->commons));
-                //TODO: methodkeys not implemented yet
-                me->select->where.clear();
-                me->select->whereString("mtname", params["name"]);
-                me->next();
-                me->printAll();
-                destruct(me);
-            }
+        // commands
+        else if (command.compare("select") == 0) {
+            selectCommand (line);
         }
-        // command: insert
         else if (command.compare("insert") == 0) {
-            String input = getWord(line);
-            if (!input.compare("help")) {
-                this->printHelp(command);
-                continue;
-            }
-
-            CLIInsert* insert = new CLIInsert(*(this->vtapi->commons));
-            while (!line.empty()) insert->addParam(createParam(getWord(line)));
-
-            if (!input.compare("dataset")) insert->setType(CLIInsert::DATASET);
-            else if (!input.compare("sequence")) insert->setType(CLIInsert::SEQUENCE);
-            else if (!input.compare("interval")) insert->setType(CLIInsert::INTERVAL);
-            else if (!input.compare("process")) insert->setType(CLIInsert::PROCESS);
-            else if (!input.compare("method")) insert->setType(CLIInsert::METHOD);
-            else if (!input.compare("help")) {
-                cout << "helping you with insert command " << endl;
-            }
-            insert->execute();
-            destruct(insert);
+            insertCommand (line);
         }
-        // TODO: update
-        else if (!command.compare("update")) {
-            String input = getWord(line);
-            if (!input.compare("help")) {
-                this->printHelp(command);
-                continue;
-            }
-            this->vtapi->commons->warning("update command not implemented");
+        else if (command.compare("update") == 0) {
+            updateCommand (line);
         }
-        // TODO: delete
-        else if (!command.compare("delete")) {
-            String input = getWord(line);
-            if (!input.compare("help")) {
-                this->printHelp(command);
-                continue;
-            }
-            this->vtapi->commons->warning("delete command not implemented");
+        else if (command.compare("delete") == 0) {
+            deleteCommand (line);
         }
-        // TODO: show
-        else if (!command.compare("show")) {
-            String input = getWord(line);
-            if (!input.compare("help")) {
-                this->printHelp(command);
-                continue;
-            }
-            this->vtapi->commons->warning("show command not implemented");
+        else if (command.compare("query") == 0) {
+            queryCommand (line);
         }
-        // command: test
-        else if (!command.compare("test")) {
+        else if (command.compare("show") == 0) {
+            showCommand (line);
+        }
+        else if (command.compare("test") == 0) {
             this->vtapi->test();
         }
-        // command: help
-        else if (!command.compare("help")) {
+        else if (command.compare("help") == 0) {
             this->printHelp();
         }
-        else this->vtapi->commons->warning("Unknown command");
-
-    } while(interact);
+        else if (command.compare("exit") == 0) {
+            break;
+        }
+        else {
+            this->vtapi->commons->warning("Unknown command");
+        }
+    } while (this->interact);
 
     return 0;
 }
+
+void VTCli::queryCommand(String& line) {
+    if (!line.empty()) {
+        PGresult* qres = PQparamExec(vtapi->commons->getConnector()->getConn(),
+                NULL, line.c_str(), PGF);
+        if (qres) {
+            KeyValues* kv = new KeyValues(*(this->vtapi->commons));
+            kv->select = new Select(*(this->vtapi->commons));
+            kv->select->res = qres;
+            kv->select->executed = true;
+            kv->printAll();
+            destruct(kv);
+        }
+        else {
+            String errmsg = line + " : " + PQgeterror();
+            this->vtapi->commons->warning(errmsg);
+        }
+    }
+}
+
+void VTCli::selectCommand(String& line) {
+    String input;   // what to select
+    std::map<String,String> params; // select params
+
+    // parse command line
+    input = getWord(line);
+    while (!line.empty())
+        params.insert(createParam(getWord(line)));
+
+    // TODO: udelat pres Tkey
+    // select dataset
+    if (!input.compare("dataset")) {
+        Dataset* ds = new Dataset(*(this->vtapi->commons));
+        ds->select->where.clear();
+        ds->select->whereString("dsname", params["name"]);
+        ds->select->whereString("dslocation", params["location"]);
+        ds->next();
+        ds->printAll();
+        destruct(ds);
+    }
+    // select sequence
+    else if (!input.compare("sequence")) {
+        Sequence* seq = new Sequence(*(this->vtapi->commons));
+        seq->select->where.clear();
+        seq->select->whereString("seqname", params["name"]);
+        //seq->select->whereInt("seqnum", atoi(params["seqnum"]));
+        seq->select->whereString("seqlocation", params["location"]);
+        seq->select->whereString("seqtyp", params["seqtype"]);
+        seq->next();
+        seq->printAll();
+        destruct(seq);
+    }
+    // select interval
+    else if (!input.compare("interval")) {
+        Interval* in = new Interval(*(this->vtapi->commons));
+        in->select->where.clear();
+        in->select->whereString("seqname", params["sequence"]);
+        //in->select->whereInt(t1, params["t1"]);
+        //in->select->whereInt(t1, params["t1"]);
+        in->select->whereString("imglocation", params["location"]);
+        in->next();
+        in->printAll();
+        destruct(in);
+    }
+    // select process
+    else if (!input.compare("process")) {
+        Process* pr = new Process(*(this->vtapi->commons));
+        pr->select->where.clear();
+        pr->select->whereString("prsname", params["name"]);
+        pr->select->whereString("mtname", params["method"]);
+        pr->select->whereString("inputs", params["inputs"]);
+        pr->select->whereString("outputs", params["outputs"]);
+        pr->next();
+        pr->printAll();
+        destruct(pr);
+    }
+    // select method
+    else if (!input.compare("method")) {
+        Method* me = new Method(*(this->vtapi->commons));
+        //TODO: methodkeys not implemented yet
+        me->select->where.clear();
+        me->select->whereString("mtname", params["name"]);
+        me->next();
+        me->printAll();
+        destruct(me);
+    }
+}
+
+void VTCli::insertCommand(String& line) {
+
+    Dataset* ds = new Dataset(*(this->vtapi->commons));
+    String input;   // what to insert
+    std::map<String,String> params; // insert params
+    
+    // parse command line
+    input = getWord(line);
+    while (!line.empty())
+        params.insert(createParam(getWord(line)));
+
+    // insert sequence
+    if (input.compare("sequence") == 0) {
+        Sequence* seq = ds->newSequence();
+        seq->add(params["name"], params["location"], params["type"]);
+        seq->insert->execute();
+        destruct (seq);
+    }
+    // insert interval
+    else if (input.compare("interval") == 0) {
+        Sequence* seq = ds->newSequence(params["seqname"]);
+        Interval* in = seq->newInterval(0, 0);
+        in->add(params["seqname"], atoi(params["t1"].c_str()),
+                atoi(params["t2"].c_str()), params["location"]);
+        in->insert->execute();
+        destruct (in);
+        destruct (seq);
+    }
+
+    // insert process
+    //TODO
+    else if (input.compare("process") == 0) {
+        this->vtapi->commons->warning("insert process not implemented");
+    }
+    else {
+        this->vtapi->commons->warning("Only insert: sequence/interval/process");
+    }
+
+    destruct (ds);
+
+//    CLIInsert* insert = new CLIInsert(*(this->vtapi->commons));
+//
+//    if (!input.compare("dataset")) insert->setType(CLIInsert::DATASET);
+//    else if (!input.compare("sequence")) insert->setType(CLIInsert::SEQUENCE);
+//    else if (!input.compare("interval")) insert->setType(CLIInsert::INTERVAL);
+//    else if (!input.compare("process")) insert->setType(CLIInsert::PROCESS);
+//    else if (!input.compare("method")) insert->setType(CLIInsert::METHOD);
+//
+//    insert->execute();
+//    destruct(insert);
+}
+
+//TODO
+void VTCli::updateCommand(String& line) {
+    this->vtapi->commons->warning("update command not implemented");
+}
+//TODO
+void VTCli::deleteCommand(String& line) {
+    this->vtapi->commons->warning("delete command not implemented");
+}
+//TODO
+void VTCli::showCommand(String& line) {
+    this->vtapi->commons->warning("show command not implemented");
+}
+
 /**
  * Prints basic help
  * @return 0 on success, -1 on failure
@@ -245,10 +286,10 @@ int VTCli::printHelp(const String& what) {
             " Sequence ARGS:" << endl <<
             "      name       name of the sequence" << endl <<
             "  location       location of the sequence data file(s) (file/directory)" << endl <<
-            "    seqnum       unique number of the sequence" << endl <<
-            "   seqtype       type of the sequence [images, video]" << endl << endl <<
+            "       num       unique number of the sequence" << endl <<
+            "      type       type of the sequence [images, video]" << endl << endl <<
             "Interval ARGS:" << endl <<
-            "  sequence       name of the sequence containing this interval" << endl <<
+            "  seqname        name of the sequence containing this interval" << endl <<
             "        t1       begin time of the interval" << endl <<
             "        t2       end time of the interval" << endl <<
             "  location       location of the interval data file (file)" << endl << endl <<
@@ -270,10 +311,10 @@ int VTCli::printHelp(const String& what) {
             " Sequence ARGS:" << endl <<
             "      name       name of the sequence *REQUIRED*" << endl <<
             "  location       location of the sequence data file(s) (file/directory)" << endl <<
-            "    seqnum       unique number of the sequence" << endl <<
-            "   seqtype       type of the sequence [images, video]" << endl << endl <<
+            "       num       unique number of the sequence" << endl <<
+            "      type       type of the sequence [images, video]" << endl << endl <<
             "Interval ARGS:" << endl <<
-            "  sequence       name of the sequence containing this interval *REQUIRED*" << endl <<
+            "   seqname       name of the sequence containing this interval *REQUIRED*" << endl <<
             "        t1       begin time of the interval *REQUIRED*" << endl <<
             "        t2       end time of the interval *REQUIRED*" << endl <<
             "  location       location of the interval data file (file)" << endl << endl <<

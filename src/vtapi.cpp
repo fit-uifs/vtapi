@@ -163,7 +163,7 @@ void VTApi::test() {
     srand(time(NULL));
     String sn = "test_sequence" + toString(rand()%1000);
     cout << "ADDING Sequence " << sn << endl;
-    sequence->add(sn, "/test_location");
+    sequence->add(sn, "/test_location", "video");
     sequence->next();
 
     destruct (sequence);

@@ -1,4 +1,6 @@
 
+
+
 #include <stdio.h>
 #include <string.h>
 #if defined(WIN32) || defined(WIN64)
@@ -100,6 +102,24 @@ int geometry_get (PGtypeArgs *args) {
 
     return 0;
 }
+
+/*
+int seqtype_put (PGtypeArgs *args) {
+
+    char *seqtype = va_arg(args->ap, char *);
+    int len = strlen(seqtype) + 1;
+
+    if (args->put.expandBuffer(args, len) == -1) return -1;
+    strcpy(args->put.out, seqtype);
+
+    return len;
+}
+
+int seqtype_get (PGtypeArgs *args) {
+    //TODO
+    return 0;
+}
+*/
 
 
 /***************** PostGIS stuff *****************/

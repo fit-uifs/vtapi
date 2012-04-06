@@ -89,15 +89,16 @@ KeyValues* KeyValues::next() {
 
     // check if end of resultset has been reached
     if (select->res) {
-        int rows = PQntuples(select->res) - 1;
-        if (rows < 0) return NULL;
+        int rows = PQntuples(select->res);
+        if (rows <= 0) return NULL;
         else if (pos < rows) pos++;      // continue
-        else if (pos >= queryLimit) {     // fetch new resultset
-            if (select->executeNext()) pos = 0;
+        else if (pos >= select->limit) {     // fetch new resultset
+            if (select->executeNext()) {
+                pos = 0;
+                return this;
+            }
         }
-        else return NULL;   // end of result
-        
-        return this;
+        else return NULL;   // end of result        
     }
 
     return NULL;
@@ -148,6 +149,7 @@ String KeyValues::getValue(const int col) {
     short typlen = typemap->getLength(colkey.type);
      //if array, this shows element type
     int typelemoid = typcategory == 'A' ? typemap->getElemOID(colkey.type) : -1;
+    int precision = 4;
 
     // Call different getters for different categories of types
     switch (typcategory) {
@@ -288,7 +290,8 @@ String KeyValues::getValue(const int col) {
                     break;
                 }
 
-                //GEOSWKTWriter_setRoundingPrecision(geo_writer, 4);
+                //TODO: 2.2 zrejme neumi
+                //GEOSWKTWriter_setRoundingPrecision(geo_writer, precision);
                 geo_string = GEOSWKTWriter_write(geo_writer, geo);
                 valss << geo_string;
                 

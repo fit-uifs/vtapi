@@ -25,7 +25,7 @@
 
 
 // comment this, if there is no PostGIS extension in the database
-// #define POSTGIS
+#define POSTGIS
 
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
 #define COPYRDBUF
@@ -41,15 +41,15 @@
 #endif
 
 // OpenCV
-//#include <opencv2/core/core.hpp>
-//#include <opencv2/core/core_c.h>
-//#include <opencv2/imgproc/imgproc.hpp>
-//#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/core_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.2.2 (http://trac.osgeo.org/geos/) - C wrapper
 #include <geos_c.h>
 
-// postGIS
+// postGIS ... nove je verze 2.0.0
 //#include "../postgres/liblwgeom/liblwgeom.h"
 //#include "../postgres/cube/cubedata.h"
 // TODO: rozhodnout se, co s timhle kodem udelat ... ?

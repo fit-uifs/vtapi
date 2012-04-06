@@ -48,12 +48,13 @@ Image* Sequence::newImage(const String& name) {
 }
 
 
-bool Sequence::add(String name, String location) {
+bool Sequence::add(String name, String location, String type) {
     destruct(insert);
 
     insert = new Insert(*this, "sequences");
     insert->keyString("seqname", name);
     insert->keyString("seqlocation", location);
+    insert->keySeqtype("seqtyp", type);
     // that's all, folks ... continue similarly if needed
 }
 

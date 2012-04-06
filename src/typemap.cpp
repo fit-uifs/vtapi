@@ -71,6 +71,7 @@ void TypeMap::registerTypes() {
     PGregisterType user_def[] = {
         {"cube", cube_put, cube_get},
         {"geometry", geometry_put, geometry_get}
+//        {"seqtype", seqtype_put, seqtype_get}
     };
 #endif
 
@@ -79,11 +80,16 @@ void TypeMap::registerTypes() {
     PGregisterType comp[] = {
         {"cvmat", NULL, NULL}
     };
+    PGregisterType sub_class[] = {
+        {"seqtype=varchar", NULL, NULL}
+    };
 
-    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 2,0))
-        cerr << "User defined types not registered." << endl;
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 2, 0))
+        cerr << "Register types: " << PQgeterror() << endl;
     if (!PQregisterTypes(connector->getConn(), PQT_COMPOSITE, comp, 1, 0))
-        cerr << "Composite types not registered." << endl;
+        cerr << "Register types: " << PQgeterror() << endl;
+    if (!PQregisterTypes(connector->getConn(), PQT_SUBCLASS, sub_class, 1, 0))
+        cerr << "Register types: " << PQgeterror() << endl;
 #endif
 }
 
