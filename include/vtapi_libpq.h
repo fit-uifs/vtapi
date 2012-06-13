@@ -107,9 +107,11 @@ int geometry_put (PGtypeArgs *);
  */
 int geometry_get (PGtypeArgs *);
 
-//TODO: priste pouzij FIXME, at to tu nehledam jak blbec...
-//int seqtype_put (PGtypeArgs *);
-//int seqtype_get (PGtypeArgs *);
+
+int enum_put (PGtypeArgs *);
+int enum_get (PGtypeArgs *);
+
+int seqtype_put (PGtypeArgs *);
 
 /**
  * Endian swapper for 4-byte long types

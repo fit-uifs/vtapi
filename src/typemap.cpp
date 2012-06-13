@@ -68,12 +68,21 @@ void TypeMap::loadTypes() {
 
 // TODO: Vojto: tohle se musi poradne zaifdefovat (Petr) ... 
 void TypeMap::registerTypes() {
+
+
 #ifdef POSTGIS
     PGregisterType user_def[] = {
         {"cube", cube_put, cube_get},
-        {"geometry", geometry_put, geometry_get}
+        {"geometry", geometry_put, geometry_get},
+        {"seqtype", seqtype_put, enum_get}
     };
-    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 2, 0))
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 3, 0))
+        cerr << "Register types: " << PQgeterror() << endl;
+#else
+    PGregisterType user_def[] = {
+        {"seqtype", seqtype_put, seqtype_get}
+    }
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 1, 0))
         cerr << "Register types: " << PQgeterror() << endl;
 #endif
 
@@ -90,11 +99,11 @@ void TypeMap::registerTypes() {
 #endif
 
     // FIXME: Vojto, koukni na to...
-    PGregisterType sub_class[] = {
-        {"seqtype=pg_catalog.varchar", NULL, NULL}
-    };
-    if (!PQregisterTypes(connector->getConn(), PQT_SUBCLASS, sub_class, 1, 0))
-        cerr << "Register types: " << PQgeterror() << endl;
+//    PGregisterType sub_class[] = {
+//        {"seqtype=pg_enum", seqtype_put, NULL}
+//    };
+//    if (!PQregisterTypes(connector->getConn(), PQT_SUBCLASS, sub_class, 1, 0))
+//        cerr << "Register types: " << PQgeterror() << endl;
 
 }
 

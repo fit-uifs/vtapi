@@ -124,6 +124,53 @@ int seqtype_get (PGtypeArgs *args) {
 }
 */
 
+int seqtype_put (PGtypeArgs *args ) {
+
+    char *val = va_arg(args->ap, char *);
+    char *out = NULL;
+    int vallen = 0, len = 0, oid = 0;
+    float sortorder = 0.0;
+
+    if (!args || !val) return 0;
+
+    /* expand buffer enough */
+    vallen = strlen(val);
+    len = sizeof(int) + sizeof(float) + (vallen * sizeof(char));
+    if (args->put.expandBuffer(args, len) == -1) return -1;
+
+    /* put header - oid, sortorder and value */
+/*
+    args->put.out = va_arg(args->ap, char *);
+    return args->put.out ? (int)strlen(args->put.out) : 0;
+*/
+
+    out = args->put.out;
+    oid = 0;
+    memcpy(out, &oid, sizeof(int));
+    out += sizeof(int);
+    sortorder = 0.0;
+    memcpy(out, &sortorder, sizeof(float));
+    out += sizeof(float);
+    memcpy(out, val, vallen);
+
+    return len;
+}
+
+int enum_put (PGtypeArgs *args) {
+
+    return 0;
+}
+
+int enum_get (PGtypeArgs *args) {
+    char *val = PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
+    int len = PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
+    
+    char **result = va_arg(args->ap, char **);
+    *result = (char *) PQresultAlloc((PGresult *) args->get.result, len * sizeof(char));
+    memcpy(*result, val, len * sizeof(char));
+    
+    return 0;
+}
 
 /***************** PostGIS stuff *****************/
 GEOSGeometry *

@@ -923,6 +923,7 @@ int KeyValues::getIntOid(const String& key) {
     return (int) value;
 }
 
+
 // =============== SETTERS (Update) ============================================
 // TODO: mozna by se dalo premyslet o PQsetvalue
 
