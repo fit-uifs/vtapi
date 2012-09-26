@@ -117,12 +117,11 @@ int seqtype_put (PGtypeArgs *args) {
 }
 
 
-// TODO: no bez getu to mohlo tezko jet, ne?
+/* TODO: seqtype functions obsolete ?
 int seqtype_get (PGtypeArgs *args) {
     //TODO
     return 0;
 }
-*/
 
 int seqtype_put (PGtypeArgs *args ) {
 
@@ -133,16 +132,10 @@ int seqtype_put (PGtypeArgs *args ) {
 
     if (!args || !val) return 0;
 
-    /* expand buffer enough */
     vallen = strlen(val);
     len = sizeof(int) + sizeof(float) + (vallen * sizeof(char));
     if (args->put.expandBuffer(args, len) == -1) return -1;
 
-    /* put header - oid, sortorder and value */
-/*
-    args->put.out = va_arg(args->ap, char *);
-    return args->put.out ? (int)strlen(args->put.out) : 0;
-*/
 
     out = args->put.out;
     oid = 0;
@@ -155,19 +148,36 @@ int seqtype_put (PGtypeArgs *args ) {
 
     return len;
 }
+*/
 
+/* From support email */
 int enum_put (PGtypeArgs *args) {
+    char *val = va_arg(args->ap, char *);
+    char *out = NULL;
+    int vallen = 0, len = 0, oid = 0;
+    float sortorder = 0.0;
 
-    return 0;
+    if (!args || !val) return 0;
+
+    /* expand buffer enough */
+    vallen = strlen(val);
+    if (args->put.expandBuffer(args, len) == -1) return -1;
+
+    out = args->put.out;
+    memcpy(out, val, vallen);
+
+    return len;
 }
+/* From support email END */
 
 int enum_get (PGtypeArgs *args) {
     char *val = PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
     int len = PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
     
     char **result = va_arg(args->ap, char **);
-    *result = (char *) PQresultAlloc((PGresult *) args->get.result, len * sizeof(char));
+    *result = (char *) PQresultAlloc((PGresult *) args->get.result, (len+1) * sizeof(char));
     memcpy(*result, val, len * sizeof(char));
+    result[len] = '\0';
     
     return 0;
 }

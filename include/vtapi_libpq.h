@@ -107,11 +107,18 @@ int geometry_put (PGtypeArgs *);
  */
 int geometry_get (PGtypeArgs *);
 
-
+/**
+ * Generic put handler for enum types
+ * @param
+ * @return
+ */
 int enum_put (PGtypeArgs *);
+/**
+ * Generic get handler for enum types
+ * @param
+ * @return
+ */
 int enum_get (PGtypeArgs *);
-
-int seqtype_put (PGtypeArgs *);
 
 /**
  * Endian swapper for 4-byte long types

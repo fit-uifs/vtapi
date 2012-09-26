@@ -35,13 +35,13 @@ int TypeMap::size() {
 }
 
 int TypeMap::toOid(const String typname) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     if (!typesname.count(typname) > 0) return -1;
     return this->typesname[typname].first;
 }
 
 String TypeMap::toTypname(const int oid) {
-    loadTypes();
+    if (!dataloaded) loadTypes();
     if (!typesoid.count(oid) > 0) return "";
     return this->typesoid[oid].first;
 }
@@ -66,48 +66,7 @@ void TypeMap::loadTypes() {
     PQclear(res);
 }
 
-// TODO: Vojto: tohle se musi poradne zaifdefovat (Petr) ... 
-void TypeMap::registerTypes() {
-
-
-#ifdef POSTGIS
-    PGregisterType user_def[] = {
-        {"cube", cube_put, cube_get},
-        {"geometry", geometry_put, geometry_get},
-        {"seqtype", seqtype_put, enum_get}
-    };
-    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 3, 0))
-        cerr << "Register types: " << PQgeterror() << endl;
-#else
-    PGregisterType user_def[] = {
-        {"seqtype", seqtype_put, seqtype_get}
-    }
-    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, user_def, 1, 0))
-        cerr << "Register types: " << PQgeterror() << endl;
-#endif
-
-// FIXME: na tohle se zatim vykasli, kazdopadne bez get to nepojede
-//        {"seqtype", seqtype_put, seqtype_get}
-
-
-#ifdef __OPENCV_CORE_HPP__
-    PGregisterType comp[] = {
-        {"cvmat", NULL, NULL}
-    };
-    if (!PQregisterTypes(connector->getConn(), PQT_COMPOSITE, comp, 1, 0))
-        cerr << "Register types: " << PQgeterror() << endl;
-#endif
-
-    // FIXME: Vojto, koukni na to...
-//    PGregisterType sub_class[] = {
-//        {"seqtype=pg_enum", seqtype_put, NULL}
-//    };
-//    if (!PQregisterTypes(connector->getConn(), PQT_SUBCLASS, sub_class, 1, 0))
-//        cerr << "Register types: " << PQgeterror() << endl;
-
-}
-
-
+// TODO: this is possibly useless?
 void TypeMap::loadRefTypes() {
     reftypes.insert("regproc");
     reftypes.insert("regprocedure");
@@ -115,6 +74,39 @@ void TypeMap::loadRefTypes() {
     reftypes.insert("regoperator");
     reftypes.insert("regtype");
     reftypes.insert("regclass");
+}
+
+void TypeMap::registerTypes() {
+
+    // general types registered at all times
+    PGregisterType types_userdef[] =
+    {
+        {"seqtype", enum_put, enum_get},
+        {"inouttype", enum_put, enum_get},
+        {"permissions", enum_put, enum_get},
+    };
+
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, types_userdef, 3, 0))
+        cerr << "Register types: " << PQgeterror() << endl;
+
+    // PostGIS special types
+#ifdef POSTGIS
+    PGregisterType typespg_userdef[] = {
+        {"cube", cube_put, cube_get},
+        {"geometry", geometry_put, geometry_get}        
+    };
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, typespg_userdef, 2, 0))
+        cerr << "Register types: " << PQgeterror() << endl;
+#endif
+
+    // OpenCV special types
+#ifdef __OPENCV_CORE_HPP__
+    PGregisterType typescv_comp[] = {
+        {"cvmat", NULL, NULL}
+    };
+    if (!PQregisterTypes(connector->getConn(), PQT_COMPOSITE, typescv_comp, 1, 0))
+        cerr << "Register types: " << PQgeterror() << endl;
+#endif
 }
 
 bool TypeMap::isRefType(String name) {
