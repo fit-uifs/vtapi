@@ -5,14 +5,15 @@
   <confs>
     <conf name="Debug" type="1">
       <gizmo_options version="3">
+        <profileOnRun>false</profileOnRun>
         <configurationname>GizmoSimple</configurationname>
       </gizmo_options>
       <runprofile version="6">
-        <args>insert sequence name=a type=video location=/ahoj</args>
+        <args>"query select * from sin12.tracks limit 1"</args>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <console-type>1</console-type>
-        <terminal-type>0</terminal-type>
+        <terminal-type>1</terminal-type>
         <remove-instrumentation>0</remove-instrumentation>
         <environment>
         </environment>

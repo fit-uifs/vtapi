@@ -541,6 +541,18 @@ public:
      * @return  array of integer values
      */
     std::vector<int>* getIntV(const String& key);
+    /**
+     * Get a vector of integer vectors specified by an index of a column
+     * @param col index of column
+     * @return  array of arrays of integer values
+     */
+    std::vector< std::vector<int>* >* getIntVV(const int col);
+    /**
+     * Get a vector of integer vectors specified by a column key
+     * @param key column key
+     * @return  array of arrays of integer values
+     */
+    std::vector< std::vector<int>* >* getIntVV(const String& key);
 
     // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
     /**

@@ -91,17 +91,23 @@ KeyValues* KeyValues::next() {
     if (select->res) {
         int rows = PQntuples(select->res);
         if (rows <= 0) return NULL;
-        else if (pos < rows) pos++;      // continue
+        else if (pos < rows) {
+            pos++;      // continue
+            if (pos == rows) { // this was last row, reset
+                pos = -1;
+                return NULL;
+            }
+        }
         else if (pos >= select->limit) {     // fetch new resultset
             if (select->executeNext()) {
                 pos = 0;
-                return this;
             }
         }
-        else return NULL;   // end of result        
+        else return NULL;   // end of result
+
     }
 
-    return NULL;
+    return this;
 }
 
 TKey KeyValues::getKey(int col) {
@@ -157,6 +163,8 @@ String KeyValues::getValue(const int col) {
             //TODO: arrays of other types than int4 and float4
             if (typelemoid == typemap->toOid("int4")) {
                 std::vector<int>* arr = this->getIntV(col);
+                //std::vector< std::vector<int>* >* arrX = this->getIntVV(col);
+                //std::vector<int>* arr = (*arrX)[0];
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
                     if (arrayLimit && i == arrayLimit) {
@@ -493,6 +501,43 @@ std::vector<int>* KeyValues::getIntV(const int col) {
     PQclear(tmp.res);
 
     return values;
+}
+
+std::vector< std::vector<int>* >* KeyValues::getIntVV(const int col) {
+    PGarray tmp;
+    if (! PQgetf(select->res, this->pos, "%int4[]", col, &tmp)) {
+        warning(307, "Value is not an array of integer arrays");
+        return NULL;
+    }
+    if (tmp.ndims != 2) {
+        warning(308, "Array must have exactly 2 dimensions");
+        return NULL;
+    }
+
+    PGint4 value;
+    std::vector< std::vector<int>* >* arrays = new std::vector< std::vector<int>* >;
+    std::vector<int>* arr;
+
+    for (int i = 0; i < tmp.dims[0]; i++) {
+        arr = new std::vector<int>;
+
+        for (int j = 0; j < tmp.dims[1]; j++) {
+            if (! PQgetf(tmp.res, i*tmp.dims[1]+j, "%int4", 0, &value)) {
+                warning(308, "Unexpected value in integer array");
+                PQclear(tmp.res);
+                for (int x = 0; x < (*arrays).size(); x++) destruct ((*arrays)[x]);
+                destruct (arrays);
+                return NULL;
+            }
+            arr->push_back(value);
+        }
+        arrays->push_back(arr);
+    }
+
+    return arrays;
+}
+std::vector< std::vector<int>* >* KeyValues::getIntVV(const String& key) {
+    return this->getIntVV(PQfnumber(select->res, key.c_str()));
 }
 
 // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
