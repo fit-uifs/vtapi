@@ -151,6 +151,27 @@ bool Query::keySeqtype(const String& key, const String& value, const String& fro
     return true;
 }
 
+bool Query::keyInouttype(const String& key, const String& value, const String& from) {
+    TKey k("inouttype", key, 1, from);
+    keys.push_back(k);
+    int ret = PQputf(param, "%inouttype", value.c_str());
+
+    if (!ret) std::cerr << PQgeterror();
+    executed = false;
+    return true;
+}
+
+bool Query::keyPermissions(const String& key, const String& value, const String& from) {
+    TKey k("permissions", key, 1, from);
+    keys.push_back(k);
+    int ret = PQputf(param, "%permissions", value.c_str());
+
+    if (!ret) std::cerr << PQgeterror();
+    executed = false;
+    return true;
+}
+
+
 String Query::escapeColumn(const String& key, const String& table) {
     executed = false;
 

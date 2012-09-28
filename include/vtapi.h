@@ -231,6 +231,8 @@ public:
     bool keyFloat(const String& key, float value, const String& from = "");
     bool keyFloatA(const String& key, const float* values, const int size, const String& from = "");
     bool keySeqtype(const String& key, const String& value, const String& from = "");
+    bool keyInouttype(const String& key, const String& value, const String& from = "");
+    bool keyPermissions(const String& key, const String& value, const String& from = "");
 
     // FIXME: use keys instead of all the below
     /**
