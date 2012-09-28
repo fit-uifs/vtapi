@@ -753,25 +753,37 @@ public:
      * @param key column key
      * @return GEOS geometry
      */
-    GEOSGeometry *getGeometry(const String& key);
+    GEOSGeometry* getGeometry(const String& key);
     /**
      * Get GEOS geometry type by the column index
      * @param col column index
      * @return GEOS geometry
      */
-    GEOSGeometry *getGeometry(const int col);
+    GEOSGeometry* getGeometry(const int col);
     /**
      * Get GEOS geometry (linestring) type by the column key
      * @param key column key
      * @return GEOS geometry
      */
-    GEOSGeometry *getLineString(const String& key);
+    GEOSGeometry* getLineString(const String& key);
     /**
      * Get GEOS geometry (linestring) type by the column index
      * @param col column index
      * @return GEOS geometry
      */
-    GEOSGeometry *getLineString(const int col);
+    GEOSGeometry* getLineString(const int col);
+    /**
+     * Get array of 2D points specified by the column index
+     * @param col column index
+     * @return vector of 2D Points
+     */
+    std::vector<PGpoint>*  getPointV(const String& key);
+    /**
+     * Get array of 2D points specified by the column key
+     * @param col column key
+     * @return vector of 2D Points
+     */
+    std::vector<PGpoint>*  getPointV(const int col);
 #endif
 
     // =============== GETTERS - OTHER =========================================

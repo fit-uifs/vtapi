@@ -155,12 +155,13 @@ String KeyValues::getValue(const int col) {
     short typlen = typemap->getLength(colkey.type);
      //if array, this shows element type
     int typelemoid = typcategory == 'A' ? typemap->getElemOID(colkey.type) : -1;
-    int precision = 4;
+    //int precision = 4; // float precision
 
     // Call different getters for different categories of types
     switch (typcategory) {
         case 'A': { // array
-            //TODO: arrays of other types than int4 and float4
+            //TODO: arrays of other types
+            // array of 4-byte ints
             if (typelemoid == typemap->toOid("int4")) {
                 std::vector<int>* arr = this->getIntV(col);
                 //std::vector< std::vector<int>* >* arrX = this->getIntVV(col);
@@ -175,6 +176,7 @@ String KeyValues::getValue(const int col) {
                 }
                 destruct (arr);
             }
+            // array of 4-byte floats
             else if (typelemoid == typemap->toOid("float4")) {
                 std::vector<float>* arr = this->getFloatV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
@@ -187,17 +189,35 @@ String KeyValues::getValue(const int col) {
                 }
                 destruct (arr);
             }
+            // array of 1-byte chars
             else if (typelemoid == typemap->toOid("char")) {
                 int arr_size;
                 char *arr = this->getCharA(col, arr_size);
                 for (int i = 0; i < arr_size; i++) valss << arr[i];
                 destruct (arr);
             }
+            // array of PGpoint
+            else if (typelemoid == typemap->toOid("point")) {
+                std::vector<PGpoint>* arr = this->getPointV(col);
+                if (arr) for (int i = 0; i < (*arr).size(); i++) {
+                    valss << "(" << (*arr)[i].x << "," << (*arr)[i].y << ")";
+                    if (arrayLimit && i == arrayLimit) {
+                        valss << "...";
+                        break;
+                    }
+                    if (i < (*arr).size()-1) valss << ",";
+                }
+                destruct (arr);
+            }
+
             } break;
-        case 'B': { // boolean
+
+        case 'B': { // boolean (NOT IMPLEMENTED)
             } break;
+
         case 'C': { // composite
 #ifdef __OPENCV_CORE_C_H__
+            // OpenCV cvMat type
             if (!colkey.type.compare("cvmat")) {
                 CvMat *mat = getCvMat(col);
                 valss << cvGetElemType(mat);
@@ -217,29 +237,35 @@ String KeyValues::getValue(const int col) {
             } break;
 
         case 'E': { // enum
-            valss << getString(col); // 'name' data type is numeric
+            valss << getString(col); // enum types are strings
             } break;
+
         case 'G': { // geometric
 #ifdef POSTGIS
+            // PostGIS point type
             if (!colkey.type.compare("point")) {
                 PGpoint point = getPoint(col);
                 valss << point.x << " , " << point.y;
             }
+            // PostGIS box type
             else if (!colkey.type.compare("box")) {
                 PGbox box = getBox(col);
                 valss << '(' << box.low.x << " , " << box.low.y << ") , ";
                 valss << '(' << box.high.x << " , " << box.high.y << ')';
             }
+            // PostGIS line-segment type
             else if (!colkey.type.compare("lseg")) {
                 PGlseg lseg = getLineSegment(col);
                 valss << '(' << lseg.pts[0].x << " , " << lseg.pts[0].y << ") ";
                 valss << '(' << lseg.pts[1].x << " , " << lseg.pts[1].y << ')';
             }
+            // PostGIS circle type
             else if (!colkey.type.compare("circle")) {
                 PGcircle circle = getCircle(col);
                 valss << '(' << circle.center.x << " , " << circle.center.y;
                 valss << ") , " << circle.radius;
             }
+            // PostGIS path type
             else if (!colkey.type.compare("path")) {
                 PGpath path = getPath(col);
                 for (int i = 0; i < path.npts; i++) {
@@ -251,6 +277,7 @@ String KeyValues::getValue(const int col) {
                     if (i < path.npts-1) valss << " , ";
                 }
             }
+            // PostGIS polygon type
             else if (!colkey.type.compare("polygon")) {
                 PGpolygon polygon = getPolygon(col);
                 for (int i = 0; i < polygon.npts; i++) {
@@ -264,30 +291,38 @@ String KeyValues::getValue(const int col) {
             }
 #endif
             } break;
-        case 'I': { // network address
+
+        case 'I': { // network address (NOT IMPLEMENTED)
             } break;
 
         case 'N': { // numeric
-            // this detects if type is oid reference (regtype, regclass...)
+            // this can detect if type is oid reference (regtype, regclass...)
+            // if commented, all of it will just print oids
             // if (typemap->isRefType(colkey.type)) {}
+
+            // recognize 4 or 8-bytes integers and floats
             if (!colkey.type.substr(0,5).compare("float"))
                 typlen < 8 ? valss << getFloat(col) : valss << getFloat8(col);
             else
                 typlen < 8 ? valss << getInt(col) : valss << getInt8(col);
             } break;
-        case 'P': { // pseudo
+
+
+        case 'P': { // pseudo (NOT IMPLEMENTED)
             } break;
 
         case 'S': { // string
             if (typlen == 1) valss << getChar(col); // char has length 1
             else return getString(col);
             } break;
-        case 'T': { // timespan
+
+        case 'T': { // timespan (NOT IMPLEMENTED)
             } break;
 
         case 'U': { // user-defined (cube + postGIS types!!)
 #ifdef POSTGIS
-            if (!colkey.type.compare("geometry")) { // postGIS geometry type
+            // PostGIS generic geometry type
+            if (!colkey.type.compare("geometry")) { 
                 GEOSGeometry *geo;
                 GEOSWKTWriter *geo_writer;
                 char * geo_string;
@@ -298,7 +333,7 @@ String KeyValues::getValue(const int col) {
                     break;
                 }
 
-                //TODO: 2.2 zrejme neumi
+                //TODO: GEOS 2.2 conflict, if resolved uncomment int precision
                 //GEOSWKTWriter_setRoundingPrecision(geo_writer, precision);
                 geo_string = GEOSWKTWriter_write(geo_writer, geo);
                 valss << geo_string;
@@ -306,7 +341,8 @@ String KeyValues::getValue(const int col) {
                 GEOSFree(geo_string);
                 GEOSGeom_destroy(geo);
             }
-            else if (!colkey.type.compare("cube")) { // cube type
+            // PostGIS cube type
+            else if (!colkey.type.compare("cube")) {
                 PGcube cube = getCube(col);
                 int lim = cube.dim;
                 if (arrayLimit && (2 * lim > arrayLimit)) lim = arrayLimit/2;
@@ -329,11 +365,12 @@ String KeyValues::getValue(const int col) {
             }
 #endif
             } break;
-        case 'V': { // bit-string
+
+        case 'V': { // bit-string (NOT IMPLEMENTED)
         } break;
-        case 'X': { // unknown
+        case 'X': { // unknown (NOT IMPLEMENTED)
         } break;
-        default: { // undefined
+        default: { // undefined (NOT IMPLEMENTED)
         } break;
     }
     return valss.str();    
@@ -413,6 +450,7 @@ int KeyValues::getInt(const int col) {
     int value = 0;
     short length = typemap->getLength(getKey(col).type);
 
+    // this circumvents libpqtypes and handles all int types (int, oid...)
     if (length < 0) { // conversion if length == -1
         std::stringstream iss (PQgetvalue(select->res, pos, col));
         iss >> value;
@@ -423,7 +461,7 @@ int KeyValues::getInt(const int col) {
         value = ntohl(*(PGint4 *)PQgetvalue(select->res, pos, col));
     else {
         std::stringstream wss;
-        if (length == 8) wss << "Use getInt8(col) to fetch int8 values.";
+        if (length == 8) wss << "Use getInt8(...) to fetch int8 values.";
         else wss << "Integer value of length " << length << " is not supported";
         warning(306, wss.str());
     }    
@@ -518,9 +556,10 @@ std::vector< std::vector<int>* >* KeyValues::getIntVV(const int col) {
     std::vector< std::vector<int>* >* arrays = new std::vector< std::vector<int>* >;
     std::vector<int>* arr;
 
+    // array rows
     for (int i = 0; i < tmp.dims[0]; i++) {
         arr = new std::vector<int>;
-
+        // array columns
         for (int j = 0; j < tmp.dims[1]; j++) {
             if (! PQgetf(tmp.res, i*tmp.dims[1]+j, "%int4", 0, &value)) {
                 warning(308, "Unexpected value in integer array");
@@ -533,9 +572,9 @@ std::vector< std::vector<int>* >* KeyValues::getIntVV(const int col) {
         }
         arrays->push_back(arr);
     }
-
     return arrays;
 }
+
 std::vector< std::vector<int>* >* KeyValues::getIntVV(const String& key) {
     return this->getIntVV(PQfnumber(select->res, key.c_str()));
 }
@@ -658,7 +697,6 @@ CvMat *KeyValues::getCvMat(const int col) {
         warning(324, "Value is not a correct cvmat type");
         return NULL;
     }
-
     // parse CvMat header fields
     if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
         0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
@@ -672,7 +710,6 @@ CvMat *KeyValues::getCvMat(const int col) {
         if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
         data_loc++;
     }
-
     // construct step[] array
     step_size = PQntuples(step_arr.res);
     step = new int [step_size];
@@ -709,13 +746,11 @@ CvMat *KeyValues::getCvMat(const int col) {
         warning(326, "Unexpected type of CvMat data");
         data = NULL;
     }
-
     // create CvMat header and set user data
     if (dims > 0 && data && step) {
         mat = cvCreateMatHeader(rows, cols, type);
         cvSetData(mat, data, step[dims-1]);
     }
-
     destruct (step);
     PQclear(mres);
 
@@ -740,7 +775,6 @@ CvMatND *KeyValues::getCvMatND(const int col) {
         warning(324, "Value is not a correct cvmat type");
         return NULL;
     }
-
     // parse CvMat header fields
     if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
         0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
@@ -754,7 +788,6 @@ CvMatND *KeyValues::getCvMatND(const int col) {
         if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
         data_loc++;
     }
-
     // construct step[] array
     step_size = PQntuples(step_arr.res);
     step = new int [step_size];
@@ -799,13 +832,11 @@ CvMatND *KeyValues::getCvMatND(const int col) {
         warning(326, "Unexpected type of CvMat data");
         data = NULL;
     }
-
     // create CvMatND header and set user data
     if (dims > 0 && data && sizes && step) {
         mat = cvCreateMatNDHeader(dims, sizes, type);
         cvSetData(mat, data, step[dims-1]);
     }
-
     destruct (step);
     PQclear(mres);
 
@@ -956,6 +987,33 @@ GEOSGeometry *KeyValues::getLineString(const int col) {
         warning(323, "Value is not a linestring");
     }
     return ls;
+}
+
+std::vector<PGpoint>*  KeyValues::getPointV(const String& key) {
+    return this->getPointV(PQfnumber(select->res, key.c_str()));
+}
+std::vector<PGpoint>*  KeyValues::getPointV(const int col) {
+    PGarray tmp;
+    if (! PQgetf(select->res, this->pos, "%point[]", col, &tmp)) {
+        warning(324, "Value is not an array of points");
+        return NULL;
+    }
+
+    PGpoint value;
+    std::vector<PGpoint>* values = new std::vector<PGpoint>;
+
+    for (int i = 0; i < PQntuples(tmp.res); i++) {
+        if (! PQgetf(tmp.res, i, "%point", 0, &value)) {
+            warning(325, "Unexpected value in point array");
+            PQclear(tmp.res);
+            destruct (values);
+            return NULL;
+        }
+        values->push_back(value);
+    }
+    PQclear(tmp.res);
+
+    return values;
 }
 #endif
 
