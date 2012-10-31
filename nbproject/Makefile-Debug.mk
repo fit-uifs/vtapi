@@ -50,15 +50,11 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lproc -lgeos -lgeos_c dist/liblwgeom.so dist/libvtapi.so
+LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lproc -llwgeom -lvtapi
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-Debug.mk dist/vtapi
-
-dist/vtapi: dist/liblwgeom.so
-
-dist/vtapi: dist/libvtapi.so
 
 dist/vtapi: ${OBJECTFILES}
 	${MKDIR} -p dist
@@ -67,7 +63,7 @@ dist/vtapi: ${OBJECTFILES}
 ${OBJECTDIR}/vtcli.o: vtcli.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -Iinclude -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtcli.o vtcli.cpp
+	$(COMPILE.cc) -g -Iinclude -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtcli.o vtcli.cpp
 
 # Subprojects
 .build-subprojects:

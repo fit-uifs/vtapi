@@ -413,7 +413,7 @@ String Update::getQuery() {
               "." + String(PQescapeIdentifier(connector->conn, table.c_str(), table.length()));
     }
 
-    queryString = "UPDATE " + table + "SET ";
+    queryString = "UPDATE " + table + " SET ";
 
     // go through keys
     for (int i = 0; i < keys.size(); ++i) {

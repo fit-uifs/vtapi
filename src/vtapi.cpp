@@ -96,6 +96,7 @@ Dataset* VTApi::newDataset(const String& name) {
 
 /**
  * This might be a HOW-TO function
+ * @see doxygen -> vtapi.conf, samples.cpp
  * @code
  */
 void VTApi::test() {

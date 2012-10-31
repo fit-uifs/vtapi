@@ -514,12 +514,13 @@ void CLIInsert::getFloatArray(String arrayParam, PGarray* arr) {
 }
 
 bool CLIInsert::checkLocation(String seqname, String intlocation) {
-
+// TODO: nejede mi PQexec
+/*
     String location;
     PGresult* res;
     PGtext seqlocation = (PGtext) "";
 
-    // get sequence location
+    // get sequence locationPQcle
     res = PQexec(this->connector->getConn(),
         String("SELECT seqlocation FROM " + this->dataset +
             ".sequences WHERE seqname=\'" + seqname.c_str() + "\';").c_str());
@@ -535,7 +536,7 @@ bool CLIInsert::checkLocation(String seqname, String intlocation) {
 
     PQclear(res);
     return true;
-
+*/
 }
 
 bool CLIInsert::execute() {
@@ -596,7 +597,8 @@ bool CLIInsert::execute() {
         res = PQparamExec(this->connector->getConn(), param, query.str().c_str(), 1);
         if(!res)
             this->connector->getLogger()->write(PQgeterror());
-        else PQclear(res);
+       // TODO: nejede mi PQclear 
+        /* else PQclear(res); */
     }
 
     PQparamClear(param);

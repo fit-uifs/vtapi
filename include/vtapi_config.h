@@ -45,7 +45,7 @@
 // #include <opencv2/imgproc/imgproc.hpp>
 // #include <opencv2/highgui/highgui.hpp>
 
-// GEOS 3.2.2 (http://trac.osgeo.org/geos/) - C wrapper
+// GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
 #include <geos_c.h>
 
 // postGIS ... nove je verze 2.0.0
