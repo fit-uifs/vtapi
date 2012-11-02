@@ -298,7 +298,11 @@ String KeyValues::getValue(const int col) {
         case 'N': { // numeric
             // this can detect if type is oid reference (regtype, regclass...)
             // if commented, all of it will just print oids
-            // if (typemap->isRefType(colkey.type)) {}
+            if (typemap->isRefType(colkey.type)) {
+                // TODO: Vojta if (colkey.type.equals("regtype") == 0) { valss << typemap->toTypname(getOid(col)) }
+
+                // TODO: Petr if (colkey.type.equals("regclass") == 0) // pg_namespace.oid > 99 (pg_catalog, pg_toast)
+            }
 
             // recognize 4 or 8-bytes integers and floats
             if (!colkey.type.substr(0,5).compare("float"))

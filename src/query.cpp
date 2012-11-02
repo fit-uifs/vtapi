@@ -266,11 +266,17 @@ Select::Select(const Commons& commons, const String& queryString, PGparam* param
 // FIXME: tohle se musi predelat na TKey
 bool Select::from(const String& table, const String& column) {
     if (this->table.empty()) this->table = table;
+    else if (table.empty()) table = this->table;
 
     fromList.insert(std::pair<String, String > (table, column));
 
     executed = false;
     return true;
+}
+
+// TODO: dat do hlavicky
+bool Select::function(const String& funtext) {
+    // TODO: 
 }
 
 
@@ -315,6 +321,7 @@ String Select::getQuery() {
 
         ilast = ii;
     }
+    // TODO: zajistit, aby se daly zpracovat funkce a prazdny from
 
     // if there are some fields
     if (queryString.length() < 10 || tmpStr.empty())

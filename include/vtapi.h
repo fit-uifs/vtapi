@@ -321,6 +321,15 @@ public:
      */
     bool from(const String& table, const String& column);
 
+
+    /**
+     * This is to specify a function in the (column) list
+     * It may be called more times.
+     * @param funtext
+     * @return success
+     */
+    bool function(const String& funtext);
+
     /**
      * This is to join tables if they can be performed automatically.
      * If not, returns false (no quarantee before version 2).
@@ -1078,7 +1087,7 @@ public:
  *
  * VideoPlayer makes copies of each object, so it doesn't affect nexts() performed elsewhere,
  * however, it may fail in case of next, where are hundreds of thousands of tuples (@see Keyvalues)
- * // TODO: This behavior might be chenged later
+ * // TODO: This behavior might be changed later
  *
  *  @note Error codes 16*
  */

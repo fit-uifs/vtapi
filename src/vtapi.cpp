@@ -298,7 +298,7 @@ void VTApi::test() {
     process->printAll();
 
     // tohle doma nezkousejte, nebo vam upadne zadecek
-    // process->add("test", "test");
+    //process->add("test", "test");
 
 
 #ifdef PROCPS_PROC_READPROC_H

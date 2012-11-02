@@ -39,11 +39,15 @@
 #include <proc/readproc.h>
 #endif
 
+// OpenCV header files
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
 // OpenCV
-// #include <opencv2/core/core.hpp>
-// #include <opencv2/core/core_c.h>
-// #include <opencv2/imgproc/imgproc.hpp>
-// #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/core/core_c.h>
+#include <opencv2/imgproc/imgproc.hpp>
+// This adds the ability to debug image and video
+#include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
 #include <geos_c.h>

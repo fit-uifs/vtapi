@@ -436,6 +436,18 @@ public:
     int getElemOID (int oid);
 };
 
+
+
+// TODO: Petr
+class ClassMap {
+    ClassMap(Connector* connector);
+    ~ClassMap();
+
+    int toOid(String classname);
+    int toClassName(int Oid);
+};
+
+
 /**
  * A generic function to convert any numeric type to string
  * (any numeric type, e.g. int, float, double, etc.)

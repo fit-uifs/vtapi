@@ -45,7 +45,6 @@ Logger::Logger(const String& filename) {
 #endif
     }
 
-
 }
 
 void Logger::write(const String& logline) {

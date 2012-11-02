@@ -67,11 +67,20 @@
         <platform>2</platform>
       </toolsSet>
       <compileType>
+        <cTool>
+          <incDir>
+            <pElem>../include</pElem>
+            <pElem>../include/postgresql</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/local/include/opencv2</pElem>
+          </incDir>
+        </cTool>
         <ccTool>
           <incDir>
             <pElem>../include</pElem>
             <pElem>../include/postgresql</pElem>
             <pElem>/usr/include/postgresql</pElem>
+            <pElem>/usr/local/include/opencv2</pElem>
           </incDir>
           <preprocessorList>
             <Elem>_DEBUG</Elem>

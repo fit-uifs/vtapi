@@ -40,6 +40,7 @@ bool Video::add(String name, String location) {
 #endif
 }
 
+// TODO: nejak odlisit nestandardni veci
 
 
 #ifdef __OPENCV_HIGHGUI_HPP__
@@ -55,6 +56,7 @@ VideoPlayer::VideoPlayer(Video& orig) : Commons(orig) {
 }
 
 
+// TODO: point (), line, box, ellipse
 // TODO: play 1, 2, 4, 6, 9, 12 and 16 videos at once :)
 bool VideoPlayer::play() {
     // TODO: P3k dodelat nacteni vice Video a Interval
