@@ -9,12 +9,18 @@
  * @section HOMEPAGE VTApi development homepage
  * https://gitorious.org/vtapi
  *
- * @section PREREQUSITIES Prerequisities
+ * @section PREREQUISITIES Prerequisities
  *    - OS Windows, Linux, 32 and 64bit
- *    - GCC 4.4.6, 4.5.2+
+ *    - GCC 4.5.2+
  *    - PostgreSQL 9.1 – libpq
  *    - libpqtypes 1.5
- *    - OpenCV 2.3 (mandatory)
+ *    - OpenCV 2.4 (mandatory, but recommended)
+ *
+ * @section PREREQ_POSTGIS Prerequisities for PotsGIS use
+ *    - PostGIS 2.0
+ *    - Proj4 4.8 (reprojection)
+ *    - GEOS 3.3.3 (geometry)
+ *    - GDAL 1.9 (raster)
  *
  * @note For more information visit https://gitorious.org/vtapi/pages/Install .
 
@@ -27,15 +33,15 @@
  * @section BASIC_TERMS Basic terms
  * @subsection LOGICAL_DATASET Dataset
  * The dataset is the main storing center. This is used as a folder with video
- * files or as a folder with folders of images. There are stored also the 
- * metadata for each multimedial data.
+ * files or as a folder with folders of images. The metadata for each
+ * multimedial data are also stored there.
  *
  * @subsection LOGICAL_SEQUENCE Sequence
  * The sequence is the basic unit of the datasets. This can be represent as
  * a set of images (video) or as a folder of images.
  *
  * @subsection LOGICAL_INTERVAL Interval
- * The interval is a subset of sequence (set of images) with the same metadata,
+ * The interval is a subset of sequence (set of images) with the same metadata.
  * It can be a continuous interval of video (frames) or a sequence of images.
  * The metadata can be generally various, but they are always created by
  * a process.
@@ -63,7 +69,7 @@
  *
  * @section LICENSE License
  * There will be license information for VTApi.
- * @copyright &copy; FIT BUT, CZ, 2011
+ * @copyright &copy; FIT BUT, CZ, 2011 &ndash; 2012
  *
  * @example vtapi.conf
  * This file shows an example configuration file for VTApi.
@@ -77,15 +83,23 @@
  * Tomas Volf, ivolf (at) fit.vutbr.cz
  *
  *
- * @section LECENSE License
+ * @section LICENSE License
  *
  * There will be license information for VTApi.
- * &copy; FIT BUT, CZ, 2011
+ * &copy; FIT BUT, CZ, 2011 &ndash; 2012
  *
  *
  * @section DESCRIPTION Description
  * 
  * Main classes which provide a basic functionality of VTApi.
+ *
+ * @todo @b doc[TV]: see -> ref -> mainpage u základních pojmů
+ * @todo @b doc: sjednotit malá/velká písmena parametrů a návratových hodnot (zatím to vypadá jak "každý pes, jiná ves")
+ * @todo @b doc: opravdu je nutné do dokumentace zahrnovat i třídu VTCli 
+ *               a podobné "nesmysly" viz <a href="annotated.html">Class List</a> ?
+ *               V dokumentaci k API by podle mého názoru mělo být jen to, co ostatní
+ *               využijí, kamž VTCli a podobné věci nepatří, nemýlím-li se...
+ *               (To tak možná leda do devel doc ;) )
  */
 
 #ifndef VTAPI_H
@@ -96,6 +110,7 @@
 
 // virtual definitions of classes
 // list of classes, which are contained in this header
+// you can use it as a quick jump to the appropriate class defitinition
 class VTApi;
 
 class TKey;
@@ -115,10 +130,12 @@ class Insert;
 
 
 /**
- * @brief This is to represent the Key in fields in queries
- * 
+ * @brief This is used to represent the Key in fields in queries
  * ... just for the feeling (and vectors, of course)
+ *
  * @note You can use size=-1 for NULL :)
+ *
+ * @todo @b doc: "in fields in queries"? Co tím chtěl autor říci?
  */
 class TKey {
 // Members
@@ -137,7 +154,7 @@ public:
 
     /**
      * Copy constructor
-     * @param orig
+     * @param orig key to coppy
      */
     TKey(const TKey& orig) 
             : type(orig.type), key(orig.key), from(orig.from), size(orig.size) {};
@@ -148,14 +165,15 @@ public:
      * @param key name of a column
      * @param size "0" is the value right now
      * @param from distinguish between in/out right now
+     * @todo @b doc: asi zobecnit - použito v keyvalues, method, query, video, vtapi a ne ke všemu to, dle mého, sedí
      */
     TKey(const String& type, const String& key, const int size, const String& from = "")
             : type(type), key(key), size(size), from(from) {};
 
     
     /**
-     * Print data and return data that was printed
-     * @return data of TKey that was printed
+     * Print data and return printed string
+     * @return printed string of TKey data
      */
     String print();
 };
@@ -169,14 +187,16 @@ public:
  * @see http://libpqtypes.esilo.com/
  *
  * @note Error codes 20*
+ *
+ * @todo @b doc: sjednotit "It can be called several times", "It may be called several times." a "It may be called more times." u Query, Select, Insert, ...?
  */
 class Query : public Commons {
 // Members
 public:
     std::vector<TKey> keys; /**< This is where those keys are stored */
-    String queryString; /**< This is used for (direct) queries */
+    String queryString; /**< This is used for (direct) queries @todo @b doc: Petrovy závorky */
     PGparam* param; /**< This is used for parameter passing to query */
-    PGresult* res; /**< This is where results are (to be) not NULL */
+    PGresult* res; /**< This is where results are (to be) not NULL @todo @b doc: Petrovy závorky: co tím chtěl autor říci? */
     bool executed; /**< This is a flag wheather the query was executed after any change */
 
 // Methods
@@ -207,9 +227,9 @@ public:
     // TODO? virtual bool prepare();
 
     /**
-     * This may be hazardeous for someone...
-     * marked as deprecated, because there is no discouraged mark
      * @deprecated
+     * This may be hazardeous for someone...
+     * @note marked as deprecated, because there is no discouraged mark
      * @param key
      * @return success
      */
@@ -218,11 +238,11 @@ public:
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times as:
-     * @todo
      * @param key
      * @param value
      * @param from
      * @return success
+     * @todo @b doc: pro každou funkci; není příliš jasné, k čemu ta funkce je (+ from).
      */
     bool keyString(const String& key, const String& value, const String& from = "");
     bool keyStringA(const String& key, const String* values, const int size, const String& from = "");
@@ -239,59 +259,84 @@ public:
      * This is to specify the (single) table to be inserted in
      * @param table table into which new data will be inserted
      * @return success
+     * @todo @b doc: Petrovy závorky
      */
     bool setTable(const String& table);
-    String table;       /** This is where the (single) table/selection is stored */
+    String table;       /**< This is where the (single) table/selection is stored @todo @b doc: Petrovy závorky */
 
     // FIXME: use keys instead of this
     /**
      * This is a WHERE statement construction class for "Strings"
-     * It can be called several times as:
-     *
-     * @param key
-     * @param value
-     * @param oper
-     * @param table
-     * @return 
+     * It can be called several times.
+     * @param key key to compare with the value
+     * @param value requested value for key
+     * @param oper comparision operator between key and value
+     * @param table table where the key is situated
+     * @return
+     * @todo @b doc: snad je table míněno takto
+     * @todo @b code: vždy vrací true?
      */
     bool whereString(const String& key, const String& value, const String& oper = "=", const String& table = "");
 
     /**
      * This is a WHERE statement construction class for integers
      * It can be called several times and for arrays as:
-     *
-     * @param key
-     * @param value
-     * @param oper
-     * @param table
+     * @param key key to compare with the value
+     * @param value requested value for key
+     * @param oper comparision operator between key and value
+     * @param table table where the key is situated
      * @return
+     * @todo @b doc: "and for arrays"? co tím autor myslel? Případně reflektovat u ostatních whereX funkcí
+     * @todo @b doc: snad je table míněno takto
+     * @todo @b code: vždy vrací true?
      */
     bool whereInt(const String& key, const int value, const String& oper = "=", const String& table = "");
 
+    /**
+     * This is a WHERE statement construction class for floats
+     * It can be called several times.
+     * @param key key to compare with the value
+     * @param value requested value for key
+     * @param oper comparision operator between key and value
+     * @param table table where the key is situated
+     * @return
+     * @todo @b doc: snad je table míněno takto
+     * @todo @b code: vždy vrací true?
+     */
     bool whereFloat(const String& key, const float value, const String& oper = "=", const String& table = "");
-    String where;   // FIXME: see above :(
+    // FIXME: see above :(
+    String where;   /**< This is used either for direct entry of WHERE statement or its build from whereX functions */
 
 protected:
+    /**
+     * @param key
+     * @param table
+     * @return
+     * @todo @b doc: doplnit
+     * @todo @b code: není chyba v escapování při zadání klíče i tabulky? Je tam escapovaný název tabulky, ale nepřidává se k němu nikde klíč..
+     */
     String escapeColumn(const String& key, const String& table = "");
 };
 
 /**
  * @brief This is a class where queries are (to be) constructed
- *
+ * 
  * Mechanism: TBD
  *
  * @note Errors 21*
  *
+ * @todo @b doc: Petrovy závorky
+ * @todo @b doc: "Mechanism: TBD" - vysvětlit či zničit
  */
 class Select : public Query {
 // Members
 public:
     // TODO: this->from["intervals"] = "*";
     // FIXME: use keys
-    std::multimap<String, String> fromList; /**< This is a tuple table and column name */
+    std::multimap<String, String> fromList; /**< This is a tuple <table name, column name> */
 
-    String groupby; /**< String for a GROUP BY part of the query */
-    String orderby; /**< String for a ORDER BY part of the query */
+    String groupby; /**< String used for the GROUP BY statement */
+    String orderby; /**< String used for the ORDER BY statement */
 
     int limit;  /**< Specify a size (a number of rows) of the resultset */
     int offset; /**< Specify an index of row, where the resultset starts */
@@ -299,46 +344,50 @@ public:
 // Methods
 public:
     /**
-     * @todo
-     * @param commons
-     * @param queryString
-     * @param param
+     * Construct a SELECT query object
+     * @param commons pointer of the existing commons object
+     * @param queryString query string
+     * @param param parameters for passing to the query
      */
     Select(const Commons& commons, const String& queryString = "", PGparam *param = NULL);
 
     /**
      * This expands the query, so you can check it before the execution
-     * @return string value with SQL select query
+     * @return string value with the SQL SELECT query
      */
     String getQuery();
 
     /**
-     * This is to specify the from clause and the select (column) list
+     * This is used to specify the table for FROM statement and the column list for SELECT statement
      * It may be called more times.
-     * @param table
-     * @param column
+     * @param table table to select
+     * @param column column for select
      * @return success
+     * @todo @b code: vrací vždy true
      */
     bool from(const String& table, const String& column);
 
 
     /**
-     * This is to specify a function in the (column) list
+     * This is used to specify a function in the (column) list
      * It may be called more times.
      * @param funtext
      * @return success
+     * @todo @b code: neimplementováno
      */
     bool function(const String& funtext);
 
     /**
-     * This is to join tables if they can be performed automatically.
+     * This is used to join tables if they can be performed automatically.
      * If not, returns false (no quarantee before version 2).
+     * @warning no quarantee before version 2 !!
      * @return success
+     * @todo @b code: neimplementováno
      */
     bool join();
 
     /**
-     * This is to discard current resultset and fetch next one with updated
+     * This is used to discard current resultset and fetch next one with updated
      * OFFSET value
      * @return success
      */
@@ -353,20 +402,22 @@ public:
  *
  * @note Error codes 22*
  *
+ * @todo @b doc: Petrovy závorky
+ * @todo @b doc: "Mechanism: TBD" - vysvětlit či zničit
  */
 class Insert : public Query {
 public:
     /**
-     * @todo
-     * @param commons
-     * @param insertString
-     * @param param
+     * Construct a INSERT command object
+     * @param commons pointer of the existing commons object
+     * @param insertString query string
+     * @param param parameters for passing to the query
      */
     Insert(const Commons& commons, const String& insertString = "", PGparam *param = NULL);
 
     /**
      * This expands the query, so you can check it before the execution
-     * @return string value with SQL insert command
+     * @return string value with SQL INSERT command
      */
     String getQuery();
 };
@@ -376,13 +427,16 @@ public:
  *
  * Mechanism: TBD
  * 
- * @todo: in the future version (1.0), this class will use Select (whereKV)
+ * @todo <b>nějaký artefakt?:</b> in the future version (1.0), this class will use Select (whereKV)
  *
  * @warning This class used unproperly may destroy the life and the universe.
  * RECOMENDATION: Wait for the version 1.0.
  *
  * @note Error codes 23*
  *
+ * @todo @b doc: buď zneškodnit předchozí TODO ("nějaký artefakt?") a nebo tam napsat správnou verzi (todo, recomendation); v závislosti na předchozím výběru taky zkontrolovat, zda tu doc sedí (todo, recomendation, warning).
+ * @todo @b doc: Petrovy závorky
+ * @todo @b doc: "Mechanism: TBD" - vysvětlit či zničit
  */
 class Update : public Query {
 public:
@@ -390,7 +444,7 @@ public:
 
     /**
      * This expands the query, so you can check it before the execution
-     * @return
+     * @return string value with SQL UPDATE command
      */
     String getQuery();
 };
@@ -401,20 +455,34 @@ public:
 /**
  * @brief KeyValues storage class
  *
+ * @see Basic definition of term @ref LOGICAL_KEYVALUES
+ *
  * @note Error codes 30*
+ *
+ * @todo @b doc: sjednotit "get a ... by a ..." vs. "get ... by the ..."
  */
 class KeyValues : public Commons {
 // Members
 public:
-    Select* select; /**< Select is (to be) pre-filled by the constructor */
-    int pos;        /**< Tuple of the resultset; initialized to -1 by default */
+    Select* select; /**< Select is (to be) pre-filled by the constructor @todo @b doc: Petrovy závorky */
+    int pos;        /**< N-th tuple of the resultset; initialized to -1 by default */
     Insert* insert; /**< New insert to insert new data */
-    Update* update;
+    Update* update; /**< New update to update new data */
     // some other inherited from @link Commons
 
 // Methods
 public:
+    /**
+     * KeyValue contructor from commons object
+     * @param orig pointer of the existing commons object
+     */
     KeyValues(const Commons& orig);
+
+    /**
+     * KeyValue constructor from another KeyValues object
+     * @param orig pointer to the parent KeyValues object
+     * @param selection specific selection name
+     */
     KeyValues(const KeyValues& orig, const String& selection = "");   // FIXME: why is this needed? Stupid C++???
 
     /**
@@ -437,7 +505,8 @@ public:
     TKey getKey(int col);
     /**
      * Get a list of all possible columns as TKeys
-     * @return list of key name and TODO
+     * @return list of key names and TODO
+     * @todo @b doc: jakési TODO v popisku return ;)
      */
     std::vector<TKey>* getKeys();
 
@@ -581,13 +650,13 @@ public:
     /**
      * Get a double value specified by a column key
      * @param key column key
-     * @return float value
+     * @return double value
      */
     double getFloat8(const String& key);
     /**
      * Get a double value specified by an index of a column
      * @param col index of column
-     * @return float value
+     * @return double value
      */
     double getFloat8(const int col);
     /**
@@ -616,6 +685,8 @@ public:
      * @return  array of float values
      */
     std::vector<float>* getFloatV(const String& key);
+
+    //TODO: is it needed a vector of float vectors as in case of integers?
 
     // =============== GETTERS - TIMESTAMP =====================================
     /**
@@ -711,7 +782,7 @@ public:
     PGcircle getCircle(const int col);
     /**
      * Get polygon specified by the column key
-     * note: polygon.pts must be copied out if needed after clearing resultset
+     * @note polygon.pts must be copied out if needed after clearing resultset
      *          copy_points(polygon.npts, polygon.pts, ...);
      * @param key column key
      * @return Polygon
@@ -719,7 +790,7 @@ public:
     PGpolygon getPolygon(const String& key);
     /**
      * Get polygon specified by the column index
-     * note: polygon.pts must be copied out if needed after clearing resultset
+     * @note polygon.pts must be copied out if needed after clearing resultset
      *          copy_points(polygon.npts, polygon.pts, ...);
      * @param col column index
      * @return Polygon
@@ -727,33 +798,33 @@ public:
     PGpolygon getPolygon(const int col);
     /**
      * Get path specified by the column key
-     * note: path.pts must be copied out if needed after clearing resultset
+     * @note path.pts must be copied out if needed after clearing resultset
      *          copy_points(path.npts, path.pts, ...);
      * @param key column key
-     * @return 2D Point
+     * @return Path
      */
     PGpath getPath(const String& key);
     /**
      * Get path specified by the column index
-     * note: path.pts must be copied out if needed after clearing resultset
+     * @note path.pts must be copied out if needed after clearing resultset
      *          copy_points(path.npts, path.pts, ...);
      * @param col column index
-     * @return 2D Point
+     * @return Path
      */ 
     PGpath getPath(const int col);
 
     /**
      * Get cube specified by the column index
-     * Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
-     * Points may have 1-100(CUBE_MAX_DIM) dimensions
+     * @note Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
+     * @note Points may have 1-100(CUBE_MAX_DIM) dimensions
      * @param key column key
      * @return Cube
      */
     PGcube getCube(const String& key);
     /**
      * Get cube specified by the column key
-     * Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
-     * Points may have 1-100(CUBE_MAX_DIM) dimensions
+     * @note Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
+     * @note Points may have 1-100(CUBE_MAX_DIM) dimensions
      * @param col column index
      * @return Cube
      */
@@ -810,24 +881,112 @@ public:
      * This is to support updates in derived classes
      * (unimplemented error 3010 in this class)
      * @return success (in derived classes)
+     * @todo @b code: neimplementováno
      */
     virtual bool preSet();
 
 
     // TODO: overit jestli a jak funguje... jako UPDATE?
+    /**
+     * Set a new string value of the specified key
+     * @param key column key to update
+     * @param value new string value of the key
+     * @return
+     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     */
     bool setString(const String& key, const String& value);
+
+    /**
+     * Set a new integer value of the specified key
+     * @note New integer value is casted from string value
+     * @param key column key to update
+     * @param value new integer value (in string representation) of the key
+     * @return
+     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     */
     bool setInt(const String& key, const String& value);
+
+    /**
+     * Set a new integer value of the specified key
+     * @param key column key to update
+     * @param value new integer value of the key
+     * @return
+     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     */
     bool setInt(const String& key, int value);
+
+    /**
+     * Set a new integer array of the specified key
+     * @param key column key to update
+     * @param values new integer array of the key
+     * @param size size of the array of integer values
+     * @return
+     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     */
     bool setIntA(const String& key, const int* values, int size);
+
+    /**
+     * Set a new integer vector of the specified key
+     * @param key column key to update
+     * @param values new integer vector of the key
+     * @return
+     * @todo @b code: neimplementováno (doplnit pak do doc návratovou hodnotu)
+     */
     bool setIntV(const String& key, const std::vector<int> values);
+
+    /**
+     * Set a new float value of the specified key
+     * @note New flaot value is casted from string value
+     * @param key column key to update
+     * @param value new float value (in string representation) of the key
+     * @return
+     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     */
     bool setFloat(const String& key, const String& value);
+
+    /**
+     * Set a new float value of the specified key
+     * @param key column key to update
+     * @param value new float value of the key
+     * @return
+     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     */
     bool setFloat(const String& key, float value);
+
+    /**
+     * Set a new float array of the specified key
+     * @param key column key to update
+     * @param values new float array of the key
+     * @param size size of the array of integer values
+     * @return
+     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     */
     bool setFloatA(const String& key, const float* values, int size);
+
+    /**
+     * Set a new float vector of the specified key
+     * @param key column key to update
+     * @param values new float vector of the key
+     * @return
+     * @todo @b code: neimplementováno (doplnit pak do doc návratovou hodnotu)
+     */
     bool setFloatV(const String& key, const std::vector<float> values);
+
+    /**
+     * Execute SQL UPDATE command
+     * @return success
+     */
     bool setExecute();
     
     // =============== ADDERS (Insert) ========================================
     // TODO: implement?
+    /**
+     *
+     * @param key
+     * @param value
+     * @return
+     * @todo @b code: addX neimplementováno
+     */
     bool addString(const String& key, const String& value);
     bool addInt(const String& key, const String& value);
     bool addInt(const String& key, int value);
@@ -835,19 +994,22 @@ public:
     bool addFloat(const String& key, const String& value);
     bool addFloat(const String& key, float value);
     bool addFloatA(const String& key, float* value, int size);
+
+    /**
+     * Execute SQL INSERT command
+     * @return success
+     */
     bool addExecute();
 
     /**
-     * This is to check whether the underlying dataset, sequence (directory / video) or interval (image) exists
+     * This is used to check whether the underlying dataset, sequence (directory / video) or interval (image) exists
      * @return found
      */
     bool checkStorage();
 
 protected:
-    // table caption
-    String caption;
-    // custom table options (border, padding, whatever..)
-    String tableOpt;
+    String caption; /**< table caption */
+    String tableOpt; /**< custom table options (border, padding, whatever..) */
 
     ////////////// Print support methods
 
@@ -857,24 +1019,26 @@ protected:
      *  a) Tkeys - column types etc., b) ints - column widths
      */
     void printHeader(const std::pair< std::vector<TKey>*,std::vector<int>* > fInfo);
+
     /**
      * Prints one row of resultset.
      * @param row Which row of resultset to print
      * @param widths Metadata - vector of column widths
      */
     void printRowOnly(const int row, const std::vector<int>* widths);
+
     /**
      * Prints table footer and info about printed rows
      * @param count How many rows were printed (0 = single row was printed)
      */
-
     void printFooter(const int count = 0);
+
     /**
-     * This goes through result set and retrieves metadate necessary for print.
-     * It needs to be done before every print.
-     * @param row If not set to -1, this indicates single row print.
+     * This goes through resultset and retrieves metadata necessary for print.
+     * @note It needs to be done before every print.
+     * @param row if not set to -1, this indicates single row print
      * @param indicator whether column widths will be required
-     * @return Metadata for print, pair consisting of two vectors:
+     * @return metadata for print, pair consisting of two vectors:
      *  a) Tkeys - column types etc., b) ints - column widths
      */
     std::pair< std::vector<TKey>*,std::vector<int>* > getFieldsInfo(const int row = -1, int get_widths = 1);
@@ -884,6 +1048,8 @@ protected:
 
 /**
  * @brief This class should always be on the path of your programm...
+ *
+ * @see Basic definition of term @ref LOGICAL_DATASET
  *
  * @note Error codes 31*
  */
@@ -896,16 +1062,16 @@ public:
      *    -# Don't know the name -> use next
      *    -# The dataset is in your vtapi.conf
      *
-     * @param orig
-     * @param name
-     * @todo params orig&name in documentation
+     * @param orig pointer to the parent KeyValues object
+     * @param name specific dataset name
+     * @todo @b doc: nejsem si jist, zda i zde je parametr "const KeyValues& orig" nadřazený prvek
      */
     Dataset(const KeyValues& orig, const String& name = "");
 
     /**
      * Move to a next dataset and set dataset name and location varibles
      * @return success
-     * @note Over-loading next() from KeyValues
+     * @note Overloading next() from KeyValues
      */
     bool next();
 
@@ -914,6 +1080,7 @@ public:
      * @return string value with the name of the dataset
      */
     String getName();
+
     /**
      * Get a dataset location
      * @return string value with the location of the dataset
@@ -927,6 +1094,7 @@ public:
      * @return sequence
      */
     Sequence* newSequence(const String& name = "");
+    
     /**
      * Get new video(s) of current dataset
      * @param name (none for all)
@@ -957,6 +1125,8 @@ protected:
 /**
  * @brief A Sequence class manages videos and images
  *
+ * @see Basic definition of term @ref LOGICAL_SEQUENCE
+ *
  * @note Error codes 32*
  */
 class Sequence : public KeyValues {
@@ -968,15 +1138,15 @@ protected:
 public:
     /**
      * Constructor for sequences
-     * @param orig pointer to the parrent
-     * @param name name of sequence, which we can construct
+     * @param orig pointer to the parrent KeyValues object
+     * @param name specific sequence name
      */
     Sequence(const KeyValues& orig, const String& name = "");
 
     /**
      * Move to a next sequence and set sequence name and location varibles
      * @return success
-     * @note Over-loading next() from KeyValues
+     * @note Overloading next() from KeyValues
      */
     bool next();
 
@@ -992,11 +1162,12 @@ public:
     String getLocation();
 
     /**
-     * Add new sequence to a table
+     * Add new sequence to a database table
      * @param name name of the sequence
      * @param location location of the sequence
      * @param type type of the sequence
      * @return success
+     * @todo @code: bez návratové hodnoty
      */
     bool add(String name, String location, String type);
 
@@ -1016,13 +1187,19 @@ public:
     Image* newImage(const String& name = "");
 
     /**
-     * @todo Not implemented
+     *
      * @param name
      * @return
+     * @todo @b code: neimplementováno (potom doplnit i doc)
      */
     Process* newProcess(const String& name = "");
 
 #ifdef __OPENCV_CORE_HPP__
+    /**
+     *
+     * @return
+     * @todo @b code: neimplementováno (potom doplnit i doc)
+     */
     cv::Mat getNextImage();
 #endif
 
@@ -1038,8 +1215,8 @@ class Video : public Sequence {
 public:
     /**
      * Constructor for Video
-     * @param orig -in class (parent)
-     * @param name of the sequence
+     * @param orig pointer to the parrent KeyValues object
+     * @param name specific sequence name
      */    
     Video(const KeyValues& orig, const String& name);
 
@@ -1047,6 +1224,7 @@ public:
      * Create a new frame specified by the frame number
      * @param name name of the image
      * @return pointer to the new image
+     * @todo @b code: neimplementováno
      */
     Image* newFrame(const int frame = 1);
 
@@ -1062,6 +1240,7 @@ public:
      * @param name of the video
      * @param location of the video
      * @return success
+     * @todo @b code: bez návratové hodnoty
      */
     bool add(String name, String location);
 
@@ -1071,9 +1250,15 @@ public:
      * @todo Test
      * @param name
      * @return
+     * @todo @b code: neimplementováno (potom doplnit i doc)
      */
     bool openVideo();
 
+    /**
+     *
+     * @return
+     * @todo @b code: neimplementováno (potom doplnit i doc)
+     */
     cv::Mat getNextImage();
 #endif
 
@@ -1090,6 +1275,8 @@ public:
  * // TODO: This behavior might be changed later
  *
  *  @note Error codes 16*
+ *
+ *  @todo @b doc: třída prakticky bez dokumentace
  */
 class VideoPlayer : public Commons {
 protected:
@@ -1102,7 +1289,7 @@ protected:
 
 public:
     /**
-     * A void construcotr - plays nothing at all at the moment
+     * A void constructor - plays nothing at all at the moment
      * @param orig
      */
     VideoPlayer(Commons& orig);
@@ -1119,8 +1306,9 @@ public:
 
     /**
      * This function simply plays what added before
-     * ... or a default capture in cese of none (can be used to store the capture)
+     * ... or a default capture in case of none (can be used to store the capture)
      * @return
+     * @todo @b code: bez návratové hodnoty (potom doplnit i do doc)
      */
     bool play();
 };
@@ -1133,19 +1321,21 @@ public:
 /**
  * @brief Interval is equivalent to an interval of images
  *
+ * @see Basic definition of term @ref LOGICAL_INTERVAL
+ *
  * @note Error codes 33*
  */
 class Interval : public KeyValues {
 public:
-    /** This is because of image and video load && getSequence() documented. */
-    Sequence* parentSequence;   // TODO: destroy in destructor if doom
-    bool parentSequenceDoom;    // this is whwether do destroy the above
+    // TODO: destroy in destructor if doom
+    Sequence* parentSequence; /**< This is because of image and video load && getSequence() documented. @todo @b doc: co tím chtěl autor říci? */
+    bool parentSequenceDoom; /**< this is whether to destroy the above */
 
 public:
     /**
      * Constructor for intervals
-     * @param orig pointer to the parrent
-     * @param selection name of a selection table
+     * @param orig pointer to the parrent KeyValues object
+     * @param selection specific name of a selection table
      */
     Interval(const KeyValues& orig, const String& selection = "intervals");
 
@@ -1154,14 +1344,15 @@ public:
     /**
      * This is to (fast)
      * @return sequence string
+     * @todo @b doc: Co tím popiskem "This is to (fast)" chtěl auto říci?
      */
     String getSequenceName();
     
     /**
-     * WARNING: This function has changed the return signature in version pre2!
+     * @warning This function has changed the return signature in version pre2!
      *          You may use getSequenceName()...
      *
-     * This is to query (if needed) the Sequences (may be slow for continuous use) to
+     * This is used to query (if needed) the Sequences (may be slow for continuous use)
      * @return sequence object
      */
     Sequence* getSequence();
@@ -1178,31 +1369,37 @@ public:
     int getEndTime();
 
     /**
-     * Add new interval to a table
-     * @todo return always true
+     * Add new interval to the table
      * @param sequence interval name
      * @param t1 start time
      * @param t2 end time
-     * @param location of the image
+     * @param location location of the image
      * @return success
+     * @todo @b code: vrací vždy true
      */
     bool add(const String& sequence, const int t1, const int t2 = -1, const String& location = "");
 
     /**
-     * This is to support updates
+     * This is used to support updates
      * @return success (in derived classes)
+     * @todo @b code: vrací vždy true
      */
     bool preSet();
 };
 
 /**
  * @brief This represents images
- * @todo Not implemented [TV]
+ *
  * @note Error codes 339*
  */
 class Image : public Interval {
 // Methods
 public:
+    /**
+     * Constructor for Images
+     * @param orig pointer to the parrent KeyValues object
+     * @param selection specific name of a selection table
+     */
     Image(const KeyValues& orig, const String& selection = "intervals");
 
     /**
@@ -1219,15 +1416,18 @@ public:
     /**
      * This is here just for image name
      * @return string value with the location of the image
+     * @todo @b code: Nemělo by se to sjednotit se sekvencí, tedy neměla by se
+     *                stringová funkce jmenovat getLocationName?
      */
     String getLocation();
 
     /**
-     * Simply adds an image (interval) to the sequence (no checking)
-     * @param sequence
-     * @param t
-     * @param location
+     * Simply adds an image (interval) to the sequence table (no checking)
+     * @param sequence interval name
+     * @param t time (start time is the same as the end time)
+     * @param location location of the image
      * @return success
+     * @todo @b code: bez návratové hodnoty
      */
     bool add(const String& sequence, const int t, const String& location);
 
@@ -1238,6 +1438,8 @@ protected:
 
 /**
  * @brief A class which represents methods and gets also their keys
+ *
+ * @see Basic definition of term @ref LOGICAL_METHOD
  *
  * @note Error codes 35*
  */
@@ -1250,38 +1452,40 @@ public:
 public:
     /**
      * Constructor for methods
-     * @param orig pointer to the parrent
-     * @param name name of method, which we can construct
+     * @param orig pointer to the parrent KeyValues object
+     * @param name specific name of method, which we can construct
      */
     Method(const KeyValues& orig, const String& name = "");
 
     /**
      * Move to a next method and set a method name and its methodkeys variables
      * @return success
-     * @note Over-loading next() from KeyValues
+     * @note Overloading next() from KeyValues
      */
     bool next();
+
     /**
      * Get a name of the current method
      * @return string value with the name of the method
      */
     String getName();
     /**
-     * This is to refresh the methodKeys vector
+     * This is used to refresh the methodKeys vector
      * @return vector<TKey>
      */
     std::vector<TKey> getMethodKeys();
 
     /**
      * Create new process for current dataset
-     * @return pointer to new sequence
+     * @return pointer to new process
      */
     Process* newProcess(const String& name = "");
 
 private:
     /**
-     * @todo: NOT IMPLEMENTED? [TV]
+     *
      * @param inout
+     * @todo code: neimplementováno (pak doplnit i doc)
      */
     void printData(const String& inout);
 };
@@ -1289,16 +1493,24 @@ private:
 /**
  * @brief A class which represents processes and gets information about them
  *
+ * @see Basic definition of term @ref LOGICAL_PROCESS
+ *
  * @note Error codes 36*
  */
 class Process : public KeyValues {
 // Methods
 public:
+    /**
+     * Constructor for processes
+     * @param orig pointer to the parrent KeyValues object
+     * @param name specific name of process, which we can construct
+     */
     Process(const KeyValues& orig, const String& name = "");
 
     /**
      * Individual next() for processes, which stores current process
      * and selection to commons
+     * @note Overloading next() from KeyValues
      * @return success
      */
     bool next();
@@ -1328,6 +1540,7 @@ public:
      * @param name
      * @param selection
      * @return
+     * @todo @b doc: má to cenu komentovat? :)
      */
     bool add(const String& method, const String& name, const String& selection="intervals");
 
@@ -1337,13 +1550,15 @@ public:
      * @param t1 currently unused
      * @param t2 currently unused
      * @return new interval
+     * @todo @b code: Nepoužívané parametry t1, t2
      */
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
     /**
      * Create new sequence for process
      * // TODO: not implemented method
-     * @param name sequence name (TODO: is it correct?)
+     * @param name specific sequence name
      * @return new sequence
+     * @todo @b doc: neimplementováno
      */
     Sequence* newSequence(const String& name = "");
 
@@ -1371,6 +1586,8 @@ public:
      * Constructor recomended (in the future)
      * @param argc
      * @param argv
+     * @todo @b doc: "(in the future) je stále aktuální?
+     * @todo @b doc: další konstruktory
      */
     VTApi(int argc, char** argv);
     VTApi(const String& configFile);
@@ -1389,7 +1606,8 @@ public:
 
     /**
      * This is how to continue after creating the API class...
-     * @return
+     * @param name specific dataset name
+     * @return new dataset
      */
     Dataset* newDataset(const String& name = "");
 
@@ -1415,13 +1633,14 @@ protected:
  * @see http://www.cplusplus.com/doc/tutorial/templates/
  * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
  * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
+ * @todo @b doc: parametry konstruktorů
  */
 template <class T>
 class TKeyValue : public TKey {
 // Members
 public:    
     String typein; /**< This attribute is there for validation */
-    T* values;
+    T* values; /**< @todo @b doc: doplnit */
 
 // Methods
 public:

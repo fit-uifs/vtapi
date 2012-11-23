@@ -36,11 +36,6 @@ String Method::getName() {
     return this->getString("mtname");
 }
 
-/**
- * Create new sequence for current dataset
- * @todo Opravdu sequence a ne náhodou process? Zkontrolovat výsledek ve vtapi.h! [TV]
- * @return pointer to new sequence
- */
 Process* Method::newProcess(const String& name) {
     return (new Process(*this, name));
 }
