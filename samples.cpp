@@ -11,7 +11,7 @@
  * @code
  *    VTApi* vtapi = new VTApi(argc, argv);
  *    Dataset* dataset = vtapi->newDataset();
- *    while (dataset->next() {
+ *    while (dataset->next()) {
  *      cout << dataset->getName() << endl;
  *    }
  * @endcode
