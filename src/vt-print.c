@@ -397,7 +397,6 @@ vtPQprint(FILE *fout, const PGresult *res, const PQprintOpt *po, const int pTupl
 					fout = stdout;
 			}
 		}
-// TODO Vojta: just like P3k below (for the standard format)
 		if (!po->expanded && (po->align || po->html3))
 		{
 			if (!(fields = (char **) calloc(nFields * (nTups + 1), sizeof(char *))))

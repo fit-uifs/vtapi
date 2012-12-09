@@ -546,20 +546,20 @@ public:
      * Get character array specified by column key
      * @param col column key
      * @param size size of the array of char values
-     * @return character
+     * @return character array
      */
     char *getCharA(const String& key, int& size);
     /**
      * Get character array specified by column index
      * @param col column index
      * @param size size of the array of char values
-     * @return character
+     * @return character array
      */
     char *getCharA(const int pos, int& size);
     /**
-     * Get a string value specified by a column key
+     * Get a character array specified by a column key
      * @param key column key
-     * @return string value
+     * @return character array
      */
     String getString(const String& key);
     /**
@@ -583,15 +583,15 @@ public:
      */
     int getInt(const int col);
     /**
-     * Get long value specified by a column key
+     * Get long integer value specified by a column key
      * @param key column key
-     * @return integer value
+     * @return long integer value
      */
     long getInt8(const String& key);
     /**
-     * Get long value specified by an index of a column
+     * Get long integer value specified by an index of a column
      * @param col index of column
-     * @return integer value
+     * @return long integer value
      */
     long getInt8(const int col);
     /**
@@ -612,25 +612,25 @@ public:
     /**
      * Get a vector of integer values specified by an index of a column
      * @param col index of column
-     * @return  array of integer values
+     * @return vector of integer values
      */
     std::vector<int>* getIntV(const int col);
     /**
      * Get a vector of integer values specified by a column key
      * @param key column key
-     * @return  array of integer values
+     * @return vector of integer values
      */
     std::vector<int>* getIntV(const String& key);
     /**
      * Get a vector of integer vectors specified by an index of a column
      * @param col index of column
-     * @return  array of arrays of integer values
+     * @return  vector of vectors of integer values
      */
     std::vector< std::vector<int>* >* getIntVV(const int col);
     /**
      * Get a vector of integer vectors specified by a column key
      * @param key column key
-     * @return  array of arrays of integer values
+     * @return  vector of vectors of integer values
      */
     std::vector< std::vector<int>* >* getIntVV(const String& key);
 
@@ -676,13 +676,13 @@ public:
     /**
      * Get a vector of integer values specified by column key
      * @param col index of column
-     * @return  array of integer values
+     * @return vector of integer values
      */
     std::vector<float>* getFloatV(const int col);
     /**
      * Get a vector of float values specified by the column index
      * @param key column key
-     * @return  array of float values
+     * @return vector of float values
      */
     std::vector<float>* getFloatV(const String& key);
 

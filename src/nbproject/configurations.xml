@@ -55,9 +55,6 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
-  <sourceRootList>
-    <Elem>/home/chmelarp/Projects/VTApi/vtapi/postgres/liblwgeom</Elem>
-  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Debug" type="2">
@@ -97,7 +94,12 @@
         <linkerTool>
           <output>../${CND_DISTDIR}/libvtapi.so</output>
           <linkerLibItems>
-            <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lgeos_c -lproc -llwgeom</linkerOptionItem>
+            <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann</linkerOptionItem>
+            <linkerOptionItem> -lpq</linkerOptionItem>
+            <linkerOptionItem>-lpqtypes</linkerOptionItem>
+            <linkerOptionItem> -lgeos_c</linkerOptionItem>
+            <linkerOptionItem> -lproc</linkerOptionItem>
+            <linkerOptionItem>-llwgeom</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

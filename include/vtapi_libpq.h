@@ -2,13 +2,13 @@
  * This page describes proper installation and usage of custom data types in VTApi.
  *
  * @section 1. Define new data type
- * Execute CREATE TYPE in your PostgreSQL database to install a data type.
- * Reference manual is found here:
+ * Execute CREATE TYPE in your PostgreSQL database to install a new data type.
+ * For input/output to work, it is first necessary to create type's send and
+ * receive functions (CREATE FUNCTION) and then properly assign them to the type
+ * (parameters SEND and RECEIVE).
+ * 
+ * Reference manual for CREATE TYPE is found here (examples at the bottom):
  *      http://www.postgresql.org/docs/9.1/static/sql-createtype.html
- *
- * It is necessary to create procedures for binary input/output of data. This is
- * specified by data type arguments SEND and RECEIVE.
- * TODO: Vojto, tohle prosim lepe i s odkazem, co se kde ma pridat a kde je priklad.
  *
  * 
  * @section 2. Register data type
@@ -39,12 +39,12 @@
 #ifndef VTAPI_LIBPQ_H
 #define	VTAPI_LIBPQ_H
 
+#include "vtapi_config.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-#include "vtapi_config.h"
-
+    
 #ifdef POSTGIS
 
 #include <malloc.h>

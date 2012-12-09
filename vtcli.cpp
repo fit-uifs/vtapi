@@ -7,6 +7,7 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <time.h>
 
@@ -40,8 +41,8 @@ int VTCli::run() {
 
     if (this->interact) {
         cout << "VTApi is running" << endl;
-        cout << "Commands: query, select, insert, update, delete, show, test, "
-                "help, exit";
+        cout << "Commands: query, select, insert, update, delete, "
+                "show, script, test, help, exit";
     }
     
     // command cycle
@@ -79,6 +80,9 @@ int VTCli::run() {
         }
         else if (command.compare("show") == 0) {
             showCommand (line);
+        }
+        else if (command.compare("install") == 0) {
+            installCommand (line);
         }
         else if (command.compare("test") == 0) {
             this->vtapi->test();
@@ -247,6 +251,42 @@ void VTCli::deleteCommand(String& line) {
 //TODO
 void VTCli::showCommand(String& line) {
     this->vtapi->commons->warning("show command not implemented");
+}
+
+void VTCli::installCommand(String& line) {
+
+    String content;
+    ifstream scriptfile (line.c_str(), ios::in);
+
+    if (scriptfile)
+    {
+        scriptfile.seekg(0, ios::end);
+        content.resize(scriptfile.tellg());
+        scriptfile.seekg(0, ios::beg);
+        scriptfile.read(&content[0], content.size());
+        scriptfile.close();
+    }
+    else {
+        this->vtapi->commons->warning("Failed to read file");
+        return;
+    }
+
+    if (!content.empty()) {
+        PGresult* qres = PQparamExec(vtapi->commons->getConnector()->getConn(),
+                NULL, content.c_str(), PGF);
+        if (qres) {
+            KeyValues* kv = new KeyValues(*(this->vtapi->commons));
+            kv->select = new Select(*(this->vtapi->commons));
+            kv->select->res = qres;
+            kv->select->executed = true;
+            kv->printAll();
+            destruct(kv);
+        }
+        else {
+            String errmsg = line + " : " + PQgeterror();
+            this->vtapi->commons->warning(errmsg);
+        }
+    }
 }
 
 /**
