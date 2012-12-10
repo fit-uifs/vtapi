@@ -23,7 +23,6 @@
 #ifndef VTAPI_CONFIG_H
 #define VTAPI_CONFIG_H
 
-
 // comment this, if there is no PostGIS extension in the database
 #define POSTGIS
 

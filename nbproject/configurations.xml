@@ -52,6 +52,7 @@
             <linkerOptionItem>-lprocps</linkerOptionItem>
             <linkerOptionItem>-llwgeom</linkerOptionItem>
             <linkerOptionItem>-lvtapi</linkerOptionItem>
+            <linkerOptionItem>-lpqtypes</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

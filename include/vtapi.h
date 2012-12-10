@@ -433,6 +433,18 @@ public:
  */
 class Update : public Query {
 public:
+    /**
+     * Constructor
+     * @param commons       parent (this)
+     */
+    Update(const Commons& commons);
+
+    /**
+     * Constructor
+     * @param commons       parent (this)
+     * @param queryString   to be performed
+     * @param param         passed to the query
+     */
     Update(const Commons& commons, const String& queryString = "", PGparam *param = NULL);
 
     /**
@@ -912,8 +924,7 @@ public:
      * @param key column key to update
      * @param values new integer array of the key
      * @param size size of the array of integer values
-     * @return
-     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     * @return success
      */
     bool setIntA(const String& key, const int* values, int size);
 
@@ -921,8 +932,8 @@ public:
      * Set a new integer vector of the specified key
      * @param key column key to update
      * @param values new integer vector of the key
-     * @return
-     * @todo @b code: neimplementováno (doplnit pak do doc návratovou hodnotu)
+     * @return success
+     * @unimplemented
      */
     bool setIntV(const String& key, const std::vector<int> values);
 
@@ -931,8 +942,7 @@ public:
      * @note New flaot value is casted from string value
      * @param key column key to update
      * @param value new float value (in string representation) of the key
-     * @return
-     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     * @return success
      */
     bool setFloat(const String& key, const String& value);
 
@@ -940,7 +950,7 @@ public:
      * Set a new float value of the specified key
      * @param key column key to update
      * @param value new float value of the key
-     * @return
+     * @return success
      * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
      */
     bool setFloat(const String& key, float value);

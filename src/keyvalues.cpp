@@ -1037,8 +1037,12 @@ int KeyValues::getIntOid(const String& key) {
 
 bool KeyValues::preSet() {
     // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
-    warning(3010, "Set unimplemented at class " + thisClass);
-    return false;
+    warning(3010, "Set inherited from KeyValues at class " + thisClass);
+
+    destruct(this->update);
+    this->update = new Update(this, "", NULL);
+    if (this->update != NULL) return true;
+    else return false;
 }
 
 // TODO: how to change binary data???
@@ -1053,31 +1057,31 @@ bool KeyValues::setString(const String& key, const String& value) {
         PQsetvalue(select->res, pos, PQfnumber(select->res, key.c_str()), tempc, value.length());
     } */
 
-    update->keyString(key, value);
+    return update->keyString(key, value);
 }
 
 bool KeyValues::setInt(const String& key, int value) {
     // call preset on the derived class
     if (!update) this->preSet();
-    update->keyInt(key, value);
+    return update->keyInt(key, value);
 }
 
 bool KeyValues::setIntA(const String& key, const int* values, int size){
     // call preset on the derived class
     if (!update) this->preSet();
-    update->keyIntA(key, values, size);
+    return update->keyIntA(key, values, size);
 }
 
 bool KeyValues::setFloat(const String& key, float value){
     // call preset on the derived class
     if (!update) this->preSet();
-    update->keyFloat(key, value);
+    return update->keyFloat(key, value);
 }
 
 bool KeyValues::setFloatA(const String& key, const float* values, int size){
     // call preset on the derived class
     if (!update) this->preSet();
-    update->keyFloatA(key, values, size);
+    return update->keyFloatA(key, values, size);
 }
 
 bool KeyValues::setExecute() {
