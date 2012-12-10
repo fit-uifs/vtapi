@@ -88,7 +88,7 @@
  * @section LICENSE License
  *
  * There will be license information for VTApi.
- * &copy; FIT BUT, CZ, 2011 &ndash; 2012
+ * FIT, Brno University of Technology &copy; 2011 &ndash; 2012
  *
  *
  * @section DESCRIPTION Description
@@ -498,8 +498,7 @@ public:
     TKey getKey(int col);
     /**
      * Get a list of all possible columns as TKeys
-     * @return list of key names and TODO
-     * @todo @b doc: jakési TODO v popisku return ;)
+     * @return list of keys
      */
     std::vector<TKey>* getKeys();
 

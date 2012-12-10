@@ -34,7 +34,7 @@
 #include <libpqtypes.h> // tohle se pak poresi configure
 
 // libproc library
-// for this you need the libproc-dev (sometimes procps-devel) package
+// for this you need the libprocps-dev (sometimes libproc-dev, procps-devel) package
 #if !(defined(WIN32) || defined(WIN64))
 #include <proc/readproc.h>
 #endif
