@@ -40,8 +40,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/vtapi_settings.o \
 	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/method.o \
-	${OBJECTDIR}/video.o \
 	${OBJECTDIR}/vtapi.o \
+	${OBJECTDIR}/video.o \
 	${OBJECTDIR}/vtapi_libpq.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
@@ -64,7 +64,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lgeos_c -lproc -llwgeom
+LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lgeos_c -lprocps -llwgeom
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -99,15 +99,15 @@ ${OBJECTDIR}/method.o: method.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
 
-${OBJECTDIR}/video.o: video.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
-
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
+
+${OBJECTDIR}/video.o: video.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
 
 ${OBJECTDIR}/vtapi_libpq.o: vtapi_libpq.c 
 	${MKDIR} -p ${OBJECTDIR}

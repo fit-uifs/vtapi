@@ -9,7 +9,7 @@
         <configurationname>GizmoSimple</configurationname>
       </gizmo_options>
       <runprofile version="6">
-        <args>"query select * from sin12.tracks limit 1"</args>
+        <args>test</args>
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <console-type>1</console-type>

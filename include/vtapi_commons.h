@@ -438,7 +438,12 @@ public:
 
 
 
-// TODO: Petr
+/**
+ * This will be an internal (std::)map of classes in the database
+ * @unimplemented
+ * @TODO: Petr
+ * @param connector
+ */
 class ClassMap {
     ClassMap(Connector* connector);
     ~ClassMap();

@@ -40,19 +40,19 @@
 #endif
 
 // OpenCV header files
-#include <opencv2/opencv.hpp>
-#include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/opencv.hpp>
+// #include <opencv2/highgui/highgui.hpp>
 // OpenCV
-#include <opencv2/core/core.hpp>
-#include <opencv2/core/core_c.h>
-#include <opencv2/imgproc/imgproc.hpp>
+// #include <opencv2/core/core.hpp>
+// #include <opencv2/core/core_c.h>
+// #include <opencv2/imgproc/imgproc.hpp>
 // This adds the ability to debug image and video
-#include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
 #include <geos_c.h>
 
-// postGIS ... nove je verze 2.0.0
+// postGIS 2.0
 #include "../postgres/liblwgeom/liblwgeom.h"
 #include "../postgres/cube/cubedata.h"
 // TODO: rozhodnout se, co s timhle kodem udelat ... ?

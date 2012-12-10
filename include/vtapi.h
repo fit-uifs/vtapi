@@ -22,14 +22,15 @@
  *    - GEOS 3.3.3 (geometry)
  *    - GDAL 1.9 (raster)
  *
- * @note For more information visit https://gitorious.org/vtapi/pages/Install .
-
+ * @note For more information on installing visit https://gitorious.org/vtapi/pages/Install .
  *
  * @section LOGICAL Logical model of VTApi
  * @image html minimal_logical_data_model_small.png "Logical model of VTApi"
  * @image latex minimal_logical_data_model.png "Logical model of VTApi"
  * @image rtf minimal_logical_data_model.png "Logical model of VTApi"
  *
+ * @TODO Tomas: links instead subsections?
+ * 
  * @section BASIC_TERMS Basic terms
  * @subsection LOGICAL_DATASET Dataset
  * The dataset is the main storing center. This is used as a folder with video
@@ -68,7 +69,8 @@
  * @authors Tomas Volf, ivolf (at) fit.vutbr.cz
  *
  * @section LICENSE License
- * There will be license information for VTApi.
+ * VTApi is distributed under BUT OPEN SOURCE LICENCE (Version 1).
+ * This licence agreement provides in essentials the same extent of rights as the terms of GNU GPL version 2 and Software fulfils the requirements of the Open Source software.
  * @copyright &copy; FIT BUT, CZ, 2011 &ndash; 2012
  *
  * @example vtapi.conf
@@ -95,11 +97,6 @@
  *
  * @todo @b doc[TV]: see -> ref -> mainpage u základních pojmů
  * @todo @b doc: sjednotit malá/velká písmena parametrů a návratových hodnot (zatím to vypadá jak "každý pes, jiná ves")
- * @todo @b doc: opravdu je nutné do dokumentace zahrnovat i třídu VTCli 
- *               a podobné "nesmysly" viz <a href="annotated.html">Class List</a> ?
- *               V dokumentaci k API by podle mého názoru mělo být jen to, co ostatní
- *               využijí, kamž VTCli a podobné věci nepatří, nemýlím-li se...
- *               (To tak možná leda do devel doc ;) )
  */
 
 #ifndef VTAPI_H
@@ -108,9 +105,8 @@
 #include "vtapi_config.h"
 #include "vtapi_commons.h"
 
-// virtual definitions of classes
-// list of classes, which are contained in this header
-// you can use it as a quick jump to the appropriate class defitinition
+// virtual definitions of classes, which are contained in this header
+// you can use it as an index jump to the appropriate class defitinition
 class VTApi;
 
 class TKey;
@@ -130,25 +126,24 @@ class Insert;
 
 
 /**
- * @brief This is used to represent the Key in fields in queries
- * ... just for the feeling (and vectors, of course)
+ * @brief This represents the Key (of the Key-Value concept)
+ *
+ * Used in queries (size>0 for vectors)
  *
  * @note You can use size=-1 for NULL :)
- *
- * @todo @b doc: "in fields in queries"? Co tím chtěl autor říci?
  */
 class TKey {
 // Members
 public:
-    String type; /**< Name of data type */
-    String key;  /**< Name of a column */
-    int size;    /**< "0" is the value right now */   // you can use -1 for NULL :)
-    String from; /**< Distinguish between in/out right now */
+    String type;    /**< Name of the data type */
+    String key;     /**< Name of the column */
+    int size;       /**< "0" is the value right now */   // you can use -1 for NULL :)
+    String from;    /**< The source (table) */
 
 // Methods
 public:
     /** 
-     * Constructor for NULL
+     * Default constructor
      */
     TKey() : size(-1) {};
 
@@ -172,8 +167,8 @@ public:
 
     
     /**
-     * Print data and return printed string
-     * @return printed string of TKey data
+     * Print data
+     * @return string of TKey data
      */
     String print();
 };
@@ -187,16 +182,14 @@ public:
  * @see http://libpqtypes.esilo.com/
  *
  * @note Error codes 20*
- *
- * @todo @b doc: sjednotit "It can be called several times", "It may be called several times." a "It may be called more times." u Query, Select, Insert, ...?
  */
 class Query : public Commons {
 // Members
 public:
     std::vector<TKey> keys; /**< This is where those keys are stored */
-    String queryString; /**< This is used for (direct) queries @todo @b doc: Petrovy závorky */
+    String queryString; /**< This is used for (explicit) queries */
     PGparam* param; /**< This is used for parameter passing to query */
-    PGresult* res; /**< This is where results are (to be) not NULL @todo @b doc: Petrovy závorky: co tím chtěl autor říci? */
+    PGresult* res; /**< This is where results are (to be) not NULL */
     bool executed; /**< This is a flag wheather the query was executed after any change */
 
 // Methods
@@ -228,7 +221,7 @@ public:
 
     /**
      * @deprecated
-     * This may be hazardeous for someone...
+     * Unimplemented
      * @note marked as deprecated, because there is no discouraged mark
      * @param key
      * @return success
@@ -240,7 +233,7 @@ public:
      * It may be called several times as:
      * @param key
      * @param value
-     * @param from
+     * @param from table optional
      * @return success
      * @todo @b doc: pro každou funkci; není příliš jasné, k čemu ta funkce je (+ from).
      */
@@ -1583,23 +1576,53 @@ public:
 // Methods
 public:
     /**
-     * Constructor recomended (in the future)
+     * Constructor recomended by any program
      * @param argc
      * @param argv
      * @todo @b doc: "(in the future) je stále aktuální?
      * @todo @b doc: další konstruktory
      */
     VTApi(int argc, char** argv);
+
+    /**
+     * Constructor
+     * @deprecated
+     * @param configFile location
+     */
     VTApi(const String& configFile);
+
+    /**
+     * Constructor
+     * @deprecated
+     * @param connStr
+     * @param location
+     * @param user
+     * @param password
+     */
     VTApi(const String& connStr, const String& location, const String& user, const String& password);
+
+    /**
+     * Copy constructor
+     * @param orig
+     */
     VTApi(const Commons& orig);
+
+    /**
+     * Copy constructor
+     * @param orig
+     */
     VTApi(const VTApi& orig);
+
+    /**
+     * Destructor
+     */
     virtual ~VTApi();
 
 
     /**
-     * For testing and learning purposes
-     * This might be a HOW-TO function
+     * This might be a HOW-TO function for learning and testing purposes
+     * @see doxygen -> vtapi.conf, samples.cpp
+     * @code
      */
     void test();
 
@@ -1644,7 +1667,18 @@ public:
 
 // Methods
 public:
+    /**
+     * Default constructor
+     */
     TKeyValue() : TKey(), values(NULL) {};
+
+    /**
+     *
+     * @param type
+     * @param key
+     * @param value
+     * @param from table (optional)
+     */
     TKeyValue(const String& type, const String& key, const T& value, const String& from = "")
             : TKey(type, key, 1, from) {
         values = new T[1];
