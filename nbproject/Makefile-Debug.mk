@@ -50,7 +50,11 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
+<<<<<<< HEAD
 LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lproc -lvtapi
+=======
+LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lprocps -llwgeom -lvtapi
+>>>>>>> 551aac198ada8bc2794694fff0b7e45f7424768a
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}

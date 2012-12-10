@@ -34,20 +34,20 @@
 #include <libpqtypes.h> // tohle se pak poresi configure
 
 // libproc library
-// for this you need the libproc-dev (sometimes procps-devel) package
+// for this you need the libprocps-dev (sometimes libproc-dev, procps-devel) package
 #if !(defined(WIN32) || defined(WIN64))
 #include <proc/readproc.h>
 #endif
 
 // OpenCV header files
-#include <opencv2/opencv.hpp>
-#include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/opencv.hpp>
+// #include <opencv2/highgui/highgui.hpp>
 // OpenCV
-#include <opencv2/core/core.hpp>
-#include <opencv2/core/core_c.h>
-#include <opencv2/imgproc/imgproc.hpp>
+// #include <opencv2/core/core.hpp>
+// #include <opencv2/core/core_c.h>
+// #include <opencv2/imgproc/imgproc.hpp>
 // This adds the ability to debug image and video
-#include <opencv2/highgui/highgui.hpp>
+// #include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
 #ifdef	__cplusplus
@@ -58,10 +58,14 @@ extern "C" {
 }
 #endif
 
+<<<<<<< HEAD
 // postGIS ... nove je verze 2.0.0
 #ifdef	__cplusplus
 extern "C" {
 #endif
+=======
+// postGIS 2.0
+>>>>>>> 551aac198ada8bc2794694fff0b7e45f7424768a
 #include "../postgres/liblwgeom/liblwgeom.h"
 #include "../postgres/cube/cubedata.h"
     #ifdef	__cplusplus

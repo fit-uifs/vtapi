@@ -11,6 +11,13 @@
 #include "vtapi.h"
 #include <map>
 
+/**
+ * The VTApi command line interface class
+ *
+ * You can follow the test method of vtapi.cpp for learning.
+ * 
+ * @TODO: Comment! 
+ */
 class VTCli {
 public:
     VTCli();

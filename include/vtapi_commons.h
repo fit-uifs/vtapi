@@ -49,7 +49,8 @@ typedef std::string String;
 
 
 
-
+// virtual definitions of classes, which are contained in this header
+// you can use it as an index jump to the appropriate class defitinition
 class Commons;
 class Connector;
 class Logger;
@@ -436,7 +437,12 @@ public:
 
 
 
-// TODO: Petr
+/**
+ * This will be an internal (std::)map of classes in the database
+ * @unimplemented
+ * @TODO: Petr
+ * @param connector
+ */
 class ClassMap {
     ClassMap(Connector* connector);
     ~ClassMap();

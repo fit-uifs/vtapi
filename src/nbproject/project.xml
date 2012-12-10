@@ -9,7 +9,13 @@
             <header-extensions>h</header-extensions>
             <sourceEncoding>UTF-8</sourceEncoding>
             <make-dep-projects/>
+<<<<<<< HEAD
             <sourceRootList/>
+=======
+            <sourceRootList>
+                <sourceRootElem>../postgres/liblwgeom</sourceRootElem>
+            </sourceRootList>
+>>>>>>> 551aac198ada8bc2794694fff0b7e45f7424768a
             <confList>
                 <confElem>Debug</confElem>
                 <confElem>Release</confElem>

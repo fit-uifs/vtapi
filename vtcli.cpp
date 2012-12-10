@@ -698,8 +698,7 @@ PGtimestamp CLIInsert::getTimestamp() {
 
 
 /**
- * The CLI main function
- * You can follow the
+ * The VTCli main function
  *
  * @param argc
  * @param argv

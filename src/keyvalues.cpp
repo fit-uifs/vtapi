@@ -122,14 +122,15 @@ TKey KeyValues::getKey(int col) {
 }
 
 std::vector<TKey>* KeyValues::getKeys() {
-    std::vector<TKey>* vtk = new std::vector<TKey>;
     if (!select || !select->res) return NULL;
+
+    std::vector<TKey>* vtk = new std::vector<TKey>;
 
     int cols = PQnfields(select->res);
     for (int c = 0; c < cols; c++) {
         String name = PQfname(select->res, c);
         String type = typemap->toTypname(PQftype(select->res, c));
-        TKey tk (type, name, -1);
+        TKey tk (type, name, -1);   // return NULL
         vtk->push_back(tk);
     }
 

@@ -9,7 +9,11 @@
         <configurationname>GizmoSimple</configurationname>
       </gizmo_options>
       <runprofile version="6">
+<<<<<<< HEAD
         <args></args>
+=======
+        <args>test</args>
+>>>>>>> 551aac198ada8bc2794694fff0b7e45f7424768a
         <rundir></rundir>
         <buildfirst>true</buildfirst>
         <console-type>1</console-type>

@@ -55,6 +55,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
   </logicalFolder>
+  <sourceRootList>
+    <Elem>../postgres/liblwgeom</Elem>
+  </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
     <conf name="Debug" type="2">
@@ -98,7 +101,7 @@
             <linkerOptionItem> -lpq</linkerOptionItem>
             <linkerOptionItem>-lpqtypes</linkerOptionItem>
             <linkerOptionItem> -lgeos_c</linkerOptionItem>
-            <linkerOptionItem> -lproc</linkerOptionItem>
+            <linkerOptionItem> -lprocps</linkerOptionItem>
             <linkerOptionItem>-llwgeom</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
