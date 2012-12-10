@@ -265,19 +265,10 @@ Select::Select(const Commons& commons, const String& queryString, PGparam* param
 
 // FIXME: tohle se musi predelat na TKey
 bool Select::from(const String& table, const String& column) {
-<<<<<<< HEAD
-    String use_table = table.empty() ? this->table : table;
-
-    if (this->table.empty()) this->table = table;
-    fromList.insert(std::pair<String, String > (use_table, column));
-=======
     String t = table;
     if (this->table.empty()) this->table = table;
     else if (table.empty()) t = this->table;
-
     fromList.insert(std::pair<String, String > (t, column));
->>>>>>> 551aac198ada8bc2794694fff0b7e45f7424768a
-
     executed = false;
     return true;
 }

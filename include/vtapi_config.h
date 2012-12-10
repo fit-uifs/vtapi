@@ -58,14 +58,10 @@ extern "C" {
 }
 #endif
 
-<<<<<<< HEAD
-// postGIS ... nove je verze 2.0.0
+// postGIS 2.0
 #ifdef	__cplusplus
 extern "C" {
 #endif
-=======
-// postGIS 2.0
->>>>>>> 551aac198ada8bc2794694fff0b7e45f7424768a
 #include "../postgres/liblwgeom/liblwgeom.h"
 #include "../postgres/cube/cubedata.h"
     #ifdef	__cplusplus
