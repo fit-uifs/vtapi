@@ -1,8 +1,10 @@
-/* 
- * File:   VTCli.cpp
- * Author: vojca
+/**
+ * @example vtcli.cpp
  * 
- * Created on November 3, 2011, 7:12 PM
+ * Toto je zkouska.
+ * @see Commons
+ *
+ *
  */
 
 #include <cstdlib>

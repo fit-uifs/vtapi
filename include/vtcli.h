@@ -15,7 +15,9 @@
  * The VTApi command line interface class
  *
  * You can follow the test method of vtapi.cpp for learning.
- * 
+ *
+ * @TODO: zjistit jak se zjisti vsechny prvky primarniho klice...
+ * a dalsi veci ohledne cizich klicu pro vyhledani moznosti spojeni.
  * @TODO: Comment! 
  */
 class VTCli {
