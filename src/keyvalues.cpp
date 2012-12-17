@@ -1040,7 +1040,7 @@ bool KeyValues::preSet() {
     warning(3010, "Set inherited from KeyValues at class " + thisClass);
 
     destruct(this->update);
-    this->update = new Update(this, "", NULL);
+    this->update = new Update(*this);
     if (this->update != NULL) return true;
     else return false;
 }

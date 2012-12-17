@@ -48,6 +48,7 @@ protected:
     void updateCommand(String& line);
     void deleteCommand(String& line);
     void showCommand(String& line);
+    void installCommand(String& line);
 
 };
 

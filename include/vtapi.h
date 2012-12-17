@@ -2,27 +2,39 @@
  * @mainpage
  *
  * @section ABOUT What is VTApi
- * VTApi is a PostgreSQL database and OpenCV API for the VT project.
+ * 
  * The project is oriented towards processing of records containing
  * image and video information – categorization, searching and comparison.
  *
- * @section HOMEPAGE VTApi development homepage
+ * VTApi (Video Terror Application programming interface and methodology),
+ * a data base interface used for processing and efficient management, indexing,
+ * retrieval and analysis of image and video data and related metadata,
+ * which was created to unify and accelerate the intelligent vision
+ * applications development.
+ * VTApi 1.5 is based on PostgreSQL database, PostGIS and OpenCV created within
+ * the Ministry of interior VT project.
+ *
+ * @section HOMEPAGE VTApi download and install
  * https://gitorious.org/vtapi
+ * includes source codes in various versions and the Wiki.
  *
- * @section PREREQUISITIES Prerequisities
- *    - OS Windows, Linux, 32 and 64bit
- *    - GCC 4.5.2+
- *    - PostgreSQL 9.1 – libpq
- *    - libpqtypes 1.5
- *    - OpenCV 2.4 (mandatory, but recommended)
+ * @subsection WIKI Wiki
+ * https://gitorious.org/vtapi/pages/Install
+ * contains basic prerequisities, compilation and installation manual.
+ * Windows install v1.0 info is located at README.txt at
+ * http://vidte.fit.vutbr.cz/dist/VTApi_Windows.zip .
  *
- * @section PREREQ_POSTGIS Prerequisities for PotsGIS use
- *    - PostGIS 2.0
- *    - Proj4 4.8 (reprojection)
- *    - GEOS 3.3.3 (geometry)
- *    - GDAL 1.9 (raster)
+ * @subsection Brno University of Technology information
+ * http://vidte.fit.vutbr.cz/vtapi.html
+ * contains technical documentation (in Czech), recommended for beginners.
  *
- * @note For more information on installing visit https://gitorious.org/vtapi/pages/Install .
+ * @section BEGIN How to begin?
+ * - class ideas and reference (copy from article?)
+ * - sample codes
+ * - link information
+ *
+ * - in case of insufficient capabilities see https://gitorious.org/vtapi/pages/Devel
+ *
  *
  * @section LOGICAL Logical model of VTApi
  * @image html minimal_logical_data_model_small.png "Logical model of VTApi"
@@ -436,12 +448,6 @@ public:
     /**
      * Constructor
      * @param commons       parent (this)
-     */
-    Update(const Commons& commons);
-
-    /**
-     * Constructor
-     * @param commons       parent (this)
      * @param queryString   to be performed
      * @param param         passed to the query
      */
@@ -550,20 +556,20 @@ public:
      * Get character array specified by column key
      * @param col column key
      * @param size size of the array of char values
-     * @return character
+     * @return character array
      */
     char *getCharA(const String& key, int& size);
     /**
      * Get character array specified by column index
      * @param col column index
      * @param size size of the array of char values
-     * @return character
+     * @return character array
      */
     char *getCharA(const int pos, int& size);
     /**
-     * Get a string value specified by a column key
+     * Get a character array specified by a column key
      * @param key column key
-     * @return string value
+     * @return character array
      */
     String getString(const String& key);
     /**
@@ -587,15 +593,15 @@ public:
      */
     int getInt(const int col);
     /**
-     * Get long value specified by a column key
+     * Get long integer value specified by a column key
      * @param key column key
-     * @return integer value
+     * @return long integer value
      */
     long getInt8(const String& key);
     /**
-     * Get long value specified by an index of a column
+     * Get long integer value specified by an index of a column
      * @param col index of column
-     * @return integer value
+     * @return long integer value
      */
     long getInt8(const int col);
     /**
@@ -616,25 +622,25 @@ public:
     /**
      * Get a vector of integer values specified by an index of a column
      * @param col index of column
-     * @return  array of integer values
+     * @return vector of integer values
      */
     std::vector<int>* getIntV(const int col);
     /**
      * Get a vector of integer values specified by a column key
      * @param key column key
-     * @return  array of integer values
+     * @return vector of integer values
      */
     std::vector<int>* getIntV(const String& key);
     /**
      * Get a vector of integer vectors specified by an index of a column
      * @param col index of column
-     * @return  array of arrays of integer values
+     * @return  vector of vectors of integer values
      */
     std::vector< std::vector<int>* >* getIntVV(const int col);
     /**
      * Get a vector of integer vectors specified by a column key
      * @param key column key
-     * @return  array of arrays of integer values
+     * @return  vector of vectors of integer values
      */
     std::vector< std::vector<int>* >* getIntVV(const String& key);
 
@@ -680,13 +686,13 @@ public:
     /**
      * Get a vector of integer values specified by column key
      * @param col index of column
-     * @return  array of integer values
+     * @return vector of integer values
      */
     std::vector<float>* getFloatV(const int col);
     /**
      * Get a vector of float values specified by the column index
      * @param key column key
-     * @return  array of float values
+     * @return vector of float values
      */
     std::vector<float>* getFloatV(const String& key);
 
@@ -890,7 +896,6 @@ public:
     virtual bool preSet();
 
 
-    // TODO: overit jestli a jak funguje... jako UPDATE?
     /**
      * Set a new string value of the specified key
      * @param key column key to update

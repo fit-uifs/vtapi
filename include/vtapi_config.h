@@ -49,11 +49,23 @@
 // #include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
+#ifdef	__cplusplus
+extern "C" {
+#endif
 #include <geos_c.h>
+    #ifdef	__cplusplus
+}
+#endif
 
 // postGIS 2.0
+#ifdef	__cplusplus
+extern "C" {
+#endif
 #include "../postgres/liblwgeom/liblwgeom.h"
 #include "../postgres/cube/cubedata.h"
+    #ifdef	__cplusplus
+}
+#endif
 // TODO: rozhodnout se, co s timhle kodem udelat ... ?
 
 #endif	/* VTAPI_CONFIG_H */

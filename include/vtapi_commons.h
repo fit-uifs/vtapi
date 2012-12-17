@@ -215,18 +215,16 @@ public:
 // Methods
 public:
     /**
-     * This is OK for most of applications if there are some Commons or derived classes.
-     * The default constructor should never exist - Commons();
-     * @param orig 
-     * @todo parameter orig in documentation
+     * Full copy constructor from existing Commons class
+     * @note The default constructor Commons() should never exist
+     * @param orig previously created Commons class
      */
-    Commons(const Commons& orig); // hmm, much better
+    Commons(const Commons& orig);
 
     /**
-     * This is OK for most of applications if there are some Commons or derived classes.
-     * The default constructor should never exist - Commons();
-     * @param other 
-     * @todo parameter other in documentation
+     * Constructor from Connector class, inheriting only connection info
+     * @note The default constructor should never exist - Commons();
+     * @param other previously created Connector class
      */
     Commons(Connector& other); // hmm, much better
 
