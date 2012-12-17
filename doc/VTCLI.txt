@@ -1,0 +1,85 @@
+/**
+ * @example VTCli
+ *
+ * @code
+$ dist/vtapi
+VTApi is running
+Commands: query, select, insert, update, delete, show, script, test, help, exit
+> help
+
+VTApi 1.5
+
+Usage: vtapi [OPTIONS] [COMMAND]
+
+  -h, --help               Print help and exit
+  -V, --version            Print version and exit
+
+OPTIONS
+
+  -v, --verbose            Verbose output mode - write used SQL commands etc.
+
+ Config arguments
+      --config=FILENAME    Config file location  (default=" ./vtapi.conf" )
+      --log=FILENAME       Log file location  (default=" ./vtapi.log" )
+  -u, --user=STRING        User name
+  -p, --password=STRING    User password
+  -l, --location=filename  Base location of data files
+  -c, --connection=STRING  Connection string "host=.. port=.. dbname=..
+                             user=.. password=.."
+  -f, --format=STRING      Input/output format  (possible values="standard",
+                             "csv", "html", "binary", "sparse",
+                             "html" default=" standard" )
+  -i, --input=FILENAME     Read from specific input
+  -o, --output=FILENAME    Write to specific output
+      --querylimit=INT     Limit number of rows fetched at once (0 - unlimited)
+      --arraylimit=INT     Limit amount of printed array elements
+
+ Context specification (WHERE clause)
+  -W, --where=SQLSTRING    explicit WHERE, ex.: --where="features is NULL"
+  -D, --dataset=STRING     Set dataset to use
+  -S, --sequence=STRING    Set sequence to use
+  -I, --interval=STRING    Set interval to use
+  -M, --method=STRING      Set method to use
+  -P, --process=STRING     Set process to use
+  -E, --selection=STRING   Set selection to use
+
+COMMANDS
+
+Enter one command via argument or sequence of them in interactive mode
+
+query SQLQUERY
+
+    * executes custom SQLQUERY
+    * ex.: list methods with active processes
+                   query SELECT DISTINCT mtname FROM public.processes
+
+select dataset|sequence|interval|process|method|selection|help [ARGS]
+
+    *  selects data and prints them in specified format (-f option)
+    *  for detailed help about ARGS, use command "select help"
+    *  ex.: pick processes of method " m1"
+                   select process method=m1
+
+insert sequence|interval|process|help [ARGS]
+
+    *  inserts data into database
+    *  for detailed help about ARGS, use command "insert help"
+    *  ex.: insert interval in sequence " seq1"
+                   insert interval t1=10 t2=20 sequence=seq1
+
+update *not implemented in CLI
+
+delete *not implemented in CLI
+
+show   *not implemented in CLI
+
+test
+    * Tests VTApi methods and prints details
+
+help
+    * prints this help
+
+exit
+    * exits interactive mode (or enter EOF)
+@endcode
+*/
