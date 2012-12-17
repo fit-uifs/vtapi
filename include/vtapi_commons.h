@@ -1,21 +1,16 @@
 /**
  * @file
+ * @brief Commons classes which provide an auxiliary functionality of VTApi.
+ *
+ * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
+ *
+ * VTApi is distributed under BUT OPEN SOURCE LICENCE (Version 1).
+ * This licence agreement provides in essentials the same extent of rights as the terms of GNU GPL version 2 and Software fulfils the requirements of the Open Source software.
+ *
  * @authors
- * VTApi Team, FIT BUT, CZ
- * Petr Chmelar, chmelarp@fit.vutbr.cz
- * Vojtech Froml, xfroml00@stud.fit.vutbr.cz
- * Tomas Volf, ivolf@fit.vutbr.cz
- *
- *
- * @section LECENSE License
- *
- * There will be license information for VTApi.
- * &copy; FIT BUT, CZ, 2011
- *
- *
- * @section DESCRIPTION Description
- *
- * Commons classes which provide a auxiliary functionality of VTApi.
+ * Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * Tomas Volf, ivolf (at) fit.vutbr.cz
  *
  */
 
@@ -441,9 +436,9 @@ public:
 
 
 /**
- * This will be an internal (std::)map of classes in the database
+ * @brief This will be an internal (std::)map of classes in the database
  * @unimplemented
- * @TODO: Petr
+ * @todo Petr
  * @param connector
  */
 class ClassMap {
@@ -470,11 +465,11 @@ inline String toString(const T& t) {
 
 
 /**
- * A general experiment timer++ class...
- * each time called getTime() returns time used by the program so far (user time + system time)
- * Plus you can use meantime.
- * PlusPlus, you can get the PID, virtual and resident memory.
- * Well, some may use process information /proc/$pid/status instead of libproc_dev.
+ * @brief A general experiment timer++ class...
+ * - each time called getTime() returns time used by the program so far (user time + system time)
+ * - Plus you can use meantime.
+ * - PlusPlus, you can get the PID, virtual and resident memory.
+ * - Well, some may use process information /proc/$pid/status instead of libproc_dev.
  */
 class TimExer {
 private:
