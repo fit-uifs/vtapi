@@ -668,7 +668,8 @@ WARN_LOGFILE           =
 INPUT                  = ../vtapi \
                          ../include \
                          ../src \
-                         ../samples.cpp
+                         ../samples.cpp \
+                         ../vtcli.cpp
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
@@ -711,7 +712,11 @@ RECURSIVE              = NO
 
 EXCLUDE                = ../include/vtapi_settings.h \
                          ../src/vtapi_settings.cpp \
-                         ../include/vtcli.h
+                         ../include/vtcli.h \
+                         ../include/vtapi_libpq.h \
+                         ../include/vtapi_settings.h \
+                         ../src/vtapi_libpq.c \
+                         ../src/vt-print.c
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or 
 # directories that are symbolic links (a Unix file system feature) are excluded 

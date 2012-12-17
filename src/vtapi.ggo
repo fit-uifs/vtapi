@@ -4,7 +4,7 @@
 
 # Program name, version and usage
 package "VTApi"
-version "0.1"
+version "1.5"
 usage "vtapi [OPTIONS] [COMMAND]"
 
 # Default gengetopt arguments

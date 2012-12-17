@@ -18,11 +18,13 @@
  * in an interactive and iterative process.
  *
  * @section HOMEPAGE VTApi download and install
- * https://gitorious.org/vtapi
- * includes source codes in various versions and the Wiki.
  *
  * Wiki https://gitorious.org/vtapi/pages/Install
  * contains basic prerequisities, compilation and installation manual.
+ *
+ * Source codes in various versions can be found at https://gitorious.org/vtapi .
+ *
+ * Download the actual version at https://gitorious.org/vtapi/vtapi/archive-tarball/master .
  *
  * Windows install v1.0 info is located at README.txt at
  * http://vidte.fit.vutbr.cz/dist/VTApi_Windows.zip .
