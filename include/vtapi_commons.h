@@ -127,6 +127,9 @@ public:
     String  conninfo; /**< connection string to access the database */
     PGconn* conn;     /**< handler of the current database connection */
     Logger* logger;   /**< logger, in which we record messages */
+    
+private:
+    bool ownlogger;
 
 // Methods
 public:

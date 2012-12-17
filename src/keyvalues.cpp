@@ -42,8 +42,6 @@ KeyValues::KeyValues(const KeyValues& orig, const String& selection)
     this->selection = selection;
 }
 
-
-// TODO: decide if this behavior (warnings raised when not executed) is OK for most of us
 KeyValues::~KeyValues() {
     // whether should be something inserted
     if (insert) {
@@ -165,8 +163,6 @@ String KeyValues::getValue(const int col) {
             // array of 4-byte ints
             if (typelemoid == typemap->toOid("int4")) {
                 std::vector<int>* arr = this->getIntV(col);
-                //std::vector< std::vector<int>* >* arrX = this->getIntVV(col);
-                //std::vector<int>* arr = (*arrX)[0];
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
                     valss << (*arr)[i];
                     if (arrayLimit && i == arrayLimit) {
@@ -230,7 +226,6 @@ String KeyValues::getValue(const int col) {
         case 'D': { // date/time
             struct tm ts = getTimestamp(col);
             valss << std::right << std::setfill('0');
-            //TODO: microseconds?
             if (ts.tm_year > 0)
                 valss << std::setw(4) << ts.tm_year << '-' << std::setw(2) << ts.tm_mon <<
                   '-' << std::setw(2) << ts.tm_mday << ' ' << std::setw(2) << ts.tm_hour <<
@@ -300,8 +295,9 @@ String KeyValues::getValue(const int col) {
             // this can detect if type is oid reference (regtype, regclass...)
             // if commented, all of it will just print oids
             if (typemap->isRefType(colkey.type)) {
-                // TODO: Vojta if (colkey.type.equals("regtype") == 0) { valss << typemap->toTypname(getOid(col)) }
-
+                if (!colkey.type.compare("regtype")) {
+                    valss << typemap->toTypname(getInt(col));
+                }
                 // TODO: Petr if (colkey.type.equals("regclass") == 0) // pg_namespace.oid > 99 (pg_catalog, pg_toast)
             }
 

@@ -68,7 +68,6 @@ bool Interval::add(const String& sequence, const int t1, const int t2, const Str
     if (!location.empty()) {
         insert->keyString("imglocation", location);
     }
-    // that's all, folks ... continue similarly if needed
 
     // TODO: image && storage checking??
 

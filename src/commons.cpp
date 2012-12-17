@@ -88,8 +88,14 @@ Logger::~Logger() {
 
 /* ************************************************************************** */
 Connector::Connector(const String& connectionInfo, Logger* logger) {
-    this->logger  = logger ? logger : new Logger();
-
+    if (!logger) {
+        this->logger = new Logger();
+        ownlogger = true;
+    }
+    else {
+        this->logger = logger;
+        ownlogger = false;
+    }
     conn = NULL;
     if (!reconnect(connectionInfo)) {
         logger->log("ERROR 121! The connection couldn't been established.");
@@ -159,7 +165,7 @@ PGconn* Connector::getConn() {           // connection
 
 Connector::~Connector() {
     PQfinish(conn);
-// TODO: zde destruct(logger), je-li vytvoren v konstruktoru
+    if (ownlogger) destruct (logger);
 }
 
 

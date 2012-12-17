@@ -53,7 +53,7 @@
 extern "C" {
 #endif
 #include <geos_c.h>
-    #ifdef	__cplusplus
+#ifdef	__cplusplus
 }
 #endif
 
@@ -63,10 +63,9 @@ extern "C" {
 #endif
 #include "../postgres/liblwgeom/liblwgeom.h"
 #include "../postgres/cube/cubedata.h"
-    #ifdef	__cplusplus
+#ifdef	__cplusplus
 }
 #endif
-// TODO: rozhodnout se, co s timhle kodem udelat ... ?
 
 #endif	/* VTAPI_CONFIG_H */
 
