@@ -21,7 +21,9 @@
                    displayName="Resource Files"
                    projectFiles="true"
                    kind="SOURCE_LOGICAL_FOLDER">
+      <itemPath>../doc/LICENCE.txt</itemPath>
       <itemPath>../README.txt</itemPath>
+      <itemPath>../doc/SAMPLES.txt</itemPath>
       <itemPath>../vtapi.conf</itemPath>
       <itemPath>vtapi.ggo</itemPath>
     </logicalFolder>

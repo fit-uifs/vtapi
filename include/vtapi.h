@@ -1,10 +1,4 @@
 /**
- *
- *
- *
- *
- *
- * @file
  * Main classes which provide a basic functionality of VTApi.
  *
  * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
