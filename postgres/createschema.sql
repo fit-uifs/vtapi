@@ -48,7 +48,7 @@ CREATE TABLE sequences (
     seqname name NOT NULL,
     seqnum integer,
     seqlocation character varying,
-    seqtyp seqtype DEFAULT 'data'::seqtype,
+    seqtyp seqtype DEFAULT 'data'::public.seqtype,
     userid name,
     groupid name,
     created timestamp without time zone,
