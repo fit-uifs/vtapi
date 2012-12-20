@@ -32,6 +32,14 @@ VTApi::VTApi(int argc, char** argv) {
     cli_params->check_required = 1;
 	// Parse config file
     if (cmdline_parser_config_file (args_info.config_arg, &args_info, cli_params)) warn = true;
+        // Check if all args are specified
+    if (cmdline_parser_required (&args_info, "VTApi") != EXIT_SUCCESS) {
+        cerr << "Aborting: Database connection info missing. Use \"-h\" for help. " << endl;
+        cerr << "Use config file (--config=\"/path/to/somefile.conf\") or check help for command line option \"-c\"." << endl;
+        cmdline_parser_free (&args_info);
+        destruct (cli_params);
+        throw new exception();
+    }
 
     // TODO: user authentization here
 

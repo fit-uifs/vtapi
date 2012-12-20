@@ -229,7 +229,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     thisClass = "Commons(gengetopt_args_info&, String&)";
 
     logger    = new Logger(String(args_info.log_arg)); // has default value
-    connector = new Connector(args_info.connection_arg, logger);
+    connector = new Connector(args_info.connection_arg, logger); // necessary
     typemap   = new TypeMap(connector);
     typemap->registerTypes();
     verbose   = args_info.verbose_given;
