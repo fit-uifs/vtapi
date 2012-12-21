@@ -14,7 +14,6 @@
  *
  *
  * @todo @b doc[PC]: dodelat create db
- * @todo @b doc[TV]: see -> ref -> mainpage u základních pojmů
  * @todo @b code: sjednotit getX(pos) - getX(col)!!!
  * @todo @b code: vyházet dokumentaci z cpp a dát do h, je tam pak dvakrát, někdy to samé, někdy odlišné!!! viz například http://vidte.fit.vutbr.cz/doc/1.5/class_key_values.html#ad1311ba33e2015fb59b3635ee1327a43
  * @todo @b doc: sjednotit malá/velká písmena parametrů a návratových hodnot (zatím to vypadá jak "každý pes, jiná ves")
@@ -44,6 +43,7 @@ class Process;
 class Query;
 class Select;
 class Insert;
+class Update;
 
 
 /**
@@ -305,6 +305,8 @@ protected:
  * 
  * Mechanism: TBD
  *
+ * @see Basic information on page @ref KEYVALUES
+ *
  * @note Errors 21*
  *
  * @todo @b doc: Petrovy závorky
@@ -382,6 +384,8 @@ public:
  * 
  * Mechanism: TBD
  *
+ * @see Basic information on page @ref KEYVALUES
+ *
  * @note Error codes 22*
  *
  * @todo @b doc: Petrovy závorky
@@ -410,6 +414,8 @@ public:
  * Mechanism: TBD
  * 
  * @todo <b>nějaký artefakt?:</b> in the future version (1.0), this class will use Select (whereKV)
+ *
+ * @see Basic information on page @ref KEYVALUES
  *
  * @warning This class used unproperly may destroy the life and the universe.
  * RECOMENDATION: Wait for the version 1.0.
@@ -443,7 +449,7 @@ public:
 /**
  * @brief KeyValues storage class
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 30*
  *
@@ -1028,7 +1034,7 @@ protected:
 /**
  * @brief This class should always be on the path of your programm...
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 31*
  */
@@ -1104,7 +1110,7 @@ protected:
 /**
  * @brief A Sequence class manages videos and images
  *
- * @see Basic definition of term @ref LOGICAL
+* @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 32*
  */
@@ -1187,6 +1193,8 @@ public:
 
 /**
  * @brief Video class manages videos
+ *
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 321*
  */
@@ -1301,7 +1309,7 @@ public:
 /**
  * @brief Interval is equivalent to an interval of images
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 33*
  */
@@ -1370,6 +1378,8 @@ public:
 /**
  * @brief This represents images
  *
+ * @see Basic definition on page @ref LOGICAL
+ *
  * @note Error codes 339*
  */
 class Image : public Interval {
@@ -1419,7 +1429,7 @@ protected:
 /**
  * @brief A class which represents methods and gets also their keys
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 35*
  */
@@ -1473,7 +1483,7 @@ private:
 /**
  * @brief A class which represents processes and gets information about them
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 36*
  */

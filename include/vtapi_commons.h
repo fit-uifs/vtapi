@@ -176,6 +176,8 @@ public:
  * thus there may bee a doom if someone destroys the original ones. Well, destructor should only happen
  * when isDoom is false, which is set by the only constructor: Commons(String connStr); .
  *
+ * @see Basic information on page @ref KEYVALUES
+ *
  * @note Error codes 15*
  *//***************************************************************************/
 class Commons {
