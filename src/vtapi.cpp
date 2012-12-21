@@ -104,8 +104,7 @@ Dataset* VTApi::newDataset(const String& name) {
 
 /**
  * This might be a HOW-TO function
- * @see doxygen -> vtapi.conf, samples.cpp
- * @code
+ * @see documentation -> examples -> vtapi.conf, SAMPLES.txt
  */
 void VTApi::test() {
     // lines starting with cout should be ignored :)

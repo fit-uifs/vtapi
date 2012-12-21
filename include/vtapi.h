@@ -1,5 +1,6 @@
 /**
- * Main classes which provide a basic functionality of VTApi.
+ * @file
+ * @brief Main classes which provide a basic functionality of VTApi.
  *
  * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
  *
@@ -14,6 +15,8 @@
  *
  * @todo @b doc[PC]: dodelat create db
  * @todo @b doc[TV]: see -> ref -> mainpage u základních pojmů
+ * @todo @b code: sjednotit getX(pos) - getX(col)!!!
+ * @todo @b code: vyházet dokumentaci z cpp a dát do h, je tam pak dvakrát, někdy to samé, někdy odlišné!!! viz například http://vidte.fit.vutbr.cz/doc/1.5/class_key_values.html#ad1311ba33e2015fb59b3635ee1327a43
  * @todo @b doc: sjednotit malá/velká písmena parametrů a návratových hodnot (zatím to vypadá jak "každý pes, jiná ves")
  */
 
@@ -416,7 +419,7 @@ public:
 
     /**
      * Get key of a single table column
-     * @param pos Column index
+     * @param col Column index
      * @return Column key
      */
     TKey getKey(int col);
@@ -454,20 +457,20 @@ public:
     char getChar(const String& key);
     /**
      * Get single character specified by column index
-     * @param col column index
+     * @param pos column index
      * @return character
      */
     char getChar(const int pos);
     /**
      * Get character array specified by column key
-     * @param col column key
+     * @param key column key
      * @param size size of the array of char values
      * @return character array
      */
     char *getCharA(const String& key, int& size);
     /**
      * Get character array specified by column index
-     * @param col column index
+     * @param pos column index
      * @param size size of the array of char values
      * @return character array
      */
@@ -772,7 +775,7 @@ public:
     GEOSGeometry* getLineString(const int col);
     /**
      * Get array of 2D points specified by the column index
-     * @param col column index
+     * @param key column index
      * @return vector of 2D Points
      */
     std::vector<PGpoint>*  getPointV(const String& key);
@@ -950,7 +953,7 @@ protected:
      * This goes through resultset and retrieves metadata necessary for print.
      * @note It needs to be done before every print.
      * @param row if not set to -1, this indicates single row print
-     * @param indicator whether column widths will be required
+     * @param get_widths whether column widths will be required @todo @b doc[VF]: který popisek je správný (tento nebo "desired column widths" z .cpp)?
      * @return metadata for print, pair consisting of two vectors:
      *  a) Tkeys - column types etc., b) ints - column widths
      */
@@ -1080,7 +1083,7 @@ public:
      * @param location location of the sequence
      * @param type type of the sequence
      * @return success
-     * @todo @code: bez návratové hodnoty
+     * @todo code: bez návratové hodnoty
      */
     bool add(String name, String location, String type);
 
@@ -1135,7 +1138,7 @@ public:
 
     /**
      * Create a new frame specified by the frame number
-     * @param name name of the image
+     * @param frame name of the image @b doc: to asi nebude jméno
      * @return pointer to the new image
      * @todo @b code: neimplementováno
      */
@@ -1541,8 +1544,7 @@ public:
 
     /**
      * This might be a HOW-TO function for learning and testing purposes
-     * @see doxygen -> vtapi.conf, samples.cpp
-     * @code
+     * @see documentation -> examples -> vtapi.conf, SAMPLES.txt
      */
     void test();
 

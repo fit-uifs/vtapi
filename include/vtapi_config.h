@@ -15,7 +15,7 @@
  *
  * @section DESCRIPTION Description
  *
- * Optional VTApi configuration for includes. Comment #includes to make VTApi
+ * Optional VTApi configuration for includes. Comment \#includes to make VTApi
  * more lightweight.
  *
  */

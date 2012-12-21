@@ -1157,7 +1157,6 @@ void KeyValues::printAll() {
 // =============== PRINT support methods =======================================
 /**
  * Prints header - field name and data type
- * @param res Input resultset
  * @param fInfo Column types and widths
  */
 void KeyValues::printHeader(const std::pair< std::vector<TKey>*, std::vector<int>* > fInfo) {
@@ -1195,7 +1194,6 @@ void KeyValues::printHeader(const std::pair< std::vector<TKey>*, std::vector<int
 }
 /**
  * Prints footer - number of rows printed
- * @param res Input resultset
  * @param count Number of rows printed (0 = all)
  */
 void KeyValues::printFooter(const int count) {
@@ -1210,7 +1208,6 @@ void KeyValues::printFooter(const int count) {
 }
 /**
  * Prints values in single row
- * @param res Input resultset
  * @param row Row number
  * @param widths Vector of column widths
  */
@@ -1245,8 +1242,8 @@ void KeyValues::printRowOnly(const int row, const std::vector<int>* widths) {
 }
 /**
  * Returns data types, field names and desired column widths for all fields
- * @param res Input resultset
- * @param row Row number to process (0 = all)
+ * @param row row number to process (0 = all)
+ * @param get_widths
  * @return Pair of vectors <TKey,widths> (TKey includes data type and field name)
  */
 std::pair< std::vector<TKey>*, std::vector<int>* > KeyValues::getFieldsInfo(const int row, int get_widths) {
