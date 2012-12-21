@@ -1,6 +1,6 @@
 /**
  * @example SAMPLES.txt
- * This file shows basic use of VTApi.
+ * @brief This file shows basic use of %VTApi.
  * 
  * @section CODE_SAPLES Some sample codes
  * @note To obtain first row of the resultset, you must use the method "next()"

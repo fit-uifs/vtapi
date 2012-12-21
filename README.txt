@@ -1,13 +1,13 @@
 /**
  * @mainpage
  *
- * VTApi (Video Terror Application programming interface and methodology),
- * a data(base) interface used for processing and efficient management, indexing,
+ * @b %VTApi (%Video Terror Application programming interface and methodology),
+ * is a data(base) interface used for processing and efficient management, indexing,
  * retrieval and analysis of image and video data and related metadata,
  * which was created to unify and accelerate the intelligent vision
  * applications development.
  *
- * VTApi 1.5 is based on PostgreSQL database, PostGIS and OpenCV created within
+ * @bold{%VTApi 1.5} is based on PostgreSQL database, PostGIS and OpenCV created within
  * the Ministry of interior VideoTerror (VT) research project. The main objective
  * of the VT project is to define, explore and create a prototype of a system
  * warehousing image and video accomplished with computer
@@ -69,12 +69,12 @@
  *         related to the effective implementation and access to the metadata in the database.
  *
  * @subsubsection KEYVALUES KeyValues
- * The KeyValue is a basic mechanism of organization metadata in VTApi. It is
+ * The KeyValue is a basic mechanism of organization metadata in %VTApi. It is
  * data structure, which allows you to store metadata into pair <key, value>.
  *
  * Most classes inherit from KeyValues that provides the basic
  * operations needed to manage key-value pairs (associative array), on which
- * the VTApi model is based. KeyValues class is the crucial to ensure
+ * the %VTApi model is based. KeyValues class is the crucial to ensure
  * the functionality and generality of the API by the main function next(), which performs
  * most operations of the API, except constructors. It performs the database queries similarly to JDBC.
  * It also allows to change the values of object's variables and
@@ -83,7 +83,7 @@
  * Moreover, it uses the lazy approach, hiding the functionality necessary, doing
  * it efficiently when needed by using caches and batches if possible.
  *
- * The VTApi is strongly typed, the following description uses notation of X
+ * The %VTApi is strongly typed, the following description uses notation of X
  * referring to any data type implemented (integers, floating points, strings,
  * 4D geometry points, lines and polygons and their structures, vectors, arrays
  * and (OpenCV) matrices).
@@ -124,7 +124,7 @@
  *
  * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
  *
- * VTApi is distributed under BUT OPEN SOURCE LICENCE (Version 1).
+ * %VTApi is distributed under BUT OPEN SOURCE LICENCE (Version 1).
  * This licence agreement provides in essentials the same extent of rights as the terms of GNU GPL version 2 and Software fulfils the requirements of the Open Source software.
  *
  * @authors
