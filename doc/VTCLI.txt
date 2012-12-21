@@ -1,7 +1,7 @@
 /**
- * @example VTCli
+ * @example VTCLI.txt
  *
- * @code
+ * @verbatim
 $ dist/vtapi
 VTApi is running
 Commands: query, select, insert, update, delete, show, script, test, help, exit
@@ -81,5 +81,6 @@ help
 
 exit
     * exits interactive mode (or enter EOF)
-@endcode
+
+   @endverbatim
 */
