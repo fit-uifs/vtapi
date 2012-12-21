@@ -1,22 +1,17 @@
 /**
  * @file
+ * @brief Optional %VTApi configuration for includes. Comment \#includes to make
+ * %VTApi more lightweight..
+ *
+ * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
+ *
+ * VTApi is distributed under BUT OPEN SOURCE LICENCE (Version 1).
+ * This licence agreement provides in essentials the same extent of rights as the terms of GNU GPL version 2 and Software fulfils the requirements of the Open Source software.
+ *
  * @authors
- * VTApi Team, FIT BUT, CZ
- * Petr Chmelar, chmelarp@fit.vutbr.cz
- * Vojtech Froml, xfroml00@stud.fit.vutbr.cz
- * Tomas Volf, ivolf@fit.vutbr.cz
- *
- *
- * @section LECENSE License
- *
- * There will be license information for VTApi.
- * &copy; FIT BUT, CZ, 2011
- *
- *
- * @section DESCRIPTION Description
- *
- * Optional VTApi configuration for includes. Comment \#includes to make VTApi
- * more lightweight.
+ * Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * Tomas Volf, ivolf (at) fit.vutbr.cz
  *
  */
 

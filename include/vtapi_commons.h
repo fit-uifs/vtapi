@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Commons classes which provide an auxiliary functionality of VTApi.
+ * @brief Commons classes which provide an auxiliary functionality of %VTApi.
  *
  * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
  *
@@ -234,7 +234,7 @@ public:
      * @param user
      * @param password
      * @param logFilename
-     * @todo NOT IMPLEMENTED?
+     * @unimplemented
      */
     // Commons(const String& connStr, const String& logFilename = "");
     Commons(const String connStr, const String location, const String user, const String password, const String logFilename = "");
@@ -283,7 +283,7 @@ public:
     /**
      *
      * @param format
-     * @todo FUTURE - NOT IMPLEMENTED
+     * @unimplemented
      */
     void read(const String& format="");
 
