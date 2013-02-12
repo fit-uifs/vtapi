@@ -1,5 +1,6 @@
 /**
- * Main classes which provide a basic functionality of VTApi.
+ * @file
+ * @brief Main classes which provide a basic functionality of %VTApi.
  *
  * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
  *
@@ -13,7 +14,8 @@
  *
  *
  * @todo @b doc[PC]: dodelat create db
- * @todo @b doc[TV]: see -> ref -> mainpage u základních pojmů
+ * @todo @b code: sjednotit getX(pos) - getX(col)!!!
+ * @todo @b code: vyházet dokumentaci z cpp a dát do h, je tam pak dvakrát, někdy to samé, někdy odlišné!!! viz například http://vidte.fit.vutbr.cz/doc/1.5/class_key_values.html#ad1311ba33e2015fb59b3635ee1327a43
  * @todo @b doc: sjednotit malá/velká písmena parametrů a návratových hodnot (zatím to vypadá jak "každý pes, jiná ves")
  */
 
@@ -41,6 +43,7 @@ class Process;
 class Query;
 class Select;
 class Insert;
+class Update;
 
 
 /**
@@ -143,26 +146,94 @@ public:
      * @note marked as deprecated, because there is no discouraged mark
      * @param key
      * @return success
+     * @todo @b doc: Maybe it is implemented...? So repaire doc to current state
      */
     bool keyValue(const TKey& key);
 
     /**
      * This is a persistent function to add keys (columns) and values
-     * It may be called several times as:
-     * @param key
-     * @param value
-     * @param from table optional
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
      * @return success
-     * @todo @b doc: pro každou funkci; není příliš jasné, k čemu ta funkce je (+ from).
      */
     bool keyString(const String& key, const String& value, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param values values
+     * @param size size of array
+     * @param from selection (table; this is optional)
+     * @return success
+     * @unimplemented neimplementováno (pak zkontrolovat doc)
+     */
     bool keyStringA(const String& key, const String* values, const int size, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     bool keyInt(const String& key, int value, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param values values
+     * @param size size of array
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     bool keyIntA(const String& key, const int* values, const int size, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     bool keyFloat(const String& key, float value, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param values values
+     * @param size size of array
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     bool keyFloatA(const String& key, const float* values, const int size, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     bool keySeqtype(const String& key, const String& value, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     bool keyInouttype(const String& key, const String& value, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     bool keyPermissions(const String& key, const String& value, const String& from = "");
 
     // FIXME: use keys instead of all the below
@@ -184,7 +255,7 @@ public:
      * @param oper comparision operator between key and value
      * @param table table where the key is situated
      * @return
-     * @todo @b doc: snad je table míněno takto
+     * @todo @b doc: snad je table míněno takto - nebo selection where the key is situated?
      * @todo @b code: vždy vrací true?
      */
     bool whereString(const String& key, const String& value, const String& oper = "=", const String& table = "");
@@ -198,7 +269,7 @@ public:
      * @param table table where the key is situated
      * @return
      * @todo @b doc: "and for arrays"? co tím autor myslel? Případně reflektovat u ostatních whereX funkcí
-     * @todo @b doc: snad je table míněno takto
+     * @todo @b doc: snad je table míněno takto - nebo selection where the key is situated?
      * @todo @b code: vždy vrací true?
      */
     bool whereInt(const String& key, const int value, const String& oper = "=", const String& table = "");
@@ -211,7 +282,7 @@ public:
      * @param oper comparision operator between key and value
      * @param table table where the key is situated
      * @return
-     * @todo @b doc: snad je table míněno takto
+     * @todo @b doc: snad je table míněno takto - nebo selection where the key is situated?
      * @todo @b code: vždy vrací true?
      */
     bool whereFloat(const String& key, const float value, const String& oper = "=", const String& table = "");
@@ -233,6 +304,8 @@ protected:
  * @brief This is a class where queries are (to be) constructed
  * 
  * Mechanism: TBD
+ *
+ * @see Basic information on page @ref KEYVALUES
  *
  * @note Errors 21*
  *
@@ -287,7 +360,7 @@ public:
      * It may be called more times.
      * @param funtext
      * @return success
-     * @todo @b code: neimplementováno
+     * @unimplemented neimplementováno (pak doplnit do doc)
      */
     bool function(const String& funtext);
 
@@ -296,7 +369,7 @@ public:
      * If not, returns false (no quarantee before version 2).
      * @warning no quarantee before version 2 !!
      * @return success
-     * @todo @b code: neimplementováno
+     * @unimplemented neimplementováno (potom doplnit i doc)
      */
     bool join();
 
@@ -313,6 +386,8 @@ public:
  * @brief This is a class where queries are (to be) constructed
  * 
  * Mechanism: TBD
+ *
+ * @see Basic information on page @ref KEYVALUES
  *
  * @note Error codes 22*
  *
@@ -342,6 +417,8 @@ public:
  * Mechanism: TBD
  * 
  * @todo <b>nějaký artefakt?:</b> in the future version (1.0), this class will use Select (whereKV)
+ *
+ * @see Basic information on page @ref KEYVALUES
  *
  * @warning This class used unproperly may destroy the life and the universe.
  * RECOMENDATION: Wait for the version 1.0.
@@ -375,7 +452,7 @@ public:
 /**
  * @brief KeyValues storage class
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 30*
  *
@@ -419,7 +496,7 @@ public:
 
     /**
      * Get key of a single table column
-     * @param pos Column index
+     * @param col Column index
      * @return Column key
      */
     TKey getKey(int col);
@@ -457,20 +534,20 @@ public:
     char getChar(const String& key);
     /**
      * Get single character specified by column index
-     * @param col column index
+     * @param pos column index
      * @return character
      */
     char getChar(const int pos);
     /**
      * Get character array specified by column key
-     * @param col column key
+     * @param key column key
      * @param size size of the array of char values
      * @return character array
      */
     char *getCharA(const String& key, int& size);
     /**
      * Get character array specified by column index
-     * @param col column index
+     * @param pos column index
      * @param size size of the array of char values
      * @return character array
      */
@@ -775,7 +852,7 @@ public:
     GEOSGeometry* getLineString(const int col);
     /**
      * Get array of 2D points specified by the column index
-     * @param col column index
+     * @param key column index
      * @return vector of 2D Points
      */
     std::vector<PGpoint>*  getPointV(const String& key);
@@ -800,7 +877,7 @@ public:
      * This is to support updates in derived classes
      * (unimplemented error 3010 in this class)
      * @return success (in derived classes)
-     * @todo @b code: neimplementováno
+     * @todo @b doc: unimplemented error? I think that it is implemented :)
      */
     virtual bool preSet();
 
@@ -809,8 +886,7 @@ public:
      * Set a new string value of the specified key
      * @param key column key to update
      * @param value new string value of the key
-     * @return
-     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     * @return success
      */
     bool setString(const String& key, const String& value);
 
@@ -819,8 +895,7 @@ public:
      * @note New integer value is casted from string value
      * @param key column key to update
      * @param value new integer value (in string representation) of the key
-     * @return
-     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     * @return success
      */
     bool setInt(const String& key, const String& value);
 
@@ -828,8 +903,7 @@ public:
      * Set a new integer value of the specified key
      * @param key column key to update
      * @param value new integer value of the key
-     * @return
-     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     * @return success
      */
     bool setInt(const String& key, int value);
 
@@ -865,7 +939,6 @@ public:
      * @param key column key to update
      * @param value new float value of the key
      * @return success
-     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
      */
     bool setFloat(const String& key, float value);
 
@@ -874,8 +947,7 @@ public:
      * @param key column key to update
      * @param values new float array of the key
      * @param size size of the array of integer values
-     * @return
-     * @todo @b code: bez návratové hodnoty (doplnit pak do doc)
+     * @return success
      */
     bool setFloatA(const String& key, const float* values, int size);
 
@@ -883,8 +955,8 @@ public:
      * Set a new float vector of the specified key
      * @param key column key to update
      * @param values new float vector of the key
-     * @return
-     * @todo @b code: neimplementováno (doplnit pak do doc návratovou hodnotu)
+     * @return success
+     * @unimplemented neimplementováno
      */
     bool setFloatV(const String& key, const std::vector<float> values);
 
@@ -901,7 +973,7 @@ public:
      * @param key
      * @param value
      * @return
-     * @todo @b code: addX neimplementováno
+     * @unimplemented all methods like addX are unimplemented (then add doc)
      */
     bool addString(const String& key, const String& value);
     bool addInt(const String& key, const String& value);
@@ -953,7 +1025,7 @@ protected:
      * This goes through resultset and retrieves metadata necessary for print.
      * @note It needs to be done before every print.
      * @param row if not set to -1, this indicates single row print
-     * @param indicator whether column widths will be required
+     * @param get_widths whether column widths will be required @todo @b doc[VF]: který popisek je správný (tento nebo "desired column widths" z .cpp)?
      * @return metadata for print, pair consisting of two vectors:
      *  a) Tkeys - column types etc., b) ints - column widths
      */
@@ -965,7 +1037,7 @@ protected:
 /**
  * @brief This class should always be on the path of your programm...
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 31*
  */
@@ -1041,7 +1113,7 @@ protected:
 /**
  * @brief A Sequence class manages videos and images
  *
- * @see Basic definition of term @ref LOGICAL
+* @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 32*
  */
@@ -1083,7 +1155,7 @@ public:
      * @param location location of the sequence
      * @param type type of the sequence
      * @return success
-     * @todo @code: bez návratové hodnoty
+     * @todo @b code: bez návratové hodnoty
      */
     bool add(String name, String location, String type);
 
@@ -1106,7 +1178,7 @@ public:
      *
      * @param name
      * @return
-     * @todo @b code: neimplementováno (potom doplnit i doc)
+     * @unimplemented neimplementováno (potom doplnit i doc)
      */
     Process* newProcess(const String& name = "");
 
@@ -1125,6 +1197,8 @@ public:
 /**
  * @brief Video class manages videos
  *
+ * @see Basic definition on page @ref LOGICAL
+ *
  * @note Error codes 321*
  */
 class Video : public Sequence {
@@ -1138,9 +1212,9 @@ public:
 
     /**
      * Create a new frame specified by the frame number
-     * @param name name of the image
+     * @param frame name of the image @b doc: to asi nebude jméno
      * @return pointer to the new image
-     * @todo @b code: neimplementováno
+     * @unimplemented neimplementováno (zkontrolovat pak doc)
      */
     Image* newFrame(const int frame = 1);
 
@@ -1166,14 +1240,14 @@ public:
      * @todo Test
      * @param name
      * @return
-     * @todo @b code: neimplementováno (potom doplnit i doc)
+     * @unimplemented: neimplementováno (potom doplnit i doc)
      */
     bool openVideo();
 
     /**
      *
      * @return
-     * @todo @b code: neimplementováno (potom doplnit i doc)
+     * @unimplemented: neimplementováno (potom doplnit i doc)
      */
     cv::Mat getNextImage();
 #endif
@@ -1193,6 +1267,7 @@ public:
  *  @note Error codes 16*
  *
  *  @todo @b doc: třída prakticky bez dokumentace
+ *  @unimplemented Doplnit i doc!!!
  */
 class VideoPlayer : public Commons {
 protected:
@@ -1237,7 +1312,7 @@ public:
 /**
  * @brief Interval is equivalent to an interval of images
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 33*
  */
@@ -1306,6 +1381,8 @@ public:
 /**
  * @brief This represents images
  *
+ * @see Basic definition on page @ref LOGICAL
+ *
  * @note Error codes 339*
  */
 class Image : public Interval {
@@ -1355,7 +1432,7 @@ protected:
 /**
  * @brief A class which represents methods and gets also their keys
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 35*
  */
@@ -1409,7 +1486,7 @@ private:
 /**
  * @brief A class which represents processes and gets information about them
  *
- * @see Basic definition of term @ref LOGICAL
+ * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 36*
  */
@@ -1456,7 +1533,7 @@ public:
      * @param name
      * @param selection
      * @return
-     * @todo @b doc: má to cenu komentovat? :)
+     * @todo @b doc: má to cenu komentovat? :) Případně doplnit
      */
     bool add(const String& method, const String& name, const String& selection="intervals");
 
@@ -1474,7 +1551,7 @@ public:
      * // TODO: not implemented method
      * @param name specific sequence name
      * @return new sequence
-     * @todo @b doc: neimplementováno
+     * @unimplemented neimplementováno (zkontrolovat pak i doc)
      */
     Sequence* newSequence(const String& name = "");
 
@@ -1544,8 +1621,7 @@ public:
 
     /**
      * This might be a HOW-TO function for learning and testing purposes
-     * @see doxygen -> vtapi.conf, samples.cpp
-     * @code
+     * @see documentation -> examples -> vtapi.conf, SAMPLES.txt
      */
     void test();
 

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief Commons classes which provide an auxiliary functionality of VTApi.
+ * @brief Commons classes which provide an auxiliary functionality of %VTApi.
  *
  * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
  *
@@ -176,6 +176,8 @@ public:
  * thus there may bee a doom if someone destroys the original ones. Well, destructor should only happen
  * when isDoom is false, which is set by the only constructor: Commons(String connStr); .
  *
+ * @see Basic information on page @ref KEYVALUES
+ *
  * @note Error codes 15*
  *//***************************************************************************/
 class Commons {
@@ -234,7 +236,7 @@ public:
      * @param user
      * @param password
      * @param logFilename
-     * @todo NOT IMPLEMENTED?
+     * @unimplemented
      */
     // Commons(const String& connStr, const String& logFilename = "");
     Commons(const String connStr, const String location, const String user, const String password, const String logFilename = "");
@@ -283,7 +285,7 @@ public:
     /**
      *
      * @param format
-     * @todo FUTURE - NOT IMPLEMENTED
+     * @unimplemented
      */
     void read(const String& format="");
 
