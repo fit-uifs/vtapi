@@ -25,6 +25,7 @@ VTCli::VTCli(int argc, char** argv){
     this->processArgs(argc, argv);
     this->vtapi = new VTApi(argc, argv);
 }
+
 VTCli::VTCli(const VTApi& api) {
     this->vtapi = new VTApi(api);
 }
@@ -43,8 +44,9 @@ int VTCli::run() {
 
     if (this->interact) {
         cout << "VTApi is running" << endl;
-        cout << "Commands: query, select, insert, update, delete, "
-                "show, script, test, help, exit";
+        //cout << "Commands: query, select, insert, update, delete, "
+        //        "show, script, test, help, exit";
+        cout << "Commands: query, select, insert, test, help, exit" << endl;
     }
     
     // command cycle
@@ -147,9 +149,9 @@ void VTCli::selectCommand(String& line) {
         Sequence* seq = new Sequence(*(this->vtapi->commons));
         seq->select->where.clear();
         seq->select->whereString("seqname", params["name"]);
-        //seq->select->whereInt("seqnum", atoi(params["seqnum"]));
+        //seq->select->whereInt("seqnum", atoi(params["num"]));
         seq->select->whereString("seqlocation", params["location"]);
-        seq->select->whereString("seqtyp", params["seqtype"]);
+        seq->select->whereString("seqtyp", params["type"]);
         seq->next();
         seq->printAll();
         destruct(seq);
@@ -158,7 +160,7 @@ void VTCli::selectCommand(String& line) {
     else if (!input.compare("interval")) {
         Interval* in = new Interval(*(this->vtapi->commons));
         in->select->where.clear();
-        in->select->whereString("seqname", params["sequence"]);
+        in->select->whereString("seqname", params["seqname"]);
         //in->select->whereInt(t1, params["t1"]);
         //in->select->whereInt(t1, params["t1"]);
         in->select->whereString("imglocation", params["location"]);

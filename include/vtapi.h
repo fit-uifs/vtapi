@@ -277,7 +277,10 @@ public:
      * @todo @b code: vrací vždy true
      */
     bool from(const String& table, const String& column);
+#ifdef BLABLA
+        int from(const String& table, const String& column);
 
+   #endif
 
     /**
      * This is used to specify a function in the (column) list
