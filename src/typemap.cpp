@@ -82,11 +82,12 @@ void TypeMap::registerTypes() {
     PGregisterType types_userdef[] =
     {
         {"seqtype", enum_put, enum_get},
-        {"inouttype", enum_put, enum_get},
-        {"permissions", enum_put, enum_get},
+        {"inouttype", enum_put, enum_get}//,
+        //{"permissions", enum_put, enum_get}, // change 2 to 3 in next command
     };
 
-    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, types_userdef, 3, 0))
+
+    if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, types_userdef, 2, 0))
         cerr << "Register types: " << PQgeterror() << endl;
 
     // PostGIS special types

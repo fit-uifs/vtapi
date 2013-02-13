@@ -10,6 +10,8 @@
 --
 -- PostgreSQL database schema test
 --
+
+
 SET statement_timeout = 0;
 SET client_encoding = 'SQL_ASCII';
 SET standard_conforming_strings = on;
@@ -21,8 +23,6 @@ SET default_with_oids = false;
 CREATE schema test;
 
 SET search_path = test, public, pg_catalog;
-
-
 
 --
 -- Name: intervals; Type: TABLE; Schema: test; Owner: -
@@ -48,7 +48,7 @@ CREATE TABLE sequences (
     seqname name NOT NULL,
     seqnum integer,
     seqlocation character varying,
-    seqtyp seqtype DEFAULT 'data'::public.seqtype,
+    seqtyp public.seqtype DEFAULT 'data',
     userid name,
     groupid name,
     created timestamp without time zone,

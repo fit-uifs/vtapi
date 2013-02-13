@@ -79,7 +79,7 @@ String Logger::timestamp() {
     return String(timeBuffer);
 }
 
-
+// TODO: pri vynoreni odsud to crashne
 Logger::~Logger() {
     if (!logFilename.empty() && !logStream.fail()) logStream.close();
 }
@@ -232,6 +232,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     connector = new Connector(args_info.connection_arg, logger); // necessary
     typemap   = new TypeMap(connector);
     typemap->registerTypes();
+    
     verbose   = args_info.verbose_given;
 
     dataset   = args_info.dataset_given ? String(args_info.dataset_arg) : String ("");
@@ -263,11 +264,13 @@ Commons::Commons(const gengetopt_args_info& args_info) {
  */
 void Commons::beDoomed() {
     if (!doom) {
+        destruct(typemap);
         destruct(connector);        // the doom is very close     !!!!!
         destruct(logger);           // you shouldn't debug these lines!
-        destruct(typemap);
 
+#ifdef POSTGIS
         finishGEOS();
+#endif
     }
 }
 

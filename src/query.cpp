@@ -14,7 +14,7 @@ Query::Query(const Commons& commons, const String& query, PGparam* param)
     thisClass = "Query";
 
     setTable(commons.selection);
-    if (!param) this->param = PQparamCreate(connector->conn);
+    if (!param) this->param = PQparamCreate(connector->getConn());
 }
 
 Query::~Query() {
@@ -145,7 +145,6 @@ bool Query::keySeqtype(const String& key, const String& value, const String& fro
     TKey k("seqtype", key, 1, from);
     keys.push_back(k);
     int ret = PQputf(param, "%seqtype", value.c_str());
-
     if (!ret) std::cerr << PQgeterror();
     executed = false;
     return true;

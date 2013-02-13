@@ -15,6 +15,7 @@
 -- PostgreSQL database schema
 --
 
+
 SET statement_timeout = 0;
 SET client_encoding = 'SQL_ASCII';
 SET standard_conforming_strings = on;
@@ -25,9 +26,12 @@ SET search_path = public, pg_catalog;
 
 SET default_with_oids = false;
 
+
+CREATE SCHEMA public;
+
 --
 -- Name: inouttype; Type: ENUM TYPE; Schema: public; Owner: -
--- 
+--
 CREATE TYPE inouttype AS ENUM
    ('in',
     'inout',
@@ -35,11 +39,12 @@ CREATE TYPE inouttype AS ENUM
 
 --
 -- Name: seqtype; Type: ENUM TYPE; Schema: public; Owner: -
--- 
+--
 CREATE TYPE seqtype AS ENUM
    ('video',
     'images',
     'data');
+
 
 --
 -- Name: datasets; Type: TABLE; Schema: public; Owner: -
