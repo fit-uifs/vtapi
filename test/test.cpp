@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     Test test(*vtapi.newDataset("test"));    // init and your method if new (not in the DB)
     Process test1 = *test.newProcess("test1");  // register the process
 
-    // FIXME: koukni na run
+    // FIXME Vojta: koukni na run
     test1.run();  // run the process with inherited and custom parameters
     // test1.run(runTest, "sometext");  // run the process with custom parameters
 
