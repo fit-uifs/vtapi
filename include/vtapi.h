@@ -1472,7 +1472,9 @@ public:
      * Create new process for current dataset
      * @return pointer to new process
      */
-    Process* newProcess(const String& name = "");
+    Process* newProcess(const String& name) {};
+
+    virtual bool run();
 
 private:
     /**
@@ -1555,6 +1557,10 @@ public:
      */
     Sequence* newSequence(const String& name = "");
 
+    // http://stackoverflow.com/questions/205529/c-c-passing-variable-number-of-arguments-around
+    bool run(); // runs the Method's derivate run() with default parameters Method->run(*this);
+    bool run(...);
+
 // TODO:    void print();
 };
 
@@ -1632,6 +1638,14 @@ public:
      * @return new dataset
      */
     Dataset* newDataset(const String& name = "");
+
+    /**
+     * Methodology shortcuts
+     * @param name
+     * @return
+     */
+    Method* newMethod(const String& name = "");
+    Method* addMethod(const Method& method);
 
 protected:
 
@@ -1720,6 +1734,11 @@ String TKeyValue<T>::print() {
     std::cout << ret;
     return (ret);
 }
+
+// Mno a tohle he?
+// FIXME: 
+typedef std::map<String, TKeyValue<String> > TKeyValues;
+
 
 #endif	/* VTAPI_H */
 

@@ -41,24 +41,26 @@ Process* Method::newProcess(const String& name) {
 }
 
 std::vector<TKey> Method::getMethodKeys() {
-    methodKeys.clear();
+    if (methodKeys.empty()) {
+        KeyValues* kv = new KeyValues(*this);
+        kv->select = new Select(*this);
+        kv->select->from("public.methods_keys", "keyname");
+        kv->select->from("public.methods_keys", "typname");
+        kv->select->from("public.methods_keys", "inout");
+        kv->select->whereString("mtname", this->method);
 
-    KeyValues* kv = new KeyValues(*this);
-    kv->select = new Select(*this);
-    kv->select->from("public.methods_keys", "keyname");
-    kv->select->from("public.methods_keys", "typname");
-    kv->select->from("public.methods_keys", "inout");
-    kv->select->whereString("mtname", this->method);
+        while (kv->next()) {
+            TKey mk;
+            mk.key = kv->getString("keyname");
+            mk.type = kv->getString("typname");
+            mk.size = 0;   // 0 is for the definition
+            mk.from = kv->getString("inout");
+            methodKeys.push_back(mk);
+        }
 
-    while (kv->next()) {
-        TKey mk;
-        mk.key = kv->getString("keyname");
-        mk.type = kv->getString("typname");
-        mk.size = 0;   // 0 is for the definition
-        mk.from = kv->getString("inout");
-        methodKeys.push_back(mk);
+        delete (kv);
     }
-
-    delete (kv);
     return methodKeys;
 }
+
+public abstract Method::run() {};
