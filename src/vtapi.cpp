@@ -300,7 +300,7 @@ void VTApi::test() {
     cout << endl;
     cout << "TESTING Process" << endl;
 
-    Process* process = method->newProcess();
+    Process* process = method->newProcess("test");
     process->next();
     process->printAll();
 

@@ -188,7 +188,7 @@ String Query::escapeColumn(const String& key, const String& table) {
     } else if (key.find('(') != String::npos) {
         keyLength = key.find('(');
         rest += key.substr(key.find('('));
-    }
+    } // else { // nothing to do
 
     String ret = "";
     char* c = PQescapeIdentifier(connector->conn, key.c_str(), keyLength);
@@ -197,9 +197,9 @@ String Query::escapeColumn(const String& key, const String& table) {
         char* t = PQescapeIdentifier(connector->conn, table.c_str(), table.length());
         ret += String(t) + ".";
         PQfreemem(t);
-    } else {
-        ret += String(c) + rest + " ";
     }
+
+    ret += String(c) + rest + " ";
     PQfreemem(c);
 
     return ret;

@@ -19,6 +19,8 @@
  * @todo @b doc: sjednotit malá/velká písmena parametrů a návratových hodnot (zatím to vypadá jak "každý pes, jiná ves")
  */
 
+// TODO: udelat namespace vtapi!!!
+
 #ifndef VTAPI_H
 #define	VTAPI_H
 
@@ -1472,7 +1474,7 @@ public:
      * Create new process for current dataset
      * @return pointer to new process
      */
-    Process* newProcess(const String& name) {};
+    Process* newProcess(const String& name);
 
     virtual bool run();
 

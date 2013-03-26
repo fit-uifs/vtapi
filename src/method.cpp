@@ -63,4 +63,4 @@ std::vector<TKey> Method::getMethodKeys() {
     return methodKeys;
 }
 
-public abstract Method::run() {};
+bool Method::run() {};
