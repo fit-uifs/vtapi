@@ -57,21 +57,40 @@ int Interval::getEndTime() {
 
 
 bool Interval::add(const String& sequence, const int t1, const int t2, const String& location) {
-    destruct(insert);
-    int te2 = t2;
-    if (t2 < 0) te2 = t1;
+    bool retval = true;
+    int te2 = (t2 < 0) ? t1 : t2;
 
+    destruct(insert);
     insert = new Insert(*this, this->selection);
-    insert->keyString("seqname", sequence);
-    insert->keyInt("t1", t1);
-    insert->keyInt("t2", t2);
-    if (!location.empty()) {
-        insert->keyString("imglocation", location);
-    }
+    retval &= insert->keyString("seqname", sequence);
+    retval &= insert->keyInt("t1", t1);
+    retval &= insert->keyInt("t2", te2);
+    retval &= insert->keyString("imglocation", location);
 
     // TODO: image && storage checking??
 
-    return true;
+    return retval;
+}
+
+bool Interval::add(const String& sequence, const int t1, const int t2, const String& location,
+    const String& userid, const String& notes) {
+    bool retval = this->add(sequence, t1, t2, location);
+    retval &= insert->keyString("userid", userid);
+    retval &= insert->keyString("notes", notes);
+    return retval;
+}
+
+bool Interval::addExecute() {
+    bool retval = true;
+
+    if (this->insert) {
+        time_t now;
+        time(&now);
+        retval &= insert->keyTimestamp("created", now);
+        retval &= this->insert->execute();
+    }
+    else retval = false;
+    return retval;
 }
 
 

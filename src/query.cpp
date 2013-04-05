@@ -170,6 +170,30 @@ bool Query::keyPermissions(const String& key, const String& value, const String&
     return true;
 }
 
+bool Query::keyTimestamp(const String& key, const time_t& value, const String& from) {
+    PGtimestamp timestamp = {0};
+    struct tm* ts;
+
+    TKey k("timestamp", key, 1, from);
+    keys.push_back(k);
+
+    ts = localtime(&value);
+    timestamp.date.isbc = 0;
+    timestamp.date.year = ts->tm_year + 1900;
+    timestamp.date.mon = ts->tm_mon;
+    timestamp.date.mday = ts->tm_mday;
+    timestamp.time.hour = ts->tm_hour;
+    timestamp.time.min = ts->tm_min;
+    timestamp.time.sec = ts->tm_sec;
+    timestamp.time.usec = 0;
+
+    int ret = PQputf(param, "%timestamp", &timestamp);
+
+    if (!ret) std::cerr << PQgeterror();
+    executed = false;
+    return true;
+}
+
 
 String Query::escapeColumn(const String& key, const String& table) {
     executed = false;

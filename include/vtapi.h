@@ -237,6 +237,15 @@ public:
      * @return success
      */
     bool keyPermissions(const String& key, const String& value, const String& from = "");
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+    bool keyTimestamp(const String& key, const time_t& value, const String& from = "");
 
     // FIXME: use keys instead of all the below
     /**
@@ -1152,15 +1161,34 @@ public:
     String getLocation();
 
     /**
-     * Add new sequence to a database table
+     * Add new sequence to a database table - minimal insert
      * @param name name of the sequence
      * @param location location of the sequence
      * @param type type of the sequence
      * @return success
-     * @todo @b code: bez návratové hodnoty
      */
-    bool add(String name, String location, String type);
+    bool add(const String& name, const String& location, const String& type);
 
+    /**
+     * Add new sequence to a database table - full insert
+     * @param name name of the sequence
+     * @param location location of the sequence
+     * @param type type of the sequence
+     * @param userid name of the owner
+     * @param groupid name of the owner group
+     * @param notes optional description
+     * @return success
+     */
+    bool add(const String& name, const String& location, const String& type,
+    const String& userid, const String& groupid, const String& notes);
+
+    /**
+     * Execute SQL INSERT command for sequence
+     * @return success
+     * @note Overloading addExecute from KeyValues
+     */
+    bool addExecute();
+    
     /**
      * Create a new interval specified by a start time and an end time
      * @param t1 start time
@@ -1362,21 +1390,37 @@ public:
     int getEndTime();
 
     /**
-     * Add new interval to the table
+     * Add new interval to the table - minimal insert
      * @param sequence interval name
      * @param t1 start time
      * @param t2 end time
      * @param location location of the image
      * @return success
-     * @todo @b code: vrací vždy true
      */
     bool add(const String& sequence, const int t1, const int t2 = -1, const String& location = "");
-
+    /**
+     * Add new interval to the table - full insert
+     * @param sequence interval name
+     * @param t1 start time
+     * @param t2 end time
+     * @param location location of the image
+     * @param userid name of the owner
+     * @param notes optional description
+     * @return success
+     */
+    bool add(const String& sequence, const int t1, const int t2, const String& location,
+    const String& userid, const String& notes);
     /**
      * This is used to support updates
      * @return success (in derived classes)
      * @todo @b code: vrací vždy true
      */
+    /**
+     * Execute SQL INSERT command for interval
+     * @return success
+     * @note Overloading addExecute from KeyValues
+     */
+    bool addExecute();
     bool preSet();
 };
 

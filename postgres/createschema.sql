@@ -41,6 +41,7 @@ CREATE TABLE intervals (
 );
 
 
+
 --
 -- Name: sequences; Type: TABLE; Schema: test; Owner: -
 --
@@ -78,6 +79,13 @@ ALTER TABLE ONLY sequences
 ALTER TABLE ONLY sequences
     ADD CONSTRAINT sequences_unq UNIQUE (seqnum);
 
+--
+-- Generovani ID
+--
+CREATE SEQUENCE sequences_seqnum_seq;
+ALTER TABLE ONLY sequences
+    ALTER COLUMN seqnum
+        SET DEFAULT NEXTVAL('sequences_seqnum_seq');
 
 
 --

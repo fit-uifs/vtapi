@@ -4,6 +4,8 @@
 
 
 
+// generovat z vtcli
+
 class Test : public Method {
 public:
     TKeyValues params;
@@ -12,8 +14,8 @@ public:
      * The default constructor, not necessary to edit
      * @return
      */
-    Test(const KeyValues& orig, const String& name = "Test") : Method(orig, name) {
-        // TODO Vojta: naplnit MethodKeys if not existent (create)
+    Test(const KeyValues& orig, const String& name = "Test") : Method(orig, name) {        
+	// TODO Vojta: naplnit Method + MethodKeys if not existent (create)
     };
 
     /**

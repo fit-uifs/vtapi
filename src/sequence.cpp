@@ -48,14 +48,35 @@ Image* Sequence::newImage(const String& name) {
 }
 
 
-bool Sequence::add(String name, String location, String type) {
-    destruct(insert);
+bool Sequence::add(const String& name, const String& location, const String& type) {
+    bool retval = true;
 
+    destruct(insert);
     insert = new Insert(*this, "sequences");
-    insert->keyString("seqname", name);
-    insert->keyString("seqlocation", location);
-    insert->keySeqtype("seqtyp", type);
-    // that's all, folks ... continue similarly if needed
+    retval &= insert->keyString("seqname", name);
+    retval &= insert->keyString("seqlocation", location);
+    retval &= insert->keySeqtype("seqtyp", type);
+    return retval;
 }
 
+bool Sequence::add(const String& name, const String& location, const String& type,
+    const String& userid, const String& groupid, const String& notes) {
+    bool retval = this->add(name, location, type);
+    retval &= insert->keyString("userid", userid);
+    retval &= insert->keyString("groupid", groupid);
+    retval &= insert->keyString("notes", notes);
+    return retval;
+}
 
+bool Sequence::addExecute() {
+    bool retval = true;
+
+    if (this->insert) {
+        time_t now;
+        time(&now);
+        retval &= insert->keyTimestamp("created", now);
+        retval &= this->insert->execute();
+    }
+    else retval = false;
+    return retval;
+}

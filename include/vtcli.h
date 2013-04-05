@@ -9,7 +9,6 @@
 #define	VTCLI_H
 
 #include "vtapi.h"
-#include <map>
 
 /**
  * The VTApi command line interface class
@@ -38,11 +37,26 @@ protected:
     bool interact;
     String cmdline;
     std::map<String,String> helpStrings;
+    std::set<String> videoSuffixes;
+    std::set<String> imageSuffixes;
+    
+
+    std::pair<String,String> createKeyValue(const String& word);
+    String createSeqnameFromPath(const String& filepath);
+    String createLocationFromPath(const String& filepath, const String& baseLocation, const String& datasetLocation);
+    bool isParam(const String& word);
+    bool isImageFile(const String& filepath);
+    bool isImageFolder(const String& dirpath);
+    bool isVideoFile(const String& filepath);
+    int loadImageList(const String& dirpath, std::set<String>& imagelist);
+    void initSufVectors();
+
 
     int processArgs(int argc, char** argv);
-    String getWord(String& line);
-    String getCSV(String& word);
-    std::pair<String,String> createParam(String word);
+    String cutWord(String& line);
+    String cutCSV(String& word);
+    bool fixSlashes(String& path);
+        
 
     void queryCommand(String& line);
     void selectCommand(String& line);

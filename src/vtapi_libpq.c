@@ -107,19 +107,19 @@ int geometry_get (PGtypeArgs *args) {
 int enum_put (PGtypeArgs *args) {
     char *val = va_arg(args->ap, char *);
     char *out = NULL;
-    int vallen = 0, len = 0, oid = 0;
+    int vallen = 0, oid = 0;
     float sortorder = 0.0;
 
     if (!args || !val) return 0;
 
     /* expand buffer enough */
     vallen = strlen(val);
-    if (args->put.expandBuffer(args, len) == -1) return -1;
+    if (args->put.expandBuffer(args, vallen) == -1) return -1;
 
     out = args->put.out;
     memcpy(out, val, vallen);
 
-    return len;
+    return vallen;
 }
 /* From support email END */
 
