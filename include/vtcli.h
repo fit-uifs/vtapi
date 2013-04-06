@@ -17,28 +17,55 @@
 #ifndef VTCLI_H
 #define	VTCLI_H
 
+#define     VTCLI_OK    0
+#define     VTCLI_FAIL  -1
+
+#include <cstdlib>
+#include <time.h>
+#include <dirent.h>
+
 #include "vtapi.h"
 
 /**
- * The VTApi command line interface class
- *
- * You can follow the test method of vtapi.cpp for learning.
- *
- * @TODO: zjistit jak se zjisti vsechny prvky primarniho klice...
- * a dalsi veci ohledne cizich klicu pro vyhledani moznosti spojeni.
- * @TODO: Comment! 
+ * @brief Main VTCli class
  */
 class VTCli {
 public:
-    VTCli();
-    VTCli(const VTCli& orig);
+    /**
+     * VTCli constructor with arguments from a VTApi object
+     * @param api initialized VTApi object
+     */
     VTCli(const VTApi& api);
+    /**
+     * VTCli constructor with command line arguments
+     * @param argc command line argument count
+     * @param argv command line arguments
+     */
     VTCli(int argc, char** argv);
-
+    /**
+     * Destructor
+     */
     virtual ~VTCli();
 
+    /**
+     * Runs VTCli tool in one of the two modes:
+     *  interactive - asks user for commands (default mode)
+     *      eg.: ./vtcli --config=./vtapi.conf
+     *  one-time    - runs one time command (toggled when command line arguments contain an unknown string)
+     *      eg.: ./vtcli --config=./vtapi.conf insert sequence /mnt/data/seq/video.mpg
+     * @return VTCLI_OK on success, VTCLI_FAIL on failure
+     */
     int run();
+    /**
+     * Prints basic help
+     * @return VTCLI_OK on success, VTCLI_FAIL on failure
+     */
     int printHelp();
+    /**
+     * Prints command-specific help
+     * @param what command with which to help
+     * @return VTCLI_OK on success, VTCLI_FAIL on failure
+     */
     int printHelp(const String& what);
 
 protected:
@@ -49,24 +76,91 @@ protected:
     std::set<String> videoSuffixes;
     std::set<String> imageSuffixes;
     
-
+    /**
+     * Creates key/value std::pair from string in key=value format
+     * @param word Input string
+     * @return Key,Value std::pair
+     */
     std::pair<String,String> createKeyValue(const String& word);
+    /**
+     * Creates sequence name (filename without suffix) from its full path
+     * @param filepath full file(dir)path
+     * @return sequence name
+     */
     String createSeqnameFromPath(const String& filepath);
+    /**
+     * Creates sequence location (within dataset) from its full path
+     * @param filepath full file(dir)path
+     * @param baseLocation base data location
+     * @param datasetLocation dataset data location
+     * @return sequence location
+     */
     String createLocationFromPath(const String& filepath, const String& baseLocation, const String& datasetLocation);
+    /**
+     * Checks if string is valid parameter key=value
+     * @param word checked string
+     * @return bool value
+     */
     bool isParam(const String& word);
-    bool isImageFile(const String& filepath);
-    bool isImageFolder(const String& dirpath);
+    /**
+     * Checks if filepath points to a video file
+     * @param filepath full filepath
+     * @return bool value
+     */
     bool isVideoFile(const String& filepath);
+    /**
+     * Checks if filepath points to a image file
+     * @param filepath full filepath
+     * @return bool value
+     */
+    bool isImageFile(const String& filepath);
+    /**
+     * Checks if dirpath points to a directory with at least one image in it
+     * @param dirpath full path to directory
+     * @return bool value
+     */
+    bool isImageFolder(const String& dirpath);
+    /**
+     * Loads list of images within a folder
+     * @param dirpath image folder
+     * @param imagelist set of loaded image filenames
+     * @return count of images loaded
+     */
     int loadImageList(const String& dirpath, std::set<String>& imagelist);
-    void initSufVectors();
-
-
-    int processArgs(int argc, char** argv);
+    /**
+     * Initialize sets holding image/video suffixes
+     */
+    void initSuffixSets();
+    /**
+     * Changes all slashes within a path to '/' and removes slashes at its end
+     * @param path path to modify
+     * @return VTCLI_OK on success, VTCLI_FAIL on failure
+     */
+    int fixSlashes(String& path);
+    /**
+     * Cuts and returns the first word from the input command line
+     * @param line input command line
+     * @return First word
+     */
     String cutWord(String& line);
+    /**
+     * Cuts and returns the first CSV value from the input command line
+     * @param line input command line
+     * @return First CSV value
+     */
     String cutCSV(String& word);
-    bool fixSlashes(String& path);
-        
+    /**
+     * Reads if command was supplied from command line arguments and forms help string
+     * @param argc command line argument count
+     * @param argv command line arguments
+     * @return VTCLI_OK on success, VTCLI_FAIL on failure
+     */
+    int processArgs(int argc, char** argv);
 
+    /**
+     * 
+     * @param line
+     */
     void queryCommand(String& line);
     void selectCommand(String& line);
     void insertCommand(String& line);
@@ -74,100 +168,13 @@ protected:
     void deleteCommand(String& line);
     void showCommand(String& line);
     void installCommand(String& line);
-
 };
 
-
-
-
-/**
- * This is a class to construct and execute INSERT queries.
- *
+/*
  * Command syntax: (array values are comma-separated)
- * insert dataset name=.. location=..
  * insert sequence name=.. [seqnum=.. location=.. seqtype=..]
  * insert interval sequence=... t1=.. t2=.. [location=.. tags=.. svm=..]
- * insert method name=.. [key= type= inout=..]*
  * insert process name=.. method=.. inputs=.. outputs=..
- * insert selection name=.. --
- *
  */
-class CLIInsert {
-public:
-    enum InsertType {GENERIC, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION};
-
-    CLIInsert(Commons& orig);
-    ~CLIInsert();
-    /**
-     * Set what to insert into dataset
-     * @param newtype {NONE, DATASET, SEQUENCE, INTERVAL, PROCESS, METHOD, SELECTION}
-     */
-    void setType(InsertType newtype);
-    /**
-     * Adds argument to insert query in pair <Key,Value> form
-     * @param param pair of argument key and value
-     * @return 0 on success, -1 if key/value is empty or key already exists
-     */
-    int addParam(String param);
-    /**
-     * Adds argument to insert query
-     * @param key argument name, eg.: 'name'
-     * @param value argument value, eg.: 'process1'
-     * @return 0 on success, -1 if key/value is empty or key already exists
-     */
-    int addParam(std::pair<String,String> param);
-    /**
-     * Adds argument to insert query
-     * @param key argument name, eg.: 'name'
-     * @param value argument value, eg.: 'process1'
-     * @return 0 on success, -1 if key/value is empty or key already exists
-     */
-    int addParam(String key, String value);
-
-    /**
-     * Clears query arguments
-     */
-    void clear();
-    /**
-     * Executes query
-     * @return Success value
-     */
-    bool execute();
-
-protected:
-    String dataset;
-    Connector* connector;
-    InsertType type;
-    std::map<String,String> params;
-
-    /**
-     * Gets value of argument from params map
-     * @param pname Argument key
-     * @return Argument value
-     */
-    String getParam(String pname);
-    /**
-     * Fills PGarray structure with array of int arguments in string form
-     * @param arrayParam Comma-separated string of values
-     * @param arr Array structure to fill
-     */
-    void getIntArray(String arrayParam, PGarray* arr);
-    /**
-     * Fills PGarray structure with array of float arguments in string form
-     * @param arrayParam Comma-separated string of values
-     * @param arr Array structure to fill
-     */
-    void getFloatArray(String arrayParam, PGarray* arr);
-    /**
-     * Checks whether interval location points to existing file
-     * @param seqname Name of the sequence containing interval
-     * @param intlocation Interval filename
-     * @return
-     */
-    bool checkLocation(String seqname, String intlocation);
-    PGtimestamp getTimestamp();
-
-};
-
 #endif	/* VTCLI_H */
 

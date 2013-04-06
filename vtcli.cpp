@@ -7,21 +7,17 @@
  * For more detailed description see header vtcli.h
  */
 
-#include <cstdlib>
-#include <time.h>
-#include <dirent.h>
-
 #include "vtcli.h"
+
+VTCli::VTCli(const VTApi& api) {
+    this->vtapi = new VTApi(api);
+    initSuffixSets();
+}
 
 VTCli::VTCli(int argc, char** argv){
     this->processArgs(argc, argv);
     this->vtapi = new VTApi(argc, argv);
-    initSufVectors();
-}
-
-VTCli::VTCli(const VTApi& api) {
-    this->vtapi = new VTApi(api);
-    initSufVectors();
+    initSuffixSets();
 }
 
 VTCli::~VTCli() {
@@ -98,7 +94,7 @@ int VTCli::run() {
         }
     } while (this->interact);
 
-    return 0;
+    return VTCLI_OK;
 }
 
 void VTCli::queryCommand(String& line) {
@@ -127,7 +123,7 @@ void VTCli::selectCommand(String& line) {
     input = cutWord(line);
     while (!line.empty()) {
         String word = cutWord(line);
-        params.insert(createKeyValue(cutWord(line)));
+        params.insert(createKeyValue(word));
     }
 
     // TODO: udelat pres Tkey
@@ -309,34 +305,6 @@ void VTCli::insertCommand(String& line) {
 
         seq->select->executed = true;
         destruct(seq);
-/*
-            if (params.count("location") > 0 || params.count("type") > 0) {
-                do {
-                    if (params.count("name") == 0) {
-                        String seqname = createSeqnameFromPath(params['location']);
-                        params.insert(std::pair<String,String>("name", seqname));
-                    }
-                    if (params['type'].compare("images") == 0) {
-                        // check if it's image folder
-                        // load imagelist
-                    }
-                    else if (params['type'].compare("video") == 0) {
-                        // check if it's video
-                    }
-                    else if (params['type'].compare("data") > 0) {
-                        seq->warning("Insert sequence - unknown sequence type.");
-                        break;
-                    }
-                    seq->add(params["name"], params["location"], params["type"], seq->user, "", "");
-                    seq->addExecute();
-                } while (2=3);
-
-            }
-            else seq->warning("Insert sequence - missing arguments.");
-        } while (2=3);
-        seq->select->executed = true;
-        destruct (seq);
-        */
     }
     // insert interval
     else if (input.compare("interval") == 0) {
@@ -373,9 +341,10 @@ void VTCli::deleteCommand(String& line) {
 void VTCli::showCommand(String& line) {
     this->vtapi->commons->warning("show command not implemented");
 }
-
+//TODO
 void VTCli::installCommand(String& line) {
-
+    this->vtapi->commons->warning("install command not implemented");
+/*
     String content;
     std::ifstream scriptfile (line.c_str(), std::ios::in);
 
@@ -408,9 +377,25 @@ void VTCli::installCommand(String& line) {
             this->vtapi->commons->warning(errmsg);
         }
     }
+*/
 }
 
-
+bool VTCli::isVideoFile(const String& filepath) {
+    std::ifstream video(filepath.c_str());
+    size_t dotPos = 0;
+    
+    if (video) {       
+        video.close();
+        dotPos = filepath.find_last_of('.', String::npos);
+        if (dotPos > 0 && dotPos < filepath.length()-1) {
+            String suffix = filepath.substr(dotPos + 1, String::npos);
+            if (this->videoSuffixes.count(suffix.c_str()) > 0) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 bool VTCli::isImageFile(const String& filepath) {
     std::ifstream image(filepath.c_str());
@@ -428,6 +413,7 @@ bool VTCli::isImageFile(const String& filepath) {
     }
     return false;
 }
+
 bool VTCli::isImageFolder(const String& dirpath) {
     DIR *imagefolder = opendir(dirpath.c_str());
 
@@ -444,22 +430,6 @@ bool VTCli::isImageFolder(const String& dirpath) {
             }
         }
         closedir (imagefolder);
-    }
-    return false;
-}
-bool VTCli::isVideoFile(const String& filepath) {
-    std::ifstream video(filepath.c_str());
-    size_t dotPos = 0;
-    
-    if (video) {       
-        video.close();
-        dotPos = filepath.find_last_of('.', String::npos);
-        if (dotPos > 0 && dotPos < filepath.length()-1) {
-            String suffix = filepath.substr(dotPos + 1, String::npos);
-            if (this->videoSuffixes.count(suffix.c_str()) > 0) {
-                return true;
-            }
-        }
     }
     return false;
 }
@@ -485,7 +455,7 @@ int VTCli::loadImageList(const String& dirpath, std::set<String>& imagelist) {
     return cntimg;
 }
 
- void VTCli::initSufVectors() {
+ void VTCli::initSuffixSets() {
      String imgsuf[] = {"bmp", "jpeg", "jpg", "gif", "png", "svg", "tiff"};
      String vidsuf[] = {"avi", "mkv", "mpeg", "mpg", "mp4", "rm", "wmv"};
 
@@ -493,12 +463,6 @@ int VTCli::loadImageList(const String& dirpath, std::set<String>& imagelist) {
      this->videoSuffixes = std::set<String> (vidsuf, vidsuf + sizeof(vidsuf) / sizeof(vidsuf[0]));
  }
 
-
-/**
- * Creates key/value std::pair from string in key=value format
- * @param word Input string
- * @return Key,Value std::pair
- */
 std::pair<String,String> VTCli::createKeyValue(const String& word) {
     size_t pos = word.find('=');
 
@@ -508,11 +472,7 @@ std::pair<String,String> VTCli::createKeyValue(const String& word) {
     else
         return std::pair<String,String>("","");
 }
-/**
- *
- * @param filepath
- * @return
- */
+
 String VTCli::createSeqnameFromPath(const String& filepath) {
     String seqname;
     size_t startPos = 0, endPos = String::npos;
@@ -561,11 +521,6 @@ bool VTCli::isParam(const String& word) {
     return (pos > 0 && pos < word.length()-1);
 }
 
-/**
- * Cut first word from input command line
- * @param line input line
- * @return word
- */
 String VTCli::cutWord(String& line) {
     String word;
     size_t startPos = 0, pos, endPos = String::npos;
@@ -602,11 +557,7 @@ String VTCli::cutWord(String& line) {
 
     return word;
 }
-/**
- * Cuts first comma-separated value from string
- * @param word CSV string
- * @return first CSV
- */
+
 String VTCli::cutCSV(String& word) {
     String csv;
     size_t pos = word.find(",", 0);
@@ -618,7 +569,7 @@ String VTCli::cutCSV(String& word) {
     return csv;
 }
 
-bool VTCli::fixSlashes(String& path) {
+int VTCli::fixSlashes(String& path) {
     size_t len = path.length();
     size_t slPos = 0;
     size_t nsPos = len;
@@ -636,34 +587,25 @@ bool VTCli::fixSlashes(String& path) {
         nsPos--;
         if (nsPos < 0) {
             path.clear();
-            return false;
+            return VTCLI_FAIL;
         }
     } while (path[nsPos] == '/' || path[nsPos] == '\\');
     if (nsPos < len - 1) {
         path = path.substr(0, nsPos + 1);   
     }
-    return true;
+    return VTCLI_OK;
 }
 
-
-/**
- * Prints basic help
- * @return 0 on success, -1 on failure
- */
 int VTCli::printHelp() {
     return this->printHelp("all");
 }
-/**
- * Prints help string
- * @param what Help context ("all", "select", ...)
- * @return 0 on success, -1 on failure
- */
+
 int VTCli::printHelp(const String& what) {
     std::stringstream hss;
 
     if (this->helpStrings.count(what)) {
         std::cout << this->helpStrings[what];
-        return 0;
+        return VTCLI_OK;
     }
     else if (!what.compare("query")) {
         hss << std::endl <<
@@ -702,13 +644,13 @@ int VTCli::printHelp(const String& what) {
     }
     else if (!what.compare("insert")) {
         hss << std::endl <<
-            "insert sequence|interval|process [ARGS]" << std::endl << std::endl <<
+            "insert sequence|interval|process [FULLPATH] [ARGS]" << std::endl << std::endl <<
             "Inserts data into database" << std::endl << std::endl <<
-            "ARG format:      arg=value or arg=value1,value2,..." << std::endl << std::endl <<
+            "   [FULLPATH]:      full path to file/directory to insert  " << std::endl <<
+            "[ARGS] format:      arg=value or arg=value1,value2,..." << std::endl << std::endl <<
             " Sequence ARGS:" << std::endl <<
             "      name       name of the sequence" << std::endl <<
-            "  location       location of the sequence data file(s) (file/directory)" << std::endl <<
-            "       num       unique number of the sequence" << std::endl <<
+            "  location       location of the sequence data file(s) within dataset (don't combine with FULLPATH arg)" << std::endl <<
             "      type       type of the sequence [images, video]" << std::endl << std::endl <<
             "Interval ARGS:" << std::endl <<
             "   seqname       name of the sequence containing this interval *REQUIRED*" << std::endl <<
@@ -734,23 +676,17 @@ int VTCli::printHelp(const String& what) {
     if (!hss.fail()) {
         this->helpStrings.insert(std::make_pair(what,hss.str()));
         std::cout << hss.str() << std::endl;
-        return 0;
+        return VTCLI_OK;
     }
-    else return -1;
+    else return VTCLI_FAIL;
 }
 
-/**
- * Creates help and command strings from arguments
- * @param argc Argument count
- * @param argv Argument field
- * @return 0 on success, -1 on failure
- */
 int VTCli::processArgs(int argc, char** argv) {
     gengetopt_args_info args_info;
     if (cmdline_parser2 (argc, argv, &args_info, 0, 1, 0) != 0) {
         helpStrings.insert(std::make_pair("all", ""));
         this->cmdline.clear();
-        return -1;
+        return VTCLI_FAIL;
     }
     else {
         // Construct help string
@@ -765,194 +701,10 @@ int VTCli::processArgs(int argc, char** argv) {
         for (int i = 0; i < args_info.inputs_num; i++)
             cmdline.append(args_info.inputs[i]).append(" ");
         cmdline_parser_free (&args_info);
-        return 0;
+        return VTCLI_OK;
     }
 }
 
-
-
-// ************************************************************************** //
-CLIInsert::CLIInsert(Commons& orig) {
-    this->connector = (&orig)->getConnector();
-    this->dataset = (&orig)->getDataset();
-    this->type = GENERIC;
-}
-CLIInsert::~CLIInsert() {
-    this->params.clear();
-}
-
-void CLIInsert::setType(InsertType newtype){
-    this->type = newtype;
-}
-
-int CLIInsert::addParam(std::pair<String,String> param) {
-    std::pair<std::map<String,String>::iterator,bool> ret;
-
-    if (!param.first.empty() && !param.second.empty()) {
-	ret = this->params.insert(param);
-        // key already existed
-        if (!ret.second) return -1;
-        else return 0;
-    }
-    else return -1;
-}
-
-int CLIInsert::addParam(String key, String value) {
-    return this->addParam(std::pair<String, String> (key, value));
-}
-
-String CLIInsert::getParam(String pname) {
-    return this->params[pname];
-}
-
-void CLIInsert::getIntArray(String arrayParam, PGarray* arr) {
-
-    size_t startPos = 0, endPos = String::npos;
-    int tag;
-    arr->ndims = 0;
-    arr->param = PQparamCreate(this->connector->getConn());
-
-    while (startPos < arrayParam.length()) {
-        endPos = arrayParam.find(',', startPos);
-        tag = atoi(arrayParam.substr(startPos, endPos).c_str());
-        PQputf(arr->param, "%int4", tag);
-        if (endPos == String::npos) break;
-        startPos = endPos + 1;
-    }
-}
-
-void CLIInsert::getFloatArray(String arrayParam, PGarray* arr) {
-
-    size_t startPos = 0, endPos = String::npos;
-    float svm;
-    arr->ndims = 0;
-    arr->param = PQparamCreate(this->connector->getConn());
-
-    while (startPos < arrayParam.length()) {
-        endPos = arrayParam.find(',', startPos);
-        svm = (float) atof(arrayParam.substr(startPos, endPos).c_str());
-        PQputf(arr->param, "%float4", svm);
-        if (endPos == String::npos) break;
-        startPos = endPos + 1;
-    }
-}
-
-bool CLIInsert::checkLocation(String seqname, String intlocation) {
-// TODO: nejede mi PQexec
-/*
-    String location;
-    PGresult* res;
-    PGtext seqlocation = (PGtext) "";
-
-    // get sequence locationPQcle
-    res = PQexec(this->connector->getConn(),
-        String("SELECT seqlocation FROM " + this->dataset +
-            ".sequences WHERE seqname=\'" + seqname.c_str() + "\';").c_str());
-    if(!res) {
-        this->connector->getLogger()->write(PQgeterror());
-        return false;
-    }
-    PQgetf(res, 0, "%varchar", 0, &seqlocation);
-
-    // FIXME: check location using getDataLocation();
-    location = this->dataset.append((String) seqlocation).append(intlocation);
-    // TODO:
-
-    PQclear(res);
-    return true;
-*/
-}
-
-bool CLIInsert::execute() {
-
-    std::stringstream query;
-    PGresult *res;
-    PGarray arr;
-    PGparam *param = PQparamCreate(this->connector->getConn());
-    bool queryOK = true;
-    PGtimestamp timestamp = getTimestamp();
-
-    if (this->type == GENERIC) {
-        this->connector->getLogger()->write("Error: insert command incomplete\n");
-        return 0;
-    }
-
-    //TODO: datasets/methods/selections
-    // insert sequence
-    if (this->type == SEQUENCE) {
-        PQputf(param, "%name", getParam("name").c_str());
-        PQputf(param, "%int4", atoi(getParam("seqnum").c_str()));
-        PQputf(param, "%varchar", getParam("location").c_str());
-        PQputf(param, "%timestamp", &timestamp);
-        query << "INSERT INTO " << this->dataset << ".sequences " <<
-            "(seqname, seqnum, seqlocation, seqtyp, created) " <<
-            "VALUES ($1, $2, $3, \'" << getParam("seqtype") << "\', $4)";
-    }
-    // insert interval
-    else if (this->type == INTERVAL) {
-        PQputf(param, "%name", getParam("sequence").c_str());
-        PQputf(param, "%int4", atoi(getParam("t1").c_str()));
-        PQputf(param, "%int4", atoi(getParam("t2").c_str()));
-        PQputf(param, "%varchar", getParam("location").c_str());
-        getIntArray(getParam("tags"), &arr);
-        PQputf(param, "%int4[]", &arr);
-        PQparamReset(arr.param);
-        getFloatArray(getParam("svm"), &arr);
-        PQputf(param, "%float4[]", &arr);
-        PQparamClear(arr.param);
-        PQputf(param, "%timestamp", &timestamp);
-        query << "INSERT INTO " << this->dataset << ".intervals " <<
-            "(seqname, t1, t2, imglocation, tags, svm, created) " <<
-            "VALUES ($1, $2, $3, $4, $5, $6, $7)";
-        queryOK = checkLocation(getParam("sequence"), getParam("location"));
-    }
-    // insert process
-    if (this->type == PROCESS) {
-        PQputf(param, "%name", getParam("name").c_str());
-        PQputf(param, "%name", atoi(getParam("method").c_str()));
-        PQputf(param, "%varchar", getParam("inputs").c_str());
-        PQputf(param, "%varchar", getParam("outputs").c_str());
-        PQputf(param, "%timestamp", &timestamp);
-        query << "INSERT INTO " << this->dataset << ".processes " <<
-            "(prsname, mtname, inputs, outputs, created) VALUES ($1, $2, $3, $4, $5)";
-    }
-
-    if (queryOK) {
-        res = PQparamExec(this->connector->getConn(), param, query.str().c_str(), 1);
-        if(!res)
-            this->connector->getLogger()->write(PQgeterror());
-       // TODO: nejede mi PQclear 
-        /* else PQclear(res); */
-    }
-
-    PQparamClear(param);
-
-    return 1;
-}
-
-void CLIInsert::clear(){
-
-    this->params.clear();
-    this->type = GENERIC;
-}
-
-PGtimestamp CLIInsert::getTimestamp() {
-    PGtimestamp timestamp;
-    time_t rawtime;
-    struct tm * timeinfo;
-
-    time (&rawtime);
-    timeinfo = localtime (&rawtime);
-    timestamp.date.isbc  = 0;
-    timestamp.date.year  = timeinfo->tm_year + 1900;
-    timestamp.date.mon   = timeinfo->tm_mon;
-    timestamp.date.mday  = timeinfo->tm_mday;
-    timestamp.time.hour  = timeinfo->tm_hour;
-    timestamp.time.min   = timeinfo->tm_min;
-    timestamp.time.sec   = timeinfo->tm_sec;
-    timestamp.time.usec  = 0;
-    return timestamp;
-}
 
 
 
