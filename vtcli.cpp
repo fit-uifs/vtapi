@@ -288,7 +288,7 @@ void VTCli::insertCommand(String& line) {
             // insert image folder sequence, load list of images
             else if (params["type"].compare("images") == 0) {
                 std::set<String> imagelist;
-                int imgix = 0;
+                int t = 1;
                 if (loadImageList(filepath, imagelist) == 0) {
                     seq->warning("Insert sequence " + params["name"] + " failed; image files could not have been loaded.");
                     break;
@@ -301,11 +301,11 @@ void VTCli::insertCommand(String& line) {
                         break;
                     }
                     for (std::set<String>::iterator it = imagelist.begin(); it != imagelist.end(); ++it) {
-                        img->add(params["name"], imgix, imgix, *it, img->user, "");
+                        img->add(params["name"], t, t, *it, img->user, "");
                         if (!img->addExecute()) {
                             img->warning("Insert interval " + (*it) + " failed; image not inserted");
                         }
-                        imgix++;
+                        t++;
                     }
                     img->select->executed = true;
                     destruct(img);
@@ -478,7 +478,7 @@ int VTCli::loadImageList(const String& dirpath, std::set<String>& imagelist) {
         struct dirent *entry;
         while (entry = readdir(imagefolder)) {
             String filename (entry->d_name);
-            if(filename.compare(".") != 0 && filename.compare("..") != 0) {
+            if(filename[0] != '.') {
                 String fullpath = dirpath + "/" + filename;
                 if (isImageFile(fullpath)) {
                     imagelist.insert(filename);
