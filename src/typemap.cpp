@@ -7,7 +7,6 @@
 
 #include "vtapi_commons.h"
 
-using namespace std;
 
 TypeMap::TypeMap(Connector* connector) {
     this->connector = connector;
@@ -57,8 +56,8 @@ void TypeMap::loadTypes() {
         PGtext typname;
         PQgetf(res, i, "%oid %name %char %int2 %oid",
             0, &oid, 1, &typname, 2, &ti.category, 3, &ti.length, 4, &ti.elemoid);
-        typesname[String(typname)] = make_pair(oid, ti);
-        typesoid[oid] = make_pair(String(typname), ti);
+        typesname[String(typname)] = std::make_pair(oid, ti);
+        typesoid[oid] = std::make_pair(String(typname), ti);
     }
     // load defined reference types
     loadRefTypes();
@@ -88,7 +87,7 @@ void TypeMap::registerTypes() {
 
 
     if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, types_userdef, 2, 0))
-        cerr << "Register types: " << PQgeterror() << endl;
+        std::cerr << "Register types: " << PQgeterror() << std::endl;
 
     // PostGIS special types
 #ifdef POSTGIS
@@ -97,7 +96,7 @@ void TypeMap::registerTypes() {
         {"geometry", geometry_put, geometry_get}        
     };
     if (!PQregisterTypes(connector->getConn(), PQT_USERDEFINED, typespg_userdef, 2, 0))
-        cerr << "Register types: " << PQgeterror() << endl;
+        std::cerr << "Register types: " << PQgeterror() << std::endl;
 #endif
 
     // OpenCV special types

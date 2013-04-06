@@ -17,10 +17,7 @@
 #ifndef VTAPI_COMMONS_H
 #define	VTAPI_COMMONS_H
 
-#include "vtapi_settings.h"
-#include "vtapi_config.h"
-#include "vtapi_libpq.h"
-
+#include <cstdlib>
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -30,6 +27,10 @@
 #include <sstream>
 
 #include <typeinfo>
+
+#include "vtapi_settings.h"
+#include "vtapi_libpq.h"
+
 
 typedef std::string String;
 #define BUFFERSize 255
@@ -231,18 +232,19 @@ public:
     /**
      * A custom API startup constructor
      * This construtors should not cause any doom
-     * @param connStr
-     * @param location
-     * @param user
-     * @param password
-     * @param logFilename
+     * @param connStr connection string
+     * @param location base data files location
+     * @param user user name
+     * @param password user password
+     * @param logFilename log file
      * @unimplemented
      */
     // Commons(const String& connStr, const String& logFilename = "");
     Commons(const String connStr, const String location, const String user, const String password, const String logFilename = "");
 
     /**
-     * And a shorter one...
+     * Recommended constructor. All arguments are loaded from gengetopt structure.
+     * @param args_info gengetopt structure of command line/configuration file arguments
      */
     Commons(const gengetopt_args_info& args_info);
 

@@ -6,11 +6,6 @@
  */
 
 #include "vtapi.h"
-#include <cstdlib>
-#include <iostream>
-#include <iomanip>
-
-using namespace std;
 
 
 Process::Process(const KeyValues& orig, const String& name) : KeyValues(orig) {

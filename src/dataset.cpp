@@ -34,51 +34,29 @@ bool Dataset::next() {
     return kv;
 }
 
-/**
- * Get name of current dataset
- * @return name name of current dataset
- */
+
 String Dataset::getName() {
     return this->getString("dsname");
 }
 
-/**
- * Get location of current dataset
- * @return location of current dataset
- */
+
 String Dataset::getLocation() {
     return this->getString("dslocation");
 }
 
-/**
- * Create new sequence for current dataset
- * @return pointer to new sequence
- */
+
 Sequence* Dataset::newSequence(const String& name) {
     return (new Sequence(*this, name));
 }
 
-/**
- * Create new sequence for current dataset
- * @return pointer to new sequence
- */
 Video* Dataset::newVideo(const String& name) {
     return (new Video(*this, name));
 }
 
-
-/**
- * Create new method for current dataset
- * @return pointer to new method
- */
 Method* Dataset::newMethod(const String& name) {
     return (new Method(*this, name));
 }
 
-/**
- * Create new process for current dataset
- * @return pointer to new process
- */
 Process* Dataset::newProcess(const String& name) {
     return (new Process(*this, name));
 }

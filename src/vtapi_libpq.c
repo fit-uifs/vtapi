@@ -1,13 +1,13 @@
 
-
-
-#include <stdio.h>
-#include <string.h>
 #if defined(WIN32) || defined(WIN64)
 #include <Winsock2.h>
 #else
 #include <netinet/in.h>
 #endif
+
+#include <stdio.h>
+#include <string.h>
+
 #include "vtapi_libpq.h"
 
 #ifdef POSTGIS

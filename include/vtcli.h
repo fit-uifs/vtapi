@@ -1,8 +1,17 @@
-/* 
- * File:   VTCli.h
- * Author: vojca
+/**
+ * @file
+ * @brief VTCli is a command line tool for easy manipulation with data structures of a %VTApi library.
  *
- * Created on November 3, 2011, 7:12 PM
+ * @copyright Brno University of Technology &copy; 2011 &ndash; 2013
+ *
+ * VTCli is distributed under BUT OPEN SOURCE LICENCE (Version 1).
+ * This licence agreement provides in essentials the same extent of rights as the terms of GNU GPL version 2 and Software fulfils the requirements of the Open Source software.
+ *
+ * @author
+ * Vojtěch Fröml, xfroml00 (at) stud.fit.vutbr.cz
+ *
+ *
+ * @todo @b code: dodelat
  */
 
 #ifndef VTCLI_H

@@ -6,7 +6,6 @@
  */
 
 #include "vtapi.h"
-#include <iostream>
 
 
 Query::Query(const Commons& commons, const String& query, PGparam* param)

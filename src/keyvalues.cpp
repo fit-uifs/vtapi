@@ -11,12 +11,11 @@
 #include <netinet/in.h>
 #endif
 
-#include "vtapi.h"
-
-#include <cstdlib>
-#include <iostream>
 #include <iomanip>
 #include <string.h>
+
+#include "vtapi.h"
+
 
 // ************************************************************************** //
 String TKey::print() {
@@ -1020,13 +1019,15 @@ std::vector<PGpoint>*  KeyValues::getPointV(const int col) {
 
 // =============== GETTERS - OTHER =============================================
 int KeyValues::getIntOid(const String& key) {
-    PGint4 value;
-
-    PQgetf(select->res, this->pos, "#oid", key.c_str(), &value);
-
-    return (int) value;
+    return this->getIntOid(PQfnumber(select->res, key.c_str()));
 }
 
+int KeyValues::getIntOid(const int col) {
+    PGint4 value;
+
+    PQgetf(select->res, this->pos, "%oid", col, &value);
+    return (int) value;
+}
 
 // =============== SETTERS (Update) ============================================
 // TODO: mozna by se dalo premyslet o PQsetvalue
@@ -1113,9 +1114,6 @@ bool KeyValues::checkStorage() {
 
 // =============== PRINT methods =======================================
 
-/**
- * Prints currently selected row in resultset (Select)
- */
 void KeyValues::print() {
     if (!select || !select->res || pos < 0)
         warning(302, "There is nothing to print (see other messages)");
@@ -1133,9 +1131,7 @@ void KeyValues::print() {
         this->pos = origpos;
     }
 }
-/**
- * Prints all rows in resultset (Select)
- */
+
 void KeyValues::printAll() {
     if (!select || !select->res)
         warning(303, "There is nothing to print (see other messages)");
@@ -1155,10 +1151,7 @@ void KeyValues::printAll() {
 }
 
 // =============== PRINT support methods =======================================
-/**
- * Prints header - field name and data type
- * @param fInfo Column types and widths
- */
+
 void KeyValues::printHeader(const std::pair< std::vector<TKey>*, std::vector<int>* > fInfo) {
     std::stringstream table, nameln, typeln, border;
     int cols = PQnfields(select->res);
@@ -1192,10 +1185,7 @@ void KeyValues::printHeader(const std::pair< std::vector<TKey>*, std::vector<int
     else if (format == CSV) std::cout << nameln.str();
     else if (format == HTML) std::cout << table.str();
 }
-/**
- * Prints footer - number of rows printed
- * @param count Number of rows printed (0 = all)
- */
+
 void KeyValues::printFooter(const int count) {
     std::stringstream output;
     if (format == STANDARD) {
@@ -1206,11 +1196,7 @@ void KeyValues::printFooter(const int count) {
     else if (format == HTML) output << "</table>" << std::endl;
     std::cout << output.str();
 }
-/**
- * Prints values in single row
- * @param row Row number
- * @param widths Vector of column widths
- */
+
 void KeyValues::printRowOnly(const int row, const std::vector<int>* widths) {
     std::stringstream output;
     int cols = PQnfields(select->res);
@@ -1240,12 +1226,7 @@ void KeyValues::printRowOnly(const int row, const std::vector<int>* widths) {
     output << std::endl;
     std::cout << output.str();
 }
-/**
- * Returns data types, field names and desired column widths for all fields
- * @param row row number to process (0 = all)
- * @param get_widths
- * @return Pair of vectors <TKey,widths> (TKey includes data type and field name)
- */
+
 std::pair< std::vector<TKey>*, std::vector<int>* > KeyValues::getFieldsInfo(const int row, int get_widths) {
     int plen, flen, tlen, width;
     std::vector<int> *widths = get_widths ? new std::vector<int>() : NULL;

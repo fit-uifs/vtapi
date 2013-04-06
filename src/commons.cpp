@@ -12,10 +12,6 @@
 
 #include "vtapi_commons.h"
 
-#include <stdlib.h>
-#include <fstream>
-#include <iostream>
-
 
 /* ************************************************************************** */
 
@@ -103,11 +99,6 @@ Connector::Connector(const String& connectionInfo, Logger* logger) {
     }
 }
 
-/**
- * YES, this is a fun that connects to the database
- * @param connectionInfo
- * @return success
- */
 bool Connector::reconnect(const String& connectionInfo) {
      PQfinish(conn);
 
@@ -121,10 +112,8 @@ bool Connector::reconnect(const String& connectionInfo) {
 
     PQinitTypes(conn);  // libpqtypes ... http://libpqtypes.esilo.com/
 
-
     return true; // success
 }
-
 
 bool Connector::connected() {
     bool success = false;
@@ -154,7 +143,6 @@ bool Connector::connected() {
     return success;
 }
 
-
 Logger* Connector::getLogger() {
     return logger;
 }
@@ -167,8 +155,6 @@ Connector::~Connector() {
     PQfinish(conn);
     if (ownlogger) destruct (logger);
 }
-
-
 
 
 /* ************************************************************************** */
@@ -222,9 +208,6 @@ Commons::Commons(const String& connStr, const String& logFilename) {
 }
 */
 
-/**
- * The most best ever of all VTAPI Commons constructors that should be always used
- */
 Commons::Commons(const gengetopt_args_info& args_info) {
     thisClass = "Commons(gengetopt_args_info&, String&)";
 
@@ -274,9 +257,6 @@ void Commons::beDoomed() {
     }
 }
 
-/**
- * This is a doom destructor, which should never happen :)
- */
 Commons::~Commons() {
     this->beDoomed();
 }
@@ -349,23 +329,6 @@ String Commons::getDataLocation() {
 //    else warning(158, "No result set to print.\n" + String(PQgeterror()));
 //}
 
-//void Commons::registerTypes() {
-//    if (! this->typemap->dataloaded) {
-//        KeyValues* kv = new KeyValues(*this);
-//        kv->select = new Select(*this);
-//        kv->select->from("pg_catalog.pg_type", "oid");
-//        kv->select->from("pg_catalog.pg_type", "typname");
-//
-//        while (kv->next()) {
-//            this->typemap->insert(kv->getIntOid("oid"), kv->getName("typname"));
-//        }
-//
-//        this->typemap->dataloaded = true;
-//
-//        delete kv;
-//    }
-//
-//}
 
 int Commons::toOid(String typname) {
     //this->registerTypes();

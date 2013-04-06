@@ -1,23 +1,17 @@
-/**
- * @example vtcli.cpp
- * 
- * Toto je zkouska.
- * @see Commons
+/*
+ * File:    vtcli.cpp
+ * Author:  Vojtěch Fröml
+ *          xfroml00 (at) stud.fit.vutbr.cz
  *
- *
+ * VTCli is a command line tool for easy manipulation with VTApi structures.
+ * For more detailed description see header vtcli.h
  */
 
 #include <cstdlib>
-#include <iostream>
-#include <fstream>
-#include <sstream>
 #include <time.h>
 #include <dirent.h>
 
-#include "vtapi.h"
 #include "vtcli.h"
-#include "vtapi_settings.h"
-
 
 VTCli::VTCli(int argc, char** argv){
     this->processArgs(argc, argv);

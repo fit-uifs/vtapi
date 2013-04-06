@@ -14,9 +14,6 @@
  *
  *
  * @todo @b doc[PC]: dodelat create db
- * @todo @b code: sjednotit getX(pos) - getX(col)!!!
- * @todo @b code: vyházet dokumentaci z cpp a dát do h, je tam pak dvakrát, někdy to samé, někdy odlišné!!! viz například http://vidte.fit.vutbr.cz/doc/1.5/class_key_values.html#ad1311ba33e2015fb59b3635ee1327a43
- * @todo @b doc: sjednotit malá/velká písmena parametrů a návratových hodnot (zatím to vypadá jak "každý pes, jiná ves")
  */
 
 // TODO: udelat namespace vtapi!!!
@@ -882,6 +879,13 @@ public:
      * @return integer with the OID value
      */
     int getIntOid(const String& key);
+    /**
+     * Get an integer with an OID value specified by a column index
+     * @param col column index
+     * @return integer with the OID value
+     */
+    int getIntOid(const int col);
+
 
     // =============== SETTERS (Update) ========================================
     /**
@@ -1075,44 +1079,42 @@ public:
     bool next();
 
     /**
-     * Get a dataset name
-     * @return string value with the name of the dataset
+     * Get name of the current dataset
+     * @return name name of the current dataset
      */
     String getName();
 
     /**
-     * Get a dataset location
-     * @return string value with the location of the dataset
+     * Get location of the current dataset
+     * @return location of the current dataset
      */
     String getLocation();
 
-
     /**
-     * Get new sequence(s) of the current dataset
-     * @param name of the sequence (none for all)
-     * @return sequence
+     * Create new sequence object for the current dataset
+     * @param name sequence name (no name = represent all sequences)
+     * @return pointer to the new sequence object
      */
     Sequence* newSequence(const String& name = "");
     
     /**
-     * Get new video(s) of current dataset
-     * @param name (none for all)
-     * @return video
+     * Create new video (sequence) object for the current dataset
+     * @param name video (sequence) name (no name = represent all sequences)
+     * @return pointer to the new video object
      */
     Video* newVideo(const String& name = "");
-
     
     /**
-     * Get new method(s) of the current dataset
-     * @param name of the method (none for all)
-     * @return method
+     * Create new method object for the current dataset
+     * @param name method name (no name = represent all methods)
+     * @return pointer to the new method object
      */
     Method* newMethod(const String& name = "");
 
     /**
-     * Get new process of the current dataset
-     * @param name of new process
-     * @return process
+     * Create new process object for the current dataset
+     * @param name process name (no name = represent all processes)
+     * @return pointer to the new process object
      */
     Process* newProcess(const String& name = "");
 

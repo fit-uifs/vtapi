@@ -6,12 +6,6 @@
  */
 
 #include "vtapi.h"
-#include <cstdlib>
-#include <iostream>
-#include <iomanip>
-
-using namespace std;
-
 
 
 Method::Method(const KeyValues& orig, const String& name) : KeyValues(orig) {

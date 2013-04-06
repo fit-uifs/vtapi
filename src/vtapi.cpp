@@ -5,15 +5,12 @@
  * Created on 29. září 2011, 10:42
  */
 
-#include <cstdlib>
-#include <iostream>
-
-#include "vtapi_libpq.h"
-#include "vtapi_settings.h"
 #include "vtapi.h"
 
+using std::cout;
+using std::cerr;
+using std::endl;
 
-using namespace std;
 
 VTApi::VTApi(int argc, char** argv) {
     gengetopt_args_info args_info;
@@ -38,7 +35,7 @@ VTApi::VTApi(int argc, char** argv) {
         cerr << "Use config file (--config=\"/path/to/somefile.conf\") or check help for command line option \"-c\"." << endl;
         cmdline_parser_free (&args_info);
         destruct (cli_params);
-        throw new exception();
+        throw new std::exception();
     }
 
     // TODO: user authentization here
@@ -101,11 +98,6 @@ Dataset* VTApi::newDataset(const String& name) {
 
 
 
-
-/**
- * This might be a HOW-TO function
- * @see documentation -> examples -> vtapi.conf, SAMPLES.txt
- */
 void VTApi::test() {
     // lines starting with cout should be ignored :)
     TimExer* timex = new TimExer();
