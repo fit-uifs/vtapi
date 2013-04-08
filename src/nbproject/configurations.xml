@@ -150,6 +150,12 @@
         <platform>3</platform>
       </toolsSet>
       <compileType>
+        <cTool>
+          <incDir>
+            <pElem>../include</pElem>
+            <pElem>../include/postgresql</pElem>
+          </incDir>
+        </cTool>
         <ccTool>
           <incDir>
             <pElem>../include</pElem>
@@ -168,9 +174,14 @@
 </commandlineTool>
         </asmTool>
         <linkerTool>
-          <output>../${CND_DISTDIR}/libvtapi.so</output>
+          <output>../${CND_DISTDIR}/libvtapi.dll</output>
           <linkerLibItems>
-            <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lws2_32</linkerOptionItem>
+            <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann</linkerOptionItem>
+            <linkerOptionItem>-lpq</linkerOptionItem>
+            <linkerOptionItem>-lpqtypes</linkerOptionItem>
+            <linkerOptionItem>-lgeos_c</linkerOptionItem>
+            <linkerOptionItem>-llwgeom</linkerOptionItem>
+            <linkerOptionItem>-lws2_32</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>
@@ -185,6 +196,8 @@
                             group="bin"/>
         </packFileList>
       </packaging>
+      <item path="vtapi_libpq.c" ex="false" tool="1">
+      </item>
     </conf>
   </confs>
 </configurationDescriptor>
