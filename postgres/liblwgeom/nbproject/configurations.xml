@@ -106,5 +106,17 @@
         </asmTool>
       </compileType>
     </conf>
+    <conf name="Windows" type="2">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <compilerSet>MinGW|MinGW</compilerSet>
+        <platform>3</platform>
+      </toolsSet>
+      <compileType>
+        <linkerTool>
+          <output>../../dist/liblwgeom.dll</output>
+        </linkerTool>
+      </compileType>
+    </conf>
   </confs>
 </configurationDescriptor>
