@@ -18,7 +18,9 @@ CC=gcc
 CCC=g++
 CXX=g++
 FC=
+
 AS=as
+
 
 # Macros
 CND_PLATFORM=MinGW-Windows
@@ -33,7 +35,19 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/vtcli.o
+	${OBJECTDIR}/dataset.o \
+	${OBJECTDIR}/keyvalues.o \
+	${OBJECTDIR}/typemap.o \
+	${OBJECTDIR}/sequence.o \
+	${OBJECTDIR}/video.o \
+	${OBJECTDIR}/vtapi_settings.o \
+	${OBJECTDIR}/vtapi_libpq.o \
+	${OBJECTDIR}/process.o \
+	${OBJECTDIR}/vtapi.o \
+	${OBJECTDIR}/method.o \
+	${OBJECTDIR}/commons.o \
+	${OBJECTDIR}/interval.o \
+	${OBJECTDIR}/query.o
 
 
 # C Compiler Flags
@@ -50,20 +64,80 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -llwgeom -lpqtypes -lvtapi -lgeos_c -lpq -lws2_32
+LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lpq -lpqtypes -lgeos_c -llwgeom -lws2_32
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Windows.mk dist/vtapi.exe
+	"${MAKE}"  -f nbproject/Makefile-Windows.mk ../dist/libvtapi.dll
 
-dist/vtapi.exe: ${OBJECTFILES}
-	${MKDIR} -p dist
-	${LINK.cc} -o ${CND_DISTDIR}/vtapi ${OBJECTFILES} ${LDLIBSOPTIONS} 
+../dist/libvtapi.dll: ${OBJECTFILES}
+	${MKDIR} -p ../dist
+	${LINK.cc} -shared -o ../${CND_DISTDIR}/libvtapi.dll ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
-${OBJECTDIR}/vtcli.o: vtcli.cpp 
+${OBJECTDIR}/dataset.o: dataset.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -g -Iinclude -I../include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtcli.o vtcli.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
+
+${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
+
+${OBJECTDIR}/typemap.o: typemap.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/typemap.o typemap.cpp
+
+${OBJECTDIR}/sequence.o: sequence.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/sequence.o sequence.cpp
+
+${OBJECTDIR}/video.o: video.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
+
+${OBJECTDIR}/vtapi_settings.o: vtapi_settings.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_settings.o vtapi_settings.cpp
+
+${OBJECTDIR}/vtapi_libpq.o: vtapi_libpq.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_libpq.o vtapi_libpq.c
+
+${OBJECTDIR}/process.o: process.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/process.o process.cpp
+
+${OBJECTDIR}/vtapi.o: vtapi.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
+
+${OBJECTDIR}/method.o: method.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
+
+${OBJECTDIR}/commons.o: commons.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/commons.o commons.cpp
+
+${OBJECTDIR}/interval.o: interval.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
+
+${OBJECTDIR}/query.o: query.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql  -MMD -MP -MF $@.d -o ${OBJECTDIR}/query.o query.cpp
 
 # Subprojects
 .build-subprojects:
@@ -71,7 +145,7 @@ ${OBJECTDIR}/vtcli.o: vtcli.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Windows
-	${RM} dist/vtapi.exe
+	${RM} ../dist/libvtapi.dll
 
 # Subprojects
 .clean-subprojects:

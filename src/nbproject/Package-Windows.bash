@@ -11,9 +11,9 @@ CND_CONF=Windows
 CND_DISTDIR=dist
 NBTMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=${CND_DISTDIR}/vtapi
-OUTPUT_BASENAME=vtapi
-PACKAGE_TOP_DIR=vtapi1.5/
+OUTPUT_PATH=../${CND_DISTDIR}/libvtapi.dll
+OUTPUT_BASENAME=libvtapi.dll
+PACKAGE_TOP_DIR=libsrc.dll/
 
 # Functions
 function checkReturnCode
@@ -58,17 +58,17 @@ mkdir -p ${NBTMPDIR}
 
 # Copy files and create directories and links
 cd "${TOP}"
-makeDirectory "${NBTMPDIR}/vtapi1.5/bin"
-copyFileToTmpDir "${OUTPUT_PATH}.exe" "${NBTMPDIR}/${PACKAGE_TOP_DIR}bin/${OUTPUT_BASENAME}.exe" 0755
+makeDirectory "${NBTMPDIR}/libsrc.dll/lib"
+copyFileToTmpDir "${OUTPUT_PATH}" "${NBTMPDIR}/${PACKAGE_TOP_DIR}lib/${OUTPUT_BASENAME}" 0644
 
 
 # Generate tar file
 cd "${TOP}"
-rm -f ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/vtapi1.5.tar
+rm -f ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libsrc.dll.tar
 cd ${NBTMPDIR}
-tar -vcf ../../../../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/vtapi1.5.tar *
+tar -vcf ../../../../${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/package/libsrc.dll.tar *
 checkReturnCode
 
 # Cleanup
 cd "${TOP}"
-rm -rf 
+rm -rf ${NBTMPDIR}
