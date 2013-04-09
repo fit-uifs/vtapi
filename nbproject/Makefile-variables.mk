@@ -22,3 +22,11 @@ CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/vtapi
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=vtapi.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/vtapi.tar
+# Windows configuration
+CND_PLATFORM_Windows=MinGW-Windows
+CND_ARTIFACT_DIR_Windows=dist
+CND_ARTIFACT_NAME_Windows=vtapi
+CND_ARTIFACT_PATH_Windows=dist/vtapi
+CND_PACKAGE_DIR_Windows=dist/Windows/MinGW-Windows/package
+CND_PACKAGE_NAME_Windows=vtapi.tar
+CND_PACKAGE_PATH_Windows=dist/Windows/MinGW-Windows/package/vtapi.tar
