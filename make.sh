@@ -48,7 +48,7 @@ else
     echo "OS Windows was detected - making configuration is set to Windows..."
   else
     MAKEARGS=Debug
-    echo "Not Windows OS was detected (most probably it is *nix-like OS) - making configuration is set to Debug..."
+    echo "Not Windows OS was detected (most probably it is unix-like OS) - making configuration is set to Debug..."
   fi
   MAKEARGS="-f Makefile CONF=$MAKEARGS"
 
