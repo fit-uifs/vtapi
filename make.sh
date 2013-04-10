@@ -18,11 +18,16 @@ if [ "$1" == "--help" ]; then
   echo "     --without-config | -c     Do not copy config file to dist directory."
   echo "     --without-doc    | -d     Do not generate documentation."
   echo "     --without-exec   | -e     Do not make executable VTApi program (VTCli)."
-  
+ # else if nbwinconfig
 else
   MAKETXT=Making
   for i in $*; do
     case $i in
+      --remake|-r)
+        REMAKE=1
+        MAKETXT=Remaking
+        ;;
+        
       --without-config|-c)
         CONFIG=0
         ;;
@@ -34,22 +39,27 @@ else
       --without-exec|-e)
         EXECUTABLE=0
         ;;
-        
-      --remake|-r)
-        REMAKE=1
-        MAKETXT=Remaking
-        ;;
     esac   
   done  
+  
+  # Arguments of making depends of operating system, which is detected by uname
+  if [ "`uname -s | grep "MINGW32_NT"`" != "" ]; then
+    MAKEARGS=Windows
+    echo "OS Windows was detected - making configuration is set to Windows..."
+  else
+    MAKEARGS=Debug
+    echo "Not Windows OS was detected (most probably it is *nix-like OS) - making configuration is set to Debug..."
+  fi
+  MAKEARGS="-f Makefile CONF=$MAKEARGS"
 
   # documentation
   if [ $REMAKE -eq 1 ]; then
-    echo "Clean documentation..."
+    echo "Cleaning documentation..."
     cd doc
     rm -rf html latex
     cd ..
   fi
-  if [ $DOXYGEN -ne 0 ]; then
+  if [ $DOXYGEN -eq 1 ]; then
     echo "Generating documentation..."
     cd doc
     doxygen
@@ -62,7 +72,7 @@ else
   if [ $REMAKE -eq 1 ]; then
     make clean
   fi
-  make
+  make $MAKEARGS
 
   # libvtapi
   echo "$MAKETXT libvtapi..."
@@ -70,18 +80,16 @@ else
   if [ $REMAKE -eq 1 ]; then
     make clean
   fi
-  make
+  make $MAKEARGS
   cd ..
 
   # VTApi executable
-  if [ $EXECUTABLE -ne 0 ]; then
+  if [ $REMAKE -eq 1 ]; then
+    make clean
+  fi
+  if [ $EXECUTABLE -eq 1 ]; then
     echo "$MAKETXT executable vtapi (VTCli)..."
-    make
-  else
-    if [ $REMAKE -eq 1 ]; then
-      echo "Cleaning documentation because it is not required..."
-      make clean
-    fi  
+    make $MAKEARGS
   fi
   
   # Configuration file
