@@ -1,14 +1,21 @@
-/*
- * File:   method.cpp
- * Author: chmelarp
+/**
+ * @file    method.cpp
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * Created on 29. září 2011, 10:54
+ * @section DESCRIPTION
+ *
+ * Methods of Method class
  */
 
-#include "vtapi.h"
+#include "data/vtapi_method.h"
+
+using namespace vtapi;
 
 
-Method::Method(const KeyValues& orig, const String& name) : KeyValues(orig) {
+Method::Method(const KeyValues& orig, const string& name) : KeyValues(orig) {
     thisClass = "Method";
     
     select = new Select(orig);
@@ -26,15 +33,15 @@ bool Method::next() {
     return kv;
 }
 
-String Method::getName() {
+string Method::getName() {
     return this->getString("mtname");
 }
 
-Process* Method::newProcess(const String& name) {
+Process* Method::newProcess(const string& name) {
     return (new Process(*this, name));
 }
 
-std::vector<TKey> Method::getMethodKeys() {
+TKeys Method::getMethodKeys() {
     if (methodKeys.empty()) {
         KeyValues* kv = new KeyValues(*this);
         kv->select = new Select(*this);

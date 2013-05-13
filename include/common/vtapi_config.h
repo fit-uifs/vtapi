@@ -19,13 +19,19 @@
 #define VTAPI_CONFIG_H
 
 // comment this, if there is no PostGIS extension in the database
-#define POSTGIS
+//#define POSTGIS
 
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
 #define COPYRDBUF
 
-// libpqtypes
+// platform independent library loading
+#include <ltdl.h>
+
+// libpqtypes + pq
 #include <libpqtypes.h> // tohle se pak poresi configure
+// sqlite
+#include <sqlite3.h>
+
 
 // libproc library
 // for this you need the libprocps-dev (sometimes libproc-dev, procps-devel) package
@@ -34,14 +40,14 @@
 #endif
 
 // OpenCV header files
-// #include <opencv2/opencv.hpp>
-// #include <opencv2/highgui/highgui.hpp>
-// OpenCV
-// #include <opencv2/core/core.hpp>
-// #include <opencv2/core/core_c.h>
-// #include <opencv2/imgproc/imgproc.hpp>
-// This adds the ability to debug image and video
-// #include <opencv2/highgui/highgui.hpp>
+ #include <opencv2/opencv.hpp>
+ #include <opencv2/highgui/highgui.hpp>
+ //OpenCV
+ #include <opencv2/core/core.hpp>
+ #include <opencv2/core/core_c.h>
+ #include <opencv2/imgproc/imgproc.hpp>
+ //This adds the ability to debug image and video
+ #include <opencv2/highgui/highgui.hpp>
 
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
 #ifdef	__cplusplus

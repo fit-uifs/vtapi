@@ -1,14 +1,21 @@
-/* 
- * File:   dataset.cpp
- * Author: chmelarp
- * 
- * Created on 29. září 2011, 10:52
+/**
+ * @file    dataset.cpp
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
+ *
+ * @section DESCRIPTION
+ *
+ * Methods of Dataset class
  */
 
-#include "vtapi.h"
+#include "data/vtapi_dataset.h"
+
+using namespace vtapi;
 
 
-Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
+Dataset::Dataset(const KeyValues& orig, const string& name) : KeyValues(orig) {
     thisClass = "Dataset";
 
     // set the dataset name
@@ -16,9 +23,8 @@ Dataset::Dataset(const KeyValues& orig, const String& name) : KeyValues(orig) {
         dataset = name;
     }
     if (dataset.empty()) {
-        warning(313, "No dataset specified");
+        logger->warning(313, "No dataset specified", thisClass+"::Dataset()");
     }
-
     select = new Select(orig);
     select->from("public.datasets", "*");
     select->whereString("dsname", this->dataset);
@@ -34,29 +40,28 @@ bool Dataset::next() {
     return kv;
 }
 
-
-String Dataset::getName() {
+string Dataset::getName() {
     return this->getString("dsname");
 }
 
 
-String Dataset::getLocation() {
+string Dataset::getLocation() {
     return this->getString("dslocation");
 }
 
 
-Sequence* Dataset::newSequence(const String& name) {
+Sequence* Dataset::newSequence(const string& name) {
     return (new Sequence(*this, name));
 }
 
-Video* Dataset::newVideo(const String& name) {
+Video* Dataset::newVideo(const string& name) {
     return (new Video(*this, name));
 }
 
-Method* Dataset::newMethod(const String& name) {
+Method* Dataset::newMethod(const string& name) {
     return (new Method(*this, name));
 }
 
-Process* Dataset::newProcess(const String& name) {
+Process* Dataset::newProcess(const string& name) {
     return (new Process(*this, name));
 }

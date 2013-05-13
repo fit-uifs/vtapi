@@ -23,14 +23,36 @@
 #include <cstdlib>
 #include <time.h>
 #include <dirent.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <map>
+#include <set>
 
 #include "vtapi.h"
+
+using namespace vtapi;
+
+using std::ifstream;
+using std::iostream;
+using std::stringstream;
+using std::string;
+using std::map;
+using std::set;
+using std::pair;
+
+using std::cin;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 /**
  * @brief Main VTCli class
  */
 class VTCli {
 public:
+
     /**
      * VTCli constructor with arguments from a VTApi object
      * @param api initialized VTApi object
@@ -66,28 +88,29 @@ public:
      * @param what command with which to help
      * @return VTCLI_OK on success, VTCLI_FAIL on failure
      */
-    int printHelp(const String& what);
+    int printHelp(const string& what);
 
 protected:
+
     VTApi* vtapi;
     bool interact;
-    String cmdline;
-    std::map<String,String> helpStrings;
-    std::set<String> videoSuffixes;
-    std::set<String> imageSuffixes;
+    string cmdline;
+    map<string,string> helpStrings;
+    set<string> videoSuffixes;
+    set<string> imageSuffixes;
     
     /**
      * Creates key/value std::pair from string in key=value format
      * @param word Input string
      * @return Key,Value std::pair
      */
-    std::pair<String,String> createKeyValue(const String& word);
+    std::pair<string,string> createKeyValue(const string& word);
     /**
      * Creates sequence name (filename without suffix) from its full path
      * @param filepath full file(dir)path
      * @return sequence name
      */
-    String createSeqnameFromPath(const String& filepath);
+    string createSeqnameFromPath(const string& filepath);
     /**
      * Creates sequence location (within dataset) from its full path
      * @param filepath full file(dir)path
@@ -95,60 +118,60 @@ protected:
      * @param datasetLocation dataset data location
      * @return sequence location
      */
-    String createLocationFromPath(const String& filepath, const String& baseLocation, const String& datasetLocation);
+    string createLocationFromPath(const string& filepath, const string& baseLocation, const string& datasetLocation);
     /**
      * Checks if string is valid parameter key=value
      * @param word checked string
      * @return bool value
      */
-    bool isParam(const String& word);
+    bool isParam(const string& word);
     /**
      * Checks if filepath points to a video file
      * @param filepath full filepath
      * @return bool value
      */
-    bool isVideoFile(const String& filepath);
+    bool isVideoFile(const string& filepath);
     /**
      * Checks if filepath points to a image file
      * @param filepath full filepath
      * @return bool value
      */
-    bool isImageFile(const String& filepath);
+    bool isImageFile(const string& filepath);
     /**
      * Checks if dirpath points to a directory with at least one image in it
      * @param dirpath full path to directory
      * @return bool value
      */
-    bool isImageFolder(const String& dirpath);
+    bool isImageFolder(const string& dirpath);
     /**
      * Loads list of images within a folder
      * @param dirpath image folder
      * @param imagelist set of loaded image filenames
      * @return count of images loaded
      */
-    int loadImageList(const String& dirpath, std::set<String>& imagelist);
+    int loadImageList(const string& dirpath, set<string>& imagelist);
     /**
      * Initialize sets holding image/video suffixes
      */
-    void initSuffixSets();
+    void initSuffixes();
     /**
      * Changes all slashes within a path to '/' and removes slashes at its end
      * @param path path to modify
      * @return VTCLI_OK on success, VTCLI_FAIL on failure
      */
-    int fixSlashes(String& path);
+    int fixSlashes(string& path);
     /**
      * Cuts and returns the first word from the input command line
      * @param line input command line
      * @return First word
      */
-    String cutWord(String& line);
+    string cutWord(string& line);
     /**
      * Cuts and returns the first CSV value from the input command line
      * @param line input command line
      * @return First CSV value
      */
-    String cutCSV(String& word);
+    string cutCSV(string& word);
     /**
      * Reads if command was supplied from command line arguments and forms help string
      * @param argc command line argument count
@@ -161,13 +184,13 @@ protected:
      * 
      * @param line
      */
-    void queryCommand(String& line);
-    void selectCommand(String& line);
-    void insertCommand(String& line);
-    void updateCommand(String& line);
-    void deleteCommand(String& line);
-    void showCommand(String& line);
-    void installCommand(String& line);
+    void queryCommand(string& line);
+    void selectCommand(string& line);
+    void insertCommand(string& line);
+    void updateCommand(string& line);
+    void deleteCommand(string& line);
+    void showCommand(string& line);
+    void installCommand(string& line);
 };
 
 /*

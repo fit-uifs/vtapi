@@ -1,14 +1,86 @@
+/**
+ * @file    vtapi_misc.cpp
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
+ *
+ * @section DESCRIPTION
+ *
+ * Miscellaneous support stuff, mostly C
+ */
 
-#if defined(WIN32) || defined(WIN64)
-#include <Winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-
+/*
 #include <stdio.h>
 #include <string.h>
+*/
 
-#include "vtapi_libpq.h"
+#include "backends/vtapi_typemanager.h"
+#include "common/vtapi_misc.h"
+
+
+void *g_typeManager;
+
+
+int pg_enum_put (PGtypeArgs *args) {
+    return ((vtapi::PGTypeManager *)g_typeManager)->enum_put(args);
+}
+
+int pg_enum_get (PGtypeArgs *args) {
+    return ((vtapi::PGTypeManager *)g_typeManager)->enum_get(args);
+}
+
+
+void endian_swap2(void *outp, void *inp)
+{
+    static unsigned short n = 0x0001;
+
+    unsigned short *in = (unsigned short *) inp;
+    unsigned short *out = (unsigned short *) outp;
+
+    if (*(char *)&n == 0x01) {
+        *out = ((((*in) >> 8) & 0xff) | (((*in) & 0xff) << 8));
+    }
+    else
+        *out = *in;
+}
+
+void endian_swap4(void *outp, void *inp)
+{
+    static unsigned short n = 0x0001;
+
+    unsigned int *in = (unsigned int *) inp;
+    unsigned int *out = (unsigned int *) outp;
+
+    if (*(char *)&n == 0x01) {
+        *out = ((((*in) & 0xff000000) >> 24) | (((*in) & 0x00ff0000) >>  8) |
+                (((*in) & 0x0000ff00) <<  8) | (((*in) & 0x000000ff) << 24));
+    }
+    else
+        *out = *in;
+}
+
+void endian_swap8(void *outp, void *inp)
+{
+    static unsigned short n = 0x0001;
+
+    unsigned long *in = (unsigned long *) inp;
+    unsigned long *out = (unsigned long *) outp;
+
+    if (*(char *)&n == 0x01) {
+        *out = ((((*in) & 0xff00000000000000ull) >> 56)
+              | (((*in) & 0x00ff000000000000ull) >> 40)
+              | (((*in) & 0x0000ff0000000000ull) >> 24)
+              | (((*in) & 0x000000ff00000000ull) >> 8)
+              | (((*in) & 0x00000000ff000000ull) << 8)
+              | (((*in) & 0x0000000000ff0000ull) << 24)
+              | (((*in) & 0x000000000000ff00ull) << 40)
+              | (((*in) & 0x00000000000000ffull) << 56));
+    }
+    else {
+        *out = *in;
+    }
+}
 
 #ifdef POSTGIS
 
@@ -323,36 +395,6 @@ pglwgeom_from_ewkb(uchar *ewkb, int flags, size_t ewkblen)
 	return ret;
 }
 
-void pq_swap4(void *outp, void *inp, int tonet)
-{
-    static int n = 1;
-
-    unsigned int *in = (unsigned int *) inp;
-    unsigned int *out = (unsigned int *) outp;
-
-    if (*(char *)&n == 1)
-        *out = tonet ? htonl(*in) : ntohl(*in);
-    else
-        *out = *in;
-
-}
-
-void pq_swap8(void *outp, void *inp, int tonet)
-{
-    static int n = 1;
-
-    unsigned int *in = (unsigned int *) inp;
-    unsigned int *out = (unsigned int *) outp;
-
-    if (*(char *)&n == 1) {
-        out[0] = (unsigned int) (tonet ? htonl(in[1]) : ntohl(in[1]));
-        out[1] = (unsigned int) (tonet ? htonl(in[0]) : ntohl(in[0]));
-    }
-    else {
-        out[0] = in[0];
-        out[1] = in[1];
-    }
-}
 
 /*
  * This is in liblwgeom/lwutil.c right now

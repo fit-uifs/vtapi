@@ -21,18 +21,24 @@ option "config" - "Config file location"
 option "log" - "Log file location"
     string typestr="FILENAME" default="./vtapi.log"
     optional
+option "location" l "Base location of data files"
+    string typestr="FILENAME"
+    optional
+option "backend" b "Database backend"
+    string values="postgres","sqlite"
+    required
+option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. password=..\""
+    string
+    optional
+option "dbfolder" d "SQlite databases folder"
+    string typestr="FILENAME" default="./sqlite"
+    optional
 option "user" u "User name"
     string
     optional
 option "password" p "User password"
     string
     optional dependon="user"
-option "location" l "Base location of data files"
-    string typestr="filename"
-    optional
-option "connection" c "Connection string \"host=.. port=.. dbname=.. user=.. password=..\""
-    string
-    required
 option "format" f "Input/output format"
     string values="standard","csv", "html", "binary","sparse","html" default="standard"
     optional
@@ -50,16 +56,10 @@ option "arraylimit" - "Limit amount of printed array elements"
     optional
 
 text "\n Context specification (WHERE clause)"
-option "where" W "explicit WHERE, ex.: --where=\"features is NULL\""
-    string typestr="SQLSTRING"
-    optional
 option "dataset" D "Set dataset to use"
     string
     optional
 option "sequence" S "Set sequence to use"
-    string
-    optional
-option "interval" I "Set interval to use"
     string
     optional
 option "method" M "Set method to use"

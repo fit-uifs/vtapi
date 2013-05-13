@@ -11,13 +11,13 @@
 
 VTCli::VTCli(const VTApi& api) {
     this->vtapi = new VTApi(api);
-    initSuffixSets();
+    initSuffixes();
 }
 
 VTCli::VTCli(int argc, char** argv){
     this->processArgs(argc, argv);
     this->vtapi = new VTApi(argc, argv);
-    initSuffixSets();
+    initSuffixes();
 }
 
 VTCli::~VTCli() {
@@ -26,30 +26,30 @@ VTCli::~VTCli() {
 
 int VTCli::run() {
 
-    String line, command;
+    string line, command;
     bool do_help = false;
 
     // without arguments, VTCli will be interactive (cycle)
     this->interact = this->cmdline.empty();
 
     if (this->interact) {
-        std::cout << "VTApi is running" << std::endl;
-        //std::cout << "Commands: query, select, insert, update, delete, "
+        cout << "VTCli is running" << endl;
+        //cout << "Commands: query, select, insert, update, delete, "
         //        "show, script, test, help, exit";
-        std::cout << "Commands: query, select, insert, test, help, exit" << std::endl;
+        cout << "Commands: query, select, insert, test, help, exit" << endl;
     }
     
     // command cycle
     do {
         // get command, if cli is empty then start interactive mode
         if (this->interact) {
-            std::cout << std::endl << "> "; std::cout.flush();
-            getline(std::cin, line);
+            cout << endl << "> "; cout.flush();
+            getline(cin, line);
         }
         else {
             line = this->cmdline;
         }
-        if (std::cin.fail()) break;        // EOF detected
+        if (cin.fail()) break;        // EOF detected
 
         command = cutWord(line);
         do_help = (line.substr(0,4).compare("help") == 0) ;
@@ -90,48 +90,36 @@ int VTCli::run() {
             break;
         }
         else {
-            this->vtapi->commons->warning("Unknown command");
+            cerr << "Unknown command" << endl;
         }
     } while (this->interact);
 
     return VTCLI_OK;
 }
 
-void VTCli::queryCommand(String& line) {
+void VTCli::queryCommand(string& line) {
     if (!line.empty()) {
-        PGresult* qres = PQparamExec(vtapi->commons->getConnector()->getConn(), NULL, line.c_str(), PGF);
-        if (qres) {
-            KeyValues* kv = new KeyValues(*(this->vtapi->commons));
-            kv->select = new Select(*(this->vtapi->commons));
-            kv->select->res = qres;
-            kv->select->executed = true;
-            kv->printAll();
-            destruct(kv);
-        }
-        else {
-            String errmsg = line + " : " + PQgeterror();
-            this->vtapi->commons->warning(errmsg);
-        }
+        Query *query = new Query(*(this->vtapi->commons), line);
+        query->execute();
+        destruct(query);
     }
 }
 
-void VTCli::selectCommand(String& line) {
-    String input;   // what to select (dataset/sequence/...)
-    std::map<String,String> params; // select params
+void VTCli::selectCommand(string& line) {
+    string input;   // what to select (dataset/sequence/...)
+    map<string,string> params; // select params
 
     // parse command line
     input = cutWord(line);
     while (!line.empty()) {
-        String word = cutWord(line);
+        string word = cutWord(line);
         params.insert(createKeyValue(word));
     }
 
     // TODO: udelat pres Tkey
     // select dataset
     if (!input.compare("dataset")) {
-        Dataset* ds = new Dataset(*(this->vtapi->commons));
-        ds->select->where.clear();
-        ds->select->whereString("dsname", params["name"]);
+        Dataset* ds = new Dataset(*(this->vtapi->commons), params["name"]);
         ds->select->whereString("dslocation", params["location"]);
         ds->next();
         ds->printAll();
@@ -139,12 +127,10 @@ void VTCli::selectCommand(String& line) {
     }
     // select sequence
     else if (!input.compare("sequence")) {
-        Sequence* seq = new Sequence(*(this->vtapi->commons));
-        seq->select->where.clear();
-        seq->select->whereString("seqname", params["name"]);
-        //seq->select->whereInt("seqnum", atoi(params["num"]));
+        Sequence* seq = new Sequence(*(this->vtapi->commons), params["name"]);
+        if (params.count("num") > 0) seq->select->whereInt("seqnum", atoi(params["num"].c_str()));
         seq->select->whereString("seqlocation", params["location"]);
-        seq->select->whereString("seqtyp", params["type"]);
+        seq->select->whereSeqtype("seqtyp", params["type"]);
         seq->next();
         seq->printAll();
         destruct(seq);
@@ -152,10 +138,9 @@ void VTCli::selectCommand(String& line) {
     // select interval
     else if (!input.compare("interval")) {
         Interval* in = new Interval(*(this->vtapi->commons));
-        in->select->where.clear();
         in->select->whereString("seqname", params["seqname"]);
-        //in->select->whereInt(t1, params["t1"]);
-        //in->select->whereInt(t1, params["t1"]);
+        if (params.count("t1") > 0) in->select->whereInt("t1", atoi(params["t1"].c_str()));
+        if (params.count("t2") > 0) in->select->whereInt("t2", atoi(params["t2"].c_str()));
         in->select->whereString("imglocation", params["location"]);
         in->next();
         in->printAll();
@@ -164,7 +149,6 @@ void VTCli::selectCommand(String& line) {
     // select process
     else if (!input.compare("process")) {
         Process* pr = new Process(*(this->vtapi->commons));
-        pr->select->where.clear();
         pr->select->whereString("prsname", params["name"]);
         pr->select->whereString("mtname", params["method"]);
         pr->select->whereString("inputs", params["inputs"]);
@@ -177,7 +161,6 @@ void VTCli::selectCommand(String& line) {
     else if (!input.compare("method")) {
         Method* me = new Method(*(this->vtapi->commons));
         //TODO: methodkeys not implemented yet
-        me->select->where.clear();
         me->select->whereString("mtname", params["name"]);
         me->next();
         me->printAll();
@@ -185,27 +168,27 @@ void VTCli::selectCommand(String& line) {
     }
 }
 
-void VTCli::insertCommand(String& line) {
+void VTCli::insertCommand(string& line) {
 
     Dataset* ds;     // active dataset
-    String input;    // what to insert (sequence/interval/...)
-    String filepath; // insert automatically from file/directory
-    std::map<String,String> params; // insert params
-    
+    string input;    // what to insert (sequence/interval/...)
+    string filepath; // insert automatically from file/directory
+    map<string,string> params; // insert params
+
     //initialize dataset object
     ds = this->vtapi->newDataset();
     ds->next();
-    if (ds->dataset.empty()) {
-        ds->warning("Insert failed; no dataset specified to insert into");
+    if (ds->getDataset().empty()) {
+        cerr << "Insert failed; no dataset specified to insert into" << endl;
         destruct(ds);
         return;
     }
     // parse command line
     input = cutWord(line);
     while (!line.empty()) {
-        String word = cutWord(line);
+        string word = cutWord(line);
         if (isParam(word)) {
-            std::pair<String,String> param = createKeyValue(word);
+            pair<string,string> param = createKeyValue(word);
             if (!param.first.empty() && !param.second.empty()) {
                 params.insert(param);
             }
@@ -222,86 +205,86 @@ void VTCli::insertCommand(String& line) {
             // param location and full file(dir)path
             if (filepath.empty()) {
                 if (params.count("location") == 0) {
-                    ds->warning("Insert sequence failed; no file specified.");
+                    cerr << "Insert sequence failed; no file specified." << endl;
                     break;
                 }
                 else {
                     fixSlashes(params["location"]);
-                    filepath = ds->baseLocation + ds->datasetLocation + params["location"];
+                    filepath = ds->getBaseLocation() + ds->getDatasetLocation() + params["location"];
                 }
             }
             else {
                 if (params.count("location") == 0) {
-                    String location;
+                    string location;
                     fixSlashes(filepath);
-                    location = createLocationFromPath(filepath, ds->baseLocation, ds->datasetLocation);
-                    params.insert(std::pair<String,String>("location", location));
+                    location = createLocationFromPath(filepath, ds->getBaseLocation(), ds->getDatasetLocation());
+                    params.insert(pair<string,string>("location", location));
                 }
                 else {
-                    ds->warning("Insert sequence failed; can't specify both location and filepath");
+                    cerr << "Insert sequence failed; can't specify both location and filepath" << endl;
                     break;
                 }
             }
             // param name
             if (params.count("name") == 0) {
-                String name = createSeqnameFromPath(filepath);
+                string name = createSeqnameFromPath(filepath);
                 if (name.empty()) {
-                    ds->warning("Insert sequence failed; invalid sequence name.");
+                    cerr << "Insert sequence failed; invalid sequence name." << endl;
                     break;
                 }
                 else {
-                    params.insert(std::pair<String,String>("name", name));
+                    params.insert(pair<string,string>("name", name));
                 }
             }
             // param type (and check validity)
             if (params.count("type") == 0) {
                 if (isVideoFile(filepath)) {
-                    params.insert(std::pair<String,String>("type", "video"));
+                    params.insert(pair<string,string>("type", "video"));
                 }
                 else if (isImageFolder(filepath)) {
-                    params.insert(std::pair<String,String>("type", "images"));
-                    params["location"].append("/");                    
+                    params.insert(pair<string,string>("type", "images"));
+                    params["location"].append("/");
                 }
                 else {
-                    ds->warning("Insert sequence " + params["name"] + " failed; sequence must be an image folder or a video file.");
+                    cerr << "Insert sequence " + params["name"] + " failed; sequence must be an image folder or a video file." << endl;
                     break;
                 }
             }
             // insert video sequence
             if (params["type"].compare("video") == 0) {
-                seq->add(params["name"], params["location"], params["type"], seq->user, "", "");
+                seq->add(params["name"], params["location"], params["type"], seq->getUser(), "", "");
                 if (!seq->addExecute()) {
-                    seq->warning("Insert sequence " + params["name"] + " failed; video not inserted.");
+                    cerr << "Insert sequence " + params["name"] + " failed; video not inserted." << endl;
                     break;
                 }
             }
             // insert image folder sequence, load list of images
             else if (params["type"].compare("images") == 0) {
-                std::set<String> imagelist;
+                set<string> imagelist;
                 int t = 1;
                 if (loadImageList(filepath, imagelist) == 0) {
-                    seq->warning("Insert sequence " + params["name"] + " failed; image files could not have been loaded.");
+                    cerr << "Insert sequence " + params["name"] + " failed; image files could not have been loaded." << endl;
                     break;
                 }
                 else {
                     Interval *img = seq->newInterval();
-                    seq->add(params["name"], params["location"], params["type"], seq->user, "", "");
+                    seq->add(params["name"], params["location"], params["type"], seq->getUser(), "", "");
                     if (!seq->addExecute()) {
-                        seq->warning("Insert sequence " + params["name"] + " failed; image folder not inserted.");
+                        cerr << "Insert sequence " + params["name"] + " failed; image folder not inserted." << endl;
                         break;
                     }
-                    for (std::set<String>::iterator it = imagelist.begin(); it != imagelist.end(); ++it) {
-                        img->add(params["name"], t, t, *it, img->user, "");
+                    for (set<string>::iterator it = imagelist.begin(); it != imagelist.end(); ++it) {
+                        img->add(params["name"], t, t, *it, img->getUser(), "");
                         if (!img->addExecute()) {
-                            img->warning("Insert interval " + (*it) + " failed; image not inserted");
+                            cerr << "Insert interval " + (*it) + " failed; image not inserted" << endl;
                         }
                         t++;
                     }
                     img->select->executed = true;
                     destruct(img);
                 }
-            }            
-        } while (2==3);
+            }
+        } while (0);
 
         seq->select->executed = true;
         destruct(seq);
@@ -320,33 +303,33 @@ void VTCli::insertCommand(String& line) {
     // insert process
     //TODO
     else if (input.compare("process") == 0) {
-        this->vtapi->commons->warning("insert process not implemented");
+        cerr << "insert process not implemented" << endl;
     }
     else {
-        this->vtapi->commons->warning("Only insert: sequence/interval/process");
+        cerr << "Only insert: sequence/interval/process" << endl;
     }
 
     destruct (ds);
 }
 
 //TODO
-void VTCli::updateCommand(String& line) {
-    this->vtapi->commons->warning("update command not implemented");
+void VTCli::updateCommand(string& line) {
+    cerr << "update command not implemented" << endl;
 }
 //TODO
-void VTCli::deleteCommand(String& line) {
-    this->vtapi->commons->warning("delete command not implemented");
+void VTCli::deleteCommand(string& line) {
+    cerr << "delete command not implemented" << endl;
 }
 //TODO
-void VTCli::showCommand(String& line) {
-    this->vtapi->commons->warning("show command not implemented");
+void VTCli::showCommand(string& line) {
+    cerr << "show command not implemented" << endl;
 }
 //TODO
-void VTCli::installCommand(String& line) {
-    this->vtapi->commons->warning("install command not implemented");
+void VTCli::installCommand(string& line) {
+    cerr << "install command not implemented" << endl;
 /*
-    String content;
-    std::ifstream scriptfile (line.c_str(), std::ios::in);
+    string content;
+    ifstream scriptfile (line.c_str(), std::ios::in);
 
     if (scriptfile)
     {
@@ -373,22 +356,22 @@ void VTCli::installCommand(String& line) {
             destruct(kv);
         }
         else {
-            String errmsg = line + " : " + PQgeterror();
+            string errmsg = line + " : " + PQgeterror();
             this->vtapi->commons->warning(errmsg);
         }
     }
 */
 }
 
-bool VTCli::isVideoFile(const String& filepath) {
-    std::ifstream video(filepath.c_str());
+bool VTCli::isVideoFile(const string& filepath) {
+    ifstream video(filepath.c_str());
     size_t dotPos = 0;
     
     if (video) {       
         video.close();
-        dotPos = filepath.find_last_of('.', String::npos);
+        dotPos = filepath.find_last_of('.', string::npos);
         if (dotPos > 0 && dotPos < filepath.length()-1) {
-            String suffix = filepath.substr(dotPos + 1, String::npos);
+            string suffix = filepath.substr(dotPos + 1, string::npos);
             if (this->videoSuffixes.count(suffix.c_str()) > 0) {
                 return true;
             }
@@ -397,15 +380,15 @@ bool VTCli::isVideoFile(const String& filepath) {
     return false;
 }
 
-bool VTCli::isImageFile(const String& filepath) {
-    std::ifstream image(filepath.c_str());
+bool VTCli::isImageFile(const string& filepath) {
+    ifstream image(filepath.c_str());
     size_t dotPos = 0;
 
     if (image) {
         image.close();
-        dotPos = filepath.find_last_of('.', String::npos);
+        dotPos = filepath.find_last_of('.', string::npos);
         if (dotPos > 0 && dotPos < filepath.length()-1) {
-            String suffix = filepath.substr(dotPos + 1, String::npos);
+            string suffix = filepath.substr(dotPos + 1, string::npos);
             if (this->imageSuffixes.count(suffix.c_str()) > 0) {
                 return true;
             }
@@ -414,15 +397,15 @@ bool VTCli::isImageFile(const String& filepath) {
     return false;
 }
 
-bool VTCli::isImageFolder(const String& dirpath) {
+bool VTCli::isImageFolder(const string& dirpath) {
     DIR *imagefolder = opendir(dirpath.c_str());
 
     if (imagefolder) {
         struct dirent *entry;
         while (entry = readdir(imagefolder)) {
-            String filename (entry->d_name);
+            string filename (entry->d_name);
             if(filename.compare(".") != 0 && filename.compare("..") != 0) {
-                String fullpath = dirpath + "/" + filename;
+                string fullpath = dirpath + "/" + filename;
                 if (isImageFile(fullpath)) {
                     closedir(imagefolder);
                     return true;
@@ -434,16 +417,16 @@ bool VTCli::isImageFolder(const String& dirpath) {
     return false;
 }
 
-int VTCli::loadImageList(const String& dirpath, std::set<String>& imagelist) {
+int VTCli::loadImageList(const string& dirpath, set<string>& imagelist) {
     DIR *imagefolder = opendir(dirpath.c_str());
     int cntimg = 0;
 
     if (imagefolder) {
         struct dirent *entry;
         while (entry = readdir(imagefolder)) {
-            String filename (entry->d_name);
+            string filename (entry->d_name);
             if(filename[0] != '.') {
-                String fullpath = dirpath + "/" + filename;
+                string fullpath = dirpath + "/" + filename;
                 if (isImageFile(fullpath)) {
                     imagelist.insert(filename);
                     cntimg++;
@@ -455,27 +438,27 @@ int VTCli::loadImageList(const String& dirpath, std::set<String>& imagelist) {
     return cntimg;
 }
 
- void VTCli::initSuffixSets() {
-     String imgsuf[] = {"bmp", "jpeg", "jpg", "gif", "png", "svg", "tiff"};
-     String vidsuf[] = {"avi", "mkv", "mpeg", "mpg", "mp4", "rm", "wmv"};
+ void VTCli::initSuffixes() {
+     string imgsuf[] = {"bmp", "jpeg", "jpg", "gif", "png", "svg", "tiff"};
+     string vidsuf[] = {"avi", "mkv", "mpeg", "mpg", "mp4", "rm", "wmv"};
 
-     this->imageSuffixes = std::set<String> (imgsuf, imgsuf + sizeof(imgsuf) / sizeof(imgsuf[0]));
-     this->videoSuffixes = std::set<String> (vidsuf, vidsuf + sizeof(vidsuf) / sizeof(vidsuf[0]));
+     this->imageSuffixes = set<string> (imgsuf, imgsuf + sizeof(imgsuf) / sizeof(imgsuf[0]));
+     this->videoSuffixes = set<string> (vidsuf, vidsuf + sizeof(vidsuf) / sizeof(vidsuf[0]));
  }
 
-std::pair<String,String> VTCli::createKeyValue(const String& word) {
+pair<string,string> VTCli::createKeyValue(const string& word) {
     size_t pos = word.find('=');
 
     if (pos > 0 && pos < word.length()-1)
-        return std::pair<String,String>
-                (word.substr(0,pos), word.substr(pos+1, String::npos));
+        return pair<string,string>
+                (word.substr(0,pos), word.substr(pos+1, string::npos));
     else
-        return std::pair<String,String>("","");
+        return pair<string,string>("","");
 }
 
-String VTCli::createSeqnameFromPath(const String& filepath) {
-    String seqname;
-    size_t startPos = 0, endPos = String::npos;
+string VTCli::createSeqnameFromPath(const string& filepath) {
+    string seqname;
+    size_t startPos = 0, endPos = string::npos;
     size_t len = filepath.length();
     size_t nsPos = len - 1;
 
@@ -485,29 +468,29 @@ String VTCli::createSeqnameFromPath(const String& filepath) {
         if (nsPos < 0) return "";
     }
     startPos = filepath.find_last_of('/', nsPos);
-    if (startPos == String::npos) {
+    if (startPos == string::npos) {
         startPos = 0;
     }
     else {
         startPos++;
     }
     endPos = filepath.find_last_of('.', nsPos);
-    if (endPos == String::npos || endPos <= startPos) endPos = nsPos + 1;
+    if (endPos == string::npos || endPos <= startPos) endPos = nsPos + 1;
 
     seqname = filepath.substr(startPos, endPos - startPos);
     return seqname;
 }
 
-String VTCli::createLocationFromPath(const String& filepath, const String& baseLocation, const String& datasetLocation) {
-    String part, location;
-    String tmpBase = baseLocation;
-    String tmpDataset = datasetLocation;
+string VTCli::createLocationFromPath(const string& filepath, const string& baseLocation, const string& datasetLocation) {
+    string part, location;
+    string tmpBase = baseLocation;
+    string tmpDataset = datasetLocation;
      
     fixSlashes(tmpBase);
     fixSlashes(tmpDataset);
     part = tmpBase + "/" + tmpDataset + "/";
     if (filepath.find(part) == 0) {
-        location = filepath.substr(part.length(), String::npos);
+        location = filepath.substr(part.length(), string::npos);
     }
     else {
         location = filepath;
@@ -516,27 +499,27 @@ String VTCli::createLocationFromPath(const String& filepath, const String& baseL
 }
 
 
-bool VTCli::isParam(const String& word) {
+bool VTCli::isParam(const string& word) {
     size_t pos = word.find('=');
     return (pos > 0 && pos < word.length()-1);
 }
 
-String VTCli::cutWord(String& line) {
-    String word;
-    size_t startPos = 0, pos, endPos = String::npos;
+string VTCli::cutWord(string& line) {
+    string word;
+    size_t startPos = 0, pos, endPos = string::npos;
 
     if (line.empty()) return "";
 
     // word end is whitespace, skip quoted part
         pos = line.find_first_of(" \t\n\"", startPos);
-        if (pos != String::npos && line.at(pos) == '\"'){
+        if (pos != string::npos && line.at(pos) == '\"'){
             if (pos + 1 >= line.length()) {
                 line.clear();
                 return "";
             }
             endPos = line.find('\"', pos + 1);
-            if (endPos == String::npos)
-                word = line.substr(pos + 1, String::npos);
+            if (endPos == string::npos)
+                word = line.substr(pos + 1, string::npos);
             else {
                 word = line.substr(pos + 1, endPos - pos - 1);
                 endPos++;
@@ -547,9 +530,9 @@ String VTCli::cutWord(String& line) {
             word = line.substr(0, endPos);
         }
     // cut line
-    if (endPos != String::npos && endPos < line.length()){
+    if (endPos != string::npos && endPos < line.length()){
         endPos = line.find_first_not_of(" \t\n", endPos);
-        if (endPos != String::npos) line = line.substr(endPos, String::npos);
+        if (endPos != string::npos) line = line.substr(endPos, string::npos);
         else line.clear();
     }
     else
@@ -558,31 +541,31 @@ String VTCli::cutWord(String& line) {
     return word;
 }
 
-String VTCli::cutCSV(String& word) {
-    String csv;
+string VTCli::cutCSV(string& word) {
+    string csv;
     size_t pos = word.find(",", 0);
 
     csv = word.substr(0, pos);
-    if (pos != String::npos && pos+1 < word.length())
-        word = word.substr(pos+1, String::npos);
+    if (pos != string::npos && pos+1 < word.length())
+        word = word.substr(pos+1, string::npos);
     else word.clear();
     return csv;
 }
 
-int VTCli::fixSlashes(String& path) {
+int VTCli::fixSlashes(string& path) {
     size_t len = path.length();
     size_t slPos = 0;
     size_t nsPos = len;
 
     do {
         slPos = path.find('\\', slPos);
-        if (slPos != String::npos) {
+        if (slPos != string::npos) {
             path[slPos] = '/';
         }
         else {
             break;
         }
-    } while (2==3);
+    } while (1);
     do {
         nsPos--;
         if (nsPos < 0) {
@@ -600,68 +583,68 @@ int VTCli::printHelp() {
     return this->printHelp("all");
 }
 
-int VTCli::printHelp(const String& what) {
-    std::stringstream hss;
+int VTCli::printHelp(const string& what) {
+    stringstream hss;
 
     if (this->helpStrings.count(what)) {
-        std::cout << this->helpStrings[what];
+        cout << this->helpStrings[what];
         return VTCLI_OK;
     }
     else if (!what.compare("query")) {
-        hss << std::endl <<
-            "query [SQLSTRING]" << std::endl << std::endl <<
-            "     * executes custom SQLQUERY" << std::endl <<
-            "     * ex.: list methods with active processes" << std::endl <<
-            "              query SELECT DISTINCT mtname FROM public.processes" << std::endl ;
+        hss << endl <<
+            "query [SQLSTRING]" << endl << endl <<
+            "     * executes custom SQLQUERY" << endl <<
+            "     * ex.: list methods with active processes" << endl <<
+            "              query SELECT DISTINCT mtname FROM public.processes" << endl ;
     }
     else if (!what.compare("select")) {
-        hss << std::endl <<
-            "select dataset|sequence|interval|process|method|selection [ARGS]" << std::endl << std::endl <<
-            "Selects data and prints them in specified format (-f option)" << std::endl << std::endl <<
-            "ARG format:      arg=value or arg=value1,value2,..." << std::endl << std::endl <<
-            " Dataset ARGS:" << std::endl <<
-            "      name       name of the dataset" << std::endl <<
-            "  location       base location of the dataset data files (directory)" << std::endl << std::endl <<
-            " Sequence ARGS:" << std::endl <<
-            "      name       name of the sequence" << std::endl <<
-            "  location       location of the sequence data file(s) (file/directory)" << std::endl <<
-            "       num       unique number of the sequence" << std::endl <<
-            "      type       type of the sequence [images, video]" << std::endl << std::endl <<
-            "Interval ARGS:" << std::endl <<
-            "  seqname        name of the sequence containing this interval" << std::endl <<
-            "        t1       begin time of the interval" << std::endl <<
-            "        t2       end time of the interval" << std::endl <<
-            "  location       location of the interval data file (file)" << std::endl << std::endl <<
-            "Method ARGS:" << std::endl <<
-            "      name       name of the method" << std::endl << std::endl <<
-            "Process ARGS:" << std::endl <<
-            "      name       name of the process" << std::endl <<
-            "    method       name of the method the process is instance of" << std::endl <<
-            "    inputs       data type of inputs (database table)" << std::endl <<
-            "   outputs       data type of outputs (database table)" << std::endl << std::endl <<
-            "Selection ARGS:" << std::endl <<
-            "   (not implemented)" << std::endl;
+        hss << endl <<
+            "select dataset|sequence|interval|process|method|selection [ARGS]" << endl << endl <<
+            "Selects data and prints them in specified format (-f option)" << endl << endl <<
+            "ARG format:      arg=value or arg=value1,value2,..." << endl << endl <<
+            " Dataset ARGS:" << endl <<
+            "      name       name of the dataset" << endl <<
+            "  location       base location of the dataset data files (directory)" << endl << endl <<
+            " Sequence ARGS:" << endl <<
+            "      name       name of the sequence" << endl <<
+            "  location       location of the sequence data file(s) (file/directory)" << endl <<
+            "       num       unique number of the sequence" << endl <<
+            "      type       type of the sequence [images, video]" << endl << endl <<
+            "Interval ARGS:" << endl <<
+            "  seqname        name of the sequence containing this interval" << endl <<
+            "        t1       begin time of the interval" << endl <<
+            "        t2       end time of the interval" << endl <<
+            "  location       location of the interval data file (file)" << endl << endl <<
+            "Method ARGS:" << endl <<
+            "      name       name of the method" << endl << endl <<
+            "Process ARGS:" << endl <<
+            "      name       name of the process" << endl <<
+            "    method       name of the method the process is instance of" << endl <<
+            "    inputs       data type of inputs (database table)" << endl <<
+            "   outputs       data type of outputs (database table)" << endl << endl <<
+            "Selection ARGS:" << endl <<
+            "   (not implemented)" << endl;
     }
     else if (!what.compare("insert")) {
-        hss << std::endl <<
-            "insert sequence|interval|process [FULLPATH] [ARGS]" << std::endl << std::endl <<
-            "Inserts data into database" << std::endl << std::endl <<
-            "   [FULLPATH]:      full path to file/directory to insert  " << std::endl <<
-            "[ARGS] format:      arg=value or arg=value1,value2,..." << std::endl << std::endl <<
-            " Sequence ARGS:" << std::endl <<
-            "      name       name of the sequence" << std::endl <<
-            "  location       location of the sequence data file(s) within dataset (don't combine with FULLPATH arg)" << std::endl <<
-            "      type       type of the sequence [images, video]" << std::endl << std::endl <<
-            "Interval ARGS:" << std::endl <<
-            "   seqname       name of the sequence containing this interval *REQUIRED*" << std::endl <<
-            "        t1       begin time of the interval *REQUIRED*" << std::endl <<
-            "        t2       end time of the interval *REQUIRED*" << std::endl <<
-            "  location       location of the interval data file (file)" << std::endl << std::endl <<
-            "Process ARGS:" << std::endl <<
-            "      name       name of the process *REQUIRED*" << std::endl <<
-            "    method       name of the method the process is instance of" << std::endl <<
-            "    inputs       data type of inputs (database table)" << std::endl <<
-            "   outputs       data type of outputs (database table)" << std::endl;
+        hss << endl <<
+            "insert sequence|interval|process [FULLPATH] [ARGS]" << endl << endl <<
+            "Inserts data into database" << endl << endl <<
+            "   [FULLPATH]:      full path to file/directory to insert  " << endl <<
+            "[ARGS] format:      arg=value or arg=value1,value2,..." << endl << endl <<
+            " Sequence ARGS:" << endl <<
+            "      name       name of the sequence" << endl <<
+            "  location       location of the sequence data file(s) within dataset (don't combine with FULLPATH arg)" << endl <<
+            "      type       type of the sequence [images, video]" << endl << endl <<
+            "Interval ARGS:" << endl <<
+            "   seqname       name of the sequence containing this interval *REQUIRED*" << endl <<
+            "        t1       begin time of the interval *REQUIRED*" << endl <<
+            "        t2       end time of the interval *REQUIRED*" << endl <<
+            "  location       location of the interval data file (file)" << endl << endl <<
+            "Process ARGS:" << endl <<
+            "      name       name of the process *REQUIRED*" << endl <<
+            "    method       name of the method the process is instance of" << endl <<
+            "    inputs       data type of inputs (database table)" << endl <<
+            "   outputs       data type of outputs (database table)" << endl;
     }
     else if (!what.compare("update")) {
         hss << "update command not implemented";
@@ -675,7 +658,7 @@ int VTCli::printHelp(const String& what) {
     else hss.clear(std::_S_failbit);
     if (!hss.fail()) {
         this->helpStrings.insert(std::make_pair(what,hss.str()));
-        std::cout << hss.str() << std::endl;
+        cout << hss.str() << endl;
         return VTCLI_OK;
     }
     else return VTCLI_FAIL;
@@ -690,12 +673,12 @@ int VTCli::processArgs(int argc, char** argv) {
     }
     else {
         // Construct help string
-        std::stringstream hss;
+        stringstream hss;
         int i = 0;
-        hss << std::endl << CMDLINE_PARSER_PACKAGE_NAME <<" "<< CMDLINE_PARSER_VERSION << std::endl;
-        hss << std::endl << gengetopt_args_info_usage << std::endl << std::endl;
+        hss << endl << CMDLINE_PARSER_PACKAGE_NAME <<" "<< CMDLINE_PARSER_VERSION << endl;
+        hss << endl << gengetopt_args_info_usage << endl << endl;
         while (gengetopt_args_info_help[i])
-            hss << gengetopt_args_info_help[i++] << std::endl;
+            hss << gengetopt_args_info_help[i++] << endl;
         helpStrings.insert(std::make_pair("all", hss.str()));
         // Construct command string from unnamed arguments
         for (int i = 0; i < args_info.inputs_num; i++)
@@ -749,6 +732,7 @@ int main(int argc, char** argv) {
     destruct (vtcli);
 
     return 0;
+
 }
 
 

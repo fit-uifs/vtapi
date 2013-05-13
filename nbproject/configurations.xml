@@ -47,12 +47,9 @@
           </incDir>
         </ccTool>
         <linkerTool>
-          <output>${CND_DISTDIR}/vtapi</output>
+          <output>${CND_DISTDIR}/vtcli</output>
           <linkerLibItems>
             <linkerOptionItem>-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann</linkerOptionItem>
-            <linkerOptionItem>-lprocps</linkerOptionItem>
-            <linkerOptionItem>-llwgeom</linkerOptionItem>
-            <linkerOptionItem>-lpqtypes</linkerOptionItem>
             <linkerOptionItem>-lvtapi</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
@@ -99,9 +96,9 @@
             <linkerOptionItem>-llwgeom</linkerOptionItem>
             <linkerOptionItem>-lpqtypes</linkerOptionItem>
             <linkerOptionItem>-lvtapi</linkerOptionItem>
-	    <linkerOptionItem>-lgeos_c</linkerOptionItem>
-	    <linkerOptionItem>-lpq</linkerOptionItem>
-	    <linkerOptionItem>-lws2_32</linkerOptionItem>
+            <linkerOptionItem>-lgeos_c</linkerOptionItem>
+            <linkerOptionItem>-lpq</linkerOptionItem>
+            <linkerOptionItem>-lws2_32</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
       </compileType>

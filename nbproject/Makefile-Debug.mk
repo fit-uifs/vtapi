@@ -50,15 +50,15 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lprocps -llwgeom -lpqtypes -lvtapi
+LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopencv_video -lopencv_features2d -lopencv_calib3d -lopencv_objdetect -lopencv_contrib -lopencv_legacy -lopencv_flann -lvtapi
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Debug.mk dist/vtapi
+	"${MAKE}"  -f nbproject/Makefile-Debug.mk dist/vtcli
 
-dist/vtapi: ${OBJECTFILES}
+dist/vtcli: ${OBJECTFILES}
 	${MKDIR} -p dist
-	${LINK.cc} -o ${CND_DISTDIR}/vtapi ${OBJECTFILES} ${LDLIBSOPTIONS} 
+	${LINK.cc} -o ${CND_DISTDIR}/vtcli ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/vtcli.o: vtcli.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -71,7 +71,7 @@ ${OBJECTDIR}/vtcli.o: vtcli.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Debug
-	${RM} dist/vtapi
+	${RM} dist/vtcli
 
 # Subprojects
 .clean-subprojects:

@@ -1,26 +1,41 @@
- /*
- * File:   process.cpp
- * Author: chmelarp
+/**
+ * @file    process.cpp
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * Created on 29. září 2011, 10:54
+ * @section DESCRIPTION
+ *
+ * Methods of Process class
  */
 
-#include "vtapi.h"
+#include "data/vtapi_process.h"
+
+using namespace vtapi;
 
 
-Process::Process(const KeyValues& orig, const String& name) : KeyValues(orig) {
+Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig) {
     thisClass = "Process";
 
-    String s = "SELECT P.*, PA1.relname AS inputs, PA2.relname AS outputs\n"
-            "  FROM public.processes P\n"
-            "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode\n"
-            "  LEFT JOIN pg_catalog.pg_class PA2 ON P.outputs::regclass = PA2.relfilenode";
+    string query;
+
+    if (BackendFactory::backend == POSTGRES) {
+        query = "\nSELECT P.*, PA1.relname AS inputs, PA2.relname AS outputs\n"
+                "  FROM public.processes P\n"
+                "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode\n"
+                "  LEFT JOIN pg_catalog.pg_class PA2 ON P.outputs::regclass = PA2.relfilenode";
+    }
+    else {
+        query = "\nSELECT * from public.processes";
+    }
+
     if (!name.empty()) {
-        s += "  WHERE P.prsname='" + name + "'";
+        query += "  WHERE P.prsname='" + name + "'";
         this->process = name;
     }
-    s += ";";
-    this->select = new Select(orig, s.c_str());
+    query += ";";
+    this->select = new Select(orig, query.c_str());
 }
 
 
@@ -35,23 +50,23 @@ bool Process::next() {
 }
 
 
-String Process::getName() {
+string Process::getName() {
     return this->getString("prsname");
 }
 
-String Process::getInputs() {
+string Process::getInputs() {
     return this->getString("inputs");
 }
 
-String Process::getOutputs() {
+string Process::getOutputs() {
     return this->getString("outputs");
 }
 
 
-bool Process::add(const String& method, const String& name, const String& selection) {
-    destruct(insert);
-    bool ok = false;
+bool Process::add(const string& method, const string& name, const string& selection) {
+    bool ret = false;
 
+    destruct(insert);
     insert = new Insert(*this, "processes");
     insert->keyString("mtname", method);
     insert->keyString("prsname", name);
@@ -61,12 +76,12 @@ bool Process::add(const String& method, const String& name, const String& select
     if (insert->execute()) {
 
         update = new Update(*this, "ALTER TABLE \""+ selection +"\" ADD COLUMN \""+ name +"\" real[];");
-        ok = update->execute();
+        ret = update->execute();
     }
 
     destruct(insert);
     destruct(update);
-    return ok;
+    return ret;
 }
 
 

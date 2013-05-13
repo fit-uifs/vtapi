@@ -1,42 +1,32 @@
-/*
- * File:   keyvalues.cpp
- * Author: chmelarp
+/**
+ * @file    commons.cpp
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * Created on 29. září 2011, 10:52
+ * @section DESCRIPTION
+ *
+ * Methods of KeyValues class
  */
 
-#if defined(WIN32) || defined(WIN64)
-#include <Winsock2.h>
-#else
-#include <netinet/in.h>
-#endif
-
 #include <iomanip>
-#include <string.h>
 
-#include "vtapi.h"
+#include "data/vtapi_keyvalues.h"
 
-
-// ************************************************************************** //
-String TKey::print() {
-    String ret = "TKey type=" + type + ", key=" + key + ", size=" + toString(size) + ", from=" + from;
-    std::cout << ret << std::endl;
-    return (ret);
-}
+using namespace vtapi;
 
 
-// FIXME: tohle kdyz dam sem, tak je to v haji - proc?
-// template <class T>
-// String TKeyValue<T>::print() {};
-// ************************************************************************** //
+//================================ KEYVALUES ===================================
 
-KeyValues::KeyValues(const Commons& orig) 
-          : Commons(orig), select(NULL), pos(-1), insert(NULL), update(NULL) {
+
+KeyValues::KeyValues(const Commons& orig)
+          : Commons(orig), select(NULL), insert(NULL), update(NULL) {
     thisClass = "KeyValues(Commons&)";
 }
 
-KeyValues::KeyValues(const KeyValues& orig, const String& selection)
-          : Commons(orig), select(NULL), pos(-1), insert(NULL), update(NULL) {
+KeyValues::KeyValues(const KeyValues& orig, const string& selection)
+          : Commons(orig), select(NULL), insert(NULL), update(NULL) {
     thisClass = "KeyValues(KeyValues&)";
     this->selection = selection;
 }
@@ -44,22 +34,26 @@ KeyValues::KeyValues(const KeyValues& orig, const String& selection)
 KeyValues::~KeyValues() {
     // whether should be something inserted
     if (insert) {
-        if (!insert->executed) warning(313, "There should be something inserted: \n" + insert->getQuery());
+        if (!insert->executed) {
+            logger->warning(313, "There should be something inserted: \n" + insert->getQuery(), thisClass+"~KeyValues()");
+        }
         destruct(insert);
     }
 
     // whether should be something updated
     if (update) {
-        if (!update->executed) warning(314, "There should be something updated: \n" + insert->getQuery());
+        if (!update->executed) {
+            logger->warning(314, "There should be something updated: \n" + update->getQuery(), thisClass+"~KeyValues()");
+        }
         destruct(update);
     }
 
     destruct (select);
-
-    this->beDoomed();
 }
 
 KeyValues* KeyValues::next() {
+    int rowCount    = 0;
+
     // whether should be something inserted
     if (insert) {
         if (!insert->executed) insert->execute();  // FIXME: here should be the store fun instead
@@ -73,65 +67,39 @@ KeyValues* KeyValues::next() {
     }
 
     // check the Select, each subclass is responsible of
-    if (!select) error(301, "There is no select class");
+    if (!select) logger->error(301, "There is no select class", thisClass+"next()");
 
     // select is executed here when position == -1
-    if (pos == -1) {
-        if (select->res) {
-            PQclear(select->res);
-            select->res = NULL;
-        }
-        select->execute();
+    if (select->resultSet->getPosition() == -1) {                
+        if (!select->execute()) return NULL;
     }
 
     // check if end of resultset has been reached
-    if (select->res) {
-        int rows = PQntuples(select->res);
-        if (rows <= 0) return NULL;
-        else if (pos < rows) {
-            pos++;      // continue
-            if (pos == rows) { // this was last row, reset
-                pos = -1;
-                return NULL;
-            }
+    rowCount = select->resultSet->countRows();
+    if (rowCount <= 0) return NULL;
+    else if (select->resultSet->getPosition() < rowCount) {
+        select->resultSet->step();
+        if (select->resultSet->getPosition() == rowCount) { // this was last row, reset
+            select->resultSet->setPosition(-1);
+            return NULL;
         }
-        else if (pos >= select->limit) {     // fetch new resultset
-            if (select->executeNext()) {
-                pos = 0;
-            }
-        }
-        else return NULL;   // end of result
-
     }
-
+    else if (select->resultSet->getPosition() >= select->getLimit()) {     // fetch new resultset
+        if (select->executeNext()) {
+            select->resultSet->setPosition(0);
+        }
+    }
+    else return NULL;   // end of result
+    
     return this;
 }
 
 TKey KeyValues::getKey(int col) {
-    TKey column;
-    if (!select || !select->res) return column;
-    if (col >= PQnfields(select->res)) return column;
-
-    column.key = PQfname(select->res, col);
-    column.type = typemap->toTypname(PQftype(select->res, col));
-    column.size = 1;
-    return column;
+    return select->resultSet->getKey(col);
 }
 
-std::vector<TKey>* KeyValues::getKeys() {
-    if (!select || !select->res) return NULL;
-
-    std::vector<TKey>* vtk = new std::vector<TKey>;
-
-    int cols = PQnfields(select->res);
-    for (int c = 0; c < cols; c++) {
-        String name = PQfname(select->res, c);
-        String type = typemap->toTypname(PQftype(select->res, c));
-        TKey tk (type, name, -1);   // return NULL
-        vtk->push_back(tk);
-    }
-
-    return vtk;
+TKeys* KeyValues::getKeys() {
+    return select->resultSet->getKeys();
 }
 
 
@@ -141,545 +109,95 @@ std::vector<TKey>* KeyValues::getKeys() {
 /**
  * Generic getter - fetches any value from resultset and returns it as string
  * @param col column index
- * @return String representation of field value
+ * @return string representation of field value
  */
-String KeyValues::getValue(const int col) {
+string KeyValues::getValue(const int col, const int arrayLimit) {
 
-    std::stringstream valss; //return stringstream
-    TKey colkey = getKey(col); // get column type via its key
-    if (colkey.size < 0) return "";
-    // get type metadata (its category, length in bytes and possibly array type)
-    char typcategory = typemap->getCategory(colkey.type);
-    short typlen = typemap->getLength(colkey.type);
-     //if array, this shows element type
-    int typelemoid = typcategory == 'A' ? typemap->getElemOID(colkey.type) : -1;
-    //int precision = 4; // float precision
-
-    // Call different getters for different categories of types
-    switch (typcategory) {
-        case 'A': { // array
-            //TODO: arrays of other types
-            // array of 4-byte ints
-            if (typelemoid == typemap->toOid("int4")) {
-                std::vector<int>* arr = this->getIntV(col);
-                if (arr) for (int i = 0; i < (*arr).size(); i++) {
-                    valss << (*arr)[i];
-                    if (arrayLimit && i == arrayLimit) {
-                        valss << "...";
-                        break;
-                    }
-                    if (i < (*arr).size()-1) valss << ",";
-                }
-                destruct (arr);
-            }
-            // array of 4-byte floats
-            else if (typelemoid == typemap->toOid("float4")) {
-                std::vector<float>* arr = this->getFloatV(col);
-                if (arr) for (int i = 0; i < (*arr).size(); i++) {
-                    valss << (*arr)[i];
-                    if (arrayLimit && i == arrayLimit) {
-                        valss << "...";
-                        break;
-                    }
-                    if (i < (*arr).size()-1) valss << ",";
-                }
-                destruct (arr);
-            }
-            // array of 1-byte chars
-            else if (typelemoid == typemap->toOid("char")) {
-                int arr_size;
-                char *arr = this->getCharA(col, arr_size);
-                for (int i = 0; i < arr_size; i++) valss << arr[i];
-                destruct (arr);
-            }
-            // array of PGpoint
-            else if (typelemoid == typemap->toOid("point")) {
-                std::vector<PGpoint>* arr = this->getPointV(col);
-                if (arr) for (int i = 0; i < (*arr).size(); i++) {
-                    valss << "(" << (*arr)[i].x << "," << (*arr)[i].y << ")";
-                    if (arrayLimit && i == arrayLimit) {
-                        valss << "...";
-                        break;
-                    }
-                    if (i < (*arr).size()-1) valss << ",";
-                }
-                destruct (arr);
-            }
-
-            } break;
-
-        case 'B': { // boolean (NOT IMPLEMENTED)
-            } break;
-
-        case 'C': { // composite
-#ifdef __OPENCV_CORE_C_H__
-            // OpenCV cvMat type
-            if (!colkey.type.compare("cvmat")) {
-                CvMat *mat = getCvMat(col);
-                valss << cvGetElemType(mat);
-                cvReleaseMat(&mat);
-            }
-#endif
-            } break;
-
-        case 'D': { // date/time
-            struct tm ts = getTimestamp(col);
-            valss << std::right << std::setfill('0');
-            if (ts.tm_year > 0)
-                valss << std::setw(4) << ts.tm_year << '-' << std::setw(2) << ts.tm_mon <<
-                  '-' << std::setw(2) << ts.tm_mday << ' ' << std::setw(2) << ts.tm_hour <<
-                  ':' << std::setw(2) << ts.tm_min  << ':' << std::setw(2) << ts.tm_sec;
-            } break;
-
-        case 'E': { // enum
-            valss << getString(col); // enum types are strings
-            } break;
-
-        case 'G': { // geometric
-#ifdef POSTGIS
-            // PostGIS point type
-            if (!colkey.type.compare("point")) {
-                PGpoint point = getPoint(col);
-                valss << point.x << " , " << point.y;
-            }
-            // PostGIS box type
-            else if (!colkey.type.compare("box")) {
-                PGbox box = getBox(col);
-                valss << '(' << box.low.x << " , " << box.low.y << ") , ";
-                valss << '(' << box.high.x << " , " << box.high.y << ')';
-            }
-            // PostGIS line-segment type
-            else if (!colkey.type.compare("lseg")) {
-                PGlseg lseg = getLineSegment(col);
-                valss << '(' << lseg.pts[0].x << " , " << lseg.pts[0].y << ") ";
-                valss << '(' << lseg.pts[1].x << " , " << lseg.pts[1].y << ')';
-            }
-            // PostGIS circle type
-            else if (!colkey.type.compare("circle")) {
-                PGcircle circle = getCircle(col);
-                valss << '(' << circle.center.x << " , " << circle.center.y;
-                valss << ") , " << circle.radius;
-            }
-            // PostGIS path type
-            else if (!colkey.type.compare("path")) {
-                PGpath path = getPath(col);
-                for (int i = 0; i < path.npts; i++) {
-                    valss << '(' << path.pts[i].x << " , " << path.pts[i].y << ')';
-                    if (arrayLimit && i == arrayLimit) {
-                        valss << "...";
-                        break;
-                    }
-                    if (i < path.npts-1) valss << " , ";
-                }
-            }
-            // PostGIS polygon type
-            else if (!colkey.type.compare("polygon")) {
-                PGpolygon polygon = getPolygon(col);
-                for (int i = 0; i < polygon.npts; i++) {
-                    valss << '(' << polygon.pts[i].x << " , " << polygon.pts[i].y << ')';
-                    if (arrayLimit && i == arrayLimit) {
-                        valss << "...";
-                        break;
-                    }
-                    if (i < polygon.npts-1) valss << " , ";
-                }
-            }
-#endif
-            } break;
-
-        case 'I': { // network address (NOT IMPLEMENTED)
-            } break;
-
-        case 'N': { // numeric
-            // this can detect if type is oid reference (regtype, regclass...)
-            // if commented, all of it will just print oids
-            if (typemap->isRefType(colkey.type)) {
-                if (!colkey.type.compare("regtype")) {
-                    valss << typemap->toTypname(getInt(col));
-                }
-                // TODO: Petr if (colkey.type.equals("regclass") == 0) // pg_namespace.oid > 99 (pg_catalog, pg_toast)
-            }
-
-            // recognize 4 or 8-bytes integers and floats
-            if (!colkey.type.substr(0,5).compare("float"))
-                typlen < 8 ? valss << getFloat(col) : valss << getFloat8(col);
-            else
-                typlen < 8 ? valss << getInt(col) : valss << getInt8(col);
-            } break;
-
-
-        case 'P': { // pseudo (NOT IMPLEMENTED)
-            } break;
-
-        case 'S': { // string
-            if (typlen == 1) valss << getChar(col); // char has length 1
-            else return getString(col);
-            } break;
-
-        case 'T': { // timespan (NOT IMPLEMENTED)
-            } break;
-
-        case 'U': { // user-defined (cube + postGIS types!!)
-#ifdef POSTGIS
-            // PostGIS generic geometry type
-            if (!colkey.type.compare("geometry")) { 
-                GEOSGeometry *geo;
-                GEOSWKTWriter *geo_writer;
-                char * geo_string;
-
-                if (!(geo = getGeometry(col))) break;
-                if (! (geo_writer  =  GEOSWKTWriter_create())) {
-                    GEOSGeom_destroy(geo);
-                    break;
-                }
-
-                //TODO: GEOS 2.2 conflict, if resolved uncomment int precision
-                //GEOSWKTWriter_setRoundingPrecision(geo_writer, precision);
-                geo_string = GEOSWKTWriter_write(geo_writer, geo);
-                valss << geo_string;
-                
-                GEOSFree(geo_string);
-                GEOSGeom_destroy(geo);
-            }
-            // PostGIS cube type
-            else if (!colkey.type.compare("cube")) {
-                PGcube cube = getCube(col);
-                int lim = cube.dim;
-                if (arrayLimit && (2 * lim > arrayLimit)) lim = arrayLimit/2;
-                if (cube.x && cube.dim > 0) {
-                    valss << '(';
-                    for (int i = 0; i < lim; i++) {
-                        valss << cube.x[i];
-                        if (i < lim-1) valss << ',';
-                    }
-                    valss << ')';
-                    if (cube.x[lim]) {
-                        valss << ",(";
-                        for (int i = lim; i < 2 * lim; i++) {
-                            valss << cube.x[i];
-                            if (i < lim-1) valss << ',';
-                        }
-                    }
-                    valss << ')';
-                }
-            }
-#endif
-            } break;
-
-        case 'V': { // bit-string (NOT IMPLEMENTED)
-        } break;
-        case 'X': { // unknown (NOT IMPLEMENTED)
-        } break;
-        default: { // undefined (NOT IMPLEMENTED)
-        } break;
-    }
-    return valss.str();    
+    return select->resultSet->getValue(col, arrayLimit);
 }
 
 // =============== GETTERS FOR CHAR, CHAR ARRAYS AND STRINGS ===================
-char KeyValues::getChar(const String& key) {
-    return this->getChar(PQfnumber(select->res, key.c_str()));
+char KeyValues::getChar(const string& key) {
+    return select->resultSet->getChar(key);
 }
 char KeyValues::getChar(const int col) {
-    PGchar value = '\0';
-    int ret = PQgetf(select->res, this->pos, "%char", col, &value);
-    if (ret == 0) {
-        warning(304, "Value is not an char");
-        return '\0';
-    }
-    else return value;
+    return select->resultSet->getChar(col);
 }
-
-char *KeyValues::getCharA(const String& key, int& size) {
-    return this->getCharA(PQfnumber(select->res, key.c_str()), size);
+char *KeyValues::getCharA(const string& key, int& size) {
+    return select->resultSet->getCharA(key, size);
 }
-
 char *KeyValues::getCharA(const int col, int& size) {
-    PGarray tmp;
-    if (! PQgetf(select->res, this->pos, "%char[]", col, &tmp)) {
-        warning(304, "Value is not an array of chars");
-        size = -1;
-        return NULL;
-    }
-
-    size = PQntuples(tmp.res);
-    char* values = new char [size];
-    for (int i = 0; i < size; i++) {
-        if (! PQgetf(tmp.res, i, "%char", 0, &values[i])) {
-            warning(304, "Unexpected value in char array");
-            size = -1;
-            PQclear(tmp.res);
-            destruct (values);
-            return NULL;
-        }
-    }
-    PQclear(tmp.res);
-
-    return values;
+    return select->resultSet->getCharA(col, size);
 }
-
-String KeyValues::getString(const String& key) {
-    return this->getString(PQfnumber(select->res, key.c_str()));
+string KeyValues::getString(const string& key) {
+    return select->resultSet->getString(key);
 }
-
-String KeyValues::getString(const int col) {
-    PGtext value = (PGtext) "";
-    TKey colkey = getKey(col);
-    if (!select->res) return "";
-
-    if (typemap->getCategory(colkey.type) == 'S')  // string types
-        value = PQgetvalue(select->res, pos, col);
-    else if (typemap->isEnumType(colkey.type))     // enum types
-        value = PQgetvalue(select->res, pos, col);
-    else if(typemap->isRefType(colkey.type)) {  // reference types (regtype, regclass..)
-    }
-    else {
-        std::stringstream wss;
-        wss << "Value of type " << colkey.type << " isn't a string";
-        warning(305, wss.str());
-    }
-    return value ? String(value) : String("");
+string KeyValues::getString(const int col) {
+    return select->resultSet->getString(col);
 }
 
 // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
-int KeyValues::getInt(const String& key) {
-    return this->getInt(PQfnumber(select->res, key.c_str()));
+int KeyValues::getInt(const string& key) {
+    return select->resultSet->getInt(key);
 }
-
 int KeyValues::getInt(const int col) {
-    int value = 0;
-    short length = typemap->getLength(getKey(col).type);
-
-    // this circumvents libpqtypes and handles all int types (int, oid...)
-    if (length < 0) { // conversion if length == -1
-        std::stringstream iss (PQgetvalue(select->res, pos, col));
-        iss >> value;
-    }
-    else if (length == 2) // short int
-        value = ntohl(*(PGint2 *)PQgetvalue(select->res, pos, col));
-    else if (length == 4) // int
-        value = ntohl(*(PGint4 *)PQgetvalue(select->res, pos, col));
-    else {
-        std::stringstream wss;
-        if (length == 8) wss << "Use getInt8(...) to fetch int8 values.";
-        else wss << "Integer value of length " << length << " is not supported";
-        warning(306, wss.str());
-    }    
-    return value;
+    return select->resultSet->getInt(col);
 }
-
-long KeyValues::getInt8(const String& key) {
-    return this->getInt8(PQfnumber(select->res, key.c_str()));
+long KeyValues::getInt8(const string& key) {
+    return select->resultSet->getInt8(key);
 }
-
 long KeyValues::getInt8(const int col) {
-    long value = 0;
-    short length = typemap->getLength(getKey(col).type);
-        // extract long or call getInt if value is integer
-    if (length == 8) value = ntohl(*(PGint8 *)PQgetvalue(select->res, pos, col));
-    else if (length < 8) value = (long) getInt(col);
-    else {
-        std::stringstream wss;
-        wss << "Integer value of length " << length << " is not supported";
-        warning(306, wss.str());
-    }
-    return value;
+    return select->resultSet->getInt8(col);
 }
-
-
-int* KeyValues::getIntA(const String& key, int& size) {
-    return this->getIntA(PQfnumber(select->res, key.c_str()), size);
+int* KeyValues::getIntA(const string& key, int& size) {
+    return select->resultSet->getIntA(key, size);
 }
 int* KeyValues::getIntA(const int col, int& size) {
-    PGarray tmp;
-    if (! PQgetf(select->res, this->pos, "%int4[]", col, &tmp)) {
-        warning(307, "Value is not an array of integer");
-        size = -1;
-        return NULL;
-    }
-
-    size = PQntuples(tmp.res);
-    int* values = new int [size];
-    for (int i = 0; i < size; i++) {
-        if (! PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
-            warning(308, "Unexpected value in integer array");
-            size = -1;
-            PQclear(tmp.res);
-            destruct (values);
-            return NULL;
-        }
-    }
-    PQclear(tmp.res);
-
-    return values;
+    return select->resultSet->getIntA(col, size);
 }
-
-std::vector<int>* KeyValues::getIntV(const String& key) {
-    return this->getIntV(PQfnumber(select->res, key.c_str()));
+vector<int>* KeyValues::getIntV(const string& key) {
+    return select->resultSet->getIntV(key);
 }
-std::vector<int>* KeyValues::getIntV(const int col) {
-    PGarray tmp;
-    if (! PQgetf(select->res, this->pos, "%int4[]", col, &tmp)) {
-        warning(307, "Value is not an array of integer");
-        return NULL;
-    }
-
-    PGint4 value;
-    std::vector<int>* values = new std::vector<int>;
-
-    for (int i = 0; i < PQntuples(tmp.res); i++) {
-        if (! PQgetf(tmp.res, i, "%int4", 0, &value)) {
-            warning(308, "Unexpected value in integer array");
-            PQclear(tmp.res);
-            destruct (values);
-            return NULL;
-        }
-        values->push_back(value);
-    }
-    PQclear(tmp.res);
-
-    return values;
+vector<int>* KeyValues::getIntV(const int col) {
+    return select->resultSet->getIntV(col);
 }
-
-std::vector< std::vector<int>* >* KeyValues::getIntVV(const int col) {
-    PGarray tmp;
-    if (! PQgetf(select->res, this->pos, "%int4[]", col, &tmp)) {
-        warning(307, "Value is not an array of integer arrays");
-        return NULL;
-    }
-    if (tmp.ndims != 2) {
-        warning(308, "Array must have exactly 2 dimensions");
-        return NULL;
-    }
-
-    PGint4 value;
-    std::vector< std::vector<int>* >* arrays = new std::vector< std::vector<int>* >;
-    std::vector<int>* arr;
-
-    // array rows
-    for (int i = 0; i < tmp.dims[0]; i++) {
-        arr = new std::vector<int>;
-        // array columns
-        for (int j = 0; j < tmp.dims[1]; j++) {
-            if (! PQgetf(tmp.res, i*tmp.dims[1]+j, "%int4", 0, &value)) {
-                warning(308, "Unexpected value in integer array");
-                PQclear(tmp.res);
-                for (int x = 0; x < (*arrays).size(); x++) destruct ((*arrays)[x]);
-                destruct (arrays);
-                return NULL;
-            }
-            arr->push_back(value);
-        }
-        arrays->push_back(arr);
-    }
-    return arrays;
+vector< vector<int>* >* KeyValues::getIntVV(const int col) {
+    return select->resultSet->getIntVV(col);
 }
-
-std::vector< std::vector<int>* >* KeyValues::getIntVV(const String& key) {
-    return this->getIntVV(PQfnumber(select->res, key.c_str()));
+vector< vector<int>* >* KeyValues::getIntVV(const string& key) {
+    return select->resultSet->getIntVV(key);
 }
 
 // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
-float KeyValues::getFloat(const String& key) {
-    return this->getFloat(PQfnumber(select->res, key.c_str()));
+float KeyValues::getFloat(const string& key) {
+    return select->resultSet->getFloat(key);
 }
-
 float KeyValues::getFloat(const int col) {
-    float value = 0;
-    short length = typemap->getLength(getKey(col).type);
-    if (length < 0) { // conversion if length == -1
-        std::stringstream iss (PQgetvalue(select->res, pos, col));
-        iss >> value;
-    }
-    else if (length == 4) {
-        value = ntohl(*(PGfloat4 *)PQgetvalue(select->res, pos, col));
-        std::cout << value << std::endl;
-    }
-    else {
-        std::stringstream wss;
-        if (length == 8) wss << "Use getFloat8(col) to fetch float8 values.";
-        else wss << "Float value of length " << length << " is not supported";
-        warning(309, wss.str());
-    }
-    return value;
+    return select->resultSet->getFloat(col);
 }
-
-double KeyValues::getFloat8(const String& key) {
-    return this->getFloat8(PQfnumber(select->res, key.c_str()));
+double KeyValues::getFloat8(const string& key) {
+    return select->resultSet->getFloat8(key);
 }
-
 double KeyValues::getFloat8(const int col) {
-    double value = 0;
-    short length = typemap->getLength(getKey(col).type);
-
-    if (length == 8) value = ntohl(*(PGfloat8 *)PQgetvalue(select->res, pos, col));
-    else if (length < 8) value = (double) getFloat(col);
-    else {
-        std::stringstream wss;
-        wss << "Float value of length " << length << " is not supported";
-        warning(309, wss.str());
-    }
-    return value;
+    return select->resultSet->getFloat8(col);
 }
-
-float* KeyValues::getFloatA(const String& key, int& size) {
-    int pos = PQfnumber(select->res, String("\"" + key + "\"").c_str());
-    if (pos < 0) warning(310, "Column " + toString(key) + " doesn't exist.");
-    return this->getFloatA(pos, size);
+float* KeyValues::getFloatA(const string& key, int& size) {
+    return select->resultSet->getFloatA(key, size);
 }
 float* KeyValues::getFloatA(const int col, int& size) {
-    PGarray tmp;
-    if (! PQgetf(select->res, this->pos, "%float4[]", col, &tmp)) {
-        warning(311, "Value is not an array of float");
-        size = -1;
-        return NULL;
-    }
-
-    size = PQntuples(tmp.res);
-    float* values = new float [size];
-    for (int i = 0; i < size; i++) {
-        if (! PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
-            warning(312, "Unexpected value in float array");
-            size = -1;
-            PQclear(tmp.res);
-            destruct (values);
-            return NULL;
-        }
-    }
-    PQclear(tmp.res);
-
-    return values;
+    return select->resultSet->getFloatA(col, size);
+}
+vector<float>* KeyValues::getFloatV(const string& key) {
+    return select->resultSet->getFloatV(key);
+}
+vector<float>* KeyValues::getFloatV(const int col) {
+    return select->resultSet->getFloatV(col);
 }
 
-std::vector<float>* KeyValues::getFloatV(const String& key) {
-    return this->getFloatV(PQfnumber(select->res, key.c_str()));
-}
-std::vector<float>* KeyValues::getFloatV(const int col) {
-    PGarray tmp;
-    if (! PQgetf(select->res, this->pos, "%float4[]", col, &tmp)) {
-        warning(311, "Value is not an array of float");
-        return NULL;
-    }
-
-    PGfloat4 value;
-    std::vector<float>* values = new std::vector<float>;
-    for (int i = 0; i < PQntuples(tmp.res); i++) {
-        if (! PQgetf(tmp.res, i, "%float4", 0, &value)) {
-            warning(312, "Unexpected value in float array");
-            PQclear(tmp.res);
-            destruct (values);
-            return NULL;
-        }
-        values->push_back(value);
-    }
-    PQclear(tmp.res);
-
-    return values;
-}
 // =============== GETTERS - OpenCV MATRICES ===============================
-#ifdef __OPENCV_CORE_C_H__
+#ifdef __OPENCV_CORE_C_H__XXX
 
-CvMat *KeyValues::getCvMat(const String& key) {
+CvMat *KeyValues::getCvMat(const string& key) {
     return this->getCvMat(PQfnumber(select->res, key.c_str()));
 }
 
@@ -731,15 +249,15 @@ CvMat *KeyValues::getCvMat(const int col) {
         warning(325, "Invalid column for CvMat user data");
         data = NULL;
     }
-    else data_oid = typemap->getElemOID(PQftype(select->res, dataloc_col));
+    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
 
     // could be char, short, int, float, double
-    if (data_oid == typemap->toOid("char")) {
+    if (data_oid == typeManager->toOid("char")) {
         //TODO: maybe fix alignment (every row to 4B) ?
         data = getCharA(dataloc_col, data_len);
     }
-    else if (data_oid == typemap->toOid("float4") ||
-            data_oid == typemap->toOid("real")) {
+    else if (data_oid == typeManager->toOid("float4") ||
+            data_oid == typeManager->toOid("real")) {
         data = getFloatA(dataloc_col, data_len);
     }
     else {
@@ -757,7 +275,7 @@ CvMat *KeyValues::getCvMat(const int col) {
     return mat;
 }
 
-CvMatND *KeyValues::getCvMatND(const String& key) {
+CvMatND *KeyValues::getCvMatND(const string& key) {
     return this->getCvMatND(PQfnumber(select->res, key.c_str()));
 }
 
@@ -811,18 +329,18 @@ CvMatND *KeyValues::getCvMatND(const int col) {
         warning(325, "Invalid column for CvMat user data");
         data = NULL;
     }
-    else data_oid = typemap->getElemOID(PQftype(select->res, dataloc_col));
+    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
 
     // could be char, short, int, float, double
-    if (data_oid == typemap->toOid("char")) {
+    if (data_oid == typeManager->toOid("char")) {
         //TODO: maybe fix alignment (every row to 4B) ?
         //TODO: not sure if sizes are counted correctly
         data = getCharA(dataloc_col, data_len);
         for (int i = 0; i < step_size; i++)
             sizes[i] = data_len / step[i];
     }
-    else if (data_oid == typemap->toOid("float4") ||
-            data_oid == typemap->toOid("real")) {
+    else if (data_oid == typeManager->toOid("float4") ||
+            data_oid == typeManager->toOid("real")) {
         //TODO: not sure if sizes are counted correctly
         data = getFloatA(dataloc_col, data_len);
         for (int i = 0; i < step_size; i++)
@@ -844,41 +362,16 @@ CvMatND *KeyValues::getCvMatND(const int col) {
 }
 #endif
 // =============== GETTERS - TIMESTAMP =========================================
-struct tm KeyValues::getTimestamp(const String& key) {
-    return this->getTimestamp(PQfnumber(select->res, key.c_str()));
+time_t KeyValues::getTimestamp(const string& key) {
+    return select->resultSet->getTimestamp(key);
 }
-struct tm KeyValues::getTimestamp(const int col) {
-    struct tm ts = {0};
-    String dtype = getKey(col).type;
-
-    if (!dtype.compare("time")) {
-        PGtime timestamp;
-        PQgetf(select->res, this->pos, "%time", col, &timestamp);
-        ts.tm_hour  = timestamp.hour;
-        ts.tm_min   = timestamp.min;
-        ts.tm_sec   = timestamp.sec; 
-    }
-    else if (!dtype.compare("timestamp")) {
-        PGtimestamp timestamp;
-        PQgetf(select->res, this->pos, "%timestamp", col, &timestamp);
-        ts.tm_year  = timestamp.date.year;
-        ts.tm_mon   = timestamp.date.mon;
-        ts.tm_mday  = timestamp.date.mday;
-        ts.tm_hour  = timestamp.time.hour;
-        ts.tm_min   = timestamp.time.min;
-        ts.tm_sec   = timestamp.time.sec;
-    }
-    else {
-        std::stringstream wss;
-        wss << "Data type " << dtype << " not yet supported";
-        warning(313, wss.str());
-    }
-    return ts;
+time_t KeyValues::getTimestamp(const int col) {
+    return select->resultSet->getTimestamp(col);
 }
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
 #ifdef POSTGIS
-PGpoint KeyValues::getPoint(const String& key) {
+PGpoint KeyValues::getPoint(const string& key) {
     return this->getPoint(PQfnumber(select->res, key.c_str()));
 }
 PGpoint KeyValues::getPoint(const int col) {
@@ -889,7 +382,7 @@ PGpoint KeyValues::getPoint(const int col) {
     }
     return point;
 }
-PGlseg KeyValues::getLineSegment(const String& key) {
+PGlseg KeyValues::getLineSegment(const string& key) {
     return this->getLineSegment(PQfnumber(select->res, key.c_str()));
 }
 PGlseg KeyValues::getLineSegment(const int col){
@@ -901,7 +394,7 @@ PGlseg KeyValues::getLineSegment(const int col){
     return lseg;
 }
 
-PGbox KeyValues::getBox(const String& key){
+PGbox KeyValues::getBox(const string& key){
     return this->getBox(PQfnumber(select->res, key.c_str()));
 }
 PGbox KeyValues::getBox(const int col){
@@ -913,7 +406,7 @@ PGbox KeyValues::getBox(const int col){
     return box;
 }
 
-PGcircle KeyValues::getCircle(const String& key){
+PGcircle KeyValues::getCircle(const string& key){
     return this->getCircle(PQfnumber(select->res, key.c_str()));
 
 }
@@ -926,7 +419,7 @@ PGcircle KeyValues::getCircle(const int col){
     return circle;
 }
 
-PGpolygon KeyValues::getPolygon(const String& key){
+PGpolygon KeyValues::getPolygon(const string& key){
     return this->getPolygon(PQfnumber(select->res, key.c_str()));
 
 }
@@ -939,7 +432,7 @@ PGpolygon KeyValues::getPolygon(const int col){
     return polygon;
 }
 
-PGpath KeyValues::getPath(const String& key){
+PGpath KeyValues::getPath(const string& key){
     return this->getPath(PQfnumber(select->res, key.c_str()));
 
 }
@@ -952,7 +445,7 @@ PGpath KeyValues::getPath(const int col){
     return path;
 }
 
-PGcube KeyValues::getCube(const String& key) {
+PGcube KeyValues::getCube(const string& key) {
     return this->getCube(PQfnumber(select->res, key.c_str()));
 }
 PGcube KeyValues::getCube(const int col) {
@@ -964,7 +457,7 @@ PGcube KeyValues::getCube(const int col) {
     return cube;
 }
 
-GEOSGeometry *KeyValues::getGeometry(const String& key) {
+GEOSGeometry *KeyValues::getGeometry(const string& key) {
     return this->getGeometry(PQfnumber(select->res, key.c_str()));
 }
 GEOSGeometry *KeyValues::getGeometry(const int col) {
@@ -975,7 +468,7 @@ GEOSGeometry *KeyValues::getGeometry(const int col) {
     return geo;
 }
 
-GEOSGeometry *KeyValues::getLineString(const String& key) {
+GEOSGeometry *KeyValues::getLineString(const string& key) {
     return this->getLineString(PQfnumber(select->res, key.c_str()));
 }
 GEOSGeometry *KeyValues::getLineString(const int col) {
@@ -989,10 +482,10 @@ GEOSGeometry *KeyValues::getLineString(const int col) {
     return ls;
 }
 
-std::vector<PGpoint>*  KeyValues::getPointV(const String& key) {
+vector<PGpoint>*  KeyValues::getPointV(const string& key) {
     return this->getPointV(PQfnumber(select->res, key.c_str()));
 }
-std::vector<PGpoint>*  KeyValues::getPointV(const int col) {
+vector<PGpoint>*  KeyValues::getPointV(const int col) {
     PGarray tmp;
     if (! PQgetf(select->res, this->pos, "%point[]", col, &tmp)) {
         warning(324, "Value is not an array of points");
@@ -1000,7 +493,7 @@ std::vector<PGpoint>*  KeyValues::getPointV(const int col) {
     }
 
     PGpoint value;
-    std::vector<PGpoint>* values = new std::vector<PGpoint>;
+    vector<PGpoint>* values = new vector<PGpoint>;
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%point", 0, &value)) {
@@ -1018,149 +511,64 @@ std::vector<PGpoint>*  KeyValues::getPointV(const int col) {
 #endif
 
 // =============== GETTERS - OTHER =============================================
-int KeyValues::getIntOid(const String& key) {
-    return this->getIntOid(PQfnumber(select->res, key.c_str()));
+int KeyValues::getIntOid(const string& key) {
+    return select->resultSet->getIntOid(key);
 }
-
 int KeyValues::getIntOid(const int col) {
-    PGint4 value;
-
-    PQgetf(select->res, this->pos, "%oid", col, &value);
-    return (int) value;
+    return select->resultSet->getIntOid(col);
 }
-
-// =============== SETTERS (Update) ============================================
-// TODO: mozna by se dalo premyslet o PQsetvalue
-
-bool KeyValues::preSet() {
-    // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
-    warning(3010, "Set inherited from KeyValues at class " + thisClass);
-
-    destruct(this->update);
-    this->update = new Update(*this);
-    if (this->update != NULL) return true;
-    else return false;
-}
-
-// TODO: how to change binary data???
-bool KeyValues::setString(const String& key, const String& value) {
-    // call preset on the derived class
-    if (!update) this->preSet();
-
-    /* TODO: how to change the res in case of binary data???
-    if (select) {
-        // TODO: what to call in the case of binary data???
-        char* tempc = const_cast<char*>(value.c_str()); // stupid C conversions
-        PQsetvalue(select->res, pos, PQfnumber(select->res, key.c_str()), tempc, value.length());
-    } */
-
-    return update->keyString(key, value);
-}
-
-bool KeyValues::setInt(const String& key, int value) {
-    // call preset on the derived class
-    if (!update) this->preSet();
-    return update->keyInt(key, value);
-}
-
-bool KeyValues::setIntA(const String& key, const int* values, int size){
-    // call preset on the derived class
-    if (!update) this->preSet();
-    return update->keyIntA(key, values, size);
-}
-
-bool KeyValues::setFloat(const String& key, float value){
-    // call preset on the derived class
-    if (!update) this->preSet();
-    return update->keyFloat(key, value);
-}
-
-bool KeyValues::setFloatA(const String& key, const float* values, int size){
-    // call preset on the derived class
-    if (!update) this->preSet();
-    return update->keyFloatA(key, values, size);
-}
-
-bool KeyValues::setExecute() {
-    if (this->update) return this->update->execute();
-    else return false;
-}
-
-
-// =================== ADDERS (Insert) =========================================
-bool KeyValues::addExecute() {
-    if (this->insert) return this->insert->execute();
-    else return false;
-}
-
-// =================== CHECKERS (Storage) ======================================
-bool KeyValues::checkStorage() {
-    warning(3018, "Check might fail at class " + thisClass);
-
-    if (!sequence.empty() && fileExists(getDataLocation())) return true;
-    else if (!dataset.empty() && fileExists(getDataLocation())) return true;
-
-    return false;
-}
-
-
-
-
-
-
-
-
-
 
 // =============== PRINT methods =======================================
 
 void KeyValues::print() {
-    if (!select || !select->res || pos < 0)
-        warning(302, "There is nothing to print (see other messages)");
+
+    if (!select || !select->resultSet->isOk() || select->resultSet->getPosition() < 0)
+        logger->warning(302, "There is nothing to print (see other messages)", thisClass+"::print()");
     else {
-        int origpos = this->pos;
+        int origpos = select->resultSet->getPosition();
         int get_widths = (format == STANDARD);
-        std::pair< std::vector<TKey>*, std::vector<int>* > fInfo = getFieldsInfo(pos, get_widths);
+        pair< TKeys*, vector<int>* > fInfo = select->resultSet->getKeysWidths(select->resultSet->getPosition(), get_widths, arrayLimit);
         if (fInfo.first && (format != STANDARD || fInfo.second)) {
             printHeader(fInfo);
-            printRowOnly(pos, fInfo.second);
+            printRowOnly(select->resultSet->getPosition(), fInfo.second);
             printFooter(1);
         }
-        else std::cout << "(no output)" << std::endl;
+        else cout << "(no output)" << endl;
         destruct(fInfo.first); destruct(fInfo.second);
-        this->pos = origpos;
+        select->resultSet->setPosition(origpos);
     }
 }
 
 void KeyValues::printAll() {
-    if (!select || !select->res)
-        warning(303, "There is nothing to print (see other messages)");
+
+    if (!select || !select->resultSet->isOk())
+        logger->warning(303, "There is nothing to print (see other messages)", thisClass+"::printAll()");
     else {
-        int origpos = this->pos;
+        int origpos = select->resultSet->getPosition();
         int get_widths = (format == STANDARD);
-        std::pair< std::vector<TKey>*, std::vector<int>* > fInfo = getFieldsInfo(-1, get_widths);
+        pair< TKeys*, vector<int>* > fInfo = select->resultSet->getKeysWidths(-1, get_widths, arrayLimit);
         if (fInfo.first && (format != STANDARD || fInfo.second)) {
             printHeader(fInfo);
-            for (int r = 0; r < PQntuples(select->res); r++) printRowOnly(r, fInfo.second);
-            printFooter();
+            for (int r = 0; r < select->resultSet->countRows(); r++) printRowOnly(r, fInfo.second);
+            printFooter(select->resultSet->countRows());
         }
-        else std::cout << "(no output)" << std::endl;
+        else cout << "(no output)" << endl;
         destruct(fInfo.first); destruct(fInfo.second);
-        this->pos = origpos;
+        select->resultSet->setPosition(origpos);
     }
 }
 
 // =============== PRINT support methods =======================================
 
-void KeyValues::printHeader(const std::pair< std::vector<TKey>*, std::vector<int>* > fInfo) {
-    std::stringstream table, nameln, typeln, border;
-    int cols = PQnfields(select->res);
+void KeyValues::printHeader(const pair< TKeys*, vector<int>* > fInfo) {
+    stringstream table, nameln, typeln, border;
+    int cols = select->resultSet->countCols();
 
     if (format == HTML) {
         if (tableOpt.empty()) table << "<table>";
         else table << "<table " << tableOpt << ">";
         if (!caption.empty()) table << "<caption align=\"top\">" << caption << "</caption>";
-        table << std::endl << "<tr align=\"center\">";
+        table << endl << "<tr align=\"center\">";
     }
     for (int c = 0; c < cols; c++) {
         if (format == STANDARD) {
@@ -1180,40 +588,40 @@ void KeyValues::printHeader(const std::pair< std::vector<TKey>*, std::vector<int
             table << (*fInfo.first)[c].type << "</th>";
         }
     }
-    table << "</tr>" << std::endl; nameln << std::endl; typeln << std::endl; border << std::endl;
-    if (format == STANDARD) std::cout << nameln.str() << typeln.str() << border.str();
-    else if (format == CSV) std::cout << nameln.str();
-    else if (format == HTML) std::cout << table.str();
+    table << "</tr>" << endl; nameln << endl; typeln << endl; border << endl;
+    if (format == STANDARD) cout << nameln.str() << typeln.str() << border.str();
+    else if (format == CSV) cout << nameln.str();
+    else if (format == HTML) cout << table.str();
 }
 
 void KeyValues::printFooter(const int count) {
-    std::stringstream output;
+    stringstream output;
     if (format == STANDARD) {
-        int rows = PQntuples(select->res);
-        if (count > 0) output << "(" << count << " of " << rows << " rows)" << std::endl;
-        else output << "(" << rows << " rows)" << std::endl;
+        int rows = select->resultSet->countRows();
+        if (count > 0) output << "(" << count << " of " << rows << " rows)" << endl;
+        else output << "(" << rows << " rows)" << endl;
     }
-    else if (format == HTML) output << "</table>" << std::endl;
-    std::cout << output.str();
+    else if (format == HTML) output << "</table>" << endl;
+    cout << output.str();
 }
 
-void KeyValues::printRowOnly(const int row, const std::vector<int>* widths) {
-    std::stringstream output;
-    int cols = PQnfields(select->res);
+void KeyValues::printRowOnly(const int row, const vector<int>* widths) {
+    stringstream output;
+    int cols = select->resultSet->countCols();
 
     //for (int i = 0; i < cols-(widths->size()); i++) widths->push_back(0);
     // don't forget to save original value of pos beforehand!
-    this->pos = row;
+    select->resultSet->setPosition(row);
     if (format == HTML) output << "<tr>";
     for (int c = 0; c < cols; c++) {
         // obecny getter
-        String val = getValue(c);
+        string val = getValue(c, arrayLimit);
         if (format == STANDARD) {
             output << std::left << std::setw((*widths)[c]) << val;
             if (c < cols-1) output << '|';
         }
         else if (format == CSV) {
-            if (val.find(',') != String::npos) output << "\"" << val << "\"";
+            if (val.find(',') != string::npos) output << "\"" << val << "\"";
             //TODO: escape quotation marks ""
             else output << val;
             if (c < cols-1) output << ',';
@@ -1223,52 +631,83 @@ void KeyValues::printRowOnly(const int row, const std::vector<int>* widths) {
         }
     }
     if (format == HTML) output << "</tr>";
-    output << std::endl;
-    std::cout << output.str();
+    output << endl;
+    cout << output.str();
 }
 
-std::pair< std::vector<TKey>*, std::vector<int>* > KeyValues::getFieldsInfo(const int row, int get_widths) {
-    int plen, flen, tlen, width;
-    std::vector<int> *widths = get_widths ? new std::vector<int>() : NULL;
-    std::vector<TKey> *keys = getKeys();
-    int rows = PQntuples(select->res);
-    int cols = PQnfields(select->res);
 
-    if (!get_widths && keys) return std::make_pair(keys, widths);
-    else if (!widths || !keys || cols!=keys->size() || cols == 0 || rows == 0) {
-        destruct(widths);
-        destruct(keys);
-        return std::make_pair((std::vector<TKey>*)NULL, (std::vector<int>*)NULL);
-    }
+// =============== SETTERS (Update) ============================================
+// TODO: mozna by se dalo premyslet o PQsetvalue
 
-    // header and first row
-    for (int c = 0; c < cols; c++) {
-        // don't forget to save original value of pos beforehand!
-        this->pos = row < 0 ? 0 : row;
-        flen = (*keys)[c].key.length();  // field name length
-        tlen = (*keys)[c].type.length(); // data type string length
-        plen = getValue(c).length();     // field value string length
-        if (plen >= flen && plen >= tlen) width = plen;
-        else if (flen >= plen && flen >= tlen) width = flen;
-        else width = tlen;
-        widths->push_back(width);
-    }
+bool KeyValues::preSet() {
+    // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
+    logger->warning(3010, "Set inherited from KeyValues at class " + thisClass, thisClass+"::preSet()");
 
-    // rest of the rows
-    if (row < 0) {
-        for (int r = 1; r < rows; r++) {
-            // very ugly manipulation with pos, it needs to be reset after print
-            this->pos = r;
-            for (int c = 0; c < cols; c++) {
-                plen = getValue(c).length();
-                if (plen > (*widths)[c]) (*widths)[c] = plen;
-            }
-        }
-    }
-    if (widths->size() != keys->size()) {
-        destruct(widths);
-        destruct(keys);
-        return std::make_pair((std::vector<TKey>*)NULL, (std::vector<int>*)NULL);
-    }
-    else return std::make_pair(keys, widths);
+    destruct(this->update);
+    this->update = new Update(*this);
+    if (this->update != NULL) return true;
+    else return false;
 }
+
+// TODO: how to change binary data???
+bool KeyValues::setString(const string& key, const string& value) {
+    // call preset on the derived class
+    if (!update) this->preSet();
+
+    /* TODO: how to change the res in case of binary data???
+    if (select) {
+        // TODO: what to call in the case of binary data???
+        char* tempc = const_cast<char*>(value.c_str()); // stupid C conversions
+        PQsetvalue(select->res, pos, PQfnumber(select->res, key.c_str()), tempc, value.length());
+    } */
+
+    return update->setString(key, value);
+}
+
+bool KeyValues::setInt(const string& key, int value) {
+    // call preset on the derived class
+    if (!update) this->preSet();
+    return update->setInt(key, value);
+}
+
+bool KeyValues::setIntA(const string& key, int* values, int size){
+    // call preset on the derived class
+    if (!update) this->preSet();
+    return update->setIntA(key, values, size);
+}
+
+bool KeyValues::setFloat(const string& key, float value){
+    // call preset on the derived class
+    if (!update) this->preSet();
+    return update->setFloat(key, value);
+}
+
+bool KeyValues::setFloatA(const string& key, float* values, int size){
+    // call preset on the derived class
+    if (!update) this->preSet();
+    return update->setFloatA(key, values, size);
+}
+
+bool KeyValues::setExecute() {
+    if (this->update) return this->update->execute();
+    else return false;
+}
+
+
+// =================== ADDERS (Insert) =========================================
+bool KeyValues::addExecute() {
+    if (this->insert) return this->insert->execute();
+    else return false;
+}
+
+// =================== CHECKERS (Storage) ======================================
+bool KeyValues::checkStorage() {
+    logger->warning(3018, "Check might fail at class " + thisClass, thisClass+"::checkStorage()");
+
+    if (!sequence.empty() && fileExists(getDataLocation())) return true;
+    else if (!dataset.empty() && fileExists(getDataLocation())) return true;
+
+    return false;
+}
+
+

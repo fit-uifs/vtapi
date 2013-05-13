@@ -1,458 +1,311 @@
-/*
- * File:   query.cpp
- * Author: chmelarp
+/**
+ * @file    query.cpp
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * Created on 18. October 2011, 9:50
+ * @section DESCRIPTION
+ *
+ * Methods of Query, Select, Insert and Update classes
  */
 
-#include "vtapi.h"
+#include "vtapi_queries.h"
+
+using namespace vtapi;
 
 
-Query::Query(const Commons& commons, const String& query, PGparam* param)
-: Commons(commons), queryString(query), param(param), res(NULL), executed(false) {
-    thisClass = "Query";
+//================================== QUERY =====================================
 
-    setTable(commons.selection);
-    if (!param) this->param = PQparamCreate(connector->getConn());
+
+Query::Query(const Commons& commons, const string& initString)
+: Commons(commons) {
+    thisClass       = "Query";
+
+    queryBuilder    = BackendFactory::createQueryBuilder(FUNC_MAP, connection, logger, initString);
+    resultSet       = BackendFactory::createResultSet(FUNC_MAP, typeManager, logger);
+    this->queryBuilder->setDataset(this->dataset);
+    this->queryBuilder->setTable(this->selection);
+    executed        = false;
 }
 
 Query::~Query() {
-    if (!executed) warning(208, "The query was not executed after the last change\n" + queryString);
+    if (!executed) logger-> warning(208, "The query was not executed after the last change\n" + this->getQuery(), thisClass+"::~Query()");
 
-    PQclear(res);
-    PQparamClear(param);
-
-    this->beDoomed();
+    destruct(resultSet);
+    destruct(queryBuilder);
 }
 
-bool Query::setTable(const String& table) {
-    this->table = table;
+string Query::getQuery() {
+    return queryBuilder->getGenericQuery();
 }
 
-String Query::getQuery() {
-    if (queryString.empty()) warning(201, "Query is a virtual class... check whether got what wanted");
-    return queryString;
+bool Query::reset() {
+    executed = false;
+    return queryBuilder->reset();
 }
 
 bool Query::execute() {
-    queryString = this->getQuery();
+    int result = 0;
+    string queryString = this->getQuery();
 
-    if (verbose) logger->debug(queryString);
-    res = PQparamExec(connector->getConn(), param, queryString.c_str(), PGF);
+    logger->debug("SQL query:\n" + queryString);
+    result = connection->execute(queryString, queryBuilder->getParam());
+    executed = true;
 
-    if (!res) error(200, "Query::execute():\n" + String(PQgeterror()));
+    if (result < 0) {
+        logger->warning(200, "Query failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
+        return false;
+    }
     else {
-        executed = true;
-
-        if (verbose) {
-            if (PQresultStatus(res) == PGRES_TUPLES_OK) {
-                logger->debug(toString(PQntuples(res)) + " row(s) returned");
-            }
-            else if (PQresultStatus(res) == PGRES_COMMAND_OK) {
-                logger->debug(toString(PQcmdTuples(res)) + " row(s) (not)affected");
-            }
-            else {
-                warning(2011, "You should never see this warning since 2011 :(");
-            }
-        }
-
+        logger->debug("Query succeeded");
+        return true;
     }
-
-    return (res);
-}
-
-bool Query::keyValue(const TKey& key) {
-    if (key.size > 0) warning("TODO");
-    // keys.push_back(key);
-
-    executed = false;
-    return true;
-}
-
-bool Query::keyString(const String& key, const String& value, const String& from) {
-    TKey k("varchar", key, 1, from);
-    keys.push_back(k);
-    PQputf(param, "%varchar", value.c_str());
-
-    executed = false;
-    return true;
-}
-
-bool Query::keyInt(const String& key, int value, const String& from) {
-    TKey k("int4", key, 1, from);
-    keys.push_back(k);
-    PQputf(param, "%int4", value);
-
-    executed = false;
-    return true;
-}
-
-bool Query::keyIntA(const String& key, const int* values, const int size, const String& from) {
-    TKey k("int4[]", key, size, from);
-    keys.push_back(k);
-
-    PGarray arr;
-    arr.ndims = 0; // one dimensional arrays do not require setting dimension info
-    // FIXME: this is a potential bug
-    // arr.lbound[0] = 1;
-    arr.param = PQparamCreate(connector->conn);
-
-    // put the array elements
-    for(int i = 0; i < size; ++i) {
-        PQputf(arr.param, "%int4", values[i]);
-    }
-
-    PQputf(param, "%int4[]", &arr);
-    PQparamClear(arr.param);
-
-    executed = false;
-    return true;
-}
-
-bool Query::keyFloat(const String& key, const float value, const String& from) {
-    TKey k("float4", key, 1, from);
-    keys.push_back(k);
-    PQputf(param, "%float4", value);
-
-    executed = false;
-    return true;
-}
-
-bool Query::keyFloatA(const String& key, const float* values, const int size, const String& from) {
-    TKey k("float4[]", key, size, from);
-    keys.push_back(k);
-
-    PGarray arr;
-    arr.ndims = 0; // one dimensional arrays do not require setting dimension info
-    // FIXME: this is a potential bug
-    // arr.lbound[0] = 1;
-    arr.param = PQparamCreate(connector->conn);
-
-    // put the array elements
-    for(int i = 0; i < size; ++i) {
-        PQputf(arr.param, "%float4", values[i]);
-    }
-
-    PQputf(param, "%float4[]", &arr);
-    PQparamClear(arr.param);
-
-    executed = false;
-    return true;
-}
-
-bool Query::keySeqtype(const String& key, const String& value, const String& from) {
-    TKey k("seqtype", key, 1, from);
-    keys.push_back(k);
-    int ret = PQputf(param, "%seqtype", value.c_str());
-    if (!ret) std::cerr << PQgeterror();
-    executed = false;
-    return true;
-}
-
-bool Query::keyInouttype(const String& key, const String& value, const String& from) {
-    TKey k("inouttype", key, 1, from);
-    keys.push_back(k);
-    int ret = PQputf(param, "%inouttype", value.c_str());
-
-    if (!ret) std::cerr << PQgeterror();
-    executed = false;
-    return true;
-}
-
-bool Query::keyPermissions(const String& key, const String& value, const String& from) {
-    TKey k("permissions", key, 1, from);
-    keys.push_back(k);
-    int ret = PQputf(param, "%permissions", value.c_str());
-
-    if (!ret) std::cerr << PQgeterror();
-    executed = false;
-    return true;
-}
-
-bool Query::keyTimestamp(const String& key, const time_t& value, const String& from) {
-    PGtimestamp timestamp = {0};
-    struct tm* ts;
-
-    TKey k("timestamp", key, 1, from);
-    keys.push_back(k);
-
-    ts = localtime(&value);
-    timestamp.date.isbc = 0;
-    timestamp.date.year = ts->tm_year + 1900;
-    timestamp.date.mon = ts->tm_mon;
-    timestamp.date.mday = ts->tm_mday;
-    timestamp.time.hour = ts->tm_hour;
-    timestamp.time.min = ts->tm_min;
-    timestamp.time.sec = ts->tm_sec;
-    timestamp.time.usec = 0;
-
-    int ret = PQputf(param, "%timestamp", &timestamp);
-
-    if (!ret) std::cerr << PQgeterror();
-    executed = false;
-    return true;
 }
 
 
-String Query::escapeColumn(const String& key, const String& table) {
-    executed = false;
-
-    int keyLength = key.length();
-    String rest = "";
-
-    // FIXME: in a case, there may be a buffer overflow - do not expose comumn names!
-    // FIXME: in a case, this may reorder somethings' meaning!
-    if (key.find(':') != String::npos) {
-        keyLength = key.find(':');
-        rest += key.substr(key.find(':'));
-    } else if (key.find('[') != String::npos) {
-        keyLength = key.find('[');
-        rest += key.substr(key.find('['));
-    } else if (key.find('(') != String::npos) {
-        keyLength = key.find('(');
-        rest += key.substr(key.find('('));
-    } // else { // nothing to do
-
-    String ret = "";
-    char* c = PQescapeIdentifier(connector->conn, key.c_str(), keyLength);
-
-    if (!table.empty()) {
-        char* t = PQescapeIdentifier(connector->conn, table.c_str(), table.length());
-        ret += String(t) + ".";
-        PQfreemem(t);
-    }
-
-    ret += String(c) + rest + " ";
-    PQfreemem(c);
-
-    return ret;
-}
+//================================== SELECT ====================================
 
 
-// FIXME: tohle se musi predelat na TKeyValue
-bool Query::whereString(const String& key, const String& value, const String& oper, const String& table) {
-    if (value.empty()) return false;
-
-    if (!where.empty()) where += " AND ";
-    where += escapeColumn(key, table);
-
-    // FIXME: buffer overflow!! use params!
-    if (value.compare("NULL") == 0) {
-        where += "IS NULL";
-    }
-    else if (value.compare("NOT NULL") == 0) {
-        where += "IS NOT NULL";
-    } else {
-        where += oper + " " + String(PQescapeLiteral(connector->conn, value.c_str(), value.length()));
-    }
-
-    return true;
-}
-
-
-// FIXME: tohle se musi predelat na TKeyValue
-bool Query::whereInt(const String& key, const int value, const String& oper, const String& table) {
-
-    if (!where.empty()) where += " AND ";
-    where += escapeColumn(key, table);
-
-    where += oper + " " + toString(value);
-
-    executed = false;
-    return true;
-}
-
-// FIXME: tohle se musi predelat na TKeyValue
-bool Query::whereFloat(const String& key, const float value, const String& oper, const String& table) {
-
-    if (!where.empty()) where += " AND ";
-    where += escapeColumn(key, table);
-
-    where += oper + " " + toString(value);
-
-    executed = false;
-    return true;
-}
-
-
-// ************************************************************************** //
-// Select::Select() { }
-Select::Select(const Commons& commons, const String& queryString, PGparam* param)
-: Query(commons, queryString, param) {
+Select::Select(const Commons& commons, const string& initString)
+: Query(commons, initString) {
     thisClass = "Select";
-
-    limit = commons.queryLimit;
-    offset = 0;
+    this->limit = queryLimit;
+    this->offset = 0;
 }
 
-// FIXME: tohle se musi predelat na TKey
-bool Select::from(const String& table, const String& column) {
-    String t = table;
-    if (this->table.empty()) this->table = table;
-    else if (table.empty()) t = this->table;
-    fromList.insert(std::pair<String, String > (t, column));
-    executed = false;
-    return true;
+string Select::getQuery() {
+    return queryBuilder->getSelectQuery(groupby, orderby, limit, offset);
 }
 
-// TODO: dat do hlavicky
-bool Select::function(const String& funtext) {
+bool Select::function(const string& funtext) {
     // TODO: 
 }
 
+bool Select::execute() {
+    int result = 0;
+    string queryString = this->getQuery();
 
-// FIXME: vyuzit params (zauvozovkovat nazvy tabulek a datasetu???)
-String Select::getQuery() {
-    if (fromList.empty()) {
-        if (!queryString.empty()) return queryString; // in case of a direct query
-        // else add * from this->table
-        else if (!table.empty()) {
-            this->from(table, "*");
-        }
-        else warning(2012, "No table specified - don't know how to make a query.");
+    logger->debug("Select query:\n" + queryString);
+    result = connection->fetch(queryString, queryBuilder->getParam(), resultSet);
+    executed = true;
+
+    if (result < 0) {
+        logger->warning(200, "SELECT failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
+        return false;
     }
-
-    queryString = "SELECT ";
-    String tmpStr = "";
-    
-    // this is the previous value ... is it the same in this ordered list???
-    std::multimap<String, String>::iterator ilast = fromList.end();
-
-    // make the SELECT and FROM statement
-    for (std::multimap<String, String>::iterator ii = fromList.begin(); ii != fromList.end(); ++ii) {
-        String tmpTable = (*ii).first;
-        if (tmpTable.find(".") == String::npos) tmpTable = this->getDataset() + "." + tmpTable;
-
-        String tmpColumn = (*ii).second;
-        if (tmpColumn.empty() || tmpColumn.compare("*") == 0) {
-            queryString += tmpTable + ".*, ";
-        }
-        else {
-            char* escapedIdent = PQescapeIdentifier(connector->conn, tmpColumn.c_str(), tmpColumn.length());
-            queryString += tmpTable + "." + escapeColumn(tmpColumn);
-            queryString += toString("AS ") + escapedIdent + ", ";
-            PQfreemem(escapedIdent);
-        }
-
-        // tables in the from list should not be specified multiple times -> use views instead!
-        if (ilast==fromList.end() || (*ii).first.compare((*ilast).first)!=0) {
-            if (!tmpStr.empty()) tmpStr += ", "; // " NATURAL JOIN ";
-            tmpStr += tmpTable;
-        }
-
-        ilast = ii;
+    else {        
+        logger->debug("SELECT succeeded, "+toString(result)+" row(s) returned");
+        return true;
     }
-    // TODO: zajistit, aby se daly zpracovat funkce a prazdny from
-
-    // if there are some fields
-    if (queryString.length() < 10 || tmpStr.empty())
-        error(201, "Select::getQuery():\n" + queryString + "\n" + tmpStr);
-
-    queryString.erase(queryString.length() - 2);
-    queryString += "\n  FROM " + tmpStr;
-
-    // FIXME: the rest should be done as above + using params...
-    if (!where.empty()) {
-        queryString += "\n  WHERE " + where;
-    }
-
-    if (!groupby.empty()) {
-        queryString += "\n  GROUP BY " + groupby;
-    }
-
-    if (!orderby.empty()) {
-        queryString += "\n  ORDER BY " + orderby;
-    }
-
-    if (limit > 0) {
-        queryString += "\n  LIMIT " + toString(limit);
-    }
-
-    if (offset > 0) {
-        queryString += "\n  OFFSET " + toString(offset);
-    }
-    queryString += ";";
-    return (queryString);
 }
 
 bool Select::executeNext() {
     if (limit > 0) {
-        if (res) PQclear(res);
         offset += limit;
         return this->execute();
     }
     else return false;
 }
 
+bool Select::from(const string& table, const string& column) {
+    this->queryBuilder->keyFrom(table, column);
+    executed = false;
+    return true;
+}
 
-// ************************************************************************** //
-// Insert::Insert() { }
-Insert::Insert(const Commons& commons, const String& queryString, PGparam* param)
-: Query(commons, queryString, param) {
+bool Select::whereString(const string& key, const string& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereString(key, value, oper, from);
+}
+bool Select::whereInt(const string& key, const int value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereInt(key, value, oper, from);
+}
+bool Select::whereFloat(const string& key, const float value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereFloat(key, value, oper, from);
+}
+bool Select::whereSeqtype(const string& key, const string& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereSeqtype(key, value, oper, from);
+}
+bool Select::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereInouttype(key, value, oper, from);
+}
+bool Select::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereTimestamp(key, value, oper, from);
+}
+
+//================================== INSERT ====================================
+
+
+Insert::Insert(const Commons& commons, const string& initString)
+: Query(commons, initString) {
     thisClass = "Insert";
 }
 
-String Insert::getQuery() {
-    if (keys.empty()) return queryString; // in case of a direct query
-
-    // in case we're lazy, we have the table specified in the queryString
-    if (table.empty() && queryString.find("INSERT") == String::npos) table = queryString;
-    
-    // add the dataset selected and escape identifiers
-    if (table.find(".") == String::npos) {
-        table = String(PQescapeIdentifier(connector->conn, this->dataset.c_str(), this->dataset.length())) +
-              "." + String(PQescapeIdentifier(connector->conn, table.c_str(), table.length()));
-    }
-
-    queryString = "INSERT INTO " + table + "(";
-    String tmpStr;
-
-    // go through keys
-    for (int i = 0; i < keys.size(); ++i) {
-        queryString += String(PQescapeIdentifier(connector->conn, keys[i].key.c_str(), keys[i].key.length())) + ", ";
-        tmpStr += "$" + toString(i+1) + ", ";
-    }
-    // this is to remove ending separators
-    queryString.erase(queryString.length()-2);
-    tmpStr.erase(tmpStr.length()-2);
-
-    queryString += ") VALUES(" + tmpStr + ");";
-
-    return queryString;
+string Insert::getQuery() {
+    return queryBuilder->getInsertQuery();
 }
 
 
-// *****************************************************************************
-Update::Update(const Commons& commons, const String& queryString, PGparam* param)
-       : Query(commons, queryString, param) {
+bool Insert::execute() {
+    int result = 0;
+    string queryString = this->getQuery();
+
+    logger->debug("Insert query:\n" + queryString);
+    result = connection->execute(queryString, queryBuilder->getParam());
+    executed = true;
+
+    if (result < 0) {
+        logger->warning(200, "INSERT failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
+        return false;
+    }
+    else {
+        logger->debug("INSERT succeeded, "+toString(result)+" row(s) inserted");
+        return true;
+    }
+}
+
+bool Insert::keyString(const string& key, const string& value, const string& from) {
+    executed = false;
+    return this->queryBuilder->keyString(key, value, from);
+}
+bool Insert::keyStringA(const string& key, string* values, const int size, const string& from) {
+    executed = false;
+    return this->queryBuilder->keyStringA(key, values, size, from);
+}
+bool Insert::keyInt(const string& key, int value, const string& from) {
+    executed = false;
+    return this->queryBuilder->keyInt(key, value, from);
+}
+bool Insert::keyIntA(const string& key, int* values, const int size, const string& from) {
+    executed = false;
+    return this->queryBuilder->keyIntA(key, values, size, from);
+}
+bool Insert::keyFloat(const string& key, float value, const string& from){
+    executed = false;
+    return this->queryBuilder->keyFloat(key, value, from);
+}
+bool Insert::keyFloatA(const string& key, float* values, const int size, const string& from){
+    executed = false;
+    return this->queryBuilder->keyFloatA(key, values, size, from);
+}
+bool Insert::keySeqtype(const string& key, const string& value, const string& from){
+    executed = false;
+    return this->queryBuilder->keySeqtype(key, value, from);
+}
+bool Insert::keyInouttype(const string& key, const string& value, const string& from){
+    executed = false;
+    return this->queryBuilder->keyInouttype(key, value, from);
+}
+//bool Insert::keyPermissions(const string& key, const string& value, const string& from){
+//    executed = false;
+//    this->queryBuilder->keyPermissions(key, value, from);
+//}
+bool Insert::keyTimestamp(const string& key, const time_t& value, const string& from){
+    executed = false;
+    this->queryBuilder->keyTimestamp(key, value, from);
+}
+
+
+//================================= UPDATE =====================================
+
+
+Update::Update(const Commons& commons, const string& initString)
+: Query(commons, initString) {
     thisClass = "Update";
 
 }
 
-String Update::getQuery() {
-    if (keys.empty()) return queryString; // in case of a direct query
+string Update::getQuery() {
+    return queryBuilder->getUpdateQuery();
+}
 
-    // in case we're lazy, we have the table specified in the queryString
-    if (table.empty() && queryString.find("UPDATE") == String::npos) table = queryString;
+bool Update::execute() {
+    int result = 0;
+    string queryString = this->getQuery();
 
-    // add the dataset selected and escape identifiers
-    if (table.find(".") == String::npos) {
-        table = String(PQescapeIdentifier(connector->conn, this->dataset.c_str(), this->dataset.length())) +
-              "." + String(PQescapeIdentifier(connector->conn, table.c_str(), table.length()));
+    logger->debug("Update query:\n" + queryString);
+    result = connection->execute(queryString, queryBuilder->getParam());
+    executed = true;
+
+    if (result < 0) {
+        logger->warning(200, "UPDATE failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
+        return false;
     }
-
-    queryString = "UPDATE " + table + " SET ";
-
-    // go through keys
-    for (int i = 0; i < keys.size(); ++i) {
-        queryString += String(PQescapeIdentifier(connector->conn, keys[i].key.c_str(), keys[i].key.length()))
-                + "=$" + toString(i+1) + ", ";
+    else {
+        executed = true;
+        logger->debug("UPDATE succeeded, "+toString(result)+" row(s) updated");
+        return true;
     }
-    // this is to remove ending separators
-    queryString.erase(queryString.length()-2);
+}
 
-    // MAYBE a where list
-    queryString += " WHERE " + where + ";";
+bool Update::setString(const string& key, const string& value, const string& from) {
+    executed = false;
+    return this->queryBuilder->keyString(key, value, from);
+}
+bool Update::setStringA(const string& key, string* values, const int size, const string& from) {
+    executed = false;
+    return this->queryBuilder->keyStringA(key, values, size, from);
+}
+bool Update::setInt(const string& key, int value, const string& from) {
+    executed = false;
+    return this->queryBuilder->keyInt(key, value, from);
+}
+bool Update::setIntA(const string& key, int* values, const int size, const string& from) {
+    executed = false;
+    return this->queryBuilder->keyIntA(key, values, size, from);
+}
+bool Update::setFloat(const string& key, float value, const string& from){
+    executed = false;
+    return this->queryBuilder->keyFloat(key, value, from);
+}
+bool Update::setFloatA(const string& key, float* values, const int size, const string& from){
+    executed = false;
+    return this->queryBuilder->keyFloatA(key, values, size, from);
+}
+bool Update::setSeqtype(const string& key, const string& value, const string& from){
+    executed = false;
+    return this->queryBuilder->keySeqtype(key, value, from);
+}
+bool Update::setInouttype(const string& key, const string& value, const string& from){
+    executed = false;
+    return this->queryBuilder->keyInouttype(key, value, from);
+}
+//bool Update::setPermissions(const string& key, const string& value, const string& from){
+//    executed = false;
+//    this->queryBuilder->keyPermissions(key, value, from);
+//}
+bool Update::setTimestamp(const string& key, const time_t& value, const string& from){
+    executed = false;
+    this->queryBuilder->keyTimestamp(key, value, from);
+}
 
-    return queryString;
+bool Update::whereString(const string& key, const string& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereString(key, value, oper, from);
+}
+bool Update::whereInt(const string& key, const int value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereInt(key, value, oper, from);
+}
+bool Update::whereFloat(const string& key, const float value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereFloat(key, value, oper, from);
+}
+bool Update::whereSeqtype(const string& key, const string& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereSeqtype(key, value, oper, from);
+}
+bool Update::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereInouttype(key, value, oper, from);
+}
+bool Update::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereTimestamp(key, value, oper, from);
 }

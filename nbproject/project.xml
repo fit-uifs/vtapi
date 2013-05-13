@@ -13,7 +13,7 @@
             <confList>
                 <confElem>Debug</confElem>
                 <confElem>Release</confElem>
-		<confElem>Windows</confElem>
+                <confElem>Windows</confElem>
             </confList>
         </data>
     </configuration>

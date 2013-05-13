@@ -1,13 +1,23 @@
-/* 
- * File:   Interval.cpp
- * Author: chmelarp
- * 
- * Created on 29. září 2011, 10:54
+/**
+ * @file    interval.cpp
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
+ *
+ * @section DESCRIPTION
+ *
+ * Methods of Interval and Image classes
  */
 
-#include "vtapi.h"
+#include "data/vtapi_interval.h"
 
-Interval::Interval(const KeyValues& orig, const String& selection) : KeyValues(orig) {
+using namespace vtapi;
+
+
+//================================= INTERVAL ===================================
+
+Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(orig) {
     thisClass = "Interval";
 
     if (!selection.empty()) this->selection = selection;
@@ -16,33 +26,20 @@ Interval::Interval(const KeyValues& orig, const String& selection) : KeyValues(o
     select->from(this->selection, "*");
     select->whereString("seqname", this->sequence);
 
-    // thi is to detect if derived from a Sequence (highly recommended)
-    parentSequence = NULL;
-    parentSequenceDoom = true;
-    if (!orig.sequenceLocation.empty()) {
-        parentSequence = (Sequence*)&orig;
-        parentSequenceDoom = false;
-    }
 }
 
-
-
-String Interval::getSequenceName() {
+string Interval::getSequenceName() {
     // TODO: possibly empty... possible warning 332
     return this->sequence;
 }
 
-
-Sequence* Interval::getSequence() {
-    if (parentSequence && this->sequence.compare(parentSequence->sequence) == 0) {
-        return this->parentSequence;
-    }
-    else {  // TODO: This is not OK... should be a query
-        this->error(333, "The use of getSequence() function is not recomended without using the Sequence first.");
-        // TODO: doom it here && query for next one??? (just in case when needed)
-    }
-
-    return NULL;
+//TODO: pres query
+Sequence* Interval::getParentSequence() {
+    Sequence *seq = NULL;
+    if (!this->sequence.empty()) {
+        seq = new Sequence(*this, this->sequence);
+    }  
+    return seq;
 }
 
 
@@ -56,7 +53,7 @@ int Interval::getEndTime() {
 }
 
 
-bool Interval::add(const String& sequence, const int t1, const int t2, const String& location) {
+bool Interval::add(const string& sequence, const int t1, const int t2, const string& location) {
     bool retval = true;
     int te2 = (t2 < 0) ? t1 : t2;
 
@@ -72,8 +69,8 @@ bool Interval::add(const String& sequence, const int t1, const int t2, const Str
     return retval;
 }
 
-bool Interval::add(const String& sequence, const int t1, const int t2, const String& location,
-    const String& userid, const String& notes) {
+bool Interval::add(const string& sequence, const int t1, const int t2, const string& location,
+    const string& userid, const string& notes) {
     bool retval = this->add(sequence, t1, t2, location);
     retval &= insert->keyString("userid", userid);
     retval &= insert->keyString("notes", notes);
@@ -87,7 +84,7 @@ bool Interval::addExecute() {
         time_t now;
         time(&now);
         retval &= insert->keyTimestamp("created", now);
-        retval &= this->insert->execute();
+        retval &= insert->execute();
     }
     else retval = false;
     return retval;
@@ -106,8 +103,10 @@ bool Interval::preSet() {
 }
 
 
-// ************************************************************************** //
-Image::Image(const KeyValues& orig, const String& selection) : Interval(orig, selection) {
+//=================================== IMAGE ====================================
+
+
+Image::Image(const KeyValues& orig, const string& selection) : Interval(orig, selection) {
     thisClass = "Image";
 }
 
@@ -116,20 +115,20 @@ int Image::getTime() {
     int t2 = this->getEndTime();
 
     if (t1 != t2) {
-        warning(3291, "This is not an Image (see output if verbose)");
+        logger->warning(3291, "This is not an Image (see output if verbose)", thisClass+"::getTime()");
         // if (verbose) this->print();
     }
     return t1;
 }
 
-bool Image::add(const String& sequence, const int t, const String& location) {
+bool Image::add(const string& sequence, const int t, const string& location) {
     ((Interval*)this)->add(sequence, t, t, location);
 }
 
-String Image::getLocation() {
+string Image::getImgLocation() {
     return this->getString("imglocation");
 }
 
-String Image::getDataLocation() {
-    return (((Commons*)this)->getDataLocation() + this->getLocation());
+string Image::getDataLocation() {
+    return (this->getDataLocation() + this->getImgLocation());
 }

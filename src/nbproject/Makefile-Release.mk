@@ -33,19 +33,22 @@ OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/timexer.o \
+	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/sequence.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/vtapi_settings.o \
-	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/method.o \
+	${OBJECTDIR}/vtapi_misc.o \
+	${OBJECTDIR}/logger.o \
 	${OBJECTDIR}/vtapi.o \
-	${OBJECTDIR}/video.o \
-	${OBJECTDIR}/vtapi_libpq.o \
+	${OBJECTDIR}/backend_sl.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/process.o \
-	${OBJECTDIR}/typemap.o \
+	${OBJECTDIR}/backend_pg.o \
 	${OBJECTDIR}/query.o \
-	${OBJECTDIR}/dataset.o
+	${OBJECTDIR}/dataset.o \
+	${OBJECTDIR}/tkey.o
 
 
 # C Compiler Flags
@@ -72,6 +75,16 @@ dist/Release/GNU-Linux-x86/src: ${OBJECTFILES}
 	${MKDIR} -p dist/Release/GNU-Linux-x86
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/src ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
+${OBJECTDIR}/timexer.o: timexer.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/timexer.o timexer.cpp
+
+${OBJECTDIR}/interval.o: interval.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
+
 ${OBJECTDIR}/sequence.o: sequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -87,30 +100,30 @@ ${OBJECTDIR}/vtapi_settings.o: vtapi_settings.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_settings.o vtapi_settings.cpp
 
-${OBJECTDIR}/interval.o: interval.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/interval.o interval.cpp
-
 ${OBJECTDIR}/method.o: method.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
+
+${OBJECTDIR}/vtapi_misc.o: vtapi_misc.c 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_misc.o vtapi_misc.c
+
+${OBJECTDIR}/logger.o: logger.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/logger.o logger.cpp
 
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi.o vtapi.cpp
 
-${OBJECTDIR}/video.o: video.cpp 
+${OBJECTDIR}/backend_sl.o: backend_sl.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/video.o video.cpp
-
-${OBJECTDIR}/vtapi_libpq.o: vtapi_libpq.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_libpq.o vtapi_libpq.c
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/backend_sl.o backend_sl.cpp
 
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -122,10 +135,10 @@ ${OBJECTDIR}/process.o: process.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/process.o process.cpp
 
-${OBJECTDIR}/typemap.o: typemap.cpp 
+${OBJECTDIR}/backend_pg.o: backend_pg.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
-	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/typemap.o typemap.cpp
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/backend_pg.o backend_pg.cpp
 
 ${OBJECTDIR}/query.o: query.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -136,6 +149,11 @@ ${OBJECTDIR}/dataset.o: dataset.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
+
+${OBJECTDIR}/tkey.o: tkey.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/tkey.o tkey.cpp
 
 # Subprojects
 .build-subprojects:

@@ -23,7 +23,7 @@
 
 #include <getopt.h>
 
-#include "vtapi_settings.h"
+#include "common/vtapi_settings.h"
 
 const char *gengetopt_args_info_purpose = "";
 
@@ -39,20 +39,20 @@ const char *gengetopt_args_info_help[] = {
   "\n Config arguments",
   "      --config=FILENAME    Config file location  (default=`./vtapi.conf')",
   "      --log=FILENAME       Log file location  (default=`./vtapi.log')",
+  "  -l, --location=FILENAME  Base location of data files",
+  "  -b, --backend=STRING     Database backend  (possible values=\"postgres\", \n                             \"sqlite\")",
+  "  -c, --connection=STRING  Connection string \"host=.. port=.. dbname=.. \n                             user=.. password=..\"",
+  "  -d, --dbfolder=FILENAME  SQlite databases folder  (default=`./sqlite')",
   "  -u, --user=STRING        User name",
   "  -p, --password=STRING    User password",
-  "  -l, --location=filename  Base location of data files",
-  "  -c, --connection=STRING  Connection string \"host=.. port=.. dbname=.. \n                             user=.. password=..\"",
   "  -f, --format=STRING      Input/output format  (possible values=\"standard\", \n                             \"csv\", \"html\", \"binary\", \"sparse\", \n                             \"html\" default=`standard')",
   "  -i, --input=FILENAME     Read from specific input",
   "  -o, --output=FILENAME    Write to specific output",
   "      --querylimit=INT     Limit number of rows fetched at once (0 - unlimited)",
   "      --arraylimit=INT     Limit amount of printed array elements",
   "\n Context specification (WHERE clause)",
-  "  -W, --where=SQLSTRING    explicit WHERE, ex.: --where=\"features is NULL\"",
   "  -D, --dataset=STRING     Set dataset to use",
   "  -S, --sequence=STRING    Set sequence to use",
-  "  -I, --interval=STRING    Set interval to use",
   "  -M, --method=STRING      Set method to use",
   "  -P, --process=STRING     Set process to use",
   "  -E, --selection=STRING   Set selection to use",
@@ -101,6 +101,7 @@ free_cmd_list(void)
 }
 
 
+const char *cmdline_parser_backend_values[] = {"postgres", "sqlite", 0}; /*< Possible values for backend. */
 const char *cmdline_parser_format_values[] = {"standard", "csv", "html", "binary", "sparse", "html", 0}; /*< Possible values for format. */
 
 static char *
@@ -114,19 +115,19 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->verbose_given = 0 ;
   args_info->config_given = 0 ;
   args_info->log_given = 0 ;
+  args_info->location_given = 0 ;
+  args_info->backend_given = 0 ;
+  args_info->connection_given = 0 ;
+  args_info->dbfolder_given = 0 ;
   args_info->user_given = 0 ;
   args_info->password_given = 0 ;
-  args_info->location_given = 0 ;
-  args_info->connection_given = 0 ;
   args_info->format_given = 0 ;
   args_info->input_given = 0 ;
   args_info->output_given = 0 ;
   args_info->querylimit_given = 0 ;
   args_info->arraylimit_given = 0 ;
-  args_info->where_given = 0 ;
   args_info->dataset_given = 0 ;
   args_info->sequence_given = 0 ;
-  args_info->interval_given = 0 ;
   args_info->method_given = 0 ;
   args_info->process_given = 0 ;
   args_info->selection_given = 0 ;
@@ -140,14 +141,18 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->config_orig = NULL;
   args_info->log_arg = gengetopt_strdup ("./vtapi.log");
   args_info->log_orig = NULL;
+  args_info->location_arg = NULL;
+  args_info->location_orig = NULL;
+  args_info->backend_arg = NULL;
+  args_info->backend_orig = NULL;
+  args_info->connection_arg = NULL;
+  args_info->connection_orig = NULL;
+  args_info->dbfolder_arg = gengetopt_strdup ("./sqlite");
+  args_info->dbfolder_orig = NULL;
   args_info->user_arg = NULL;
   args_info->user_orig = NULL;
   args_info->password_arg = NULL;
   args_info->password_orig = NULL;
-  args_info->location_arg = NULL;
-  args_info->location_orig = NULL;
-  args_info->connection_arg = NULL;
-  args_info->connection_orig = NULL;
   args_info->format_arg = gengetopt_strdup ("standard");
   args_info->format_orig = NULL;
   args_info->input_arg = NULL;
@@ -156,14 +161,10 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->output_orig = NULL;
   args_info->querylimit_orig = NULL;
   args_info->arraylimit_orig = NULL;
-  args_info->where_arg = NULL;
-  args_info->where_orig = NULL;
   args_info->dataset_arg = NULL;
   args_info->dataset_orig = NULL;
   args_info->sequence_arg = NULL;
   args_info->sequence_orig = NULL;
-  args_info->interval_arg = NULL;
-  args_info->interval_orig = NULL;
   args_info->method_arg = NULL;
   args_info->method_orig = NULL;
   args_info->process_arg = NULL;
@@ -183,19 +184,19 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->verbose_help = gengetopt_args_info_help[3] ;
   args_info->config_help = gengetopt_args_info_help[5] ;
   args_info->log_help = gengetopt_args_info_help[6] ;
-  args_info->user_help = gengetopt_args_info_help[7] ;
-  args_info->password_help = gengetopt_args_info_help[8] ;
-  args_info->location_help = gengetopt_args_info_help[9] ;
-  args_info->connection_help = gengetopt_args_info_help[10] ;
-  args_info->format_help = gengetopt_args_info_help[11] ;
-  args_info->input_help = gengetopt_args_info_help[12] ;
-  args_info->output_help = gengetopt_args_info_help[13] ;
-  args_info->querylimit_help = gengetopt_args_info_help[14] ;
-  args_info->arraylimit_help = gengetopt_args_info_help[15] ;
-  args_info->where_help = gengetopt_args_info_help[17] ;
-  args_info->dataset_help = gengetopt_args_info_help[18] ;
-  args_info->sequence_help = gengetopt_args_info_help[19] ;
-  args_info->interval_help = gengetopt_args_info_help[20] ;
+  args_info->location_help = gengetopt_args_info_help[7] ;
+  args_info->backend_help = gengetopt_args_info_help[8] ;
+  args_info->connection_help = gengetopt_args_info_help[9] ;
+  args_info->dbfolder_help = gengetopt_args_info_help[10] ;
+  args_info->user_help = gengetopt_args_info_help[11] ;
+  args_info->password_help = gengetopt_args_info_help[12] ;
+  args_info->format_help = gengetopt_args_info_help[13] ;
+  args_info->input_help = gengetopt_args_info_help[14] ;
+  args_info->output_help = gengetopt_args_info_help[15] ;
+  args_info->querylimit_help = gengetopt_args_info_help[16] ;
+  args_info->arraylimit_help = gengetopt_args_info_help[17] ;
+  args_info->dataset_help = gengetopt_args_info_help[19] ;
+  args_info->sequence_help = gengetopt_args_info_help[20] ;
   args_info->method_help = gengetopt_args_info_help[21] ;
   args_info->process_help = gengetopt_args_info_help[22] ;
   args_info->selection_help = gengetopt_args_info_help[23] ;
@@ -286,14 +287,18 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->config_orig));
   free_string_field (&(args_info->log_arg));
   free_string_field (&(args_info->log_orig));
+  free_string_field (&(args_info->location_arg));
+  free_string_field (&(args_info->location_orig));
+  free_string_field (&(args_info->backend_arg));
+  free_string_field (&(args_info->backend_orig));
+  free_string_field (&(args_info->connection_arg));
+  free_string_field (&(args_info->connection_orig));
+  free_string_field (&(args_info->dbfolder_arg));
+  free_string_field (&(args_info->dbfolder_orig));
   free_string_field (&(args_info->user_arg));
   free_string_field (&(args_info->user_orig));
   free_string_field (&(args_info->password_arg));
   free_string_field (&(args_info->password_orig));
-  free_string_field (&(args_info->location_arg));
-  free_string_field (&(args_info->location_orig));
-  free_string_field (&(args_info->connection_arg));
-  free_string_field (&(args_info->connection_orig));
   free_string_field (&(args_info->format_arg));
   free_string_field (&(args_info->format_orig));
   free_string_field (&(args_info->input_arg));
@@ -302,14 +307,10 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->output_orig));
   free_string_field (&(args_info->querylimit_orig));
   free_string_field (&(args_info->arraylimit_orig));
-  free_string_field (&(args_info->where_arg));
-  free_string_field (&(args_info->where_orig));
   free_string_field (&(args_info->dataset_arg));
   free_string_field (&(args_info->dataset_orig));
   free_string_field (&(args_info->sequence_arg));
   free_string_field (&(args_info->sequence_orig));
-  free_string_field (&(args_info->interval_arg));
-  free_string_field (&(args_info->interval_orig));
   free_string_field (&(args_info->method_arg));
   free_string_field (&(args_info->method_orig));
   free_string_field (&(args_info->process_arg));
@@ -402,14 +403,18 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "config", args_info->config_orig, 0);
   if (args_info->log_given)
     write_into_file(outfile, "log", args_info->log_orig, 0);
+  if (args_info->location_given)
+    write_into_file(outfile, "location", args_info->location_orig, 0);
+  if (args_info->backend_given)
+    write_into_file(outfile, "backend", args_info->backend_orig, cmdline_parser_backend_values);
+  if (args_info->connection_given)
+    write_into_file(outfile, "connection", args_info->connection_orig, 0);
+  if (args_info->dbfolder_given)
+    write_into_file(outfile, "dbfolder", args_info->dbfolder_orig, 0);
   if (args_info->user_given)
     write_into_file(outfile, "user", args_info->user_orig, 0);
   if (args_info->password_given)
     write_into_file(outfile, "password", args_info->password_orig, 0);
-  if (args_info->location_given)
-    write_into_file(outfile, "location", args_info->location_orig, 0);
-  if (args_info->connection_given)
-    write_into_file(outfile, "connection", args_info->connection_orig, 0);
   if (args_info->format_given)
     write_into_file(outfile, "format", args_info->format_orig, cmdline_parser_format_values);
   if (args_info->input_given)
@@ -420,14 +425,10 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "querylimit", args_info->querylimit_orig, 0);
   if (args_info->arraylimit_given)
     write_into_file(outfile, "arraylimit", args_info->arraylimit_orig, 0);
-  if (args_info->where_given)
-    write_into_file(outfile, "where", args_info->where_orig, 0);
   if (args_info->dataset_given)
     write_into_file(outfile, "dataset", args_info->dataset_orig, 0);
   if (args_info->sequence_given)
     write_into_file(outfile, "sequence", args_info->sequence_orig, 0);
-  if (args_info->interval_given)
-    write_into_file(outfile, "interval", args_info->interval_orig, 0);
   if (args_info->method_given)
     write_into_file(outfile, "method", args_info->method_orig, 0);
   if (args_info->process_given)
@@ -532,9 +533,9 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   FIX_UNUSED (additional_error);
 
   /* checks for required options */
-  if (! args_info->connection_given)
+  if (! args_info->backend_given)
     {
-      fprintf (stderr, "%s: '--connection' ('-c') option required%s\n", prog_name, (additional_error ? additional_error : ""));
+      fprintf (stderr, "%s: '--backend' ('-b') option required%s\n", prog_name, (additional_error ? additional_error : ""));
       error = 1;
     }
   
@@ -715,26 +716,26 @@ cmdline_parser_internal (
         { "verbose",	0, NULL, 'v' },
         { "config",	1, NULL, 0 },
         { "log",	1, NULL, 0 },
+        { "location",	1, NULL, 'l' },
+        { "backend",	1, NULL, 'b' },
+        { "connection",	1, NULL, 'c' },
+        { "dbfolder",	1, NULL, 'd' },
         { "user",	1, NULL, 'u' },
         { "password",	1, NULL, 'p' },
-        { "location",	1, NULL, 'l' },
-        { "connection",	1, NULL, 'c' },
         { "format",	1, NULL, 'f' },
         { "input",	1, NULL, 'i' },
         { "output",	1, NULL, 'o' },
         { "querylimit",	1, NULL, 0 },
         { "arraylimit",	1, NULL, 0 },
-        { "where",	1, NULL, 'W' },
         { "dataset",	1, NULL, 'D' },
         { "sequence",	1, NULL, 'S' },
-        { "interval",	1, NULL, 'I' },
         { "method",	1, NULL, 'M' },
         { "process",	1, NULL, 'P' },
         { "selection",	1, NULL, 'E' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvu:p:l:c:f:i:o:W:D:S:I:M:P:E:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvl:b:c:d:u:p:f:i:o:D:S:M:P:E:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -762,6 +763,54 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'l':	/* Base location of data files.  */
+        
+        
+          if (update_arg( (void *)&(args_info->location_arg), 
+               &(args_info->location_orig), &(args_info->location_given),
+              &(local_args_info.location_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "location", 'l',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'b':	/* Database backend.  */
+        
+        
+          if (update_arg( (void *)&(args_info->backend_arg), 
+               &(args_info->backend_orig), &(args_info->backend_given),
+              &(local_args_info.backend_given), optarg, cmdline_parser_backend_values, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "backend", 'b',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'c':	/* Connection string \"host=.. port=.. dbname=.. user=.. password=..\".  */
+        
+        
+          if (update_arg( (void *)&(args_info->connection_arg), 
+               &(args_info->connection_orig), &(args_info->connection_given),
+              &(local_args_info.connection_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "connection", 'c',
+              additional_error))
+            goto failure;
+        
+          break;
+        case 'd':	/* SQlite databases folder.  */
+        
+        
+          if (update_arg( (void *)&(args_info->dbfolder_arg), 
+               &(args_info->dbfolder_orig), &(args_info->dbfolder_given),
+              &(local_args_info.dbfolder_given), optarg, 0, "./sqlite", ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "dbfolder", 'd',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'u':	/* User name.  */
         
         
@@ -782,30 +831,6 @@ cmdline_parser_internal (
               &(local_args_info.password_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "password", 'p',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'l':	/* Base location of data files.  */
-        
-        
-          if (update_arg( (void *)&(args_info->location_arg), 
-               &(args_info->location_orig), &(args_info->location_given),
-              &(local_args_info.location_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "location", 'l',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'c':	/* Connection string \"host=.. port=.. dbname=.. user=.. password=..\".  */
-        
-        
-          if (update_arg( (void *)&(args_info->connection_arg), 
-               &(args_info->connection_orig), &(args_info->connection_given),
-              &(local_args_info.connection_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "connection", 'c',
               additional_error))
             goto failure;
         
@@ -846,18 +871,6 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'W':	/* explicit WHERE, ex.: --where=\"features is NULL\".  */
-        
-        
-          if (update_arg( (void *)&(args_info->where_arg), 
-               &(args_info->where_orig), &(args_info->where_given),
-              &(local_args_info.where_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "where", 'W',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'D':	/* Set dataset to use.  */
         
         
@@ -878,18 +891,6 @@ cmdline_parser_internal (
               &(local_args_info.sequence_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
               "sequence", 'S',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'I':	/* Set interval to use.  */
-        
-        
-          if (update_arg( (void *)&(args_info->interval_arg), 
-               &(args_info->interval_orig), &(args_info->interval_given),
-              &(local_args_info.interval_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "interval", 'I',
               additional_error))
             goto failure;
         

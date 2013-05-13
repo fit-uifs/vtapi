@@ -1,13 +1,24 @@
-/* 
- * File:   Sequence.cpp
- * Author: chmelarp
- * 
- * Created on 29. září 2011, 10:53
+/**
+ * @file    sequence.cpp
+ * @author  VTApi Team, FIT BUT, CZ
+ * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
+ * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
+ * @author  Tomas Volf, ivolf@fit.vutbr.cz
+ *
+ * @section DESCRIPTION
+ *
+ * Methods of Sequence, Video and VideoPlayer classes
  */
 
-#include "vtapi.h"
+#include "data/vtapi_sequence.h"
 
-Sequence::Sequence(const KeyValues& orig, const String& name) : KeyValues(orig) {
+using namespace vtapi;
+
+
+//================================ SEQUENCE ====================================
+
+
+Sequence::Sequence(const KeyValues& orig, const string& name) : KeyValues(orig) {
     thisClass = "Sequence";
 
     if (!name.empty()) this->sequence = name;
@@ -15,7 +26,6 @@ Sequence::Sequence(const KeyValues& orig, const String& name) : KeyValues(orig) 
     select = new Select(orig);
     select->from("sequences", "*");
     select->whereString("seqname", this->sequence);
-    // res = PQexecf(connector->getConn(), String("SELECT * FROM "+ getString("dsname") +".sequences;").c_str());
 }
 
 bool Sequence::next() {
@@ -29,11 +39,11 @@ bool Sequence::next() {
 }
 
 
-String Sequence::getName() {
+string Sequence::getName() {
     return this->getString("seqname");
 }
 
-String Sequence::getLocation() {
+string Sequence::getLocation() {
     return this->getString("seqlocation");
 }
 
@@ -41,14 +51,14 @@ Interval* Sequence::newInterval(const int t1, const int t2) {
     return new Interval(*this);
 }
 
-Image* Sequence::newImage(const String& name) {
+Image* Sequence::newImage(const string& name) {
     Image* image = new Image(*this);
     image->select->whereString("imglocation", name);
     return image;
 }
 
 
-bool Sequence::add(const String& name, const String& location, const String& type) {
+bool Sequence::add(const string& name, const string& location, const string& type) {
     bool retval = true;
 
     destruct(insert);
@@ -59,8 +69,8 @@ bool Sequence::add(const String& name, const String& location, const String& typ
     return retval;
 }
 
-bool Sequence::add(const String& name, const String& location, const String& type,
-    const String& userid, const String& groupid, const String& notes) {
+bool Sequence::add(const string& name, const string& location, const string& type,
+    const string& userid, const string& groupid, const string& notes) {
     bool retval = this->add(name, location, type);
     retval &= insert->keyString("userid", userid);
     retval &= insert->keyString("groupid", groupid);
@@ -75,8 +85,96 @@ bool Sequence::addExecute() {
         time_t now;
         time(&now);
         retval &= insert->keyTimestamp("created", now);
-        retval &= this->insert->execute();
+        retval &= insert->execute();
     }
     else retval = false;
     return retval;
 }
+
+bool Sequence::preSet() {
+    destruct(update);
+
+    update = new Update(*this, "sequences");
+    update->whereString("seqname", this->sequence);
+
+    return true;
+}
+
+//================================= VIDEO ======================================
+
+
+
+Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name) {
+    thisClass = "Video";
+
+    select->whereSeqtype("seqtyp", "video");
+}
+
+bool Video::add(string name, string location) {
+
+    destruct(insert);
+    insert = new Insert(*this, "sequences");
+    insert->keyString("seqname", name);
+    insert->keyString("seqlocation", location);
+    insert->keySeqtype("seqtyp", "video");
+
+#ifdef __OPENCV_CORE_HPP__
+    // TODO: P3k check something else???
+    string fn = baseLocation + datasetLocation + location;
+    if (!fileExists(fn)) logger->warning(3210, "Cannot open file " + fn, thisClass+"::add()");
+    // TODO: check the lenght and so on...
+#endif
+}
+
+// TODO: nejak odlisit nestandardni veci
+
+
+#ifdef __OPENCV_HIGHGUI_HPP__
+
+VideoPlayer::VideoPlayer(Commons& orig) : Commons(orig) {
+    thisClass = "VideoPlayer(Commons&)";
+}
+
+VideoPlayer::VideoPlayer(Video& orig) : Commons(orig) {
+    thisClass = "VideoPlayer(Video&)";
+
+    videos.push_back(orig);
+}
+
+
+// TODO: point (), line, box, ellipse
+// TODO: play 1, 2, 4, 6, 9, 12 and 16 videos at once :)
+bool VideoPlayer::play() {
+    // TODO: P3k dodelat nacteni vice Video a Interval
+    cv::VideoCapture cap;
+    int fps = 25;
+
+    if (!videos.empty()) {
+        cap = cv::VideoCapture(videos.front().getDataLocation());
+        int fps = (int) cap.get(CV_CAP_PROP_FPS);
+    }
+    // TODO: images, ...
+    // frame = cv::imread("img.jpg");
+    // if there is no file to play, use the default video capture device (camera)
+    else {
+        cap = cv::VideoCapture(0);
+    }
+
+    // toz a jedem
+    if(cap.isOpened()) {
+        cv::namedWindow("video",1);
+        cv::Mat frame;
+        while(true)
+        {
+            cap >> frame;
+            cv::imshow("video", frame);
+            if(cv::waitKey(1000 / fps) >= 0) break; // correct the with real timer!
+        }
+        cv::destroyWindow("video");
+    }
+    else {
+        logger->warning(161, "Sorry, there is nothing to play, aborting :(", thisClass+"::play()");
+    }
+}
+
+#endif

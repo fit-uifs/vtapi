@@ -46,18 +46,24 @@ struct gengetopt_args_info
   char * log_arg;	/**< @brief Log file location (default='./vtapi.log').  */
   char * log_orig;	/**< @brief Log file location original value given at command line.  */
   const char *log_help; /**< @brief Log file location help description.  */
+  char * location_arg;	/**< @brief Base location of data files.  */
+  char * location_orig;	/**< @brief Base location of data files original value given at command line.  */
+  const char *location_help; /**< @brief Base location of data files help description.  */
+  char * backend_arg;	/**< @brief Database backend.  */
+  char * backend_orig;	/**< @brief Database backend original value given at command line.  */
+  const char *backend_help; /**< @brief Database backend help description.  */
+  char * connection_arg;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\".  */
+  char * connection_orig;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" original value given at command line.  */
+  const char *connection_help; /**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" help description.  */
+  char * dbfolder_arg;	/**< @brief SQlite databases folder (default='./sqlite').  */
+  char * dbfolder_orig;	/**< @brief SQlite databases folder original value given at command line.  */
+  const char *dbfolder_help; /**< @brief SQlite databases folder help description.  */
   char * user_arg;	/**< @brief User name.  */
   char * user_orig;	/**< @brief User name original value given at command line.  */
   const char *user_help; /**< @brief User name help description.  */
   char * password_arg;	/**< @brief User password.  */
   char * password_orig;	/**< @brief User password original value given at command line.  */
   const char *password_help; /**< @brief User password help description.  */
-  char * location_arg;	/**< @brief Base location of data files.  */
-  char * location_orig;	/**< @brief Base location of data files original value given at command line.  */
-  const char *location_help; /**< @brief Base location of data files help description.  */
-  char * connection_arg;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\".  */
-  char * connection_orig;	/**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" original value given at command line.  */
-  const char *connection_help; /**< @brief Connection string \"host=.. port=.. dbname=.. user=.. password=..\" help description.  */
   char * format_arg;	/**< @brief Input/output format (default='standard').  */
   char * format_orig;	/**< @brief Input/output format original value given at command line.  */
   const char *format_help; /**< @brief Input/output format help description.  */
@@ -73,18 +79,12 @@ struct gengetopt_args_info
   int arraylimit_arg;	/**< @brief Limit amount of printed array elements.  */
   char * arraylimit_orig;	/**< @brief Limit amount of printed array elements original value given at command line.  */
   const char *arraylimit_help; /**< @brief Limit amount of printed array elements help description.  */
-  char * where_arg;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\".  */
-  char * where_orig;	/**< @brief explicit WHERE, ex.: --where=\"features is NULL\" original value given at command line.  */
-  const char *where_help; /**< @brief explicit WHERE, ex.: --where=\"features is NULL\" help description.  */
   char * dataset_arg;	/**< @brief Set dataset to use.  */
   char * dataset_orig;	/**< @brief Set dataset to use original value given at command line.  */
   const char *dataset_help; /**< @brief Set dataset to use help description.  */
   char * sequence_arg;	/**< @brief Set sequence to use.  */
   char * sequence_orig;	/**< @brief Set sequence to use original value given at command line.  */
   const char *sequence_help; /**< @brief Set sequence to use help description.  */
-  char * interval_arg;	/**< @brief Set interval to use.  */
-  char * interval_orig;	/**< @brief Set interval to use original value given at command line.  */
-  const char *interval_help; /**< @brief Set interval to use help description.  */
   char * method_arg;	/**< @brief Set method to use.  */
   char * method_orig;	/**< @brief Set method to use original value given at command line.  */
   const char *method_help; /**< @brief Set method to use help description.  */
@@ -100,19 +100,19 @@ struct gengetopt_args_info
   unsigned int verbose_given ;	/**< @brief Whether verbose was given.  */
   unsigned int config_given ;	/**< @brief Whether config was given.  */
   unsigned int log_given ;	/**< @brief Whether log was given.  */
+  unsigned int location_given ;	/**< @brief Whether location was given.  */
+  unsigned int backend_given ;	/**< @brief Whether backend was given.  */
+  unsigned int connection_given ;	/**< @brief Whether connection was given.  */
+  unsigned int dbfolder_given ;	/**< @brief Whether dbfolder was given.  */
   unsigned int user_given ;	/**< @brief Whether user was given.  */
   unsigned int password_given ;	/**< @brief Whether password was given.  */
-  unsigned int location_given ;	/**< @brief Whether location was given.  */
-  unsigned int connection_given ;	/**< @brief Whether connection was given.  */
   unsigned int format_given ;	/**< @brief Whether format was given.  */
   unsigned int input_given ;	/**< @brief Whether input was given.  */
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int querylimit_given ;	/**< @brief Whether querylimit was given.  */
   unsigned int arraylimit_given ;	/**< @brief Whether arraylimit was given.  */
-  unsigned int where_given ;	/**< @brief Whether where was given.  */
   unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int sequence_given ;	/**< @brief Whether sequence was given.  */
-  unsigned int interval_given ;	/**< @brief Whether interval was given.  */
   unsigned int method_given ;	/**< @brief Whether method was given.  */
   unsigned int process_given ;	/**< @brief Whether process was given.  */
   unsigned int selection_given ;	/**< @brief Whether selection was given.  */
@@ -265,6 +265,7 @@ int cmdline_parser_config_file (const char *filename,
 int cmdline_parser_required (struct gengetopt_args_info *args_info,
   const char *prog_name);
 
+extern const char *cmdline_parser_backend_values[];  /**< @brief Possible values for backend. */
 extern const char *cmdline_parser_format_values[];  /**< @brief Possible values for format. */
 
 
