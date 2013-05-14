@@ -10,11 +10,11 @@
                      projectFiles="true"
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>../include/backends/vtapi_backendfactory.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/backends/vtapi_connection.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/backends/vtapi_libloader.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/backends/vtapi_querybuilder.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/backends/vtapi_resultset.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/backends/vtapi_typemanager.h</itemPath>
+        <itemPath>../include/backends/vtapi_connection.h</itemPath>
+        <itemPath>../include/backends/vtapi_libloader.h</itemPath>
+        <itemPath>../include/backends/vtapi_querybuilder.h</itemPath>
+        <itemPath>../include/backends/vtapi_resultset.h</itemPath>
+        <itemPath>../include/backends/vtapi_typemanager.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f5"
                      displayName="common"
@@ -22,7 +22,7 @@
                      kind="SOURCE_LOGICAL_FOLDER">
         <itemPath>../include/common/vtapi_config.h</itemPath>
         <itemPath>../include/common/vtapi_errcodes.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/common/vtapi_global.h</itemPath>
+        <itemPath>../include/common/vtapi_global.h</itemPath>
         <itemPath>../include/common/vtapi_logger.h</itemPath>
         <itemPath>../include/common/vtapi_misc.h</itemPath>
         <itemPath>../include/common/vtapi_settings.h</itemPath>
@@ -34,12 +34,12 @@
                      displayName="data"
                      projectFiles="true"
                      kind="SOURCE_LOGICAL_FOLDER">
-        <itemPath>/home/vojca/prace/vtapi/include/data/vtapi_dataset.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/data/vtapi_interval.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/data/vtapi_keyvalues.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/data/vtapi_method.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/data/vtapi_process.h</itemPath>
-        <itemPath>/home/vojca/prace/vtapi/include/data/vtapi_sequence.h</itemPath>
+        <itemPath>../include/data/vtapi_dataset.h</itemPath>
+        <itemPath>../include/data/vtapi_interval.h</itemPath>
+        <itemPath>../include/data/vtapi_keyvalues.h</itemPath>
+        <itemPath>../include/data/vtapi_method.h</itemPath>
+        <itemPath>../include/data/vtapi_process.h</itemPath>
+        <itemPath>../include/data/vtapi_sequence.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2"
                      displayName="postgis"
