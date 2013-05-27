@@ -116,7 +116,6 @@ void VTCli::selectCommand(string& line) {
         params.insert(createKeyValue(word));
     }
 
-    // TODO: udelat pres Tkey
     // select dataset
     if (!input.compare("dataset")) {
         Dataset* ds = new Dataset(*(this->vtapi->commons), params["name"]);

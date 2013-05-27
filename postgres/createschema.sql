@@ -19,66 +19,48 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET default_with_oids = false;
 
-
-CREATE schema test;
-
 SET search_path = test, public, pg_catalog;
+      
+--vytvoøení schématu      
+CREATE schema vidte;
 
---
--- Name: intervals; Type: TABLE; Schema: test; Owner: -
---
-CREATE TABLE intervals (
-    seqname character varying NOT NULL,
-    t1 integer NOT NULL,
-    t2 integer NOT NULL,
-    imglocation character varying,
-    tags integer[],
-    svm real[],
-    userid name,
-    created timestamp without time zone DEFAULT now(),
-    notes text,
-    "Process_name" real[]
-);
-
-
-
---
--- Name: sequences; Type: TABLE; Schema: test; Owner: -
---
+-- tabulka sekvencí
 CREATE TABLE sequences (
     seqname name NOT NULL,
     seqnum integer,
     seqlocation character varying,
     seqtyp public.seqtype DEFAULT 'data',
+    svm float4[],
     userid name,
     groupid name,
     created timestamp without time zone,
     changed timestamp without time zone,
-    notes text
+    notes text,
+    CONSTRAINT sequences_pk PRIMARY KEY (seqname),
+    CONSTRAINT sequences_unq UNIQUE (seqnum)
 );
 
+-- tabulka intervalù
+CREATE TABLE intervals (
+    seqname character varying NOT NULL,
+    t1 integer NOT NULL,
+    t2 integer NOT NULL,
+    imglocation character varying,
+    userid name,
+    created timestamp without time zone DEFAULT now(),
+    notes text,
+    CONSTRAINT intervals_pk PRIMARY KEY (seqname, t1, t2),
+    CONSTRAINT sequences_fk FOREIGN KEY (seqname)
+			REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT
+);
 
---
--- Name: intervals_pk; Type: CONSTRAINT; Schema: test; Owner: -
---
-ALTER TABLE ONLY intervals
-    ADD CONSTRAINT intervals_pk PRIMARY KEY (seqname, t1, t2);
-
-
-
---
--- Name: sequences_pk; Type: CONSTRAINT; Schema: test; Owner: -
---
-ALTER TABLE ONLY sequences
-    ADD CONSTRAINT sequences_pk PRIMARY KEY (seqname);
-
-
---
--- Name: sequences_unq; Type: CONSTRAINT; Schema: test; Owner: -
---
-ALTER TABLE ONLY sequences
-    ADD CONSTRAINT sequences_unq UNIQUE (seqnum);
-
+-- vlo¾ení do seznamu datasetù
+INSERT INTO public.datasets(dsname, dslocation)
+	VALUES ('vidte', 'data/vidte/');
+-- definice tabulky intervals jako selection
+INSERT INTO public.selections(selname, dataset)
+	VALUES ('vidte.intervals', 'vidte');
+ 
 --
 -- Generovani ID
 --
@@ -88,24 +70,17 @@ ALTER TABLE ONLY sequences
         SET DEFAULT NEXTVAL('sequences_seqnum_seq');
 
 
---
--- Name: sequences_fk; Type: FK CONSTRAINT; Schema: test; Owner: -
---
-ALTER TABLE ONLY intervals
-    ADD CONSTRAINT sequences_fk FOREIGN KEY (seqname) REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE TYPE cvmat AS (
+		type integer,
+		dims integer,
+		step_arr integer[],
+		rows integer,
+		cols integer,
+		data_loc character varying
+);
 
---
--- PostgreSQL database schema complete
---
+ATTACH DATABASE vtapi_vidte.db AS 'vidte';
 
-
---
--- PostgreSQL register schema
---
-
--- Insert initial data
-INSERT INTO public.selections(selname, dataset) VALUES ('test.intervals', 'test');
-
--- Please, specify the dataset location within your datasets, include the trailing / (file separator) please
-INSERT INTO public.datasets(dsname, dslocation) VALUES ('test', 'test/');
-
+-- vlo¾ení sekvence do datasetu vidte
+INSERT INTO vidte.sequences (name, seqlocation, seqtyp)
+		VALUES ($1, $2, $3);

@@ -121,6 +121,7 @@ void VTApi::test() {
     sequence->next();
     cout << endl << "---------------------------------------------------------------" << endl << endl;
 
+//    this->testPerformance();
     this->testGenericClasses();
     this->testDataset();
     this->testSequence(dataset);
@@ -145,6 +146,85 @@ void VTApi::test() {
     destruct(timex);
 
     cout << "DONE ALL ... see warnings." << endl;
+}
+
+
+
+void VTApi::testPerformance() {
+//    int id      = 0;
+//    int cnt1    = 0;
+//    int cnt2    = 0;
+//    Dataset *dataset    = this->newDataset();
+//    dataset->next();
+//    Sequence *sequence  = dataset->newSequence();
+//    sequence->next();
+//    Interval *interval  = sequence->newInterval();
+
+//    srand(time(NULL));
+//    TimExer* timex = new TimExer();
+
+////pg        sl
+
+// insert sekvence 10s
+////4824      51
+//    while(timex->getTime() < 10.0) {
+//        id = (rand()%100000);
+//        sequence->add("name"+toString(id), "loc/", "video","vfroml", "group", "pozn.");
+//        sequence->addExecute();
+//    }
+
+// insert sekvence and 50 intervals for each 10s
+//94        2
+//4661      51
+//while(timex->getTime() < 10.0) {
+//        id = (rand()%100000);
+//        sequence->add("name"+toString(id), "loc/", "video","vfroml", "group", "pozn.");
+//        sequence->addExecute();
+//        for (int i = 0; i < 50; i++) {
+//            if (timex->getTime() >= 10) break;
+//            interval->add("name"+toString(id), i, i, "loc/");
+//            interval->addExecute();
+//        }
+//    }
+
+ // insert 100 sequences with 100 intervals
+//19.29s    1997.84s
+//for (int i = 0; i < 100; i++) {
+//        sequence->add("name"+toString(i), "loc/", "video","vfroml", "group", "pozn.");
+//        sequence->addExecute();
+//        for (int j = 0; j < 100; j++) {
+//            interval->add("name"+toString(i), j, j, "loc/");
+//            interval->addExecute();
+//        }
+//    }
+
+
+//insert 10 sequences with 100 intervals big data
+//3.49s     240.35s
+//    for (int i = 0; i < 10; i++) {
+//        sequence->add("name"+toString(i), "loc/", "video","vfroml", "group", "pozn.");
+//        sequence->addExecute();
+//        for (int j = 0; j < 100; j++) {
+//            interval->add("name"+toString(i), j, j, "loc/");
+//            interval->insert->keyFloatA("svm", svm, 100);
+//            interval->addExecute();
+//        }
+//    }
+
+// update
+//4.82s     246.76s
+//while (interval->next()) {
+//        interval->setFloatA("svm", svm, 150);
+//    }
+
+// select
+// 0.28     0.26
+//while (interval->next()) {
+//        svm = interval->getFloatA("svm", size);
+//        cout << toString(svm) << endl;
+//        destruct(svm);
+//    }
+
 }
 
 void VTApi::testGenericClasses() {

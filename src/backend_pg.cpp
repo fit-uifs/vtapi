@@ -349,7 +349,7 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
     if (!tablesStr.empty())     tablesStr.erase(tablesStr.length()-2);
 
     // construct main part of the query
-    queryString = "\nSELECT " + columnsStr + "\n FROM " + tablesStr;
+    queryString = "SELECT " + columnsStr + "\n FROM " + tablesStr;
     if (tablesStr.empty() || columnsStr.empty()) {
         logger->error(201, queryString, thisClass+"::getSelectQuery()");
     }
@@ -408,7 +408,7 @@ string PGQueryBuilder::getInsertQuery() {
         dstTable = escapeIdent(dstTable);
     }
     // construct query
-    queryString = "\nINSERT INTO " + dstTable + " (" + intoStr + ")\n VALUES (" + valuesStr + ");";
+    queryString = "INSERT INTO " + dstTable + " (" + intoStr + ")\n VALUES (" + valuesStr + ");";
     return queryString;
 }
 
@@ -440,7 +440,7 @@ string PGQueryBuilder::getUpdateQuery() {
         dstTable = escapeIdent(dstTable);
     }
     //construct main part of the query
-    queryString = "\nUPDATE " + dstTable + "\n SET " + setStr;
+    queryString = "UPDATE " + dstTable + "\n SET " + setStr;
     // construct WHERE clause
     for (int i = 0; i < keys_where.size(); i++) {
         if (!whereStr.empty()) whereStr += " AND ";

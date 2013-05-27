@@ -117,6 +117,8 @@ private:
     void testMethod(Dataset *);
     void testProcess(Dataset *);
 
+    void testPerformance ();
+
 };
 
 } // namespace vtapi
