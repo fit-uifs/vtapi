@@ -18,8 +18,15 @@
 #ifndef VTAPI_CONFIG_H
 #define VTAPI_CONFIG_H
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+
 // comment this, if there is no PostGIS extension in the database
-//#define POSTGIS
+#if HAVE_POSTGIS
+  #define POSTGIS
+#endif
 
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
 #define COPYRDBUF
@@ -28,9 +35,15 @@
 #include <ltdl.h>
 
 // libpqtypes + pq
-#include <libpqtypes.h> // tohle se pak poresi configure
+
+#if HAVE_POSTGRESQL
+  #include <libpqtypes.h> // tohle se pak poresi configure
+#endif
+
 // sqlite
-#include <sqlite3.h>
+#if HAVE_SQLITE
+  #include <sqlite3.h>
+#endif
 
 
 // libproc library
@@ -39,6 +52,7 @@
 #include <proc/readproc.h>
 #endif
 
+#if HAVE_OPENCV
 // OpenCV header files
  #include <opencv2/opencv.hpp>
  #include <opencv2/highgui/highgui.hpp>
@@ -48,7 +62,9 @@
  #include <opencv2/imgproc/imgproc.hpp>
  //This adds the ability to debug image and video
  #include <opencv2/highgui/highgui.hpp>
+#endif 
 
+#if HAVE_GEOS
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
 #ifdef	__cplusplus
 extern "C" {
@@ -58,6 +74,8 @@ extern "C" {
 }
 #endif
 
+#endif // HAVE_GEOS
+
 // postGIS 2.0
 #ifdef	__cplusplus
 extern "C" {
@@ -66,7 +84,8 @@ extern "C" {
 #include "../postgres/cube/cubedata.h"
 #ifdef	__cplusplus
 }
-#endif
+#endif // __cplusplus
+
 
 #endif	/* VTAPI_CONFIG_H */
 
