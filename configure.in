@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.68]) # vyzaduje alespon autoconf ver. 2.6.8
 AC_INIT([vtapi], [1.6], [chmelarp@fit.vutbr.cz])
 AM_INIT_AUTOMAKE
 
@@ -119,13 +119,22 @@ then
   geos_present="no"
   AC_MSG_WARN([geos not available!])
 else
+  GEOS_MAJOR=`$GEOS_CONFIG --version | cut -d. -f1`
+  GEOS_MINOR=`$GEOS_CONFIG --version | cut -d. -f2`
+  GEOS_VERNUM=`expr $GEOS_MAJOR "*" 10`
+  GEOS_VERNUM=`expr $GEOS_VERNUM "+" $GEOS_MINOR`
+
+  if test "$GEOS_VERNUM" -lt 32; then # starsi verze nez 3.2.0 tak je to asi problem
+    AC_MSG_ERROR([geos should be at least 3.2.0 or newer])
+  fi
+
   AC_MSG_CHECKING([for GEOS include directory])
   GEOS_CFLAGS=`"$GEOS_CONFIG" --cflags`
   AC_MSG_RESULT([$GEOS_CFLAGS])
   AC_SUBST([GEOS_CFLAGS])
 
   AC_MSG_CHECKING([for GEOS libs])
-  GEOS_LIBS=`"$GEOS_CONFIG" --clibs`
+  GEOS_LIBS=`"$GEOS_CONFIG" --libs`
   AC_MSG_RESULT([$GEOS_LIBS])
   AC_SUBST([GEOS_LIBS])
 
@@ -136,17 +145,11 @@ fi
 # dalsi veci pro postgis
 # pgDistance, cube, pgCubeBox3d
 
-
-     AC_CHECK_HEADER([postgresql/libpq-fe.h],
-                     [AC_DEFINE([HAVE_LIBPQFE_H], [1],
-                        [Define to 1 if you have <libpq-fe.h>.])],
-                     [AC_MSG_ERROR([sorry, can't do anything for you])])
-
 # postresql
 
 postgresql_present="yes"
-AC_CHECK_HEADER(libpqtypes.h, [], [postgresql_present="no"],[-I/usr/local/include])
-AC_CHECK_HEADER(libpq.h, [], [postgresql_present="no"])
+AC_CHECK_HEADER(libpq-fe.h, [], [postgresql_present="no"]) 
+AC_CHECK_HEADER(libpqtypes.h, [], [postgresql_present="no"])
 if test x"$postgresql_present" == "xno"
 then
   AC_MSG_WARN([Postgresql is not available!])
@@ -207,8 +210,8 @@ AS_IF([test "x$enable_doc" = "xyes"], [
 ])
 
 # Checks for typedefs, structures, and compiler characteristics.
-AC_CHECK_HEADER_STDBOOL
-AC_TYPE_SIZE_T
+# AC_CHECK_HEADER_STDBOOL
+# AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_FUNC_ERROR_AT_LINE
