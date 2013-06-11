@@ -70,7 +70,11 @@ fi
 # sqlite
 sqlite_present="yes"
 PKG_CHECK_MODULES([sqlite3], [sqlite3 >= 3.7.0], [],[sqlite_present="no"])
-if test x"$sqlite_present" == "xyes"
+
+AC_ARG_WITH([sqlite3], AS_HELP_STRING([--without-sqlite3], [compile without sqlite3 support i.e. force postgresql]))
+AS_IF([test "x$with_sqlite3" != "xno"], [], [sqlite3_present=no])
+
+if test x"$sqlite_present" == "xyes" 
 then
   AC_DEFINE([HAVE_SQLITE], [1], [SQLite is present])
 fi
@@ -146,20 +150,40 @@ fi
 # pgDistance, cube, pgCubeBox3d
 
 # postresql
-
 postgresql_present="yes"
+
+AC_PATH_PROG([PG_CONFIG], [pg_config],[false])
+if test x"$PG_CONFIG" == "xfalse"
+then
+  postgresql_present="no"
+else
+  PQ_CFLAGS="-I`$PG_CONFIG --includedir`"
+  PQ_LIBS="-L`$PG_CONFIG --libdir` -lpq -lpqtypes"
+fi
+
+TMP_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$PQ_CFLAGS"
+TMP_LIBS="$LIBS"
+LIBS="$PQ_LIBS"
 AC_CHECK_HEADER(libpq-fe.h, [], [postgresql_present="no"]) 
 AC_CHECK_HEADER(libpqtypes.h, [], [postgresql_present="no"])
+AC_CHECK_LIB([pq], [PQserverVersion], [], [postgresql_present="no"])
+AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [postgresql_present="no"], [-lpq])
+CPPFLAGS="$TMP_CPPFLAGS"
+LIBS="$TMP_LIBS"
+
 if test x"$postgresql_present" == "xno"
 then
   AC_MSG_WARN([Postgresql is not available!])
 else 
-  AC_DEFINE([HAVE_POSTGRESQL], [1], [libpqtypes.h is present])
-  PQ_CFLAGS=""
-  PQ_LIBS="-lpq -lpqtypes"
+  AC_DEFINE([HAVE_POSTGRESQL], [1], [postgresql is present])
   AC_SUBST([PQ_CFLAGS])
   AC_SUBST([PQ_LIBS])
 fi
+
+
+
+
 
 # postgresql or sqlite support is necessary
 if test "x$postgresql_present" = "xno" -a "x$sqlite_present" = "xno"
