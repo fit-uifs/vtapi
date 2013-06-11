@@ -71,8 +71,8 @@ fi
 sqlite_present="yes"
 PKG_CHECK_MODULES([sqlite3], [sqlite3 >= 3.7.0], [],[sqlite_present="no"])
 
-AC_ARG_WITH([sqlite3], AS_HELP_STRING([--without-sqlite3], [compile without sqlite3 support i.e. force postgresql]))
-AS_IF([test "x$with_sqlite3" != "xno"], [], [sqlite3_present=no])
+AC_ARG_WITH([sqlite], AS_HELP_STRING([--without-sqlite], [compile without sqlite3 support i.e. force postgresql]))
+AS_IF([test "x$with_sqlite" != "xno"], [], [sqlite_present=no])
 
 if test x"$sqlite_present" == "xyes" 
 then
