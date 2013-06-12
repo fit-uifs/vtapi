@@ -230,8 +230,13 @@ AC_ARG_ENABLE([doc],
 with_doc=no
 AS_IF([test "x$enable_doc" = "xyes"], [
     with_doc=yes
-    AC_CHECK_PROG(HAVE_DOXYGEN, doxygen, true, false)
+
+    AC_CHECK_PROG(HAVE_DOXYGEN, doxygen, true)
+    AC_CONFIG_FILES([doc/Makefile doc/Doxyfile])
 ])
+AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$HAVE_DOXYGEN"]) # prenese do Makefile.am podminku - HAVE_DOXYGEN se testuje jen pokud je povoleny
+
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 # AC_CHECK_HEADER_STDBOOL

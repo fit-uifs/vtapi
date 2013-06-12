@@ -2,6 +2,9 @@ AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = src
+if HAVE_DOXYGEN
+SUBDIRS += doc
+endif
 
 dist_noinst_SCRIPTS = autogen.sh
 
