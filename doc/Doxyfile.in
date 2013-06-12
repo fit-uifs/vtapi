@@ -26,13 +26,13 @@ DOXYFILE_ENCODING      = UTF-8
 # identify the project. Note that if you do not use Doxywizard you need 
 # to put quotes around the project name if it contains spaces.
 
-PROJECT_NAME           = VTApi
+PROJECT_NAME           = @PACKAGE_NAME@
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. 
 # This could be handy for archiving the generated documentation or 
 # if some version control system is used.
 
-PROJECT_NUMBER         = "1.5 (2012.12.23)"
+PROJECT_NUMBER         = "@PACKAGE_VERSION@"
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description 
 # for a project that appears at the top of each page and should give viewer 
@@ -666,12 +666,12 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = ../include \
-                         ../src \
-                         SAMPLES.txt \
-                         ../README.txt \
-                         VTCLI.txt \
-                         LICENCE.txt
+INPUT                  = @top_srcdir@/include \
+                         @top_srcdir@/src \
+                         @top_srcdir@/doc/SAMPLES.txt \
+                         @top_srcdir@/README.txt \
+                         @top_srcdir@/doc/VTCLI.txt \
+                         @top_srcdir@/LICENCE.txt
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
