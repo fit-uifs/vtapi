@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.68]) # vyzaduje alespon autoconf ver. 2.6.8
-AC_INIT([vtapi], [1.6], [chmelarp@fit.vutbr.cz])
+AC_INIT([VTApi (Video Terror API)], [1.6], [chmelarp@fit.vutbr.cz], [vtapi], [http://vidte.fit.vutbr.cz])
 AM_INIT_AUTOMAKE
 
 AC_CONFIG_MACRO_DIR([m4])
@@ -10,7 +10,10 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_CC
+#AC_PROG_CC # Vlczech: Zdá se mi to zbyteèné
+
+# Use entered compiler for checks
+AC_LANG([C++])
 
 # Checks for libraries.
 
@@ -46,9 +49,23 @@ then
   AC_SUBST([READPROC_LIBS])
 fi
 
+AC_PATH_PROG([PKG_CONFIG], [pkg-config], [AC_MSG_ERROR([pkg-config not available!])])
+
 # opencv 
 opencv_present="yes"
-PKG_CHECK_MODULES([opencv], [opencv >= 2.4.1], [], [opencv_present="no"])
+# PKG_CHECK_MODULES([opencv], [opencv >= 2.4.1], [], [opencv_present="no"])
+
+opencv_MODVERSION=`$PKG_CONFIG opencv --modversion` 
+if test -z "$opencv_MODVERSION"
+then
+  opencv_present="no"
+else 
+  opencv_CFLAGS=`$PKG_CONFIG opencv --cflags`
+  opencv_LIBS=`$PKG_CONFIG opencv --libs`
+  AC_SUBST([opencv_CFLAGS])
+  AC_SUBST([opencv_LIBS])  
+fi
+
 AC_ARG_WITH([opencv], AS_HELP_STRING([--without-opencv], [compile without opencv support]))
 
 opencv_want=yes
@@ -69,7 +86,18 @@ fi
 
 # sqlite
 sqlite_present="yes"
-PKG_CHECK_MODULES([sqlite3], [sqlite3 >= 3.7.0], [],[sqlite_present="no"])
+#PKG_CHECK_MODULES([sqlite3], [sqlite3 >= 3.7.0], [],[sqlite_present="no"])
+sqlite3_MODVERSION=`$PKG_CONFIG sqlite3 --modversion` 
+if test -z "$sqlite3_MODVERSION"
+then
+  sqlite_present="no"
+else 
+  sqlite3_CFLAGS=`$PKG_CONFIG sqlite3 --cflags`
+  sqlite3_LIBS=`$PKG_CONFIG sqlite3 --libs`
+  AC_SUBST([sqlite3_CFLAGS])
+  AC_SUBST([sqlite3_LIBS])  
+fi
+
 
 AC_ARG_WITH([sqlite], AS_HELP_STRING([--without-sqlite], [compile without sqlite3 support i.e. force postgresql]))
 AS_IF([test "x$with_sqlite" != "xno"], [], [sqlite_present=no])
@@ -157,8 +185,8 @@ if test x"$PG_CONFIG" == "xfalse"
 then
   postgresql_present="no"
 else
-  PQ_CFLAGS="-I`$PG_CONFIG --includedir`"
-  PQ_LIBS="-L`$PG_CONFIG --libdir` -lpq -lpqtypes"
+  PQ_CFLAGS="-I$(PG_CONFIG --includedir)"
+  PQ_LIBS="-L$(PG_CONFIG --libdir) -lpq -lpqtypes"
 fi
 
 TMP_CPPFLAGS="$CPPFLAGS"
@@ -167,6 +195,7 @@ TMP_LIBS="$LIBS"
 LIBS="$PQ_LIBS"
 AC_CHECK_HEADER(libpq-fe.h, [], [postgresql_present="no"]) 
 AC_CHECK_HEADER(libpqtypes.h, [], [postgresql_present="no"])
+# FIXME: some problems on OS Windows
 AC_CHECK_LIB([pq], [PQserverVersion], [], [postgresql_present="no"])
 AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [postgresql_present="no"], [-lpq])
 CPPFLAGS="$TMP_CPPFLAGS"
