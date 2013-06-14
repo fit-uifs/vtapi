@@ -185,8 +185,8 @@ if test x"$PG_CONFIG" == "xfalse"
 then
   postgresql_present="no"
 else
-  PQ_CFLAGS="-I$(PG_CONFIG --includedir)"
-  PQ_LIBS="-L$(PG_CONFIG --libdir) -lpq -lpqtypes"
+  PQ_CFLAGS="-I$("$PG_CONFIG" --includedir)"
+  PQ_LIBS="-L$("$PG_CONFIG" --libdir) -lpq -lpqtypes"
 fi
 
 TMP_CPPFLAGS="$CPPFLAGS"
@@ -196,8 +196,8 @@ LIBS="$PQ_LIBS"
 AC_CHECK_HEADER(libpq-fe.h, [], [postgresql_present="no"]) 
 AC_CHECK_HEADER(libpqtypes.h, [], [postgresql_present="no"])
 # FIXME: some problems on OS Windows
-AC_CHECK_LIB([pq], [PQserverVersion], [], [postgresql_present="no"])
-AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [postgresql_present="no"], [-lpq])
+#AC_CHECK_LIB([pq], [PQserverVersion], [], [postgresql_present="no"])
+#AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [postgresql_present="no"], [-lpq])
 CPPFLAGS="$TMP_CPPFLAGS"
 LIBS="$TMP_LIBS"
 
