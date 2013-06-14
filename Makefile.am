@@ -23,4 +23,4 @@ LDADD = $(top_builddir)/src/.libs/libvtapi-1.6.so
 
 #LDADD = -L../lib -lexample 
 
-INCLUDES = -I$(top_builddir)/include
+AM_CPPFLAGS = -I$(top_builddir)/include
