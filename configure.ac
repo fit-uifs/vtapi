@@ -10,7 +10,6 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CXX
-#AC_PROG_CC # Vlczech: Zdá se mi to zbyteèné
 
 # Use entered compiler for checks
 AC_LANG([C++])
@@ -40,11 +39,20 @@ AC_SUBST([LTDL_LIBS])
 # readproc (yum install procps-ng-devel)
 readproc_present="yes"
 AC_CHECK_HEADER(proc/readproc.h, [], [readproc_present="no"])
+AC_CHECK_LIB([procps], [readproctab], [READPROC_LIBS="-lprocps"])
+AC_CHECK_LIB([proc], [readproctab], [READPROC_LIBS="-lproc"])
+
+if test -z "$READPROC_LIBS"
+then
+  readproc_present="no"
+fi
+
 if test x"$readproc_present" == "xyes"
 then
   AC_DEFINE([HAVE_READPROC], [1], [readproc is present])
+  
   READPROC_CFLAGS=""
-  READPROC_LIBS="-lprocps"
+  
   AC_SUBST([READPROC_CFLAGS])
   AC_SUBST([READPROC_LIBS])
 fi
@@ -196,8 +204,8 @@ LIBS="$PQ_LIBS"
 AC_CHECK_HEADER(libpq-fe.h, [], [postgresql_present="no"]) 
 AC_CHECK_HEADER(libpqtypes.h, [], [postgresql_present="no"])
 # FIXME: some problems on OS Windows
-#AC_CHECK_LIB([pq], [PQserverVersion], [], [postgresql_present="no"])
-#AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [postgresql_present="no"], [-lpq])
+AC_CHECK_LIB([pq], [PQserverVersion], [], [postgresql_present="no"])
+AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [postgresql_present="no"])
 CPPFLAGS="$TMP_CPPFLAGS"
 LIBS="$TMP_LIBS"
 
