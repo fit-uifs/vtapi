@@ -15,11 +15,12 @@ namespace vtapi {
 }
 
 #include "../common/vtapi_global.h"
+#include "../common/vtapi_logger.h"
 
 namespace vtapi {
 
 
-#define FUNC_MAP                        func_map
+#define FUNC_MAP                        func_map_i67g
 #define FUNC_MAP_ENTRY(func,funcptr)    std::make_pair<string,void *>(func,funcptr)
 
 typedef map<string,void *>              func_map_t;
@@ -103,30 +104,39 @@ typedef void (*SL_sqlite3_free_table)(char **);
 
 //TODO: comment
 class LibLoader {
+protected:
+    Logger          *logger;        /**< logger object for output messaging */
+    string          thisClass;      /**< class name */
+
 public:
 
-    LibLoader() {};
+    LibLoader(Logger *logger) {
+        this->logger = logger;
+    };
     virtual ~LibLoader() {};
 
-    virtual func_map_t *load() = 0;
-    virtual int unload() = 0;
-
+    virtual func_map_t *loadLibs() = 0;
+    virtual int unloadLibs() = 0;
+    virtual bool isLoaded() = 0;
+    virtual char *getLibName() = 0;
 };
 
 
 class PGLibLoader : public LibLoader {
 private:
 
-    lt_dlhandle h_libpqtypes;
-    lt_dlhandle h_libpq;
+    lt_dlhandle     h_libpqtypes;
+    lt_dlhandle     h_libpq;
     
 public:
 
-    PGLibLoader();
+    PGLibLoader(Logger *logger);
     ~PGLibLoader();
 
-    func_map_t *load();
-    int unload();
+    func_map_t *loadLibs();
+    int unloadLibs();
+    bool isLoaded();
+    char *getLibName();
 
 private:
 
@@ -145,11 +155,13 @@ private:
 
 public:
 
-    SLLibLoader();
+    SLLibLoader(Logger *logger);
     ~SLLibLoader();
 
-    func_map_t *load();
-    int unload();
+    func_map_t *loadLibs();
+    int unloadLibs();
+    bool isLoaded();
+    char *getLibName();
     
 private:
 

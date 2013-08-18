@@ -41,6 +41,7 @@ public:
     /**
      * Constructor
      * @param filename Name of the file for storing logs
+     * @param verbose verbosity
      */
     Logger(const string& filename = "", bool verbose = false);
     /**

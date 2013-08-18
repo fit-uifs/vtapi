@@ -22,10 +22,12 @@ Query::Query(const Commons& commons, const string& initString)
 : Commons(commons) {
     thisClass       = "Query";
 
-    queryBuilder    = BackendFactory::createQueryBuilder(FUNC_MAP, connection, logger, initString);
-    resultSet       = BackendFactory::createResultSet(FUNC_MAP, typeManager, logger);
-    this->queryBuilder->setDataset(this->dataset);
-    this->queryBuilder->setTable(this->selection);
+    queryBuilder    = FUNC_MAP ? BackendFactory::createQueryBuilder(FUNC_MAP, connection, logger, initString) : NULL;
+    resultSet       = FUNC_MAP ? BackendFactory::createResultSet(FUNC_MAP, typeManager, logger) : NULL;
+    if (queryBuilder) {
+        this->queryBuilder->setDataset(this->dataset);
+        this->queryBuilder->setTable(this->selection);
+    }
     executed        = false;
 }
 
@@ -63,6 +65,11 @@ bool Query::execute() {
     }
 }
 
+int Query::checkQueryObject() {
+    if (!queryBuilder) return -1;
+    if (!resultSet) return -2;
+    return 0;
+}
 
 //================================== SELECT ====================================
 

@@ -832,17 +832,19 @@ pair< TKeys*, vector<int>* > SLResultSet::getKeysWidths(const int row, bool get_
 
 
 
-SLLibLoader::SLLibLoader() {
-    lt_dlinit();
+SLLibLoader::SLLibLoader(Logger *logger)
+ : LibLoader (logger) {
+    thisClass = "SLLibLoader";
     h_libsqlite = NULL;
+    lt_dlinit();
 }
 
 SLLibLoader::~SLLibLoader() {
-    unload();
+    unloadLibs();
     lt_dlexit();
 };
 
-func_map_t *SLLibLoader::load() {
+func_map_t *SLLibLoader::loadLibs() {
     func_map_t *func_map = new func_map_t();
 
     if (load_libsqlite(func_map) == 0) {
@@ -854,11 +856,27 @@ func_map_t *SLLibLoader::load() {
     }
 };
 
-int SLLibLoader::unload() {
+int SLLibLoader::unloadLibs() {
     return unload_libsqlite();;
 };
 
+bool SLLibLoader:: isLoaded() {
+    return h_libsqlite;
+}
+
+char *SLLibLoader::getLibName() {
+    char *name = NULL;
+    const lt_dlinfo *libsl_info;
+
+    if (h_libsqlite) {
+        libsl_info = lt_dlgetinfo(h_libsqlite);
+        name = libsl_info->name;
+    }
+    return name;
+}
+
 int SLLibLoader::load_libsqlite (func_map_t *func_map) {
+    int retval = 0;
     void *funcPtr = NULL;
     const string funcStrings[] =
     {"sqlite3_open_v2","sqlite3_close","sqlite3_errmsg","sqlite3_db_status","sqlite3_get_table",
@@ -868,12 +886,24 @@ int SLLibLoader::load_libsqlite (func_map_t *func_map) {
 
     h_libsqlite = lt_dlopenext("libsqlite3");
 
-    for(int i = 0; !funcStrings[i].empty(); i++) {
-        funcPtr = lt_dlsym(h_libsqlite, funcStrings[i].c_str());
-        if (funcPtr) func_map->insert(FUNC_MAP_ENTRY("SL_"+funcStrings[i], funcPtr));
-        else return -1;
+    if (h_libsqlite) {
+        for(int i = 0; !funcStrings[i].empty(); i++) {
+            funcPtr = lt_dlsym(h_libsqlite, funcStrings[i].c_str());
+            if (funcPtr) {
+                func_map->insert(FUNC_MAP_ENTRY("SL_"+funcStrings[i], funcPtr));
+            }
+            else {
+                logger->warning(555, "Function " + funcStrings[i] + " not loaded.", thisClass+"::load_libsqlite()");
+                retval = -1;
+                break;
+            }
+        }
     }
-    return 0;
+    else {
+        logger->warning(556, "Libsqlite library not found.", thisClass+"::load_libsl()");
+        retval = -1;
+    }
+    return retval;
 }
 
 int SLLibLoader::unload_libsqlite () {

@@ -160,14 +160,14 @@ public:
      * Creates object of class @ref LibLoader
      * @return NULL if factory is uninitialized, library loading object otherwise
      */
-    static LibLoader* createLibLoader() {
+    static LibLoader* createLibLoader(Logger *logger) {
         LibLoader *libLoader = NULL;
         switch (backend) {
             case POSTGRES:
-                libLoader = new PGLibLoader();
+                libLoader = new PGLibLoader(logger);
                 break;
             case SQLITE:
-                libLoader = new SLLibLoader();
+                libLoader = new SLLibLoader(logger);
                 break;
             default:
                 break;

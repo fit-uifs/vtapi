@@ -152,6 +152,11 @@ public:
     string getUser();
 
     /**
+     * Checks commons object for validity (connection etc.)
+     * @return 0 on success
+     */
+    int checkCommonsObject();
+    /**
      * This is to check whether a file exists or not
      * @param filename
      * @return exists

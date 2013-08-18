@@ -109,6 +109,7 @@ TKeys* KeyValues::getKeys() {
 /**
  * Generic getter - fetches any value from resultset and returns it as string
  * @param col column index
+ * @param arrayLimit limits size of elements of returned array
  * @return string representation of field value
  */
 string KeyValues::getValue(const int col, const int arrayLimit) {

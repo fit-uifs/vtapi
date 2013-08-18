@@ -52,7 +52,7 @@ namespace vtapi {
 /**
  * A generic function to convert any numeric type to string
  * (any numeric type, e.g. int, float, double, etc.)
- * @param t
+ * @param value
  * @return string
  */
 template <class T>

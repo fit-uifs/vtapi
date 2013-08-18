@@ -1421,18 +1421,20 @@ pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_
 
 
 
-PGLibLoader::PGLibLoader() {
-    lt_dlinit();
+PGLibLoader::PGLibLoader(Logger *logger)
+ : LibLoader (logger) {
+    thisClass = "PGLibLoader";
     h_libpqtypes = NULL;
     h_libpq = NULL;
+    lt_dlinit();
 }
 
 PGLibLoader::~PGLibLoader() {
-    unload();
+    unloadLibs();
     lt_dlexit();
 };
 
-func_map_t *PGLibLoader::load() {
+func_map_t *PGLibLoader::loadLibs() {
     int ret = 0;
     func_map_t *func_map = new func_map_t();
 
@@ -1448,7 +1450,7 @@ func_map_t *PGLibLoader::load() {
     }
 };
 
-int PGLibLoader::unload() {
+int PGLibLoader::unloadLibs() {
     int ret = 0;
 
     ret += unload_libpqtypes();
@@ -1456,7 +1458,23 @@ int PGLibLoader::unload() {
     return ret;
 };
 
+bool PGLibLoader:: isLoaded() {
+    return h_libpq && h_libpqtypes;
+}
+
+char *PGLibLoader::getLibName() {
+    char *name = NULL;
+    const lt_dlinfo *libpq_info;
+
+    if (h_libpq) {
+        libpq_info = lt_dlgetinfo(h_libpq);
+        name = libpq_info->name;
+    }
+    return name;
+}
+
 int PGLibLoader::load_libpqtypes (func_map_t *func_map) {
+    int retval = 0;
     void *funcPtr = NULL;
     const string funcStrings[] =
     {"PQgeterror","PQseterror","PQgetErrorField","PQspecPrepare","PQclearSpecs","PQinitTypes",
@@ -1469,15 +1487,28 @@ int PGLibLoader::load_libpqtypes (func_map_t *func_map) {
 
     h_libpqtypes = lt_dlopenext("libpqtypes");
 
-    for(int i = 0; !funcStrings[i].empty(); i++) {
-        funcPtr = lt_dlsym(h_libpqtypes, funcStrings[i].c_str());
-        if (funcPtr) func_map->insert(FUNC_MAP_ENTRY("PQT_"+funcStrings[i], funcPtr));
-        else return -1;
+    if (h_libpqtypes) {
+        for(int i = 0; !funcStrings[i].empty(); i++) {
+            funcPtr = lt_dlsym(h_libpqtypes, funcStrings[i].c_str());
+            if (funcPtr) {
+                func_map->insert(FUNC_MAP_ENTRY("PQT_"+funcStrings[i], funcPtr));
+            }
+            else {
+                logger->warning(555, "Function " + funcStrings[i] + " not loaded.", thisClass+"::load_libpqtypes()");
+                retval = -1;
+                break;
+            }
+        }
     }
-    return 0;
+    else {
+        logger->warning(556, "Libpqtypes library not found.", thisClass+"::load_libpqtypes()");
+        retval = -1;
+    }
+    return retval;
 }
 
 int PGLibLoader::load_libpq (func_map_t *func_map) {
+    int retval = 0;
     lt_dladvise libpq_advise = NULL;
     void *funcPtr = NULL;
     const string funcStrings[] =
@@ -1492,12 +1523,24 @@ int PGLibLoader::load_libpq (func_map_t *func_map) {
     h_libpq = lt_dlopenadvise("libpq", libpq_advise);
     lt_dladvise_destroy(&libpq_advise);
 
-    for(int i = 0; !funcStrings[i].empty(); i++) {
-        funcPtr = lt_dlsym(h_libpq, funcStrings[i].c_str());
-        if (funcPtr) func_map->insert(FUNC_MAP_ENTRY("PQ_"+funcStrings[i], funcPtr));
-        else return -1;
+    if (h_libpq) {
+        for(int i = 0; !funcStrings[i].empty(); i++) {
+            funcPtr = lt_dlsym(h_libpq, funcStrings[i].c_str());
+            if (funcPtr) {
+                func_map->insert(FUNC_MAP_ENTRY("PQ_"+funcStrings[i], funcPtr));
+            }
+            else {
+                logger->warning(555, "Function " + funcStrings[i] + " not loaded.", thisClass+"::load_libpq()");
+                retval = -1;
+                break;
+            }
+        }
     }
-    return 0;
+    else {
+        logger->warning(556, "Libpq library not found.", thisClass+"::load_libpq()");
+        retval = -1;
+    }
+    return retval;
 }
 
 int PGLibLoader::unload_libpqtypes () {

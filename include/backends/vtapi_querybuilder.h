@@ -77,7 +77,6 @@ public:
     virtual string getGenericQuery() = 0;
     /**
      * Builds SELECT query
-     * @param fromList
      * @param groupby
      * @param orderby
      * @param limit
@@ -229,7 +228,7 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
+     * @param from table where the key is situated
      * @return
      */
     virtual bool whereString(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
@@ -240,7 +239,7 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
+     * @param from table where the key is situated
      * @return
      */
     virtual bool whereInt(const string& key, const int value, const string& oper = "=", const string& from = "") = 0;
@@ -251,7 +250,7 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
+     * @param from table where the key is situated
      * @return
      */
     virtual bool whereFloat(const string& key, const float value, const string& oper = "=", const string& from = "") = 0;
@@ -261,7 +260,7 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
+     * @param from table where the key is situated
      * @return
      */
     virtual bool whereSeqtype(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
@@ -271,7 +270,7 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
+     * @param from table where the key is situated
      * @return
      */
     virtual bool whereInouttype(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
@@ -281,7 +280,7 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
+     * @param from table where the key is situated
      * @return
      */
 //    virtual bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
@@ -291,7 +290,7 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
+     * @param from table where the key is situated
      * @return
      */
     virtual bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "") = 0;
@@ -313,7 +312,7 @@ protected:
     virtual string escapeIdent(const string& ident) = 0;
     /**
      * Escape literal
-     * @param ident literal
+     * @param literal literal
      * @return escaped literal
      */
     virtual string escapeLiteral(const string& literal) = 0;
