@@ -37,8 +37,8 @@ bool SLConnection::connect (const string& connectionInfo) {
     fixSlashes(connInfo);
     dbname      = connInfo + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
 
-    if (CALL_SL_sqlite3_open_v2(dbname.c_str(), &conn, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK) {
-        logger->warning(122, CALL_SL_sqlite3_errmsg(conn), thisClass+"::connect(");
+    if (CALL_SL(sqlite3_open_v2)(dbname.c_str(), &conn, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK) {
+        logger->warning(122, CALL_SL(sqlite3_errmsg)(conn), thisClass+"::connect(");
         return false;
     }
     else {
@@ -57,14 +57,14 @@ bool SLConnection::reconnect (const string& connectionInfo) {
 
 void SLConnection::disconnect () {
     if (isConnected()) {
-        CALL_SL_sqlite3_close(conn);
+        CALL_SL(sqlite3_close)(conn);
     }
 }
 
 bool SLConnection::isConnected () {
     int cur, high;
-    if (CALL_SL_sqlite3_db_status(conn, SQLITE_DBSTATUS_SCHEMA_USED, &cur, &high, false) != SQLITE_OK) {
-        logger->warning(125, CALL_SL_sqlite3_errmsg(conn), thisClass+"::isConnected()");
+    if (CALL_SL(sqlite3_db_status)(conn, SQLITE_DBSTATUS_SCHEMA_USED, &cur, &high, false) != SQLITE_OK) {
+        logger->warning(125, CALL_SL(sqlite3_errmsg)(conn), thisClass+"::isConnected()");
         return false;
     }
     else {
@@ -84,14 +84,14 @@ int SLConnection::execute(const string& query, void *param) {
         errorMessage = "Database " + sl_param->database + " couldn't have been attached.";
         return -1;
     }
-    ret_query = CALL_SL_sqlite3_exec(conn, query.c_str(), NULL, NULL, &errmsg);
+    ret_query = CALL_SL(sqlite3_exec)(conn, query.c_str(), NULL, NULL, &errmsg);
     if (ret_query == SQLITE_OK) {
         return 1;
     }
     else {
         if (errmsg) {
             errorMessage = string(errmsg);
-            CALL_SL_sqlite3_free(errmsg);
+            CALL_SL(sqlite3_free)(errmsg);
         }
         return -1;
     }
@@ -111,7 +111,7 @@ int SLConnection::fetch(const string& query, void *param, ResultSet *resultSet) 
         return -1;
     }
 
-    ret_query = CALL_SL_sqlite3_get_table(conn, query.c_str(), &(sl_res->res), &(sl_res->rows), &(sl_res->cols), &errmsg);
+    ret_query = CALL_SL(sqlite3_get_table)(conn, query.c_str(), &(sl_res->res), &(sl_res->rows), &(sl_res->cols), &errmsg);
     resultSet->newResult((void *) sl_res);
     if (ret_query == SQLITE_OK) {
         return sl_res->rows;
@@ -119,7 +119,7 @@ int SLConnection::fetch(const string& query, void *param, ResultSet *resultSet) 
     else {
         if (errmsg) {
             errorMessage = string(errmsg);
-            CALL_SL_sqlite3_free(errmsg);
+            CALL_SL(sqlite3_free)(errmsg);
         }
         return -1;
     }
@@ -157,9 +157,9 @@ int SLConnection::fixSlashes(string& path) {
 }
 
 int SLConnection::attachDatabase(string& db) {
-    if (!CALL_SL_sqlite3_db_filename(conn, db.c_str())) {
+    if (!CALL_SL(sqlite3_db_filename)(conn, db.c_str())) {
         string query = "ATTACH DATABASE \'" + connInfo + "/" + SL_DB_PREFIX + db + SL_DB_SUFFIX + "\' AS \'" + db + "\';";
-        return CALL_SL_sqlite3_exec(conn, query.c_str(), NULL, NULL, NULL);
+        return CALL_SL(sqlite3_exec)(conn, query.c_str(), NULL, NULL, NULL);
     }
     else {
         return SQLITE_OK;
@@ -597,7 +597,7 @@ bool SLResultSet::isOk() {
 void SLResultSet::clear() {
     if (this->res) {
         sl_res_t *sl_res = (sl_res_t *) this->res;
-        CALL_SL_sqlite3_free_table(sl_res->res);
+        CALL_SL(sqlite3_free_table)(sl_res->res);
         destruct(sl_res)
     }
 }

@@ -38,8 +38,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/sequence.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/vtapi_settings.o \
-	${OBJECTDIR}/method.o \
 	${OBJECTDIR}/vtapi_misc.o \
+	${OBJECTDIR}/method.o \
 	${OBJECTDIR}/logger.o \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/backend_sl.o \
@@ -100,15 +100,15 @@ ${OBJECTDIR}/vtapi_settings.o: vtapi_settings.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_settings.o vtapi_settings.cpp
 
+${OBJECTDIR}/vtapi_misc.o: vtapi_misc.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_misc.o vtapi_misc.cpp
+
 ${OBJECTDIR}/method.o: method.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
-
-${OBJECTDIR}/vtapi_misc.o: vtapi_misc.c 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.c) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_misc.o vtapi_misc.c
 
 ${OBJECTDIR}/logger.o: logger.cpp 
 	${MKDIR} -p ${OBJECTDIR}

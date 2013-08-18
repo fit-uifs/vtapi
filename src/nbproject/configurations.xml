@@ -90,7 +90,7 @@
       <itemPath>timexer.cpp</itemPath>
       <itemPath>tkey.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
-      <itemPath>vtapi_misc.c</itemPath>
+      <itemPath>vtapi_misc.cpp</itemPath>
       <itemPath>vtapi_settings.cpp</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -163,8 +163,6 @@
                             group="bin"/>
         </packFileList>
       </packaging>
-      <item path="vtapi_misc.c" ex="false" tool="1">
-      </item>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
@@ -240,8 +238,6 @@
                             group="bin"/>
         </packFileList>
       </packaging>
-      <item path="vtapi_misc.c" ex="false" tool="1">
-      </item>
     </conf>
   </confs>
 </configurationDescriptor>
