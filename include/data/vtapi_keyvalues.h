@@ -76,12 +76,14 @@ public:
 
     /**
      * Print a current tuple of resultset
+     * @return success
      */
-    void print();
+    bool print();
     /**
      * Print all tuples of resultset
+     * @return success
      */
-    void printAll();
+    bool printAll();
 
 
     // =============== GETTERS (Select) ========================================
@@ -250,7 +252,7 @@ public:
      */
     vector<float>* getFloatV(const string& key);
 
-    //TODO: is it needed a vector of float vectors as in case of integers?
+    //TODO: is getFloatVV needed?
 
     // =============== GETTERS - TIMESTAMP =====================================
     /**
@@ -295,6 +297,7 @@ public:
 #endif
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
+    // TODO: geometricke typy
 #ifdef POSTGIS
     /**
      * Get 2D point specified by the column key
@@ -452,7 +455,6 @@ public:
      * This is to support updates in derived classes
      * (unimplemented error 3010 in this class)
      * @return success (in derived classes)
-     * @todo @b doc: unimplemented error? I think that it is implemented :)
      */
     virtual bool preSet();
 
@@ -542,13 +544,12 @@ public:
     bool setExecute();
 
     // =============== ADDERS (Insert) ========================================
-    // TODO: implement?
     /**
      *
      * @param key
      * @param value
      * @return
-     * @unimplemented all methods like addX are unimplemented (then add doc)
+     * @todo @b code: všechny addX neimplementovány
      */
     bool addString(const string& key, const string& value);
     bool addInt(const string& key, const string& value);
@@ -590,21 +591,24 @@ protected:
      * Prints table header.
      * @param fInfo Metadata for print, pair consisting of two vectors:
      *  a) Tkeys - column types etc., b) ints - column widths
+     * @return success
      */
-    void printHeader(const pair< TKeys*,vector<int>* > fInfo);
+    bool printHeader(const pair< TKeys*,vector<int>* > fInfo);
 
     /**
      * Prints one row of resultset.
      * @param row Which row of resultset to print
      * @param widths Metadata - vector of column widths
+     * @return success
      */
-    void printRowOnly(const int row, const vector<int>* widths);
+    bool printRowOnly(const int row, const vector<int>* widths);
 
     /**
      * Prints table footer and info about printed rows
      * @param count How many rows were printed (0 = single row was printed)
+     * @return success
      */
-    void printFooter(const int count);
+    bool printFooter(const int count);
 
 };
 

@@ -64,6 +64,11 @@ public:
      */
     Process* newProcess(const string& name);
 
+    /**
+     * Runs a process of this method
+     * @return success
+     * @todo code: neimplementováno
+     */
     virtual bool run();
 
 private:

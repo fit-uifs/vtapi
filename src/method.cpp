@@ -64,4 +64,4 @@ TKeys Method::getMethodKeys() {
     return methodKeys;
 }
 
-bool Method::run() {};
+bool Method::run() { return VT_OK; };

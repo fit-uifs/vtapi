@@ -54,11 +54,11 @@ LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopen
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Debug.mk dist/vtcli
+	"${MAKE}"  -f nbproject/Makefile-Debug.mk ./vtcli
 
-dist/vtcli: ${OBJECTFILES}
-	${MKDIR} -p dist
-	${LINK.cc} -o ${CND_DISTDIR}/vtcli ${OBJECTFILES} ${LDLIBSOPTIONS} 
+./vtcli: ${OBJECTFILES}
+	${MKDIR} -p .
+	${LINK.cc} -o ./vtcli ${OBJECTFILES} ${LDLIBSOPTIONS} 
 
 ${OBJECTDIR}/vtcli.o: vtcli.cpp 
 	${MKDIR} -p ${OBJECTDIR}
@@ -71,7 +71,7 @@ ${OBJECTDIR}/vtcli.o: vtcli.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r build/Debug
-	${RM} dist/vtcli
+	${RM} ./vtcli
 
 # Subprojects
 .clean-subprojects:

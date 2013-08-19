@@ -79,7 +79,7 @@ public:
 
 protected:
 
-    virtual int loadTypes() = 0;
+    virtual bool loadTypes() = 0;
 
 
 };
@@ -102,9 +102,9 @@ public:
 
 protected:
 
-    int loadTypes();
+    bool loadTypes();
     //void loadRefTypes();
-    int registerTypes();
+    bool registerTypes();
     void loadRefTypes();
     type_category_t mapCategory(char category_char);
     
@@ -121,7 +121,7 @@ public:
 
 protected:
     
-    int loadTypes();
+    bool loadTypes();
 
 };
 

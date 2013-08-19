@@ -51,27 +51,67 @@ protected:
 public:
     /**
      * Constructor
-     * @param fmap
-     * @param connectionInfo
-     * @param logger
+     * @param fmap function address book
+     * @param connectionInfo initial connection string @see vtapi.conf
+     * @param logger logger object
      */
     Connection (fmap_t *fmap, const string& connectionInfo, Logger *logger) {
         this->logger    = logger;
         this->connInfo  = connectionInfo;
         this->fmap      = fmap;
     };
+    /**
+     * Virtual destructor
+     */
     virtual ~Connection() { };
 
+    /**
+     * Performs connection to database
+     * @param connectionInfo connection string @see vtapi.conf
+     * @return success
+     */
     virtual bool connect (const string& connectionInfo) = 0;
+    /**
+     * Reconnects to database
+     * @param connectionInfo connection string @see vtapi.conf
+     * @return success
+     */
     virtual bool reconnect (const string& connectionInfo = "") = 0;
+    /**
+     * Disconnects from database
+     */
     virtual void disconnect () = 0;
+    /**
+     * Checks database connection
+     * @return success
+     */
     virtual bool isConnected () = 0;
 
-    virtual int execute(const string& query, void *param) = 0;
+    /**
+     * Executes query without fetching any result set
+     * @param query SQL query string
+     * @param param query parameters
+     * @return success
+     */
+    virtual bool execute(const string& query, void *param) = 0;
+    /**
+     * Executes query and fetc hes new result set
+     * @param query SQl query string
+     * @param param query parameters
+     * @param resultSet new result set object
+     * @return number of rows fetched or negative value on error
+     */
     virtual int fetch(const string& query, void *param, ResultSet *resultSet) = 0;
 
+    /**
+     * Gets database connection object
+     * @return
+     */
     virtual void* getConnectionObject() = 0;
-
+    /**
+     * Returns last error message
+     * @return
+     */
     string getErrorMessage() { return this->errorMessage; };
 
 };
@@ -92,7 +132,7 @@ public:
     void disconnect ();
     bool isConnected ();
 
-    int execute(const string& query, void *param);
+    bool execute(const string& query, void *param);
     int fetch(const string& query, void *param, ResultSet *resultSet);
 
     void* getConnectionObject();
@@ -115,16 +155,15 @@ public:
     void disconnect ();
     bool isConnected ();
 
-    int execute(const string& query, void *param);
+    bool execute(const string& query, void *param);
     int fetch(const string& query, void *param, ResultSet *resultSet);
 
     void* getConnectionObject();
 
 private:
 
-    int fixSlashes(string& path);
-
-    int attachDatabase(string& db);
+    bool fixSlashes(string& path);
+    bool attachDatabase(string& db);
 
 };
 

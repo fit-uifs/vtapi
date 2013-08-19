@@ -53,16 +53,20 @@ public:
     /**
      * Initializes factory with given backend type
      * @param backendType backend type
+     * @return success
      */
-    static void initialize(const string& backendType = "") {
+    static bool initialize(const string& backendType = "") {
        if (backendType.compare("sqlite") == 0) {
            backend = SQLITE;
+           return VT_OK;
        }
        else if (backendType.compare("postgres") == 0) {
            backend = POSTGRES;
+           return VT_OK;
        }
        else {
            backend = UNKNOWN;
+           return VT_FAIL;
        }
     };
 

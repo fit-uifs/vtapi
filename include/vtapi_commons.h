@@ -153,18 +153,23 @@ public:
 
     /**
      * Checks commons object for validity (connection etc.)
-     * @return 0 on success
+     * @return success
      */
-    int checkCommonsObject();
+    bool checkCommonsObject();
     /**
      * This is to check whether a file exists or not
      * @param filename
-     * @return exists
+     * @return success
      */
     static bool fileExists(const string& filename);
 
 private:
 
+    /**
+     * Maps string to format_t
+     * @param format string format
+     * @return format_t value
+     */
     format_t mapFormat(const string& format);
 
 };

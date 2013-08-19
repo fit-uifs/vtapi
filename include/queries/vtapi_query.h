@@ -52,20 +52,19 @@ public:
 
     /**
      * This will commit your query
-     * @return success of the query
+     * @return success
      */
     bool execute();
     /**
      * Clears the query object to its original state
-     * @return
      */
-    bool reset();
+    void reset();
 
     /**
      * Checks query object for validity (query builder, result set)
-     * @return 0 on success
+     * @return success
      */
-    int checkQueryObject();
+    bool checkQueryObject();
 
 };
 

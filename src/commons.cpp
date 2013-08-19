@@ -71,7 +71,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     logger          = new Logger(string(args_info.log_arg), args_info.verbose_given);
     // link libraries and load functions into fmap
     libLoader       = BackendFactory::createLibLoader(logger);
-    fmap        = libLoader->loadLibs();
+    fmap            = libLoader->loadLibs();
     // initialize connection and type managing
     connection      = fmap ? BackendFactory::createConnection(fmap, dbconn, logger) : NULL;
     typeManager     = fmap ? BackendFactory::createTypeManager(fmap, connection, logger) : NULL;
@@ -164,13 +164,13 @@ string Commons::getUser() {
     return user;
 }
 
-int Commons::checkCommonsObject() {
-    if (BackendFactory::backend == UNKNOWN) return -1;
-    if (!libLoader || !libLoader->isLoaded() || !fmap) return -2;
-    if (!connection) return -3;
-    if (!typeManager) return -4;
-    if (dbconn.empty()) return -5;
-    return 0;
+bool Commons::checkCommonsObject() {
+    return !(
+         BackendFactory::backend == UNKNOWN ||
+        !libLoader || !libLoader->isLoaded() || !fmap ||
+        !connection ||
+        !typeManager ||
+        dbconn.empty());
 }
 
 

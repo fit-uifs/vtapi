@@ -64,24 +64,25 @@ string Process::getOutputs() {
 
 
 bool Process::add(const string& method, const string& name, const string& selection) {
-    bool ret = false;
+    bool retval = VT_OK;
 
     destruct(insert);
     insert = new Insert(*this, "processes");
-    insert->keyString("mtname", method);
-    insert->keyString("prsname", name);
-    insert->keyString("outputs", selection);
+    retval &= insert->keyString("mtname", method);
+    retval &= insert->keyString("prsname", name);
+    retval &= insert->keyString("outputs", selection);
+    if (retval) retval &= insert->execute();
 
     // this is the fun
-    if (insert->execute()) {
-
+    if (retval) {
         update = new Update(*this, "ALTER TABLE \""+ selection +"\" ADD COLUMN \""+ name +"\" real[];");
-        ret = update->execute();
+        retval &= update->execute();
     }
-
+    
     destruct(insert);
     destruct(update);
-    return ret;
+
+    return retval;
 }
 
 

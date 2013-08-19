@@ -115,7 +115,7 @@ public:
     virtual ~LibLoader() {};
 
     virtual fmap_t *loadLibs() = 0;
-    virtual int unloadLibs() = 0;
+    virtual void unloadLibs() = 0;
     virtual bool isLoaded() = 0;
     virtual char *getLibName() = 0;
 };
@@ -133,16 +133,16 @@ public:
     ~PGLibLoader();
 
     fmap_t *loadLibs();
-    int unloadLibs();
+    void unloadLibs();
     bool isLoaded();
     char *getLibName();
 
 private:
 
-    int load_libpqtypes(fmap_t *);
-    int load_libpq(fmap_t *);
-    int unload_libpqtypes();
-    int unload_libpq();
+    bool load_libpqtypes(fmap_t *);
+    bool load_libpq(fmap_t *);
+    void unload_libpqtypes();
+    void unload_libpq();
 
 };
 
@@ -158,14 +158,14 @@ public:
     ~SLLibLoader();
 
     fmap_t *loadLibs();
-    int unloadLibs();
+    void unloadLibs();
     bool isLoaded();
     char *getLibName();
     
 private:
 
-    int load_libsqlite(fmap_t *);
-    int unload_libsqlite();
+    bool load_libsqlite(fmap_t *);
+    void unload_libsqlite();
 };
 
 } // namespace vtapi

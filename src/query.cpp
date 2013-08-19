@@ -42,33 +42,31 @@ string Query::getQuery() {
     return queryBuilder->getGenericQuery();
 }
 
-bool Query::reset() {
+void Query::reset() {
     executed = false;
-    return queryBuilder->reset();
+    queryBuilder->reset();
 }
 
 bool Query::execute() {
-    int result = 0;
+    bool retval = VT_OK;
     string queryString = this->getQuery();
 
     logger->debug("SQL query:\n" + queryString);
-    result = connection->execute(queryString, queryBuilder->getParam());
+    retval = connection->execute(queryString, queryBuilder->getParam());
     executed = true;
 
-    if (result < 0) {
+    if (!retval) {
         logger->warning(200, "Query failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
-        return false;
     }
     else {
         logger->debug("Query succeeded");
-        return true;
     }
+
+    return retval;
 }
 
-int Query::checkQueryObject() {
-    if (!queryBuilder) return -1;
-    if (!resultSet) return -2;
-    return 0;
+bool Query::checkQueryObject() {
+    return (queryBuilder && resultSet);
 }
 
 //================================== SELECT ====================================
@@ -99,11 +97,11 @@ bool Select::execute() {
 
     if (result < 0) {
         logger->warning(200, "SELECT failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
-        return false;
+        return VT_FAIL;
     }
     else {        
         logger->debug("SELECT succeeded, "+toString(result)+" row(s) returned");
-        return true;
+        return VT_OK;
     }
 }
 
@@ -112,13 +110,16 @@ bool Select::executeNext() {
         offset += limit;
         return this->execute();
     }
-    else return false;
+    else return VT_FAIL;
 }
 
 bool Select::from(const string& table, const string& column) {
-    this->queryBuilder->keyFrom(table, column);
+    bool retval = VT_OK;
+
+    retval &= this->queryBuilder->keyFrom(table, column);
     executed = false;
-    return true;
+
+    return retval;
 }
 
 bool Select::whereString(const string& key, const string& value, const string& oper, const string& from) {
@@ -160,21 +161,20 @@ string Insert::getQuery() {
 
 
 bool Insert::execute() {
-    int result = 0;
+    bool retval = VT_OK;
     string queryString = this->getQuery();
 
     logger->debug("Insert query:\n" + queryString);
-    result = connection->execute(queryString, queryBuilder->getParam());
+    retval = connection->execute(queryString, queryBuilder->getParam());
     executed = true;
-
-    if (result < 0) {
-        logger->warning(200, "INSERT failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
-        return false;
+    if (retval) {
+        logger->debug("INSERT succeeded");
     }
     else {
-        logger->debug("INSERT succeeded, "+toString(result)+" row(s) inserted");
-        return true;
+        logger->warning(200, "INSERT failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
     }
+
+    return retval;
 }
 
 bool Insert::keyString(const string& key, const string& value, const string& from) {
@@ -233,22 +233,21 @@ string Update::getQuery() {
 }
 
 bool Update::execute() {
-    int result = 0;
+    bool retval = VT_OK;
     string queryString = this->getQuery();
 
     logger->debug("Update query:\n" + queryString);
-    result = connection->execute(queryString, queryBuilder->getParam());
+    retval = connection->execute(queryString, queryBuilder->getParam());
     executed = true;
 
-    if (result < 0) {
-        logger->warning(200, "UPDATE failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
-        return false;
+    if (retval) {
+        logger->debug("UPDATE succeeded");
     }
     else {
-        executed = true;
-        logger->debug("UPDATE succeeded, "+toString(result)+" row(s) updated");
-        return true;
+        logger->warning(200, "UPDATE failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
     }
+
+    return retval;
 }
 
 bool Update::setString(const string& key, const string& value, const string& from) {

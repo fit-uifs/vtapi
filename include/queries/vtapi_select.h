@@ -59,7 +59,7 @@ public:
      * It may be called more times.
      * @param funtext
      * @return success
-     * @unimplemented neimplementováno (pak doplnit do doc)
+     * @todo @b code: neimplementováno (pak doplnit do doc)
      */
     bool function(const string& funtext);
     /**
@@ -67,7 +67,7 @@ public:
      * If not, returns false (no quarantee before version 2).
      * @warning no quarantee before version 2 !!
      * @return success
-     * @unimplemented neimplementováno (potom doplnit i doc)
+     * @todo @b code: neimplementováno (potom doplnit i doc)
      */
     bool join();
     /**
@@ -95,7 +95,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     bool whereString(const string& key, const string& value, const string& oper = "=", const string& from = "");
     /**
@@ -105,7 +105,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     bool whereInt(const string& key, const int value, const string& oper = "=", const string& from = "");
     /**
@@ -115,7 +115,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     bool whereFloat(const string& key, const float value, const string& oper = "=", const string& from = "");
     /**
@@ -125,7 +125,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
      bool whereSeqtype(const string& key, const string& value, const string& oper = "=", const string& from = "");
     /**
@@ -135,7 +135,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
      bool whereInouttype(const string& key, const string& value, const string& oper = "=", const string& from = "");
     /**
@@ -145,7 +145,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
 //     bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "");
     /**
@@ -155,7 +155,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
      bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "");
 };

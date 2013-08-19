@@ -379,7 +379,7 @@ PGpoint KeyValues::getPoint(const int col) {
     PGpoint point;
     memset(&point, 0, sizeof(PGpoint));
     if (! PQgetf(select->res, this->pos, "%point", col, &point)) {
-        warning(314, "Value is not a point");
+        logger->warning(314, "Value is not a point");
     }
     return point;
 }
@@ -390,7 +390,7 @@ PGlseg KeyValues::getLineSegment(const int col){
     PGlseg lseg;
     memset(&lseg, 0, sizeof(PGlseg));
     if (! PQgetf(select->res, this->pos, "%lseg", col, &lseg)) {
-        warning(315, "Value is not a line segment");
+        logger->warning(315, "Value is not a line segment");
     }
     return lseg;
 }
@@ -402,7 +402,7 @@ PGbox KeyValues::getBox(const int col){
     PGbox box;
     memset(&box, 0, sizeof(PGbox));
     if (! PQgetf(select->res, this->pos, "%box", col, &box)) {
-        warning(316, "Value is not a box");
+        logger->warning(316, "Value is not a box");
     }
     return box;
 }
@@ -415,7 +415,7 @@ PGcircle KeyValues::getCircle(const int col){
     PGcircle circle;
     memset(&circle, 0, sizeof(PGcircle));
     if (! PQgetf(select->res, this->pos, "%circle", col, &circle)) {
-        warning(317, "Value is not a circle");
+        logger->warning(317, "Value is not a circle");
     }
     return circle;
 }
@@ -428,7 +428,7 @@ PGpolygon KeyValues::getPolygon(const int col){
     PGpolygon polygon;
     memset(&polygon, 0, sizeof(PGpolygon));
     if (! PQgetf(select->res, this->pos, "%polygon", col, &polygon)) {
-        warning(318, "Value is not a polygon");
+        logger->warning(318, "Value is not a polygon");
     }
     return polygon;
 }
@@ -441,7 +441,7 @@ PGpath KeyValues::getPath(const int col){
     PGpath path;
     memset(&path, 0, sizeof(PGpath));
     if (! PQgetf(select->res, this->pos, "%path", col, &path)) {
-        warning(319, "Value is not a path");
+        logger->warning(319, "Value is not a path");
     }
     return path;
 }
@@ -453,7 +453,7 @@ PGcube KeyValues::getCube(const int col) {
     PGcube cube;
     memset(&cube, 0, sizeof(PGcube));
     if (! PQgetf(select->res, this->pos, "%cube", col, &cube)) {
-        warning(320, "Value is not a cube");
+        logger->warning(320, "Value is not a cube");
     }
     return cube;
 }
@@ -464,7 +464,7 @@ GEOSGeometry *KeyValues::getGeometry(const string& key) {
 GEOSGeometry *KeyValues::getGeometry(const int col) {
     GEOSGeometry *geo;
     if (! PQgetf(select->res, this->pos, "%geometry", col, &geo)) {
-        warning(321, "Value is not a geometry type");
+        logger->warning(321, "Value is not a geometry type");
     }
     return geo;
 }
@@ -475,10 +475,10 @@ GEOSGeometry *KeyValues::getLineString(const string& key) {
 GEOSGeometry *KeyValues::getLineString(const int col) {
     GEOSGeometry *ls;
     if (! PQgetf(select->res, this->pos, "%geometry", col, &ls)) {
-        warning(322, "Value is not a geometry type");
+        logger->warning(322, "Value is not a geometry type");
     }
     else if (ls && GEOSGeomTypeId(ls) != GEOS_LINESTRING) {
-        warning(323, "Value is not a linestring");
+        logger->warning(323, "Value is not a linestring");
     }
     return ls;
 }
@@ -489,7 +489,7 @@ vector<PGpoint>*  KeyValues::getPointV(const string& key) {
 vector<PGpoint>*  KeyValues::getPointV(const int col) {
     PGarray tmp;
     if (! PQgetf(select->res, this->pos, "%point[]", col, &tmp)) {
-        warning(324, "Value is not an array of points");
+        logger->warning(324, "Value is not an array of points");
         return NULL;
     }
 
@@ -498,7 +498,7 @@ vector<PGpoint>*  KeyValues::getPointV(const int col) {
 
     for (int i = 0; i < PQntuples(tmp.res); i++) {
         if (! PQgetf(tmp.res, i, "%point", 0, &value)) {
-            warning(325, "Unexpected value in point array");
+            logger->warning(325, "Unexpected value in point array");
             PQclear(tmp.res);
             destruct (values);
             return NULL;
@@ -521,10 +521,11 @@ int KeyValues::getIntOid(const int col) {
 
 // =============== PRINT methods =======================================
 
-void KeyValues::print() {
-
-    if (!select || !select->resultSet->isOk() || select->resultSet->getPosition() < 0)
+bool KeyValues::print() {
+    if (!select || !select->resultSet->isOk() || select->resultSet->getPosition() < 0) {
         logger->warning(302, "There is nothing to print (see other messages)", thisClass+"::print()");
+        return VT_FAIL;
+    }
     else {
         int origpos = select->resultSet->getPosition();
         int get_widths = (format == STANDARD);
@@ -534,16 +535,18 @@ void KeyValues::print() {
             printRowOnly(select->resultSet->getPosition(), fInfo.second);
             printFooter(1);
         }
-        else cout << "(no output)" << endl;
+        else cout << "(empty)" << endl;
         destruct(fInfo.first); destruct(fInfo.second);
         select->resultSet->setPosition(origpos);
+        return VT_OK;
     }
 }
 
-void KeyValues::printAll() {
-
-    if (!select || !select->resultSet->isOk())
+bool KeyValues::printAll() {
+    if (!select || !select->resultSet->isOk()) {
         logger->warning(303, "There is nothing to print (see other messages)", thisClass+"::printAll()");
+        return VT_FAIL;
+    }
     else {
         int origpos = select->resultSet->getPosition();
         int get_widths = (format == STANDARD);
@@ -553,17 +556,23 @@ void KeyValues::printAll() {
             for (int r = 0; r < select->resultSet->countRows(); r++) printRowOnly(r, fInfo.second);
             printFooter(select->resultSet->countRows());
         }
-        else cout << "(no output)" << endl;
+        else cout << "(empty)" << endl;
         destruct(fInfo.first); destruct(fInfo.second);
         select->resultSet->setPosition(origpos);
+        return VT_OK;
     }
 }
 
 // =============== PRINT support methods =======================================
 
-void KeyValues::printHeader(const pair< TKeys*, vector<int>* > fInfo) {
+bool KeyValues::printHeader(const pair< TKeys*, vector<int>* > fInfo) {
+    bool retval = VT_OK;
     stringstream table, nameln, typeln, border;
     int cols = select->resultSet->countCols();
+
+    if (!fInfo.first || !fInfo.second || cols != fInfo.first->size() || cols != fInfo.second->size()) {
+        return VT_FAIL;
+    }
 
     if (format == HTML) {
         if (tableOpt.empty()) table << "<table>";
@@ -593,9 +602,11 @@ void KeyValues::printHeader(const pair< TKeys*, vector<int>* > fInfo) {
     if (format == STANDARD) cout << nameln.str() << typeln.str() << border.str();
     else if (format == CSV) cout << nameln.str();
     else if (format == HTML) cout << table.str();
+
+    return VT_OK;
 }
 
-void KeyValues::printFooter(const int count) {
+bool KeyValues::printFooter(const int count) {
     stringstream output;
     if (format == STANDARD) {
         int rows = select->resultSet->countRows();
@@ -604,18 +615,20 @@ void KeyValues::printFooter(const int count) {
     }
     else if (format == HTML) output << "</table>" << endl;
     cout << output.str();
+
+    return VT_OK;
 }
 
-void KeyValues::printRowOnly(const int row, const vector<int>* widths) {
+bool KeyValues::printRowOnly(const int row, const vector<int>* widths) {
+    bool retval = VT_OK;
     stringstream output;
     int cols = select->resultSet->countCols();
 
-    //for (int i = 0; i < cols-(widths->size()); i++) widths->push_back(0);
     // don't forget to save original value of pos beforehand!
     select->resultSet->setPosition(row);
     if (format == HTML) output << "<tr>";
     for (int c = 0; c < cols; c++) {
-        // obecny getter
+        // general getter
         string val = getValue(c, arrayLimit);
         if (format == STANDARD) {
             output << std::left << std::setw((*widths)[c]) << val;
@@ -623,7 +636,6 @@ void KeyValues::printRowOnly(const int row, const vector<int>* widths) {
         }
         else if (format == CSV) {
             if (val.find(',') != string::npos) output << "\"" << val << "\"";
-            //TODO: escape quotation marks ""
             else output << val;
             if (c < cols-1) output << ',';
         }
@@ -644,10 +656,10 @@ bool KeyValues::preSet() {
     // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
     logger->warning(3010, "Set inherited from KeyValues at class " + thisClass, thisClass+"::preSet()");
 
-    destruct(this->update);
-    this->update = new Update(*this);
-    if (this->update != NULL) return true;
-    else return false;
+    destruct(update);
+    update = new Update(*this);
+
+    return update ? VT_OK : VT_FAIL;
 }
 
 // TODO: how to change binary data???
@@ -655,9 +667,8 @@ bool KeyValues::setString(const string& key, const string& value) {
     // call preset on the derived class
     if (!update) this->preSet();
 
-    /* TODO: how to change the res in case of binary data???
+    /* 
     if (select) {
-        // TODO: what to call in the case of binary data???
         char* tempc = const_cast<char*>(value.c_str()); // stupid C conversions
         PQsetvalue(select->res, pos, PQfnumber(select->res, key.c_str()), tempc, value.length());
     } */
@@ -690,25 +701,25 @@ bool KeyValues::setFloatA(const string& key, float* values, int size){
 }
 
 bool KeyValues::setExecute() {
-    if (this->update) return this->update->execute();
-    else return false;
+    if (update) return this->update->execute();
+    else return VT_FAIL;
 }
 
 
 // =================== ADDERS (Insert) =========================================
 bool KeyValues::addExecute() {
     if (this->insert) return this->insert->execute();
-    else return false;
+    else return VT_FAIL;
 }
 
 // =================== CHECKERS (Storage) ======================================
 bool KeyValues::checkStorage() {
     logger->warning(3018, "Check might fail at class " + thisClass, thisClass+"::checkStorage()");
 
-    if (!sequence.empty() && fileExists(getDataLocation())) return true;
-    else if (!dataset.empty() && fileExists(getDataLocation())) return true;
+    if (!sequence.empty() && fileExists(getDataLocation())) return VT_OK;
+    else if (!dataset.empty() && fileExists(getDataLocation())) return VT_OK;
 
-    return false;
+    return VT_FAIL;
 }
 
 

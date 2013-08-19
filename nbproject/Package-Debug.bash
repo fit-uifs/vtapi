@@ -11,7 +11,7 @@ CND_CONF=Debug
 CND_DISTDIR=dist
 NBTMPDIR=build/${CND_CONF}/${CND_PLATFORM}/tmp-packaging
 TMPDIRNAME=tmp-packaging
-OUTPUT_PATH=${CND_DISTDIR}/vtcli
+OUTPUT_PATH=./vtcli
 OUTPUT_BASENAME=vtcli
 PACKAGE_TOP_DIR=vtapi/
 

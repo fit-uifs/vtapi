@@ -67,9 +67,8 @@ public:
     /**
      * This is to specify dataset to be inserted in
      * @param dataset dataset into which new data will be inserted
-     * @return success
      */
-    bool setDataset(const string& dataset) { this->dataset = dataset; };
+    void setDataset(const string& dataset) { this->dataset = dataset; };
     /**
      * Gets query from initialization string
      * @return query string
@@ -97,9 +96,8 @@ public:
     
     /**
      * Resets query builder to initial state
-     * @return successs
      */
-    virtual bool reset() = 0;
+    virtual void reset() = 0;
     /**
      * Allocates new query param structure, destroys the old one
      */
@@ -135,7 +133,6 @@ public:
      * @param size size of array
      * @param from selection (table; this is optional)
      * @return success
-     * @unimplemented neimplementováno (pak zkontrolovat doc)
      */
     virtual bool keyStringA(const string& key, string* values, const int size, const string& from = "") = 0;
     /**
@@ -217,10 +214,8 @@ public:
     /**
      * This is to specify the (single) table to be inserted in
      * @param table table into which new data will be inserted
-     * @return success
-     * @todo @b doc: Petrovy závorky
      */
-    bool setTable(const string& table) { this->table = table; };
+    void setTable(const string& table) { this->table = table; };
 
     /**
      * This is a WHERE statement construction class
@@ -229,7 +224,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     virtual bool whereString(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
 
@@ -240,7 +235,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     virtual bool whereInt(const string& key, const int value, const string& oper = "=", const string& from = "") = 0;
 
@@ -251,7 +246,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     virtual bool whereFloat(const string& key, const float value, const string& oper = "=", const string& from = "") = 0;
     /**
@@ -261,7 +256,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     virtual bool whereSeqtype(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
     /**
@@ -271,7 +266,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     virtual bool whereInouttype(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
     /**
@@ -281,7 +276,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
 //    virtual bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
     /**
@@ -291,7 +286,7 @@ public:
      * @param value requested value for key
      * @param oper comparision operator between key and value
      * @param from table where the key is situated
-     * @return
+     * @return success
      */
     virtual bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "") = 0;
 
@@ -316,6 +311,22 @@ protected:
      * @return escaped literal
      */
     virtual string escapeLiteral(const string& literal) = 0;
+    /**
+     * Checks validity of seqtype value
+     * @param value seqtype value
+     * @return success
+     */
+    bool checkSeqtype(const string& value) {
+        return (value.compare("images") == 0) || (value.compare("video") == 0) || (value.compare("data") == 0);
+    }
+    /**
+     * Checks validity of inouttype value
+     * @param value inouttype value
+     * @return success
+     */
+    bool checkInouttype(const string& value) {
+        return (value.compare("in") == 0) || (value.compare("inout") == 0) || (value.compare("out") == 0);
+    }
 };
 
 
@@ -359,7 +370,7 @@ public:
 //    bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "");
     bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "");
 
-    bool reset();
+    void reset();
     void createParam();
     void destroyParam();
 
@@ -407,7 +418,7 @@ public:
 //    bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "");
     bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "");
 
-    bool reset();
+    void reset();
     void createParam();
     void destroyParam();
 
@@ -419,8 +430,7 @@ protected:
 
 private:
 
-    bool checkSeqtype(const string& value);
-    bool checkInouttype(const string& value);
+
     void destroyKeys();
 
 };

@@ -57,7 +57,7 @@ public:
      * @param size size of array
      * @param from selection (table; this is optional)
      * @return success
-     * @unimplemented neimplementováno (pak zkontrolovat doc)
+     * @todo @b code: neimplementováno (pak zkontrolovat doc)
      */
     bool keyStringA(const string& key, string* values, const int size, const string& from = "");
     /**
