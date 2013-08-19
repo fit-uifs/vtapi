@@ -50,7 +50,7 @@ protected:
     TypeManager     *typeManager;       /**< Datatypes management object */
     LibLoader       *libLoader;         /**< Library loader object */
     Logger          *logger;            /**< Logger object */
-    func_map_t      *FUNC_MAP;          /**< Map of library functions */
+    fmap_t          *fmap;          /**< Map of library functions */
 
     string          dbconn;             /**< Connection string / databases folder */
     format_t        format;             /**< Output format */

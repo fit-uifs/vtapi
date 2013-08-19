@@ -68,19 +68,19 @@ public:
 
     /**
      * Creates object of class @ref Connection
-     * @param FUNC_MAP library functions address book
+     * @param fmap library functions address book
      * @param connectionInfo connection string or database folder
      * @param logger message logging object
      * @return NULL if factory is uninitialized, connection object otherwise
      */
-    static Connection* createConnection(func_map_t *FUNC_MAP, const string& connectionInfo, Logger *logger) {
+    static Connection* createConnection(fmap_t *fmap, const string& connectionInfo, Logger *logger) {
         Connection *connection = NULL;
         switch (backend) {
             case POSTGRES:
-                connection = new PGConnection(FUNC_MAP, connectionInfo, logger);
+                connection = new PGConnection(fmap, connectionInfo, logger);
                 break;
             case SQLITE:
-                connection = new SLConnection(FUNC_MAP, connectionInfo, logger);
+                connection = new SLConnection(fmap, connectionInfo, logger);
                 break;
             default:
                 break;
@@ -90,19 +90,19 @@ public:
 
     /**
      * Creates object of class @ref TypeManager
-     * @param FUNC_MAP library functions address book
+     * @param fmap library functions address book
      * @param connection connection object
      * @param logger message logging object
      * @return NULL if factory is uninitialized, data type managing object otherwise
      */
-    static TypeManager* createTypeManager(func_map_t *FUNC_MAP, Connection *connection, Logger *logger) {
+    static TypeManager* createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger) {
         TypeManager *typeManager = NULL;
         switch (backend) {
             case POSTGRES:
-                typeManager = new PGTypeManager(FUNC_MAP, connection, logger);
+                typeManager = new PGTypeManager(fmap, connection, logger);
                 break;
             case SQLITE:
-                typeManager = new SLTypeManager(FUNC_MAP, connection, logger);
+                typeManager = new SLTypeManager(fmap, connection, logger);
                 break;
             default:
                 break;
@@ -112,21 +112,21 @@ public:
 
     /**
      * Creates object of class @ref QueryBuilder
-     * @param FUNC_MAP library functions address book
+     * @param fmap library functions address book
      * @param connection connection object
      * @param logger message logging object
      * @param initString initializing string (query or table)
      * @see Query
      * @return NULL if factory is uninitialized, query building object otherwise
      */
-    static QueryBuilder* createQueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger, const string& initString) {
+    static QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString) {
         QueryBuilder *queryBuilder = NULL;
         switch (backend) {
             case POSTGRES:
-                queryBuilder = new PGQueryBuilder(FUNC_MAP, connection, logger, initString);
+                queryBuilder = new PGQueryBuilder(fmap, connection, logger, initString);
                 break;
             case SQLITE:
-                queryBuilder = new SLQueryBuilder(FUNC_MAP, connection, logger, initString);
+                queryBuilder = new SLQueryBuilder(fmap, connection, logger, initString);
                 break;
             default:
                 break;
@@ -136,19 +136,19 @@ public:
 
     /**
      * Creates object of class @ref ResultSet
-     * @param FUNC_MAP library functions address book
+     * @param fmap library functions address book
      * @param typeManager data type managing object
      * @param logger message logging object
      * @return NULL if factory is uninitialized, result set object otherwise
      */
-    static ResultSet* createResultSet(func_map_t *FUNC_MAP, TypeManager *typeManager, Logger *logger) {
+    static ResultSet* createResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger) {
         ResultSet *resultSet = NULL;
         switch (backend) {
             case POSTGRES:
-                resultSet = new PGResultSet(FUNC_MAP, typeManager, logger);
+                resultSet = new PGResultSet(fmap, typeManager, logger);
                 break;
             case SQLITE:
-                resultSet = new SLResultSet(FUNC_MAP, typeManager, logger);
+                resultSet = new SLResultSet(fmap, typeManager, logger);
                 break;
             default:
                 break;

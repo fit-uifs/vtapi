@@ -34,7 +34,7 @@ typedef struct {
 class ResultSet {
 protected:
 
-    func_map_t      *FUNC_MAP;      /**< function address book */
+    fmap_t          *fmap;      /**< function address book */
     TypeManager     *typeManager;   /**< object for type manipulation */
     Logger          *logger;        /**< logger object for output messaging */
     string          thisClass;      /**< class name */
@@ -44,12 +44,12 @@ protected:
 
 public:
 
-    ResultSet(func_map_t *FUNC_MAP, TypeManager *typeManager, Logger *logger) {
-        this->logger = logger;
-        this->typeManager = typeManager;
-        this->FUNC_MAP = FUNC_MAP;
-        this->pos = -1;
-        this->res = NULL;
+    ResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger) {
+        this->logger        = logger;
+        this->typeManager   = typeManager;
+        this->fmap          = fmap;
+        this->pos           = -1;
+        this->res           = NULL;
     };
     virtual ~ResultSet() { };
 
@@ -491,7 +491,7 @@ protected:
 class PGResultSet : public ResultSet {
 public:
 
-    PGResultSet(func_map_t *FUNC_MAP, TypeManager *typeManager, Logger *logger);
+    PGResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger);
     ~PGResultSet();
 
     void newResult(void *res);
@@ -534,7 +534,7 @@ protected:
 class SLResultSet : public ResultSet {
 public:
 
-    SLResultSet(func_map_t *FUNC_MAP, TypeManager *typeManager, Logger *logger);
+    SLResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger);
     ~SLResultSet();
 
     void newResult(void *res);

@@ -52,7 +52,7 @@ typedef map<string, type_metadata_t>    types_map_t;
 class TypeManager {
 protected:
 
-    func_map_t      *FUNC_MAP;      /**< function address book */
+    fmap_t          *fmap;      /**< function address book */
     Connection      *connection;    /**< connection object */
     Logger          *logger;        /**< logger object for output messaging */
     string          thisClass;      /**< class name */
@@ -62,10 +62,10 @@ protected:
 
 public:
 
-    TypeManager(func_map_t *FUNC_MAP, Connection *connection, Logger *logger) {
-        this->logger = logger;
-        this->connection = connection;
-        this->FUNC_MAP = FUNC_MAP;
+    TypeManager(fmap_t *fmap, Connection *connection, Logger *logger) {
+        this->logger        = logger;
+        this->connection    = connection;
+        this->fmap          = fmap;
     };
     virtual ~TypeManager() { };
 
@@ -94,7 +94,7 @@ private:
 
 public:
 
-    PGTypeManager(func_map_t *FUNC_MAP, Connection *connection, Logger* logger);
+    PGTypeManager(fmap_t *fmap, Connection *connection, Logger* logger);
     ~PGTypeManager();
 
     int enum_put (PGtypeArgs *args);
@@ -116,7 +116,7 @@ private:
 
 public:
 
-    SLTypeManager(func_map_t *FUNC_MAP, Connection *connection, Logger* logger);
+    SLTypeManager(fmap_t *fmap, Connection *connection, Logger* logger);
     ~SLTypeManager();
 
 protected:

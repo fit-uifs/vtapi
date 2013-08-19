@@ -20,10 +20,9 @@ namespace vtapi {
 namespace vtapi {
 
 
-#define FUNC_MAP                        func_map_i67g
-#define FUNC_MAP_ENTRY(func,funcptr)    std::make_pair<string,void *>(func,funcptr)
+#define FMAP_ENTRY(func,funcptr)    std::make_pair<string,void *>(func,funcptr)
 
-typedef map<string,void *>              func_map_t;
+typedef map<string,void *>              fmap_t;
 
 
 // ========================================= LIBPQTYPES ====================================================
@@ -59,7 +58,7 @@ typedef PGresult * (*PQT_PQparamExecPrepared)(PGconn *, PGparam *, const char *,
 typedef int (*PQT_PQparamSendQueryPrepared)(PGconn *, PGparam *, const char *, int);
 typedef void (*PQT_PQlocalTZInfo)(time_t *, int *, int *, char **);
 
-#define CALL_PQT(PQT_FUNCTION) ((PQT_ ## PQT_FUNCTION) (*FUNC_MAP)[string("PQT_" #PQT_FUNCTION)])
+#define CALL_PQT(FUNC_MAP, PQT_FUNCTION, ...) ((PQT_ ## PQT_FUNCTION) (*FUNC_MAP)[string("PQT_" #PQT_FUNCTION)]) (__VA_ARGS__)
 
 // ================================================= LIBPQ ==========================================================
 
@@ -84,7 +83,7 @@ typedef int (*PQ_PQgetlength)(const PGresult *, int, int);
 typedef char * (*PQ_PQescapeLiteral)(PGconn *, const char *, size_t);
 typedef char * (*PQ_PQescapeIdentifier)(PGconn *, const char *, size_t);
 
-#define CALL_PQ(PQ_FUNCTION) ((PQ_ ## PQ_FUNCTION) (*FUNC_MAP)[string("PQ_" #PQ_FUNCTION)])
+#define CALL_PQ(FUNC_MAP, PQ_FUNCTION, ...) ((PQ_ ## PQ_FUNCTION) (*FUNC_MAP)[string("PQ_" #PQ_FUNCTION)]) (__VA_ARGS__)
 
 // ================================================= SQLITE ==========================================================
 
@@ -98,7 +97,7 @@ typedef int (*SL_sqlite3_get_table)( sqlite3 *, const char *, char ***, int *, i
 typedef const char *(*SL_sqlite3_db_filename)(sqlite3 *, const char *);
 typedef void (*SL_sqlite3_free_table)(char **);
 
-#define CALL_SL(SL_FUNCTION) ((SL_ ## SL_FUNCTION) (*FUNC_MAP)[string("SL_" #SL_FUNCTION)])
+#define CALL_SL(FUNC_MAP, SL_FUNCTION, ...) ((SL_ ## SL_FUNCTION) (*FUNC_MAP)[string("SL_" #SL_FUNCTION)]) (__VA_ARGS__)
 
 // ===================================================================================================================
 
@@ -115,7 +114,7 @@ public:
     };
     virtual ~LibLoader() {};
 
-    virtual func_map_t *loadLibs() = 0;
+    virtual fmap_t *loadLibs() = 0;
     virtual int unloadLibs() = 0;
     virtual bool isLoaded() = 0;
     virtual char *getLibName() = 0;
@@ -133,15 +132,15 @@ public:
     PGLibLoader(Logger *logger);
     ~PGLibLoader();
 
-    func_map_t *loadLibs();
+    fmap_t *loadLibs();
     int unloadLibs();
     bool isLoaded();
     char *getLibName();
 
 private:
 
-    int load_libpqtypes(func_map_t *);
-    int load_libpq(func_map_t *);
+    int load_libpqtypes(fmap_t *);
+    int load_libpq(fmap_t *);
     int unload_libpqtypes();
     int unload_libpq();
 
@@ -158,14 +157,14 @@ public:
     SLLibLoader(Logger *logger);
     ~SLLibLoader();
 
-    func_map_t *loadLibs();
+    fmap_t *loadLibs();
     int unloadLibs();
     bool isLoaded();
     char *getLibName();
     
 private:
 
-    int load_libsqlite(func_map_t *);
+    int load_libsqlite(fmap_t *);
     int unload_libsqlite();
 };
 

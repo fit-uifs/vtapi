@@ -21,6 +21,7 @@ namespace vtapi {
 
 namespace vtapi {
 
+
 typedef struct {
     string  database;
 } sl_param_t;
@@ -30,11 +31,17 @@ typedef struct {
 } pg_param_t;
 
 
-//TODO: comment
+/**
+ * @brief Class encapsulating all database connection functionality including
+ * executing queries and fetching results
+ *
+ * Object of this class should be passed to all entities as an attribute of
+ * an instance of class @ref Commons.
+ */
 class Connection {
 protected:
 
-    func_map_t  *FUNC_MAP;      /**< function address book */
+    fmap_t      *fmap;          /**< function address book */
     string      connInfo;       /**< connection string to access the database */
     Logger      *logger;        /**< logger object for output messaging */
     string      thisClass;      /**< class name */
@@ -42,11 +49,16 @@ protected:
     string      errorMessage;   /**< error message string */
 
 public:
-
-    Connection (func_map_t *FUNC_MAP, const string& connectionInfo, Logger *logger) {
+    /**
+     * Constructor
+     * @param fmap
+     * @param connectionInfo
+     * @param logger
+     */
+    Connection (fmap_t *fmap, const string& connectionInfo, Logger *logger) {
         this->logger    = logger;
         this->connInfo  = connectionInfo;
-        this->FUNC_MAP  = FUNC_MAP;
+        this->fmap      = fmap;
     };
     virtual ~Connection() { };
 
@@ -72,7 +84,7 @@ private:
 
 public:
 
-    PGConnection(func_map_t *FUNC_MAP, const string& connectionInfo, Logger* logger = NULL);
+    PGConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger = NULL);
     ~PGConnection();
 
     bool connect (const string& connectionInfo);
@@ -95,7 +107,7 @@ private:
 
 public:
 
-    SLConnection(func_map_t *FUNC_MAP, const string& connectionInfo, Logger* logger = NULL);
+    SLConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger = NULL);
     ~SLConnection();
 
     bool connect (const string& connectionInfo);

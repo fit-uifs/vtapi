@@ -27,7 +27,7 @@ namespace vtapi {
 class QueryBuilder {
 protected:
 
-    func_map_t          *FUNC_MAP;      /**< library functions address book */
+    fmap_t              *fmap;      /**< library functions address book */
     Connection          *connection;    /**< connection object */
     Logger              *logger;        /**< logger object for output messaging */
     string              thisClass;      /**< class name */
@@ -42,16 +42,16 @@ protected:
 public:
     /**
      * Constructor
-     * @param FUNC_MAP library functions address book
+     * @param fmap library functions address book
      * @param connection connection object
      * @param logger logger object for output messaging
      * @param initString initialization string (query/table or empty)
      */
-    QueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger, const string& initString = "") {
+    QueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString = "") {
         this->initString    = initString;
         this->logger        = logger;
         this->connection    = connection;
-        this->FUNC_MAP      = FUNC_MAP;
+        this->fmap          = fmap;
         this->param         = NULL;
     };
     /**
@@ -331,7 +331,7 @@ private:
 
 public:
 
-    PGQueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger = NULL, const string& initString = "");
+    PGQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger = NULL, const string& initString = "");
     ~PGQueryBuilder();
 
     string getGenericQuery();
@@ -379,7 +379,7 @@ private:
 
 public:
 
-    SLQueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger = NULL, const string& initString = "");
+    SLQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger = NULL, const string& initString = "");
     ~SLQueryBuilder();
 
     string getGenericQuery();

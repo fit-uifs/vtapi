@@ -17,8 +17,8 @@
 using namespace vtapi;
 
 
-SLConnection::SLConnection(func_map_t *FUNC_MAP, const string& connectionInfo, Logger* logger)
-: Connection (FUNC_MAP, connectionInfo, logger){
+SLConnection::SLConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger)
+: Connection (fmap, connectionInfo, logger){
     thisClass   = "SLConnection";
     conn        = NULL;
     if (!this->connect(connectionInfo)) {
@@ -37,8 +37,8 @@ bool SLConnection::connect (const string& connectionInfo) {
     fixSlashes(connInfo);
     dbname      = connInfo + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
 
-    if (CALL_SL(sqlite3_open_v2)(dbname.c_str(), &conn, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK) {
-        logger->warning(122, CALL_SL(sqlite3_errmsg)(conn), thisClass+"::connect(");
+    if (CALL_SL(fmap, sqlite3_open_v2, dbname.c_str(), &conn, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK) {
+        logger->warning(122, CALL_SL(fmap, sqlite3_errmsg, conn), thisClass+"::connect(");
         return false;
     }
     else {
@@ -57,14 +57,14 @@ bool SLConnection::reconnect (const string& connectionInfo) {
 
 void SLConnection::disconnect () {
     if (isConnected()) {
-        CALL_SL(sqlite3_close)(conn);
+        CALL_SL(fmap, sqlite3_close, conn);
     }
 }
 
 bool SLConnection::isConnected () {
     int cur, high;
-    if (CALL_SL(sqlite3_db_status)(conn, SQLITE_DBSTATUS_SCHEMA_USED, &cur, &high, false) != SQLITE_OK) {
-        logger->warning(125, CALL_SL(sqlite3_errmsg)(conn), thisClass+"::isConnected()");
+    if (CALL_SL(fmap, sqlite3_db_status, conn, SQLITE_DBSTATUS_SCHEMA_USED, &cur, &high, false) != SQLITE_OK) {
+        logger->warning(125, CALL_SL(fmap, sqlite3_errmsg, conn), thisClass+"::isConnected()");
         return false;
     }
     else {
@@ -84,14 +84,14 @@ int SLConnection::execute(const string& query, void *param) {
         errorMessage = "Database " + sl_param->database + " couldn't have been attached.";
         return -1;
     }
-    ret_query = CALL_SL(sqlite3_exec)(conn, query.c_str(), NULL, NULL, &errmsg);
+    ret_query = CALL_SL(fmap, sqlite3_exec, conn, query.c_str(), NULL, NULL, &errmsg);
     if (ret_query == SQLITE_OK) {
         return 1;
     }
     else {
         if (errmsg) {
             errorMessage = string(errmsg);
-            CALL_SL(sqlite3_free)(errmsg);
+            CALL_SL(fmap, sqlite3_free, errmsg);
         }
         return -1;
     }
@@ -111,7 +111,7 @@ int SLConnection::fetch(const string& query, void *param, ResultSet *resultSet) 
         return -1;
     }
 
-    ret_query = CALL_SL(sqlite3_get_table)(conn, query.c_str(), &(sl_res->res), &(sl_res->rows), &(sl_res->cols), &errmsg);
+    ret_query = CALL_SL(fmap, sqlite3_get_table, conn, query.c_str(), &(sl_res->res), &(sl_res->rows), &(sl_res->cols), &errmsg);
     resultSet->newResult((void *) sl_res);
     if (ret_query == SQLITE_OK) {
         return sl_res->rows;
@@ -119,7 +119,7 @@ int SLConnection::fetch(const string& query, void *param, ResultSet *resultSet) 
     else {
         if (errmsg) {
             errorMessage = string(errmsg);
-            CALL_SL(sqlite3_free)(errmsg);
+            CALL_SL(fmap, sqlite3_free, errmsg);
         }
         return -1;
     }
@@ -157,9 +157,9 @@ int SLConnection::fixSlashes(string& path) {
 }
 
 int SLConnection::attachDatabase(string& db) {
-    if (!CALL_SL(sqlite3_db_filename)(conn, db.c_str())) {
+    if (!CALL_SL(fmap, sqlite3_db_filename, conn, db.c_str())) {
         string query = "ATTACH DATABASE \'" + connInfo + "/" + SL_DB_PREFIX + db + SL_DB_SUFFIX + "\' AS \'" + db + "\';";
-        return CALL_SL(sqlite3_exec)(conn, query.c_str(), NULL, NULL, NULL);
+        return CALL_SL(fmap, sqlite3_exec, conn, query.c_str(), NULL, NULL, NULL);
     }
     else {
         return SQLITE_OK;
@@ -168,8 +168,8 @@ int SLConnection::attachDatabase(string& db) {
 
 
 
-SLTypeManager::SLTypeManager(func_map_t *FUNC_MAP, Connection *connection, Logger *logger)
-: TypeManager(FUNC_MAP, connection, logger) {
+SLTypeManager::SLTypeManager(fmap_t *fmap, Connection *connection, Logger *logger)
+: TypeManager(fmap, connection, logger) {
     thisClass = "SLTypeManager";
 }
 
@@ -182,8 +182,8 @@ int SLTypeManager::loadTypes() {
 
 
 
-SLQueryBuilder::SLQueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger, const string& initString)
-: QueryBuilder (FUNC_MAP, connection, logger, initString) {
+SLQueryBuilder::SLQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString)
+: QueryBuilder (fmap, connection, logger, initString) {
     thisClass   = "SLQueryBuilder";
     param       = (void *) new sl_param_t();
 }
@@ -571,8 +571,8 @@ string SLQueryBuilder::escapeLiteral(const string& ident) {
 
 ///**********************************************************************/
 
-SLResultSet::SLResultSet(func_map_t *FUNC_MAP, TypeManager *typeManager, Logger *logger)
- : ResultSet(FUNC_MAP, typeManager, logger) {
+SLResultSet::SLResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger)
+ : ResultSet(fmap, typeManager, logger) {
     thisClass = "SLResultSet";
 }
 
@@ -597,7 +597,7 @@ bool SLResultSet::isOk() {
 void SLResultSet::clear() {
     if (this->res) {
         sl_res_t *sl_res = (sl_res_t *) this->res;
-        CALL_SL(sqlite3_free_table)(sl_res->res);
+        CALL_SL(fmap, sqlite3_free_table, sl_res->res);
         destruct(sl_res)
     }
 }
@@ -844,14 +844,14 @@ SLLibLoader::~SLLibLoader() {
     lt_dlexit();
 };
 
-func_map_t *SLLibLoader::loadLibs() {
-    func_map_t *func_map = new func_map_t();
+fmap_t *SLLibLoader::loadLibs() {
+    fmap_t *fmap = new fmap_t();
 
-    if (load_libsqlite(func_map) == 0) {
-        return func_map;
+    if (load_libsqlite(fmap) == 0) {
+        return fmap;
     }
     else {
-        destruct(func_map);
+        destruct(fmap);
         return NULL;
     }
 };
@@ -875,7 +875,7 @@ char *SLLibLoader::getLibName() {
     return name;
 }
 
-int SLLibLoader::load_libsqlite (func_map_t *func_map) {
+int SLLibLoader::load_libsqlite (fmap_t *fmap) {
     int retval = 0;
     void *funcPtr = NULL;
     const string funcStrings[] =
@@ -890,7 +890,7 @@ int SLLibLoader::load_libsqlite (func_map_t *func_map) {
         for(int i = 0; !funcStrings[i].empty(); i++) {
             funcPtr = lt_dlsym(h_libsqlite, funcStrings[i].c_str());
             if (funcPtr) {
-                func_map->insert(FUNC_MAP_ENTRY("SL_"+funcStrings[i], funcPtr));
+                fmap->insert(FMAP_ENTRY("SL_"+funcStrings[i], funcPtr));
             }
             else {
                 logger->warning(555, "Function " + funcStrings[i] + " not loaded.", thisClass+"::load_libsqlite()");
