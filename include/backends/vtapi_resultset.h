@@ -474,7 +474,7 @@ public:
      * @note It needs to be done before every print.
      * @param row if not set to -1, this indicates single row print
      * @param get_widths whether column widths will be required @todo @b doc[VF]: který popisek je správný (tento nebo "desired column widths" z .cpp)?
-     * @arrayLimit limits length of printed array
+     * @param arrayLimit limits length of printed array
      * @return metadata for print, pair consisting of two vectors:
      *  a) Tkeys - column types etc., b) ints - column widths
      */

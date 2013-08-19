@@ -671,7 +671,7 @@ INPUT                  = @top_srcdir@/include \
                          @top_srcdir@/doc/SAMPLES.txt \
                          @top_srcdir@/README.txt \
                          @top_srcdir@/doc/VTCLI.txt \
-                         @top_srcdir@/LICENCE.txt
+                         @top_srcdir@/doc/LICENCE.txt
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
