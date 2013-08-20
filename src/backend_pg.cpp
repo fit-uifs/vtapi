@@ -157,8 +157,8 @@ bool PGTypeManager::registerTypes () {
         //{"permissions", pg_enum_put, pg_enum_get}, // change 2 to 3 in next command
     };
     retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, types_userdef, 2, 0);
-    if (retreg) {
-        logger->warning(666, CALL_PQT(fmap, PQgeterror, ), thisClass+"::registerTypes()");
+    if (!retreg) {
+        logger->warning(666, CALL_PQT(fmap, PQgeterror), thisClass+"::registerTypes()");
         retval = VT_FAIL;
     }
 
@@ -169,8 +169,8 @@ bool PGTypeManager::registerTypes () {
         {"geometry", geometry_put, geometry_get}
     };
     retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, typespg_userdef, 2, 0);
-    if (retreg) {
-        logger->warning(666, CALL_PQT(fmap, PQgeterror, ), thisClass+"::registerTypes()");
+    if (!retreg) {
+        logger->warning(666, CALL_PQT(fmap, PQgeterror), thisClass+"::registerTypes()");
         retval = VT_FAIL;
     }
 #endif
@@ -181,8 +181,8 @@ bool PGTypeManager::registerTypes () {
         {"cvmat", NULL, NULL}
     };
     retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_COMPOSITE, typescv_comp, 1, 0);
-    if (retreg) {
-        logger->warning(666, CALL_PQT(fmap, PQgeterror, ), thisClass+"::registerTypes()");
+    if (!retreg) {
+        logger->warning(666, CALL_PQT(fmap, PQgeterror), thisClass+"::registerTypes()");
         retval = VT_FAIL;
     }
 #endif
