@@ -144,7 +144,7 @@ bool SLConnection::fixSlashes(string& path) {
             path.clear();
             return VT_FAIL;
         }
-    } while (path[nsPos] == '/' || path[nsPos] == '\\');
+    } while (path[nsPos] == '/');
     if (nsPos < len - 1) {
         path = path.substr(0, nsPos + 1);
     }
@@ -152,9 +152,9 @@ bool SLConnection::fixSlashes(string& path) {
     return VT_OK;
 }
 
-bool SLConnection::attachDatabase(string& db) {
-    if (CALL_SL(fmap, sqlite3_db_filename, conn, db.c_str()) == NULL) {
-        string query = "ATTACH DATABASE \'" + connInfo + "/" + SL_DB_PREFIX + db + SL_DB_SUFFIX + "\' AS \'" + db + "\';";
+bool SLConnection::attachDatabase(string& dbfile) {
+    if (CALL_SL(fmap, sqlite3_db_filename, conn, dbfile.c_str()) == NULL) {
+        string query = "ATTACH DATABASE \'" + connInfo + "/" + SL_DB_PREFIX + dbfile + SL_DB_SUFFIX + "\' AS \'" + dbfile + "\';";
         return CALL_SL(fmap, sqlite3_exec, conn, query.c_str(), NULL, NULL, NULL) == SQLITE_OK;
     }
     else {

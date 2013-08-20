@@ -486,7 +486,7 @@ bool PGQueryBuilder::keyString(const string& key, const string& value, const str
 bool PGQueryBuilder::keyStringA(const string& key, string* values, const int size, const string& from) {
     if (key.empty() || !values || size <= 0) return VT_FAIL;
     else {
-        TKey k("varchar", key, size, from);
+        TKey k("varchar[]", key, size, from);
         keys_main.push_back(k);
         keys_main_order.push_back(keysCnt++);
 

@@ -30,11 +30,17 @@ typedef struct {
 } sl_res_t;
 
 
-//TODO: comment
+/**
+ * @brief Class provides interface to the result set object
+ *
+ * New result set is inserted via newResult method. Iterating over rows is handled
+ * by incrementing pos attribute via step() or setPosition() methods. Field values
+ * can be obtained via various getX methods.
+ */
 class ResultSet {
 protected:
 
-    fmap_t          *fmap;      /**< function address book */
+    fmap_t          *fmap;          /**< function address book */
     TypeManager     *typeManager;   /**< object for type manipulation */
     Logger          *logger;        /**< logger object for output messaging */
     string          thisClass;      /**< class name */
@@ -44,6 +50,12 @@ protected:
 
 public:
 
+    /**
+     * Constructor
+     * @param fmap function address book
+     * @param typeManager type manager object
+     * @param logger logger object
+     */
     ResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger) {
         this->logger        = logger;
         this->typeManager   = typeManager;
@@ -51,17 +63,50 @@ public:
         this->pos           = -1;
         this->res           = NULL;
     };
+    /**
+     * Virtual destructor
+     */
     virtual ~ResultSet() { };
 
+    /**
+     * Destroy old result object and replace it with new one
+     * @param res new result object
+     */
     virtual void newResult(void *res) = 0;
 
+    /**
+     * Increments row position within result set
+     */
     void step() { this->pos++; };
+    /**
+     * Gets current row position within result set
+     * @return row position
+     */
     int getPosition() { return this->pos; };
+    /**
+     * Sets row position within result set
+     * @param pos row position
+     */
     void setPosition(const int pos) { this->pos = pos; };
 
+    /**
+     * Gets number of rows within result set
+     * @return number of rows
+     */
     virtual int countRows() = 0;
+    /**
+     * Gets number of columns within result set
+     * @return number of columns
+     */
     virtual int countCols() = 0;
+    /**
+     * Checks whether result set object is valid
+     * @return success
+     */
     virtual bool isOk() = 0;
+    /**
+     * Clears result set object
+     */
     virtual void clear() = 0;
 
    /**
@@ -482,7 +527,17 @@ public:
 
 protected:
 
+    /**
+     * Gets type of given column
+     * @param col column index
+     * @return type name
+     */
     virtual string getKeyType(const int col) = 0;
+    /**
+     * Gets index of given column name
+     * @param key column name
+     * @return column index
+     */
     virtual int getKeyIndex(const string& key) = 0;
 
 };

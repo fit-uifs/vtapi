@@ -62,6 +62,11 @@ inline string toString(const T& value) {
     return ostr.str();
 };
 
+/**
+ * Converts timestamp to string (yyyy-mm-dd hh:mm:ss)
+ * @param value time value
+ * @return time string
+ */
 template <>
 inline string toString <time_t>(const time_t& value) {
     char buff[20];
@@ -69,6 +74,11 @@ inline string toString <time_t>(const time_t& value) {
     return string(buff);
 };
 
+/**
+ * Converts time string (yyyy-mm-dd hh:mm:ss) to timestamp
+ * @param value time string
+ * @return timestamp
+ */
 inline time_t toTimestamp(const string& value) {
     struct tm ts = {0};
     sscanf(value.c_str(), "%d-%d-%d %d:%d:%d", &ts.tm_year, &ts.tm_mon, &ts.tm_mday, &ts.tm_hour, &ts.tm_min, &ts.tm_sec);
@@ -76,6 +86,12 @@ inline time_t toTimestamp(const string& value) {
     return mktime(&ts);
 };
 
+/**
+ * Generic conversion from string to array representation
+ * @param buffer input string
+ * @param size output - array size
+ * @return values array
+ */
 template<class T>
 inline T* deserializeA(char *buffer, int& size) {
     T *ret  = NULL;
@@ -109,6 +125,11 @@ inline T* deserializeA(char *buffer, int& size) {
     return ret;
 }
 
+/**
+ * Generic conversion from string to vector representation
+ * @param buffer input string
+ * @return values vector
+ */
 template<class T>
 inline vector<T>* deserializeV(char *buffer) {
     vector<T> *ret  = NULL;

@@ -48,18 +48,14 @@ Logger::~Logger() {
 void Logger::write(const string& logline) {
     if (logStream.good()) {
         logStream << logline;
-#ifdef _DEBUG
         logStream.flush();
-#endif
     }
 }
 
 void Logger::log(const string& logline) {
     if (logStream.good()) {
         logStream << timestamp() << ": " << logline << endl;
-#ifdef _DEBUG
         logStream.flush();
-#endif
     }
 }
 

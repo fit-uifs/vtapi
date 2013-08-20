@@ -48,11 +48,14 @@ typedef map<int,string>                 oid_map_t;
 typedef map<string, type_metadata_t>    types_map_t;
 
 
-//TODO: comment
+/**
+ * @brief Class handles registering user defined types (mostly PostgreSQL) and
+ * retrieving information about data types.
+ */
 class TypeManager {
 protected:
 
-    fmap_t          *fmap;      /**< function address book */
+    fmap_t          *fmap;          /**< function address book */
     Connection      *connection;    /**< connection object */
     Logger          *logger;        /**< logger object for output messaging */
     string          thisClass;      /**< class name */
@@ -62,25 +65,47 @@ protected:
 
 public:
 
+    /**
+     * Constructor
+     * @param fmap function address book
+     * @param connection database connection object
+     * @param logger logger object
+     */
     TypeManager(fmap_t *fmap, Connection *connection, Logger *logger) {
         this->logger        = logger;
         this->connection    = connection;
         this->fmap          = fmap;
     };
+    /**
+     * Virtual destructor
+     */
     virtual ~TypeManager() { };
 
+    /**
+     * Convert database OID to type name
+     * @param oid type OID
+     * @return type name
+     */
     string toTypname(int oid) {        
         return (oid_map.count(oid) > 0) ? oid_map[oid] : string("");
     };
 
+    /**
+     * Retrieves metadata(category, length) about given data type
+     * @param name type name
+     * @return type metadata struct
+     */
     type_metadata_t getTypeMetadata(const string& name) {
         return (types_map.count(name) > 0) ? types_map[name] : type_metadata_t();
     }
 
 protected:
 
+    /**
+     * Loads all available database data types
+     * @return success
+     */
     virtual bool loadTypes() = 0;
-
 
 };
 

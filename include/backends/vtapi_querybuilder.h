@@ -23,11 +23,24 @@ namespace vtapi {
 namespace vtapi {
 
 
-//TODO: comment
+/**
+ * @brief Class provides functionality to build various SQL queries
+ *
+ * Query parameters must first be inserted through keyX and whereX methods.
+ * KeyX methods should be used to add key(column)/value pairs (or just keys) for
+ * main section of SELECT, UPDATE and INSERT queries. WhereX methods construct
+ * WHERE clause for SELECT and UPDATE queries.
+ *
+ * It's possible to set default dataset and table which will be used if those
+ * are not specified in keyX or whereX call.
+ *
+ * Query string can be obtained via getSelectQuery, getUpdateQuery or
+ * getInsertQuery methods.
+ */
 class QueryBuilder {
 protected:
 
-    fmap_t              *fmap;      /**< library functions address book */
+    fmap_t              *fmap;          /**< library functions address book */
     Connection          *connection;    /**< connection object */
     Logger              *logger;        /**< logger object for output messaging */
     string              thisClass;      /**< class name */
@@ -69,6 +82,11 @@ public:
      * @param dataset dataset into which new data will be inserted
      */
     void setDataset(const string& dataset) { this->dataset = dataset; };
+   /**
+     * This is to specify the (single) table to be inserted in
+     * @param table table into which new data will be inserted
+     */
+    void setTable(const string& table) { this->table = table; };
     /**
      * Gets query from initialization string
      * @return query string
@@ -211,11 +229,6 @@ public:
     virtual bool keyTimestamp(const string& key, const time_t& value, const string& from = "") = 0;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * This is to specify the (single) table to be inserted in
-     * @param table table into which new data will be inserted
-     */
-    void setTable(const string& table) { this->table = table; };
 
     /**
      * This is a WHERE statement construction class
@@ -430,7 +443,9 @@ protected:
 
 private:
 
-
+    /**
+     * Frees all key s vectors
+     */
     void destroyKeys();
 
 };

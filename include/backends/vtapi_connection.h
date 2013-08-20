@@ -162,8 +162,18 @@ public:
 
 private:
 
+    /**
+     * Corrects angle of slashes and removes all trailing slashes
+     * @param path input/output string
+     * @return success
+     */
     bool fixSlashes(string& path);
-    bool attachDatabase(string& db);
+    /**
+     * Attaches database vtapi_[dbfile].db
+     * @param db
+     * @return success
+     */
+    bool attachDatabase(string& dbfile);
 
 };
 

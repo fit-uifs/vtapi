@@ -20,7 +20,7 @@ namespace vtapi {
 typedef vector<TKey>    TKeys;
 
 /**
- * @brief This represents the Key (of the Key-Value concept)
+ * @brief Class represents a generic Key (of the Key-Value pair)
  *
  * Used in queries (size>0 for vectors)
  *
@@ -44,12 +44,11 @@ public:
      */
     TKey(const TKey& orig) : type(orig.type), key(orig.key), from(orig.from), size(orig.size) {};
     /**
-     * Constructor for full specification of arguments
-     * @param type name of a data type
-     * @param key name of a column
-     * @param size "0" is the value right now
-     * @param from distinguish between in/out right now
-     * @todo @b doc: asi zobecnit - použito v keyvalues, method, query, video, vtapi a ne ke všemu to, dle mého, sedí
+     * Constructor with full specification of arguments
+     * @param type key data type
+     * @param key key name (column name)
+     * @param size negative for NULL, 1 for single value, more than 1 for vectors
+     * @param from additional key specification (eg. table)
      */
     TKey(const string& type, const string& key, const int size, const string& from = "") : type(type), key(key), size(size), from(from) {};
 

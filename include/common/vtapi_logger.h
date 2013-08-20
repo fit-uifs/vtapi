@@ -51,18 +51,18 @@ public:
 
     /**
      * Log function puts a timestamp with the message into the logstream
-     * @param message message, which to be logged
+     * @param message logged message
      */
     void log(const string& message);
     /**
      * Debug function flushes a timestamp with the message immediately into the logstream
-     * @param message
+     * @param message logged message
      */
     void debug(const string& message);
 
     /**
      * This is to write to the standard error log
-     * @param message
+     * @param message logged message
      */
     void write(const string& message);
     /**

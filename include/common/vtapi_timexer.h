@@ -28,12 +28,15 @@ namespace vtapi {
  */
 class TimExer {
 private:
-    time_t startTime;  // this is the original time
-    time_t meanTime;   // this is the time of last getTime() or getMeanTime() call
-    clock_t startClock;  // this is the original time
-    clock_t meanClock;   // this is the time of last getTime() or getMeanTime() call
+    time_t startTime;       /**< original time */
+    time_t meanTime;        /**< time of last getTime() or getMeanTime() call */
+    clock_t startClock;     /**< original time */
+    clock_t meanClock;      /**< time of last getTime() or getMeanTime() call */
 
 public:
+    /**
+     * Constructor
+     */
     TimExer();
     /**
      * Starts the timer
