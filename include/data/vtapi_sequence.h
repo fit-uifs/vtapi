@@ -110,7 +110,7 @@ public:
      *
      * @param name
      * @return
-     * @unimplemented neimplementováno (potom doplnit i doc)
+     * @todo @b code: neimplementováno (potom doplnit i doc)
      */
     Process* newProcess(const string& name = "");
 
@@ -146,7 +146,7 @@ public:
      * Create a new frame specified by the frame number
      * @param frame name of the image @b doc: to asi nebude jméno
      * @return pointer to the new image
-     * @unimplemented neimplementováno (zkontrolovat pak doc)
+     * @todo @b code: neimplementováno (zkontrolovat pak doc)
      */
     Image* newFrame(const int frame = 1);
 
@@ -155,7 +155,6 @@ public:
      * @param name of the video
      * @param location of the video
      * @return success
-     * @todo @b code: bez návratové hodnoty
      */
     bool add(string name, string location);
 
@@ -165,14 +164,14 @@ public:
      * @todo Test
      * @param name
      * @return
-     * @unimplemented: neimplementováno (potom doplnit i doc)
+     * @todo @b code: neimplementováno (potom doplnit i doc)
      */
     bool openVideo();
 
     /**
      *
      * @return
-     * @unimplemented: neimplementováno (potom doplnit i doc)
+     * @todo @b code: neimplementováno (potom doplnit i doc)
      */
     cv::Mat getNextImage();
 #endif
@@ -190,7 +189,7 @@ public:
  *  @note Error codes 16*
  *
  *  @todo @b doc: třída prakticky bez dokumentace
- *  @unimplemented Doplnit i doc!!!
+ *  @todo @b code: neimplementováno
  */
 class VideoPlayer : public Commons {
 protected:

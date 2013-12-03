@@ -4,4 +4,5 @@ libvtapi_@VTAPI_API_VERSION@_la_SOURCES = backend_pg.cpp backend_sl.cpp commons.
 libvtapi_@VTAPI_API_VERSION@_la_CFLAGS =  $(PQ_CFLAGS) $(LIBLWGEOM_CFLAGS) $(GEOS_CFLAGS) $(opencv_CFLAGS) $(sqlite3_CFLAGS) $(LTDL_CFLAGS) $(READPROC_CFLAGS)
 libvtapi_@VTAPI_API_VERSION@_la_CXXFLAGS = $(PQ_CFLAGS) $(LIBLWGEOM_CFLAGS) $(GEOS_CFLAGS) $(opencv_CFLAGS) $(sqlite3_CFLAGS) $(LTDL_CFLAGS) $(READPROC_CFLAGS)
 libvtapi_@VTAPI_API_VERSION@_la_LDFLAGS = -version-info $(VTAPI_SO_VERSION) $(DEPS_LIBS) $(opencv_LIBS) $(sqlite3_LIBS) $(PQ_LIBS) $(LIBLWGEOM_LIBS) $(GEOS_LIBS) $(LTDL_LIBS) $(READPROC_LIBS)
-INCLUDES=-I$(top_builddir)/include $(PQ_CFLAGS)
+
+AM_CPPFLAGS=-I$(top_builddir)/include $(PQ_CFLAGS)

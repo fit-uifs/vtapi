@@ -50,7 +50,7 @@ protected:
     TypeManager     *typeManager;       /**< Datatypes management object */
     LibLoader       *libLoader;         /**< Library loader object */
     Logger          *logger;            /**< Logger object */
-    func_map_t      *FUNC_MAP;          /**< Map of library functions */
+    fmap_t          *fmap;          /**< Map of library functions */
 
     string          dbconn;             /**< Connection string / databases folder */
     format_t        format;             /**< Output format */
@@ -152,14 +152,24 @@ public:
     string getUser();
 
     /**
+     * Checks commons object for validity (connection etc.)
+     * @return success
+     */
+    bool checkCommonsObject();
+    /**
      * This is to check whether a file exists or not
      * @param filename
-     * @return exists
+     * @return success
      */
     static bool fileExists(const string& filename);
 
 private:
 
+    /**
+     * Maps string to format_t
+     * @param format string format
+     * @return format_t value
+     */
     format_t mapFormat(const string& format);
 
 };

@@ -35,7 +35,6 @@
 #include <ltdl.h>
 
 // libpqtypes + pq
-
 #if HAVE_POSTGRESQL
   #include <libpqtypes.h> // tohle se pak poresi configure
 #endif

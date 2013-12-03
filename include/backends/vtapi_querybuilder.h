@@ -23,11 +23,24 @@ namespace vtapi {
 namespace vtapi {
 
 
-//TODO: comment
+/**
+ * @brief Class provides functionality to build various SQL queries
+ *
+ * Query parameters must first be inserted through keyX and whereX methods.
+ * KeyX methods should be used to add key(column)/value pairs (or just keys) for
+ * main section of SELECT, UPDATE and INSERT queries. WhereX methods construct
+ * WHERE clause for SELECT and UPDATE queries.
+ *
+ * It's possible to set default dataset and table which will be used if those
+ * are not specified in keyX or whereX call.
+ *
+ * Query string can be obtained via getSelectQuery, getUpdateQuery or
+ * getInsertQuery methods.
+ */
 class QueryBuilder {
 protected:
 
-    func_map_t          *FUNC_MAP;      /**< library functions address book */
+    fmap_t              *fmap;          /**< library functions address book */
     Connection          *connection;    /**< connection object */
     Logger              *logger;        /**< logger object for output messaging */
     string              thisClass;      /**< class name */
@@ -42,16 +55,16 @@ protected:
 public:
     /**
      * Constructor
-     * @param FUNC_MAP library functions address book
+     * @param fmap library functions address book
      * @param connection connection object
      * @param logger logger object for output messaging
      * @param initString initialization string (query/table or empty)
      */
-    QueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger, const string& initString = "") {
+    QueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString = "") {
         this->initString    = initString;
         this->logger        = logger;
         this->connection    = connection;
-        this->FUNC_MAP      = FUNC_MAP;
+        this->fmap          = fmap;
         this->param         = NULL;
     };
     /**
@@ -67,9 +80,13 @@ public:
     /**
      * This is to specify dataset to be inserted in
      * @param dataset dataset into which new data will be inserted
-     * @return success
      */
-    bool setDataset(const string& dataset) { this->dataset = dataset; };
+    void setDataset(const string& dataset) { this->dataset = dataset; };
+   /**
+     * This is to specify the (single) table to be inserted in
+     * @param table table into which new data will be inserted
+     */
+    void setTable(const string& table) { this->table = table; };
     /**
      * Gets query from initialization string
      * @return query string
@@ -77,7 +94,6 @@ public:
     virtual string getGenericQuery() = 0;
     /**
      * Builds SELECT query
-     * @param fromList
      * @param groupby
      * @param orderby
      * @param limit
@@ -98,9 +114,8 @@ public:
     
     /**
      * Resets query builder to initial state
-     * @return successs
      */
-    virtual bool reset() = 0;
+    virtual void reset() = 0;
     /**
      * Allocates new query param structure, destroys the old one
      */
@@ -136,7 +151,6 @@ public:
      * @param size size of array
      * @param from selection (table; this is optional)
      * @return success
-     * @unimplemented neimplementováno (pak zkontrolovat doc)
      */
     virtual bool keyStringA(const string& key, string* values, const int size, const string& from = "") = 0;
     /**
@@ -215,13 +229,6 @@ public:
     virtual bool keyTimestamp(const string& key, const time_t& value, const string& from = "") = 0;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    /**
-     * This is to specify the (single) table to be inserted in
-     * @param table table into which new data will be inserted
-     * @return success
-     * @todo @b doc: Petrovy závorky
-     */
-    bool setTable(const string& table) { this->table = table; };
 
     /**
      * This is a WHERE statement construction class
@@ -229,8 +236,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
     virtual bool whereString(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
 
@@ -240,8 +247,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
     virtual bool whereInt(const string& key, const int value, const string& oper = "=", const string& from = "") = 0;
 
@@ -251,8 +258,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
     virtual bool whereFloat(const string& key, const float value, const string& oper = "=", const string& from = "") = 0;
     /**
@@ -261,8 +268,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
     virtual bool whereSeqtype(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
     /**
@@ -271,8 +278,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
     virtual bool whereInouttype(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
     /**
@@ -281,8 +288,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
 //    virtual bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "") = 0;
     /**
@@ -291,8 +298,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
     virtual bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "") = 0;
 
@@ -313,10 +320,26 @@ protected:
     virtual string escapeIdent(const string& ident) = 0;
     /**
      * Escape literal
-     * @param ident literal
+     * @param literal literal
      * @return escaped literal
      */
     virtual string escapeLiteral(const string& literal) = 0;
+    /**
+     * Checks validity of seqtype value
+     * @param value seqtype value
+     * @return success
+     */
+    bool checkSeqtype(const string& value) {
+        return (value.compare("images") == 0) || (value.compare("video") == 0) || (value.compare("data") == 0);
+    }
+    /**
+     * Checks validity of inouttype value
+     * @param value inouttype value
+     * @return success
+     */
+    bool checkInouttype(const string& value) {
+        return (value.compare("in") == 0) || (value.compare("inout") == 0) || (value.compare("out") == 0);
+    }
 };
 
 
@@ -332,7 +355,7 @@ private:
 
 public:
 
-    PGQueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger = NULL, const string& initString = "");
+    PGQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger = NULL, const string& initString = "");
     ~PGQueryBuilder();
 
     string getGenericQuery();
@@ -360,7 +383,7 @@ public:
 //    bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "");
     bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "");
 
-    bool reset();
+    void reset();
     void createParam();
     void destroyParam();
 
@@ -380,7 +403,7 @@ private:
 
 public:
 
-    SLQueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger = NULL, const string& initString = "");
+    SLQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger = NULL, const string& initString = "");
     ~SLQueryBuilder();
 
     string getGenericQuery();
@@ -408,7 +431,7 @@ public:
 //    bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "");
     bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "");
 
-    bool reset();
+    void reset();
     void createParam();
     void destroyParam();
 
@@ -420,8 +443,9 @@ protected:
 
 private:
 
-    bool checkSeqtype(const string& value);
-    bool checkInouttype(const string& value);
+    /**
+     * Frees all key s vectors
+     */
     void destroyKeys();
 
 };

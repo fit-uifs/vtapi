@@ -90,7 +90,6 @@ public:
     /**
      * This is used to support updates
      * @return success (in derived classes)
-     * @todo @b code: vrací vždy true
      */
     /**
      * Execute SQL INSERT command for interval
@@ -141,7 +140,6 @@ public:
      * @param t time (start time is the same as the end time)
      * @param location location of the image
      * @return success
-     * @todo @b code: bez návratové hodnoty
      */
     bool add(const string& sequence, const int t, const string& location);
 

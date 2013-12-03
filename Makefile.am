@@ -2,6 +2,9 @@ AUTOMAKE_OPTIONS = subdir-objects
 ACLOCAL_AMFLAGS = ${ACLOCAL_FLAGS} -I m4
 
 SUBDIRS = src
+if HAVE_DOXYGEN
+SUBDIRS += doc
+endif
 
 dist_noinst_SCRIPTS = autogen.sh
 
@@ -20,4 +23,4 @@ LDADD = $(top_builddir)/src/.libs/libvtapi-1.6.so
 
 #LDADD = -L../lib -lexample 
 
-INCLUDES = -I$(top_builddir)/include
+AM_CPPFLAGS = -I$(top_builddir)/include

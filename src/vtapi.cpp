@@ -461,14 +461,14 @@ void VTApi::testMethod(Dataset *dataset) {
 
     cout << "** SHOWING all methods" << endl;
     Method* method = dataset->newMethod();
-    method->next();
-    method->printAll();
+    if (method->next()) {
+        method->printAll();
 
-    
-    cout << "SHOWING method keys for method " << method->getName() << endl;
-    if (method->methodKeys.empty()) cout << "(no keys)" << endl;
-    else for (int i = 0; i < method->methodKeys.size(); i++) {
-        method->methodKeys[i].print();
+        cout << "SHOWING method keys for method " << method->getName() << endl;
+        if (method->methodKeys.empty()) cout << "(no keys)" << endl;
+        else for (int i = 0; i < method->methodKeys.size(); i++) {
+            method->methodKeys[i].print();
+        }
     }
 
     cout << "** CLEANUP" << endl;

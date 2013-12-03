@@ -20,120 +20,115 @@
 using namespace vtapi;
 
 
-PGConnection::PGConnection(func_map_t *FUNC_MAP, const string& connectionInfo, Logger* logger)
-: Connection (FUNC_MAP, connectionInfo, logger){
+PGConnection::PGConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger)
+: Connection (fmap, connectionInfo, logger){
     thisClass   = "PGConnection";
     conn        = NULL;
-    if (!this->connect(connectionInfo)) {
-        logger->error(121, "The connection couldn't have been established.", thisClass+"::PGConnection()");
-    }
+    connect(connectionInfo);
 }
 
 PGConnection::~PGConnection() {
     disconnect();
-    CALL_PQT_PQclearTypes(conn);
+    CALL_PQT(fmap, PQclearTypes, conn);
 }
 
 bool PGConnection::connect (const string& connectionInfo) {
-    connInfo    = connectionInfo;
-    conn        = CALL_PQ_PQconnectdb(connInfo.c_str());
-    if (CALL_PQ_PQstatus(conn) != CONNECTION_OK) {
-        logger->warning(122, CALL_PQ_PQerrorMessage(conn), thisClass+"::connect()");
-        return false;
+    bool retval = VT_OK;
+
+    connInfo = connectionInfo;
+    conn = CALL_PQ(fmap, PQconnectdb, connInfo.c_str());
+    retval = isConnected();
+    if (!retval) {
+        string errmsg = conn ? string(CALL_PQ(fmap, PQerrorMessage, conn)) : "The connection couldn't have been established.";
+        logger->error(122, errmsg, thisClass+"::connect()");
     }
     else {
-        CALL_PQT_PQinitTypes(conn);
-        return true;
+        CALL_PQT(fmap, PQinitTypes, conn);
     }
+
+    return retval;
 };
 
 bool PGConnection::reconnect (const string& connectionInfo) {
     if (!connectionInfo.empty()) connInfo = connectionInfo;
     disconnect();
-    return this->connect(connInfo);
+    return connect(connInfo);
 }
 
 void PGConnection::disconnect () {
     if (isConnected()) {
-        CALL_PQ_PQfinish(conn);
+        CALL_PQ(fmap, PQfinish, conn);
     }
 }
 
 bool PGConnection::isConnected () {
-    if (CALL_PQ_PQstatus(conn) != CONNECTION_OK) {
-        logger->warning(125, CALL_PQ_PQerrorMessage(conn), thisClass+"::isConnected()");
-        return false;
-    }
-    else {
-        return true;
-    }
+    return (CALL_PQ(fmap, PQstatus, conn) == CONNECTION_OK);
 }
 
-int PGConnection::execute(const string& query, void *param) {
+bool PGConnection::execute(const string& query, void *param) {
     PGresult    *pgres  = NULL;
+    bool        retval  = VT_OK;
 
     errorMessage.clear();
 
     if (param && ((pg_param_t *)param)->args) {
-        pgres = CALL_PQT_PQparamExec(conn, ((pg_param_t *)param)->args, query.c_str(), PG_FORMAT);
+        pgres = CALL_PQT(fmap, PQparamExec, conn, ((pg_param_t *)param)->args, query.c_str(), PG_FORMAT);
     }
     else {
-        pgres = CALL_PQT_PQexecf(conn, query.c_str(), PG_FORMAT);
+        pgres = CALL_PQT(fmap, PQexecf, conn, query.c_str(), PG_FORMAT);
     }
 
     if (!pgres) {
-        errorMessage = string(CALL_PQ_PQerrorMessage(conn));
-        return -1;
+        errorMessage = string(CALL_PQ(fmap, PQerrorMessage, conn));
+        retval = VT_FAIL;
     }
     else {
-        int retval = 0;
-        if (CALL_PQ_PQresultStatus(pgres) == PGRES_TUPLES_OK) {
-            retval = CALL_PQ_PQntuples(pgres);
-        }
-        else if (CALL_PQ_PQresultStatus(pgres) == PGRES_COMMAND_OK) {
-            retval = atoi(CALL_PQ_PQcmdTuples(pgres));
-        }
-        else {
+        int result = CALL_PQ(fmap, PQresultStatus, pgres);
+        if (result != PGRES_TUPLES_OK && result != PGRES_COMMAND_OK) {
             logger->warning(2012, "Apocalypse warning", thisClass+"::execute()");
-            errorMessage = string(CALL_PQ_PQerrorMessage(conn));
-            retval = -1;
+            errorMessage = string(CALL_PQ(fmap, PQerrorMessage, conn));
+            retval = VT_FAIL;
         }
-        CALL_PQ_PQclear(pgres);
-        return retval;
+        CALL_PQ(fmap, PQclear, pgres);
     }
+
+    return retval;
 }
 
 int PGConnection::fetch(const string& query, void *param, ResultSet *resultSet) {
-    PGresult *pgres = NULL;
+    int         retval  = ER_FAIL;
+    PGresult    *pgres  = NULL;
     
     errorMessage.clear();
     
     if (param && ((pg_param_t *)param)->args) {
-        pgres = CALL_PQT_PQparamExec(conn, ((pg_param_t *)param)->args, query.c_str(), PG_FORMAT);
+        pgres = CALL_PQT(fmap, PQparamExec, conn, ((pg_param_t *)param)->args, query.c_str(), PG_FORMAT);
     }
     else {
-        pgres = CALL_PQT_PQexecf(conn, query.c_str(), PG_FORMAT);
+        pgres = CALL_PQT(fmap, PQexecf, conn, query.c_str(), PG_FORMAT);
     }
 
     resultSet->newResult((void *) pgres);
 
     if (!pgres) {
-        errorMessage = string(CALL_PQ_PQerrorMessage(conn));
-        return -1;
+        errorMessage = string(CALL_PQ(fmap, PQerrorMessage, conn));
+        retval = ER_WRONG_QUERY;
     }
     else {
-        if (CALL_PQ_PQresultStatus(pgres) == PGRES_TUPLES_OK) {
-            return CALL_PQ_PQntuples(pgres);
+        if (CALL_PQ(fmap, PQresultStatus, pgres) == PGRES_TUPLES_OK) {
+            retval = CALL_PQ(fmap, PQntuples, pgres);
         }
-        else if (CALL_PQ_PQresultStatus(pgres) == PGRES_COMMAND_OK) {
-            return 0;
+        else if (CALL_PQ(fmap, PQresultStatus, pgres) == PGRES_COMMAND_OK) {
+            retval = 0;
         }
         else {
             logger->warning(2012, "Apocalypse warning", thisClass+"::fetch()");
-            errorMessage = string(CALL_PQ_PQerrorMessage(conn));
-            return -1;
+            errorMessage = string(CALL_PQ(fmap, PQerrorMessage, conn));
+            retval = ER_WRONG_QUERY;
         }
     }
+
+    return retval;
 }
 
 void* PGConnection::getConnectionObject() {
@@ -141,8 +136,8 @@ void* PGConnection::getConnectionObject() {
 }
 
 
-PGTypeManager::PGTypeManager(func_map_t *FUNC_MAP, Connection *connection, Logger *logger)
-: TypeManager(FUNC_MAP, connection, logger) {
+PGTypeManager::PGTypeManager(fmap_t *fmap, Connection *connection, Logger *logger)
+: TypeManager(fmap, connection, logger) {
     thisClass = "PGTypeManager";
     this->loadTypes();
     this->registerTypes();
@@ -151,7 +146,8 @@ PGTypeManager::PGTypeManager(func_map_t *FUNC_MAP, Connection *connection, Logge
 PGTypeManager::~PGTypeManager() {
 }
 
-int PGTypeManager::registerTypes () {
+bool PGTypeManager::registerTypes () {
+    bool retreg = VT_OK, retval = VT_OK;
 
     // general types registered at all times
     PGregisterType types_userdef[] =
@@ -160,10 +156,11 @@ int PGTypeManager::registerTypes () {
         {"inouttype", pg_enum_put, pg_enum_get}//,
         //{"permissions", pg_enum_put, pg_enum_get}, // change 2 to 3 in next command
     };
-
-
-    if (!CALL_PQT_PQregisterTypes((PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, types_userdef, 2, 0))
-        logger->warning(666, CALL_PQT_PQgeterror(), thisClass+"::registerTypes()");
+    retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, types_userdef, 2, 0);
+    if (!retreg) {
+        logger->warning(666, CALL_PQT(fmap, PQgeterror), thisClass+"::registerTypes()");
+        retval = VT_FAIL;
+    }
 
     // PostGIS special types
 #ifdef POSTGIS
@@ -171,8 +168,11 @@ int PGTypeManager::registerTypes () {
         {"cube", cube_put, cube_get},
         {"geometry", geometry_put, geometry_get}
     };
-    if (!CALL_PQT_PQregisterTypes((PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, typespg_userdef, 2, 0))
-        logger->warning(666, CALL_PQT_PQgeterror(), thisClass+"::registerTypes()");
+    retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, typespg_userdef, 2, 0);
+    if (!retreg) {
+        logger->warning(666, CALL_PQT(fmap, PQgeterror), thisClass+"::registerTypes()");
+        retval = VT_FAIL;
+    }
 #endif
 
     // OpenCV special types
@@ -180,18 +180,24 @@ int PGTypeManager::registerTypes () {
     PGregisterType typescv_comp[] = {
         {"cvmat", NULL, NULL}
     };
-    if (!CALL_PQT_PQregisterTypes((PGconn *)connection->getConnectionObject(), PQT_COMPOSITE, typescv_comp, 1, 0))
-        logger->warning(666, CALL_PQT_PQgeterror(), thisClass+"::registerTypes()");
+    retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_COMPOSITE, typescv_comp, 1, 0);
+    if (!retreg) {
+        logger->warning(666, CALL_PQT(fmap, PQgeterror), thisClass+"::registerTypes()");
+        retval = VT_FAIL;
+    }
 #endif
+
+    return retval;
 }
 
-int PGTypeManager::loadTypes() {
+bool PGTypeManager::loadTypes() {
+    bool retval = VT_OK;
     PGresult * pgres;
 
-    pgres = CALL_PQT_PQexecf((PGconn *)connection->getConnectionObject(),
+    pgres = CALL_PQT(fmap, PQexecf, (PGconn *)connection->getConnectionObject(),
             "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type", PG_FORMAT);
     if (!pgres) {
-        return -1;
+        retval = VT_FAIL;
     }
     else {
         vector<int> oid_array;
@@ -203,8 +209,8 @@ int PGTypeManager::loadTypes() {
         PGint2 length;
         PGint4 oid_elem;
 
-        for (int i = 0; i < CALL_PQ_PQntuples(pgres); i++) {
-            CALL_PQT_PQgetf(pgres, i, "%oid %name %char %int2 %oid",
+        for (int i = 0; i < CALL_PQ(fmap, PQntuples, pgres); i++) {
+            CALL_PQT(fmap, PQgetf, pgres, i, "%oid %name %char %int2 %oid",
                 0, &oid, 1, &name, 2, &category_char, 3, &length, 4, &oid_elem);
             type_metadata.category      = mapCategory(category_char);
             type_metadata.length        = length;
@@ -225,9 +231,10 @@ int PGTypeManager::loadTypes() {
             oid_ix++;
         }
         // TODO? load reference types
-        CALL_PQ_PQclear(pgres);
-        return 0;
+        CALL_PQ(fmap, PQclear, pgres);
     }
+
+    return retval;
 }
 
 type_category_t PGTypeManager::mapCategory(char category_char) {
@@ -274,11 +281,11 @@ int PGTypeManager::enum_put (PGtypeArgs *args) {
 }
 
 int PGTypeManager::enum_get (PGtypeArgs *args) {
-    char *val = CALL_PQ_PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
-    int vallen = CALL_PQ_PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
+    char *val = CALL_PQ(fmap, PQgetvalue, args->get.result, args->get.tup_num, args->get.field_num);
+    int vallen = CALL_PQ(fmap, PQgetlength, args->get.result, args->get.tup_num, args->get.field_num);
 
     char **result = va_arg(args->ap, char **);
-    *result = (char *) CALL_PQ_PQresultAlloc((PGresult *) args->get.result, (vallen+1) * sizeof(char));
+    *result = (char *) CALL_PQ(fmap, PQresultAlloc, (PGresult *) args->get.result, (vallen+1) * sizeof(char));
 
     std::copy(val, val+vallen, *result);
     result[vallen] = '\0';
@@ -287,8 +294,8 @@ int PGTypeManager::enum_get (PGtypeArgs *args) {
 }
 
 
-PGQueryBuilder::PGQueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger, const string& initString)
-: QueryBuilder (FUNC_MAP, connection, logger, initString) {
+PGQueryBuilder::PGQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString)
+: QueryBuilder (fmap, connection, logger, initString) {
     thisClass   = "PGQueryBuilder";
     keysCnt     = 1;
 }
@@ -456,238 +463,303 @@ string PGQueryBuilder::getUpdateQuery() {
 }
 
 bool PGQueryBuilder::keyFrom(const string& table, const string& column) {
-    TKey k("", column, 1, table);
-    keys_main.push_back(k);
-    return true;
+    if (column.empty()) return VT_FAIL;
+    else {
+        TKey k("", column, 1, table);
+        keys_main.push_back(k);
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::keyString(const string& key, const string& value, const string& from) {
-    TKey k("varchar", key, 1, from);
-    if (value.empty()) return false;
-    keys_main.push_back(k);
-    keys_main_order.push_back(keysCnt++);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%varchar", value.c_str());
-    return true;
+    if (key.empty() || value.empty()) return VT_FAIL;
+    else {
+        TKey k("varchar", key, 1, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%varchar", value.c_str());
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::keyStringA(const string& key, string* values, const int size, const string& from) {
+    if (key.empty() || !values || size <= 0) return VT_FAIL;
+    else {
+        TKey k("varchar[]", key, size, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
 
-    return false;
+        if (!param) createParam();
+
+        PGarray arr;
+        arr.ndims = 0; // one dimensional arrays do not require setting dimension info
+        // FIXME: this is a potential bug
+        // arr.lbound[0] = 1;
+        arr.param = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
+
+        // put the array elements
+        for(int i = 0; i < size; ++i) {
+            CALL_PQT(fmap, PQputf, arr.param, "%varchar", values[i].c_str());
+        }
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%varchar[]", &arr);
+        CALL_PQT(fmap, PQparamClear, arr.param);
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::keyInt(const string& key, int value, const string& from) {
-    TKey k("int4", key, 1, from);
-    keys_main.push_back(k);
-    keys_main_order.push_back(keysCnt++);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%int4", value);
-    return true;
+    if (key.empty()) return VT_FAIL;
+    else {
+        TKey k("int4", key, 1, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%int4", value);
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::keyIntA(const string& key, int* values, const int size, const string& from) {
-    TKey k("int4[]", key, size, from);
-    keys_main.push_back(k);
-    keys_main_order.push_back(keysCnt++);
+    if (key.empty() || !values || size <= 0) return VT_FAIL;
+    else {
+        TKey k("int4[]", key, size, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
 
-    if (!param) createParam();
+        if (!param) createParam();
 
-    PGarray arr;
-    arr.ndims = 0; // one dimensional arrays do not require setting dimension info
-    // FIXME: this is a potential bug
-    // arr.lbound[0] = 1;
-    arr.param = CALL_PQT_PQparamCreate((PGconn *)connection->getConnectionObject());
+        PGarray arr;
+        arr.ndims = 0; // one dimensional arrays do not require setting dimension info
+        // FIXME: this is a potential bug
+        // arr.lbound[0] = 1;
+        arr.param = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
 
-    // put the array elements
-    for(int i = 0; i < size; ++i) {
-        CALL_PQT_PQputf(arr.param, "%int4", values[i]);
+        // put the array elements
+        for(int i = 0; i < size; ++i) {
+            CALL_PQT(fmap, PQputf, arr.param, "%int4", values[i]);
+        }
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%int4[]", &arr);
+        CALL_PQT(fmap, PQparamClear, arr.param);
+        return VT_OK;
     }
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%int4[]", &arr);
-    CALL_PQT_PQparamClear(arr.param);
-    return true;
 }
 
 bool PGQueryBuilder::keyFloat(const string& key, float value, const string& from) {
-    TKey k("float4", key, 1, from);
-    keys_main.push_back(k);
-    keys_main_order.push_back(keysCnt++);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%float4", value);
-    return true;
+    if (key.empty()) return VT_FAIL;
+    else {
+        TKey k("float4", key, 1, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%float4", value);
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::keyFloatA(const string& key, float* values, const int size, const string& from) {
-    TKey k("float4[]", key, size, from);
-    keys_main.push_back(k);
-    keys_main_order.push_back(keysCnt++);
+    if (key.empty() || !values || size <= 0) return VT_FAIL;
+    else {
+        TKey k("float4[]", key, size, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
 
-    if (!param) createParam();
+        if (!param) createParam();
 
-    PGarray arr;
-    arr.ndims = 0; // one dimensional arrays do not require setting dimension info
-    // FIXME: this is a potential bug
-    // arr.lbound[0] = 1;
-    arr.param = CALL_PQT_PQparamCreate((PGconn *)connection->getConnectionObject());
+        PGarray arr;
+        arr.ndims = 0; // one dimensional arrays do not require setting dimension info
+        // FIXME: this is a potential bug
+        // arr.lbound[0] = 1;
+        arr.param = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
 
-    // put the array elements
-    for(int i = 0; i < size; ++i) {
-        CALL_PQT_PQputf(arr.param, "%float4", values[i]);
+        // put the array elements
+        for(int i = 0; i < size; ++i) {
+            CALL_PQT(fmap, PQputf, arr.param, "%float4", values[i]);
+        }
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%float4[]", &arr);
+        CALL_PQT(fmap, PQparamClear, arr.param);
+        return VT_OK;
     }
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%float4[]", &arr);
-    CALL_PQT_PQparamClear(arr.param);
-    return true;
 }
 
 bool PGQueryBuilder::keySeqtype(const string& key, const string& value, const string& from) {
-    TKey k("seqtype", key, 1, from);
-    if (value.empty()) return false;
-    keys_main.push_back(k);
-    keys_main_order.push_back(keysCnt++);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%seqtype", value.c_str());
-    return true;
+    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
+    else {
+        TKey k("seqtype", key, 1, from);
+        if (value.empty()) return VT_FAIL;
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%seqtype", value.c_str());
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const string& from) {
-    TKey k("inouttype", key, 1, from);
-    if (value.empty()) return false;
-    keys_main.push_back(k);
-    keys_main_order.push_back(keysCnt++);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%inouttype", value.c_str());
-
-    return true;
+    if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
+    else {
+        TKey k("inouttype", key, 1, from);
+        if (value.empty()) return VT_FAIL;
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%inouttype", value.c_str());
+        return VT_OK;
+    }
 }
 
 //bool PGQueryBuilder::keyPermissions(const string& key, const string& value, const string& from) {
-//    TKey k("permissions", key, 1, from);
-//    keys_main.push_back(k);
-//    keys_main_order.push_back(keysCnt++);
-//   if (!param) createParam();
-//    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%permissions", value.c_str());
-//
-//    return true;
+//    if (key.empty() || value.empty()) return VT_FAIL;
+//    else {
+//        TKey k("permissions", key, 1, from);
+//        keys_main.push_back(k);
+//        keys_main_order.push_back(keysCnt++);
+//        if (!param) createParam();
+//        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%permissions", value.c_str());
+//        return VT_OK;
+//    }
 //}
 
 bool PGQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from) {
-    PGtimestamp timestamp = {0};
-    struct tm* ts;
+    if (key.empty()) return VT_FAIL;
+    else {
+        PGtimestamp timestamp = {0};
+        struct tm* ts;
 
-    TKey k("timestamp", key, 1, from);
-    keys_main.push_back(k);
-    keys_main_order.push_back(keysCnt++);
-    if (!param) createParam();
+        TKey k("timestamp", key, 1, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
+        if (!param) createParam();
 
-    ts = gmtime(&value);
-    timestamp.date.isbc = 0;
-    timestamp.date.year = ts->tm_year + 1900;
-    timestamp.date.mon = ts->tm_mon;
-    timestamp.date.mday = ts->tm_mday;
-    timestamp.time.hour = ts->tm_hour;
-    timestamp.time.min = ts->tm_min;
-    timestamp.time.sec = ts->tm_sec;
-    timestamp.time.usec = 0;
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%timestamp", &timestamp);
+        ts = gmtime(&value);
+        timestamp.date.isbc = 0;
+        timestamp.date.year = ts->tm_year + 1900;
+        timestamp.date.mon = ts->tm_mon;
+        timestamp.date.mday = ts->tm_mday;
+        timestamp.time.hour = ts->tm_hour;
+        timestamp.time.min = ts->tm_min;
+        timestamp.time.sec = ts->tm_sec;
+        timestamp.time.usec = 0;
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%timestamp", &timestamp);
 
-    return true;
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from) {
-    TKey k("varchar", key, 1, from);
-    string value_put;
-
-    if (value.empty()) return false;    
-
-    keys_where.push_back(k);
-    keys_where_order.push_back(keysCnt++);
-    if (value.compare("NULL") == 0) {
-        value_put = "IS NULL";
-        opers.push_back("");
-    }
-    else if (value.compare("NOT NULL") == 0) {
-        value_put = "IS NOT NULL";
-        opers.push_back("");
-    }
+    if (key.empty() || value.empty()) return VT_FAIL;
     else {
-        value_put = value;
-        opers.push_back(oper);
-    }
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%varchar", value_put.c_str());
+        TKey k("varchar", key, 1, from);
+        string value_put;
 
-    return true;
+        if (value.empty()) return VT_FAIL;
+
+        keys_where.push_back(k);
+        keys_where_order.push_back(keysCnt++);
+        if (value.compare("NULL") == 0) {
+            value_put = "IS NULL";
+            opers.push_back("");
+        }
+        else if (value.compare("NOT NULL") == 0) {
+            value_put = "IS NOT NULL";
+            opers.push_back("");
+        }
+        else {
+            value_put = value;
+            opers.push_back(oper);
+        }
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%varchar", value_put.c_str());
+
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from) {
-    TKey k("int4", key, 1, from);
-    keys_where.push_back(k);
-    keys_where_order.push_back(keysCnt++);
-    opers.push_back(oper);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%int4", value);
-    return true;
+    if (key.empty()) return VT_FAIL;
+    else {
+        TKey k("int4", key, 1, from);
+        keys_where.push_back(k);
+        keys_where_order.push_back(keysCnt++);
+        opers.push_back(oper);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%int4", value);
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::whereFloat(const string& key, const float value, const string& oper, const string& from) {
-    TKey k("float4", key, 1, from);
-    keys_where.push_back(k);
-    keys_where_order.push_back(keysCnt++);
-    opers.push_back(oper);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%float4", value);
-    return true;
+    if (key.empty()) return VT_FAIL;
+    else {
+        TKey k("float4", key, 1, from);
+        keys_where.push_back(k);
+        keys_where_order.push_back(keysCnt++);
+        opers.push_back(oper);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%float4", value);
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::whereSeqtype(const string& key, const string& value, const string& oper, const string& from) {
-    TKey k("seqtype", key, 1, from);
-    if (value.empty()) return false;
-    keys_where.push_back(k);
-    keys_where_order.push_back(keysCnt++);
-    opers.push_back(oper);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%seqtype", value.c_str());
-    return true;
+    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
+    else {
+        TKey k("seqtype", key, 1, from);
+        if (value.empty()) return VT_FAIL;
+        keys_where.push_back(k);
+        keys_where_order.push_back(keysCnt++);
+        opers.push_back(oper);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%seqtype", value.c_str());
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
-    TKey k("inouttype", key, 1, from);
-    if (value.empty()) return false;
-    keys_where.push_back(k);
-    keys_where_order.push_back(keysCnt++);
-    opers.push_back(oper);
-    if (!param) createParam();
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%inouttype", value.c_str());
-    return true;
+    if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
+    else {
+        TKey k("inouttype", key, 1, from);
+        if (value.empty()) return VT_FAIL;
+        keys_where.push_back(k);
+        keys_where_order.push_back(keysCnt++);
+        opers.push_back(oper);
+        if (!param) createParam();
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%inouttype", value.c_str());
+        return VT_OK;
+    }
 }
 
 bool PGQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
-    PGtimestamp timestamp = {0};
-    struct tm* ts;
+    if (key.empty()) return VT_FAIL;
+    else {
+        PGtimestamp timestamp = {0};
+        struct tm* ts;
 
-    TKey k("timestamp", key, 1, from);
-    keys_where.push_back(k);
-    keys_where_order.push_back(keysCnt++);
-    opers.push_back(oper);
-    if (!param) createParam();
+        TKey k("timestamp", key, 1, from);
+        keys_where.push_back(k);
+        keys_where_order.push_back(keysCnt++);
+        opers.push_back(oper);
+        if (!param) createParam();
 
-    ts = gmtime(&value);
-    timestamp.date.isbc = 0;
-    timestamp.date.year = ts->tm_year + 1900;
-    timestamp.date.mon = ts->tm_mon;
-    timestamp.date.mday = ts->tm_mday;
-    timestamp.time.hour = ts->tm_hour;
-    timestamp.time.min = ts->tm_min;
-    timestamp.time.sec = ts->tm_sec;
-    timestamp.time.usec = 0;
-    CALL_PQT_PQputf(((pg_param_t *)param)->args, "%timestamp", &timestamp);
+        ts = gmtime(&value);
+        timestamp.date.isbc = 0;
+        timestamp.date.year = ts->tm_year + 1900;
+        timestamp.date.mon = ts->tm_mon;
+        timestamp.date.mday = ts->tm_mday;
+        timestamp.time.hour = ts->tm_hour;
+        timestamp.time.min = ts->tm_min;
+        timestamp.time.sec = ts->tm_sec;
+        timestamp.time.usec = 0;
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%timestamp", &timestamp);
 
-    return true;
+        return VT_OK;
+    }
 }
 
 
 
 
-bool PGQueryBuilder::reset() {
+void PGQueryBuilder::reset() {
     keys_main.clear();
     keys_where.clear();
     keys_main_order.clear();
@@ -701,7 +773,7 @@ void PGQueryBuilder::createParam() {
     pg_param_t *param_new = NULL;
     destroyParam();
     param_new       = new pg_param_t();
-    param_new->args = CALL_PQT_PQparamCreate((PGconn *)connection->getConnectionObject());    
+    param_new->args = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
     param           = (void *) param_new;
 }
 
@@ -709,7 +781,7 @@ void PGQueryBuilder::destroyParam() {
     pg_param_t *param_kill = (pg_param_t *) param;
     if (param_kill) {
         if (param_kill->args) {
-            CALL_PQT_PQparamClear(param_kill->args);
+            CALL_PQT(fmap, PQparamClear, param_kill->args);
         }
         destruct(param_kill);
     }
@@ -735,16 +807,16 @@ string PGQueryBuilder::escapeColumn(const string& key, const string& table) {
 
 
 //    string ret = "";
-//    char* c = CALL_PQ_PQescapeIdentifier((PGconn *)connection->getConnectionObject(), key.c_str(), keyLength);
+//    char* c = CALL_PQ(fmap, PQescapeIdentifier, (PGconn *)connection->getConnectionObject(), key.c_str(), keyLength);
 //
 //    if (!table.empty()) {
-//        char* t = CALL_PQ_PQescapeIdentifier((PGconn *)connection->getConnectionObject(), table.c_str(), table.length());
+//        char* t = CALL_PQ(fmap, PQescapeIdentifier, (PGconn *)connection->getConnectionObject(), table.c_str(), table.length());
 //        ret += string(t) + ".";
-//        CALL_PQ_PQfreemem(t);
+//        CALL_PQ(fmap, PQfreemem, t);
 //    }
 //
 //    ret += string(c) + rest;
-//    CALL_PQ_PQfreemem(c);
+//    CALL_PQ(fmap, PQfreemem, c);
 //
 //    return ret;
     return (!table.empty() ? (escapeIdent(table) + ".") : "") + escapeIdent(key.substr(0, keyLength)) + rest;
@@ -752,9 +824,9 @@ string PGQueryBuilder::escapeColumn(const string& key, const string& table) {
 }
 
 string PGQueryBuilder::escapeIdent(const string& ident) {
-    char    *ident_c = CALL_PQ_PQescapeIdentifier((PGconn *)connection->getConnectionObject(), ident.c_str(), ident.length());
+    char    *ident_c = CALL_PQ(fmap, PQescapeIdentifier, (PGconn *)connection->getConnectionObject(), ident.c_str(), ident.length());
     string  escaped  = string(ident_c);
-    CALL_PQ_PQfreemem(ident_c);
+    CALL_PQ(fmap, PQfreemem, ident_c);
     return string(escaped);
 }
 
@@ -764,8 +836,8 @@ string PGQueryBuilder::escapeLiteral(const string& literal) {
 
 /***********************************************************************************************************************************/
 
-PGResultSet::PGResultSet(func_map_t *FUNC_MAP, TypeManager *typeManager, Logger *logger)
- : ResultSet(FUNC_MAP, typeManager, logger) {
+PGResultSet::PGResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger)
+ : ResultSet(fmap, typeManager, logger) {
     thisClass = "PGResultSet";
 }
 
@@ -779,17 +851,17 @@ void PGResultSet::newResult(void *res) {
 }
 
 int PGResultSet::countRows() {
-    return CALL_PQ_PQntuples ((PGresult *) this->res);
+    return CALL_PQ(fmap, PQntuples, (PGresult *) this->res);
 }
 int PGResultSet::countCols() {
-    return CALL_PQ_PQnfields ((PGresult *) this->res);
+    return CALL_PQ(fmap, PQnfields, (PGresult *) this->res);
 }
 bool PGResultSet::isOk() {
-    return (this->res) ? true : false;
+    return (this->res) ? VT_OK : VT_FAIL;
 }
 void PGResultSet::clear() {
     if (this->res) {
-        CALL_PQ_PQclear((PGresult *) this->res);
+        CALL_PQ(fmap, PQclear, (PGresult *) this->res);
         this->res = NULL;
     }
 }
@@ -799,15 +871,15 @@ TKey PGResultSet::getKey(int col) {
     PGresult *pgres = (PGresult *) this->res;
     string type, name;
 
-    name    = CALL_PQ_PQfname(pgres, col);
-    type    = typeManager->toTypname(CALL_PQ_PQftype(pgres, col));
+    name    = CALL_PQ(fmap, PQfname, pgres, col);
+    type    = typeManager->toTypname(CALL_PQ(fmap, PQftype, pgres, col));
     return TKey(type, name, 0);
 }
 
 TKeys* PGResultSet::getKeys() {
     PGresult *pgres = (PGresult *) this->res;
     TKeys* keys     = new TKeys;
-    int cols = CALL_PQ_PQnfields(pgres);
+    int cols = CALL_PQ(fmap, PQnfields, pgres);
 
     for (int col = 0; col < cols; col++) {
         keys->push_back(getKey(col));
@@ -816,18 +888,18 @@ TKeys* PGResultSet::getKeys() {
 }
 
 string PGResultSet::getKeyType(const int col) {
-    return typeManager->toTypname(CALL_PQ_PQftype((PGresult *) this->res, col));
+    return typeManager->toTypname(CALL_PQ(fmap, PQftype, (PGresult *) this->res, col));
 }
 
 int PGResultSet::getKeyIndex(const string& key) {
-    return CALL_PQ_PQfnumber((PGresult *) this->res, key.c_str());
+    return CALL_PQ(fmap, PQfnumber, (PGresult *) this->res, key.c_str());
 }
 
 // =============== GETTERS FOR CHAR, CHAR ARRAYS AND STRINGS ===================
 char PGResultSet::getChar(const int col) {
     PGresult *pgres = (PGresult *) this->res;
     PGchar value    = '\0';
-    int ret         = CALL_PQT_PQgetf(pgres, this->pos, "%char", col, &value);
+    int ret         = CALL_PQT(fmap, PQgetf, pgres, this->pos, "%char", col, &value);
     if (ret == 0) {
         logger->warning(304, "Value is not an char", thisClass+"::getChar()");
         return '\0';
@@ -838,24 +910,24 @@ char PGResultSet::getChar(const int col) {
 char *PGResultSet::getCharA(const int col, int& size) {
     PGresult *pgres = (PGresult *) this->res;
     PGarray tmp;
-    if (! CALL_PQT_PQgetf(pgres, this->pos, "%char[]", col, &tmp)) {
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%char[]", col, &tmp)) {
         logger->warning(304, "Value is not an array of chars", thisClass+"::getCharA()");
         size = -1;
         return NULL;
     }
 
-    size = CALL_PQ_PQntuples(tmp.res);
+    size = CALL_PQ(fmap, PQntuples, tmp.res);
     char* values = new char [size];
     for (int i = 0; i < size; i++) {
-        if (! CALL_PQT_PQgetf(tmp.res, i, "%char", 0, &values[i])) {
+        if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%char", 0, &values[i])) {
             logger->warning(304, "Unexpected value in char array", thisClass+"::getCharA()");
             size = -1;
-            CALL_PQ_PQclear(tmp.res);
+            CALL_PQ(fmap, PQclear, tmp.res);
             destruct (values);
             return NULL;
         }
     }
-    CALL_PQ_PQclear(tmp.res);
+    CALL_PQ(fmap, PQclear, tmp.res);
 
     return values;
 }
@@ -869,7 +941,7 @@ string PGResultSet::getString(const int col) {
 
     // reference types (regtype, regclass..)
     if (category == TYPE_STRING || category == TYPE_ENUM) {
-        value = CALL_PQ_PQgetvalue(pgres, this->pos, col);
+        value = CALL_PQ(fmap, PQgetvalue, pgres, this->pos, col);
     }
     // reference types (regtype, regclass..)
     // TODO: dodelat v typemanager
@@ -888,18 +960,18 @@ int PGResultSet::getInt(const int col) {
 
     // this circumvents libpqtypes and handles all int types (int, oid...)
     if (length < 0) { // conversion if length == -1
-        stringstream iss (CALL_PQ_PQgetvalue(pgres, this->pos, col));
+        stringstream iss (CALL_PQ(fmap, PQgetvalue, pgres, this->pos, col));
         iss >> value;
     }
      // short 2-byte int
     else if (length == 2) {
-//        CALL_PQT_PQgetf(pgres, this->pos, "%int2", col, &value);
-        endian_swap2(&value, CALL_PQ_PQgetvalue(pgres, this->pos, col));
+//        CALL_PQT(fmap, PQgetf, pgres, this->pos, "%int2", col, &value);
+        endian_swap2(&value, CALL_PQ(fmap, PQgetvalue, pgres, this->pos, col));
     }
     // 4-byte int
     else if (length == 4) {
-//        CALL_PQT_PQgetf(pgres, this->pos, "%int4", col, &value);
-        endian_swap4(&value, CALL_PQ_PQgetvalue(pgres, this->pos, col));
+//        CALL_PQT(fmap, PQgetf, pgres, this->pos, "%int4", col, &value);
+        endian_swap4(&value, CALL_PQ(fmap, PQgetvalue, pgres, this->pos, col));
     }
     else {
         if (length == 8) {
@@ -919,8 +991,8 @@ long PGResultSet::getInt8(const int col) {
 
     // extract long or call getInt if value is integer
     if (length == 8) {
-//        CALL_PQT_PQgetf(pgres, this->pos, "%int8", col, &value);
-        endian_swap8(&value, CALL_PQ_PQgetvalue(pgres, this->pos, col));
+//        CALL_PQT(fmap, PQgetf, pgres, this->pos, "%int8", col, &value);
+        endian_swap8(&value, CALL_PQ(fmap, PQgetvalue, pgres, this->pos, col));
     }
     else if (length < 8) {
         value = (long) getInt(col);
@@ -934,24 +1006,24 @@ long PGResultSet::getInt8(const int col) {
 int* PGResultSet::getIntA(const int col, int& size) {
     PGresult *pgres = (PGresult *) this->res;
     PGarray tmp;
-    if (! CALL_PQT_PQgetf(pgres, this->pos, "%int4[]", col, &tmp)) {
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%int4[]", col, &tmp)) {
         logger->warning(307, "Value is not an array of integer", thisClass+"::getIntA()");
         size = -1;
         return NULL;
     }
 
-    size = CALL_PQ_PQntuples(tmp.res);
+    size = CALL_PQ(fmap, PQntuples, tmp.res);
     int* values = new int [size];
     for (int i = 0; i < size; i++) {
-        if (! CALL_PQT_PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
+        if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%int4", 0, &values[i])) {
             logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntA()");
             size = -1;
-            CALL_PQ_PQclear(tmp.res);
+            CALL_PQ(fmap, PQclear, tmp.res);
             destruct (values);
             return NULL;
         }
     }
-    CALL_PQ_PQclear(tmp.res);
+    CALL_PQ(fmap, PQclear, tmp.res);
 
     return values;
 }
@@ -959,7 +1031,7 @@ int* PGResultSet::getIntA(const int col, int& size) {
 vector<int>* PGResultSet::getIntV(const int col) {
     PGresult *pgres = (PGresult *) this->res;
     PGarray tmp;
-    if (! CALL_PQT_PQgetf(pgres, this->pos, "%int4[]", col, &tmp)) {
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%int4[]", col, &tmp)) {
         logger->warning(307, "Value is not an array of integer", thisClass+"::getIntV()");
         return NULL;
     }
@@ -967,16 +1039,16 @@ vector<int>* PGResultSet::getIntV(const int col) {
     PGint4 value;
     vector<int>* values = new vector<int>;
 
-    for (int i = 0; i < CALL_PQ_PQntuples(tmp.res); i++) {
-        if (! CALL_PQT_PQgetf(tmp.res, i, "%int4", 0, &value)) {
+    for (int i = 0; i < CALL_PQ(fmap, PQntuples, tmp.res); i++) {
+        if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%int4", 0, &value)) {
             logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntV()");
-            CALL_PQ_PQclear(tmp.res);
+            CALL_PQ(fmap, PQclear, tmp.res);
             destruct (values);
             return NULL;
         }
         values->push_back(value);
     }
-    CALL_PQ_PQclear(tmp.res);
+    CALL_PQ(fmap, PQclear, tmp.res);
 
     return values;
 }
@@ -984,7 +1056,7 @@ vector<int>* PGResultSet::getIntV(const int col) {
 vector< vector<int>* >* PGResultSet::getIntVV(const int col) {
     PGresult *pgres = (PGresult *) this->res;
     PGarray tmp;
-    if (! CALL_PQT_PQgetf(pgres, this->pos, "%int4[]", col, &tmp)) {
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%int4[]", col, &tmp)) {
         logger->warning(307, "Value is not an array of integer arrays", thisClass+"::getIntVV()");
         return NULL;
     }
@@ -1002,9 +1074,9 @@ vector< vector<int>* >* PGResultSet::getIntVV(const int col) {
         arr = new vector<int>;
         // array columns
         for (int j = 0; j < tmp.dims[1]; j++) {
-            if (! CALL_PQT_PQgetf(tmp.res, i*tmp.dims[1]+j, "%int4", 0, &value)) {
+            if (! CALL_PQT(fmap, PQgetf, tmp.res, i*tmp.dims[1]+j, "%int4", 0, &value)) {
                 logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntVV()");
-                CALL_PQ_PQclear(tmp.res);
+                CALL_PQ(fmap, PQclear, tmp.res);
                 for (int x = 0; x < (*arrays).size(); x++) destruct ((*arrays)[x]);
                 destruct (arrays);
                 return NULL;
@@ -1022,12 +1094,12 @@ float PGResultSet::getFloat(const int col) {
     float value = 0;
     short length = typeManager->getTypeMetadata(getKeyType(col)).length;
     if (length < 0) { // conversion if length == -1
-        stringstream iss (CALL_PQ_PQgetvalue(pgres, this->pos, col));
+        stringstream iss (CALL_PQ(fmap, PQgetvalue, pgres, this->pos, col));
         iss >> value;
     }
     else if (length == 4) {
-//        CALL_PQT_PQgetf(pgres, this->pos, "%float4", col, &value);
-        endian_swap4(&value, CALL_PQ_PQgetvalue(pgres, this->pos, col));
+//        CALL_PQT(fmap, PQgetf, pgres, this->pos, "%float4", col, &value);
+        endian_swap4(&value, CALL_PQ(fmap, PQgetvalue, pgres, this->pos, col));
     }
     else {
         logger->warning(306, "Float value of length "+toString(length)+" is not supported", thisClass+"::getFloat()");
@@ -1044,7 +1116,7 @@ double PGResultSet::getFloat8(const int col) {
         value = (double) getFloat(col);
     }
     else  if (length == 8) {
-        CALL_PQT_PQgetf(pgres, this->pos, "%float8", col, &value);
+        CALL_PQT(fmap, PQgetf, pgres, this->pos, "%float8", col, &value);
     }
     else {
         logger->warning(306, "Float value of length "+toString(length)+" is not supported", thisClass+"::getFloat8()");
@@ -1055,24 +1127,24 @@ double PGResultSet::getFloat8(const int col) {
 float* PGResultSet::getFloatA(const int col, int& size) {
     PGresult *pgres = (PGresult *) this->res;
     PGarray tmp;
-    if (! CALL_PQT_PQgetf(pgres, this->pos, "%float4[]", col, &tmp)) {
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%float4[]", col, &tmp)) {
         logger->warning(311, "Value is not an array of float", thisClass+"::getFloatA()");
         size = -1;
         return NULL;
     }
 
-    size = CALL_PQ_PQntuples(tmp.res);
+    size = CALL_PQ(fmap, PQntuples, tmp.res);
     float* values = new float [size];
     for (int i = 0; i < size; i++) {
-        if (! CALL_PQT_PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
+        if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%float4", 0, &values[i])) {
             logger->warning(312, "Unexpected value in float array", thisClass+"::getFloatA()");
             size = -1;
-            CALL_PQ_PQclear(tmp.res);
+            CALL_PQ(fmap, PQclear, tmp.res);
             destruct (values);
             return NULL;
         }
     }
-    CALL_PQ_PQclear(tmp.res);
+    CALL_PQ(fmap, PQclear, tmp.res);
 
     return values;
 }
@@ -1080,23 +1152,23 @@ float* PGResultSet::getFloatA(const int col, int& size) {
 vector<float>* PGResultSet::getFloatV(const int col) {
     PGresult *pgres = (PGresult *) this->res;
     PGarray tmp;
-    if (! CALL_PQT_PQgetf(pgres, this->pos, "%float4[]", col, &tmp)) {
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%float4[]", col, &tmp)) {
         logger->warning(311, "Value is not an array of float", thisClass+"::getFloatV()");
         return NULL;
     }
 
     PGfloat4 value;
     vector<float>* values = new vector<float>;
-    for (int i = 0; i < CALL_PQ_PQntuples(tmp.res); i++) {
-        if (! CALL_PQT_PQgetf(tmp.res, i, "%float4", 0, &value)) {
+    for (int i = 0; i < CALL_PQ(fmap, PQntuples, tmp.res); i++) {
+        if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%float4", 0, &value)) {
             logger->warning(312, "Unexpected value in float array", thisClass+"::getFloatV()");
-            CALL_PQ_PQclear(tmp.res);
+            CALL_PQ(fmap, PQclear, tmp.res);
             destruct (values);
             return NULL;
         }
         values->push_back(value);
     }
-    CALL_PQ_PQclear(tmp.res);
+    CALL_PQ(fmap, PQclear, tmp.res);
 
     return values;
 }
@@ -1110,14 +1182,14 @@ time_t PGResultSet::getTimestamp(const int col) {
 
     if (!dtype.compare("time")) {
         PGtime timestamp;
-        CALL_PQT_PQgetf(pgres, this->pos, "%time", col, &timestamp);
+        CALL_PQT(fmap, PQgetf, pgres, this->pos, "%time", col, &timestamp);
         ts.tm_hour  = timestamp.hour;
         ts.tm_min   = timestamp.min;
         ts.tm_sec   = timestamp.sec;
     }
     else if (!dtype.compare("timestamp")) {
         PGtimestamp timestamp;
-        CALL_PQT_PQgetf(pgres, this->pos, "%timestamp", col, &timestamp);
+        CALL_PQT(fmap, PQgetf, pgres, this->pos, "%timestamp", col, &timestamp);
         ts.tm_year  = timestamp.date.year;
         ts.tm_mon   = timestamp.date.mon;
         ts.tm_mday  = timestamp.date.mday;
@@ -1135,7 +1207,7 @@ int PGResultSet::getIntOid(const int col) {
     PGresult *pgres = (PGresult *) this->res;
     PGint4 value;
 
-    CALL_PQT_PQgetf(pgres, this->pos, "%oid", col, &value);
+    CALL_PQT(fmap, PQgetf, pgres, this->pos, "%oid", col, &value);
     return (int) value;
 }
 
@@ -1149,7 +1221,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
 
     // check for NULL resultset and field
     if (!this->res) return "";
-    if (CALL_PQ_PQgetisnull((PGresult *)this->res, this->pos, col)) return "";
+    if (CALL_PQ(fmap, PQgetisnull, (PGresult *)this->res, this->pos, col)) return "";
 
     // Call different getters for different categories of types
     switch (keytype_metadata.category) {
@@ -1376,8 +1448,8 @@ pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_
     PGresult *pgres     = (PGresult *) this->res;
     vector<int> *widths = get_widths ? new vector<int>() : NULL;
     TKeys *keys         = getKeys();
-    int rows            = CALL_PQ_PQntuples(pgres);
-    int cols            = CALL_PQ_PQnfields(pgres);
+    int rows            = CALL_PQ(fmap, PQntuples, pgres);
+    int cols            = CALL_PQ(fmap, PQnfields, pgres);
     int plen, flen, tlen, width;
 
     if (!get_widths && keys) return std::make_pair(keys, widths);
@@ -1421,43 +1493,54 @@ pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_
 
 
 
-PGLibLoader::PGLibLoader() {
-    lt_dlinit();
+PGLibLoader::PGLibLoader(Logger *logger)
+ : LibLoader (logger) {
+    thisClass = "PGLibLoader";
     h_libpqtypes = NULL;
     h_libpq = NULL;
+    lt_dlinit();
 }
 
 PGLibLoader::~PGLibLoader() {
-    unload();
+    unloadLibs();
     lt_dlexit();
 };
 
-func_map_t *PGLibLoader::load() {
-    int ret = 0;
-    func_map_t *func_map = new func_map_t();
+fmap_t *PGLibLoader::loadLibs() {
+    bool    retval  = VT_OK;
+    fmap_t  *fmap   = new fmap_t();
 
-    ret += load_libpq(func_map);
-    ret += load_libpqtypes(func_map);
+    retval &= load_libpq(fmap);
+    retval &= load_libpqtypes(fmap);
+    if (!retval) destruct(fmap);
 
-    if (ret == 0) {
-        return func_map;
-    }
-    else {
-        destruct(func_map);
-        return NULL;
-    }
+    return retval ? fmap : NULL;
 };
 
-int PGLibLoader::unload() {
-    int ret = 0;
-
-    ret += unload_libpqtypes();
-    ret += unload_libpq();
-    return ret;
+void PGLibLoader::unloadLibs() {
+    unload_libpqtypes();
+    unload_libpq();
 };
 
-int PGLibLoader::load_libpqtypes (func_map_t *func_map) {
-    void *funcPtr = NULL;
+bool PGLibLoader:: isLoaded() {
+    return h_libpq && h_libpqtypes ? VT_OK : VT_FAIL;
+}
+
+char *PGLibLoader::getLibName() {
+    char *name = NULL;
+    const lt_dlinfo *libpq_info;
+
+    if (h_libpq) {
+        libpq_info = lt_dlgetinfo(h_libpq);
+        name = libpq_info->name;
+    }
+    
+    return name;
+}
+
+bool PGLibLoader::load_libpqtypes (fmap_t *fmap) {
+    bool retval     = VT_OK;
+    void *funcPtr   = NULL;
     const string funcStrings[] =
     {"PQgeterror","PQseterror","PQgetErrorField","PQspecPrepare","PQclearSpecs","PQinitTypes",
      "PQregisterSubClasses","PQregisterComposites","PQregisterUserDefinedTypes","PQregisterTypes",
@@ -1469,17 +1552,31 @@ int PGLibLoader::load_libpqtypes (func_map_t *func_map) {
 
     h_libpqtypes = lt_dlopenext("libpqtypes");
 
-    for(int i = 0; !funcStrings[i].empty(); i++) {
-        funcPtr = lt_dlsym(h_libpqtypes, funcStrings[i].c_str());
-        if (funcPtr) func_map->insert(FUNC_MAP_ENTRY("PQT_"+funcStrings[i], funcPtr));
-        else return -1;
+    if (h_libpqtypes) {
+        for(int i = 0; !funcStrings[i].empty(); i++) {
+            funcPtr = lt_dlsym(h_libpqtypes, funcStrings[i].c_str());
+            if (funcPtr) {
+                fmap->insert(FMAP_ENTRY("PQT_"+funcStrings[i], funcPtr));
+            }
+            else {
+                logger->warning(555, "Function " + funcStrings[i] + " not loaded.", thisClass+"::load_libpqtypes()");
+                retval = VT_FAIL;
+                break;
+            }
+        }
     }
-    return 0;
+    else {
+        logger->warning(556, "Libpqtypes library not found.", thisClass+"::load_libpqtypes()");
+        retval = VT_FAIL;
+    }
+
+    return retval;
 }
 
-int PGLibLoader::load_libpq (func_map_t *func_map) {
+bool PGLibLoader::load_libpq (fmap_t *fmap) {
+    bool retval     = VT_OK;
+    void *funcPtr   = NULL;
     lt_dladvise libpq_advise = NULL;
-    void *funcPtr = NULL;
     const string funcStrings[] =
     {"PQconnectdb","PQstatus","PQerrorMessage","PQfinish","PQclear","PQresultAlloc","PQfreemem","PQresultStatus","PQntuples", "PQcmdStatus",
      "PQcmdTuples","PQfname","PQfnumber","PQftype","PQnfields","PQgetvalue","PQgetisnull","PQgetlength","PQescapeLiteral","PQescapeIdentifier",
@@ -1492,32 +1589,36 @@ int PGLibLoader::load_libpq (func_map_t *func_map) {
     h_libpq = lt_dlopenadvise("libpq", libpq_advise);
     lt_dladvise_destroy(&libpq_advise);
 
-    for(int i = 0; !funcStrings[i].empty(); i++) {
-        funcPtr = lt_dlsym(h_libpq, funcStrings[i].c_str());
-        if (funcPtr) func_map->insert(FUNC_MAP_ENTRY("PQ_"+funcStrings[i], funcPtr));
-        else return -1;
+    if (h_libpq) {
+        for(int i = 0; !funcStrings[i].empty(); i++) {
+            funcPtr = lt_dlsym(h_libpq, funcStrings[i].c_str());
+            if (funcPtr) {
+                fmap->insert(FMAP_ENTRY("PQ_"+funcStrings[i], funcPtr));
+            }
+            else {
+                logger->warning(555, "Function " + funcStrings[i] + " not loaded.", thisClass+"::load_libpq()");
+                retval = VT_FAIL;
+                break;
+            }
+        }
     }
-    return 0;
+    else {
+        logger->warning(556, "Libpq library not found.", thisClass+"::load_libpq()");
+        retval = VT_FAIL;
+    }
+    return retval;
 }
 
-int PGLibLoader::unload_libpqtypes () {
+void PGLibLoader::unload_libpqtypes () {
     if (h_libpqtypes) {
         lt_dlclose(h_libpqtypes);
         h_libpqtypes = NULL;
-        return 0;
-    }
-    else {
-        return -1;
     }
 }
 
-int PGLibLoader::unload_libpq () {
+void PGLibLoader::unload_libpq () {
     if (h_libpq) {
         lt_dlclose(h_libpq);
         h_libpq = NULL;
-        return 0;
-    }
-    else {
-        return -1;
     }
 }

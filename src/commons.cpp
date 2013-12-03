@@ -10,6 +10,8 @@
  * Methods of Commons class
  */
 
+#include <string>
+
 #include "vtapi_commons.h"
 
 using namespace vtapi;
@@ -26,7 +28,7 @@ Commons::Commons(const Commons& orig) {
     connection      = orig.connection;
     dbconn          = orig.dbconn;
     typeManager     = orig.typeManager;
-    FUNC_MAP        = orig.FUNC_MAP;
+    fmap            = orig.fmap;
 
     user            = orig.user;
     format          = orig.format;
@@ -67,12 +69,12 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     }
     // initialize logger (log_arg has default value)
     logger          = new Logger(string(args_info.log_arg), args_info.verbose_given);
-    // link libraries and load functions into FUNC_MAP
-    libLoader       = BackendFactory::createLibLoader();
-    FUNC_MAP        = libLoader->load();
+    // link libraries and load functions into fmap
+    libLoader       = BackendFactory::createLibLoader(logger);
+    fmap            = libLoader->loadLibs();
     // initialize connection and type managing
-    connection      = BackendFactory::createConnection(FUNC_MAP, dbconn, logger);
-    typeManager     = BackendFactory::createTypeManager(FUNC_MAP, connection, logger);
+    connection      = fmap ? BackendFactory::createConnection(fmap, dbconn, logger) : NULL;
+    typeManager     = fmap ? BackendFactory::createTypeManager(fmap, connection, logger) : NULL;
     g_typeManager   = (void *)typeManager; // global kvuli pg_enum_* handlerum
 
     // other args (see vtapi.conf)
@@ -102,7 +104,7 @@ Commons::~Commons() {
     if (doom) {
         destruct(typeManager);
         destruct(connection);
-        destruct(FUNC_MAP);
+        destruct(fmap);
         destruct(libLoader);        
         destruct(logger);
         
@@ -161,6 +163,16 @@ string Commons::getUser() {
     if (user.empty()) logger->warning(160, "No user specified", thisClass+"::getUser()");
     return user;
 }
+
+bool Commons::checkCommonsObject() {
+    return !(
+         BackendFactory::backend == UNKNOWN ||
+        !libLoader || !libLoader->isLoaded() || !fmap ||
+        !connection ||
+        !typeManager ||
+        dbconn.empty());
+}
+
 
 // static
 bool Commons::fileExists(const string& filename) {

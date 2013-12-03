@@ -61,7 +61,6 @@ public:
      */
     string getOutputs();
 
-    // TODO: o tohle bych se ani nepokousel
     /**
      * A dangerous and rather discouraged function...
      * @deprecated by the human power
@@ -75,7 +74,6 @@ public:
 
     /**
      * Create new interval for process
-     * // TODO: unused t1, t2
      * @param t1 currently unused
      * @param t2 currently unused
      * @return new interval
@@ -84,18 +82,22 @@ public:
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
     /**
      * Create new sequence for process
-     * // TODO: not implemented method
      * @param name specific sequence name
      * @return new sequence
-     * @unimplemented neimplementováno (zkontrolovat pak i doc)
+     * @todo @b code: neimplementováno (zkontrolovat pak i doc)
      */
     Sequence* newSequence(const string& name = "");
 
     // http://stackoverflow.com/questions/205529/c-c-passing-variable-number-of-arguments-around
-    bool run(); // runs the Method's derivate run() with default parameters Method->run(*this);
+    /**
+     * Runs the Method's derivate run() with default parameters Method->run(*this);
+     * @return success
+     * @todo @b code: neimplementováno
+     */
+    bool run();
     bool run(...);
 
-// TODO:    void print();
+
 
 };
 

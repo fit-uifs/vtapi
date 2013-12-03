@@ -54,40 +54,46 @@ Interval* Sequence::newInterval(const int t1, const int t2) {
 Image* Sequence::newImage(const string& name) {
     Image* image = new Image(*this);
     image->select->whereString("imglocation", name);
+
     return image;
 }
 
 
 bool Sequence::add(const string& name, const string& location, const string& type) {
-    bool retval = true;
+    bool retval = VT_OK;
 
     destruct(insert);
     insert = new Insert(*this, "sequences");
     retval &= insert->keyString("seqname", name);
     retval &= insert->keyString("seqlocation", location);
     retval &= insert->keySeqtype("seqtyp", type);
+
     return retval;
 }
 
 bool Sequence::add(const string& name, const string& location, const string& type,
     const string& userid, const string& groupid, const string& notes) {
-    bool retval = this->add(name, location, type);
+    bool retval = VT_OK;
+
+    retval &= this->add(name, location, type);
     retval &= insert->keyString("userid", userid);
     retval &= insert->keyString("groupid", groupid);
     retval &= insert->keyString("notes", notes);
+
     return retval;
 }
 
 bool Sequence::addExecute() {
-    bool retval = true;
+    bool retval = VT_OK;
+    time_t now = 0;
 
     if (this->insert) {
-        time_t now;
         time(&now);
         retval &= insert->keyTimestamp("created", now);
-        retval &= insert->execute();
+        if (retval) retval &= insert->execute();
     }
-    else retval = false;
+    else retval = VT_FAIL;
+    
     return retval;
 }
 
@@ -97,7 +103,7 @@ bool Sequence::preSet() {
     update = new Update(*this, "sequences");
     update->whereString("seqname", this->sequence);
 
-    return true;
+    return VT_OK;
 }
 
 //================================= VIDEO ======================================
@@ -111,19 +117,27 @@ Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name) {
 }
 
 bool Video::add(string name, string location) {
-
-    destruct(insert);
-    insert = new Insert(*this, "sequences");
-    insert->keyString("seqname", name);
-    insert->keyString("seqlocation", location);
-    insert->keySeqtype("seqtyp", "video");
+    bool retval = VT_OK;
+    string filename = "";
 
 #ifdef __OPENCV_CORE_HPP__
     // TODO: P3k check something else???
-    string fn = baseLocation + datasetLocation + location;
-    if (!fileExists(fn)) logger->warning(3210, "Cannot open file " + fn, thisClass+"::add()");
+    filename = baseLocation + datasetLocation + location;
+    if (!fileExists(filename)) {
+        logger->warning(3210, "Cannot open file " + filename, thisClass+"::add()");
+        retval = VT_FAIL;
+    }
     // TODO: check the lenght and so on...
 #endif
+    
+    if (retval) {
+        destruct(insert);
+        insert = new Insert(*this, "sequences");
+        retval &= insert->keyString("seqname", name);
+        retval &= insert->keyString("seqlocation", location);
+        retval &= insert->keySeqtype("seqtyp", "video");
+    }
+    return retval;
 }
 
 // TODO: nejak odlisit nestandardni veci
@@ -144,8 +158,9 @@ VideoPlayer::VideoPlayer(Video& orig) : Commons(orig) {
 
 // TODO: point (), line, box, ellipse
 // TODO: play 1, 2, 4, 6, 9, 12 and 16 videos at once :)
+// TODO: P3k dodelat nacteni vice Video a Interval
 bool VideoPlayer::play() {
-    // TODO: P3k dodelat nacteni vice Video a Interval
+    bool retval = VT_OK;
     cv::VideoCapture cap;
     int fps = 25;
 
@@ -164,7 +179,7 @@ bool VideoPlayer::play() {
     if(cap.isOpened()) {
         cv::namedWindow("video",1);
         cv::Mat frame;
-        while(true)
+        while(1)
         {
             cap >> frame;
             cv::imshow("video", frame);
@@ -174,7 +189,10 @@ bool VideoPlayer::play() {
     }
     else {
         logger->warning(161, "Sorry, there is nothing to play, aborting :(", thisClass+"::play()");
+        retval = VT_FAIL;
     }
+
+    return retval;
 }
 
 #endif

@@ -8,9 +8,9 @@ CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
 CND_PLATFORM_Debug=GNU-Linux-x86
-CND_ARTIFACT_DIR_Debug=dist
+CND_ARTIFACT_DIR_Debug=.
 CND_ARTIFACT_NAME_Debug=vtcli
-CND_ARTIFACT_PATH_Debug=dist/vtcli
+CND_ARTIFACT_PATH_Debug=./vtcli
 CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Debug=vtapi.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/vtapi.tar

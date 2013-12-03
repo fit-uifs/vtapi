@@ -54,7 +54,7 @@ int Interval::getEndTime() {
 
 
 bool Interval::add(const string& sequence, const int t1, const int t2, const string& location) {
-    bool retval = true;
+    bool retval = VT_OK;
     int te2 = (t2 < 0) ? t1 : t2;
 
     destruct(insert);
@@ -71,35 +71,40 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
 
 bool Interval::add(const string& sequence, const int t1, const int t2, const string& location,
     const string& userid, const string& notes) {
-    bool retval = this->add(sequence, t1, t2, location);
+    bool retval = VT_OK;
+
+    retval &= this->add(sequence, t1, t2, location);
     retval &= insert->keyString("userid", userid);
     retval &= insert->keyString("notes", notes);
+    
     return retval;
 }
 
 bool Interval::addExecute() {
-    bool retval = true;
+    bool retval = VT_OK;
+    time_t now = 0;
 
     if (this->insert) {
-        time_t now;
         time(&now);
         retval &= insert->keyTimestamp("created", now);
-        retval &= insert->execute();
+        if (retval) retval &= insert->execute();
     }
-    else retval = false;
+    else retval = VT_FAIL;
+
     return retval;
 }
 
 
 bool Interval::preSet() {
+    bool retval = VT_OK;
+
     destruct(update);
-
     update = new Update(*this, this->selection);
-    update->whereString("seqname", sequence);
-    update->whereInt("t1", this->getInt("t1"));
-    update->whereInt("t2", this->getInt("t2"));
+    retval &= update->whereString("seqname", sequence);
+    retval &= update->whereInt("t1", this->getInt("t1"));
+    retval &= update->whereInt("t2", this->getInt("t2"));
 
-    return true;
+    return retval;
 }
 
 
@@ -122,7 +127,7 @@ int Image::getTime() {
 }
 
 bool Image::add(const string& sequence, const int t, const string& location) {
-    ((Interval*)this)->add(sequence, t, t, location);
+    return ((Interval*)this)->add(sequence, t, t, location);
 }
 
 string Image::getImgLocation() {

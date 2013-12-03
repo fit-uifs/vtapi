@@ -17,14 +17,11 @@
 using namespace vtapi;
 
 
-SLConnection::SLConnection(func_map_t *FUNC_MAP, const string& connectionInfo, Logger* logger)
-: Connection (FUNC_MAP, connectionInfo, logger){
+SLConnection::SLConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger)
+: Connection (fmap, connectionInfo, logger){
     thisClass   = "SLConnection";
     conn        = NULL;
-    if (!this->connect(connectionInfo)) {
-        logger->error(121, "The connection couldn't have been established.", thisClass+"::SLConnection()");
-    }
-    this->isConnected();
+    connect(connectionInfo);
 }
 
 SLConnection::~SLConnection() {
@@ -32,18 +29,21 @@ SLConnection::~SLConnection() {
 }
 
 bool SLConnection::connect (const string& connectionInfo) {
-    string dbname;
+    bool retval     = VT_OK;
+    string dbname   = "";
+
     connInfo    = connectionInfo;
     fixSlashes(connInfo);
     dbname      = connInfo + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
+    CALL_SL(fmap, sqlite3_open_v2, dbname.c_str(), &conn, SQLITE_OPEN_READWRITE, NULL);
 
-    if (CALL_SL_sqlite3_open_v2(dbname.c_str(), &conn, SQLITE_OPEN_READWRITE, NULL) != SQLITE_OK) {
-        logger->warning(122, CALL_SL_sqlite3_errmsg(conn), thisClass+"::connect(");
-        return false;
+    retval = isConnected();
+    if (!retval) {
+        string errmsg = conn ? string(CALL_SL(fmap, sqlite3_errmsg, conn)) : "The connection couldn't have been established.";
+        logger->error(122, errmsg, thisClass+"::connect(");
     }
-    else {
-        return true;
-    }
+
+    return retval;
 }
 
 bool SLConnection::reconnect (const string& connectionInfo) {
@@ -52,84 +52,79 @@ bool SLConnection::reconnect (const string& connectionInfo) {
         fixSlashes(connInfo);
     }
     disconnect();
-    return this->connect(connInfo);
+    return connect(connInfo);
 }
 
 void SLConnection::disconnect () {
-    if (isConnected()) {
-        CALL_SL_sqlite3_close(conn);
+    if (conn) {
+        CALL_SL(fmap, sqlite3_close, conn);
     }
 }
 
 bool SLConnection::isConnected () {
     int cur, high;
-    if (CALL_SL_sqlite3_db_status(conn, SQLITE_DBSTATUS_SCHEMA_USED, &cur, &high, false) != SQLITE_OK) {
-        logger->warning(125, CALL_SL_sqlite3_errmsg(conn), thisClass+"::isConnected()");
-        return false;
+    if (conn) {
+        return (CALL_SL(fmap, sqlite3_db_status, conn, SQLITE_DBSTATUS_SCHEMA_USED, &cur, &high, false) == SQLITE_OK);
     }
     else {
-        return true;
+        return VT_FAIL;
     }
 }
 
-int SLConnection::execute(const string& query, void *param) {
-    sl_param_t      *sl_param   = (sl_param_t *) param;
-    char            *errmsg     = NULL;
-    int             ret_query   = 0;
+bool SLConnection::execute(const string& query, void *param) {
+    sl_param_t  *sl_param   = (sl_param_t *) param;
+    char        *errmsg     = NULL;
+    bool        retval      = VT_OK;
 
     errorMessage.clear();
 
-    ret_query = attachDatabase (sl_param->database);
-    if (ret_query != SQLITE_OK) {
+    retval = attachDatabase (sl_param->database);
+    if (!retval) {
         errorMessage = "Database " + sl_param->database + " couldn't have been attached.";
-        return -1;
-    }
-    ret_query = CALL_SL_sqlite3_exec(conn, query.c_str(), NULL, NULL, &errmsg);
-    if (ret_query == SQLITE_OK) {
-        return 1;
     }
     else {
-        if (errmsg) {
+        retval = CALL_SL(fmap, sqlite3_exec, conn, query.c_str(), NULL, NULL, &errmsg) == SQLITE_OK;
+        if (!retval && errmsg) {
             errorMessage = string(errmsg);
-            CALL_SL_sqlite3_free(errmsg);
+            CALL_SL(fmap, sqlite3_free, errmsg);
         }
-        return -1;
     }
+
+    return retval;
 }
 
 int SLConnection::fetch(const string& query, void *param, ResultSet *resultSet) {
-    sl_param_t      *sl_param   = (sl_param_t *) param;
-    sl_res_t        *sl_res     = new sl_res_t();
-    char            *errmsg     = NULL;
-    int             ret_query   = 0;
+    sl_param_t  *sl_param   = (sl_param_t *) param;
+    sl_res_t    *sl_res     = new sl_res_t();
+    char        *errmsg     = NULL;
+    int         retval      = ER_FAIL;
+    int         retquery    = SQLITE_ERROR;
 
     errorMessage.clear();
 
-    ret_query = attachDatabase (sl_param->database);
-    if (ret_query != SQLITE_OK) {
+    if (!attachDatabase (sl_param->database)) {
         errorMessage = "Database " + sl_param->database + " couldn't have been attached.";
-        return -1;
-    }
-
-    ret_query = CALL_SL_sqlite3_get_table(conn, query.c_str(), &(sl_res->res), &(sl_res->rows), &(sl_res->cols), &errmsg);
-    resultSet->newResult((void *) sl_res);
-    if (ret_query == SQLITE_OK) {
-        return sl_res->rows;
     }
     else {
-        if (errmsg) {
-            errorMessage = string(errmsg);
-            CALL_SL_sqlite3_free(errmsg);
+        retquery = CALL_SL(fmap, sqlite3_get_table, conn, query.c_str(), &(sl_res->res), &(sl_res->rows), &(sl_res->cols), &errmsg);
+        resultSet->newResult((void *) sl_res);
+        if (retquery == SQLITE_OK) {
+            retval = sl_res->rows;
         }
-        return -1;
+        else if (errmsg) {
+            errorMessage = string(errmsg);
+            CALL_SL(fmap, sqlite3_free, errmsg);
+        }
     }
+
+    return retval;
 }
 
 void* SLConnection::getConnectionObject() {
     return (void *) this->conn;
 }
 
-int SLConnection::fixSlashes(string& path) {
+bool SLConnection::fixSlashes(string& path) {
     size_t len = path.length();
     size_t slPos = 0;
     size_t nsPos = len;
@@ -147,43 +142,44 @@ int SLConnection::fixSlashes(string& path) {
         nsPos--;
         if (nsPos < 0) {
             path.clear();
-            return -1;
+            return VT_FAIL;
         }
-    } while (path[nsPos] == '/' || path[nsPos] == '\\');
+    } while (path[nsPos] == '/');
     if (nsPos < len - 1) {
         path = path.substr(0, nsPos + 1);
     }
-    return 0;
+
+    return VT_OK;
 }
 
-int SLConnection::attachDatabase(string& db) {
-    if (!CALL_SL_sqlite3_db_filename(conn, db.c_str())) {
-        string query = "ATTACH DATABASE \'" + connInfo + "/" + SL_DB_PREFIX + db + SL_DB_SUFFIX + "\' AS \'" + db + "\';";
-        return CALL_SL_sqlite3_exec(conn, query.c_str(), NULL, NULL, NULL);
+bool SLConnection::attachDatabase(string& dbfile) {
+    if (CALL_SL(fmap, sqlite3_db_filename, conn, dbfile.c_str()) == NULL) {
+        string query = "ATTACH DATABASE \'" + connInfo + "/" + SL_DB_PREFIX + dbfile + SL_DB_SUFFIX + "\' AS \'" + dbfile + "\';";
+        return CALL_SL(fmap, sqlite3_exec, conn, query.c_str(), NULL, NULL, NULL) == SQLITE_OK;
     }
     else {
-        return SQLITE_OK;
+        return VT_OK;
     }
 }
 
 
 
-SLTypeManager::SLTypeManager(func_map_t *FUNC_MAP, Connection *connection, Logger *logger)
-: TypeManager(FUNC_MAP, connection, logger) {
+SLTypeManager::SLTypeManager(fmap_t *fmap, Connection *connection, Logger *logger)
+: TypeManager(fmap, connection, logger) {
     thisClass = "SLTypeManager";
 }
 
 SLTypeManager::~SLTypeManager() {
 }
 
-int SLTypeManager::loadTypes() {
-    return 0;
+bool SLTypeManager::loadTypes() {
+    return VT_OK;
 }
 
 
 
-SLQueryBuilder::SLQueryBuilder(func_map_t *FUNC_MAP, Connection *connection, Logger *logger, const string& initString)
-: QueryBuilder (FUNC_MAP, connection, logger, initString) {
+SLQueryBuilder::SLQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString)
+: QueryBuilder (fmap, connection, logger, initString) {
     thisClass   = "SLQueryBuilder";
     param       = (void *) new sl_param_t();
 }
@@ -362,166 +358,166 @@ string SLQueryBuilder::getGenericQuery() {
 }
 
 bool SLQueryBuilder::keyFrom(const string& table, const string& column) {
-    if (column.empty()) return false;
+    if (column.empty()) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("", column, "", table);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::keyString(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty()) return false;
+    if (key.empty() || value.empty()) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("text", key, value, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }    
 }
 
 bool SLQueryBuilder::keyStringA(const string& key, string* values, const int size, const string& from) {    
-    if (key.empty() || !values || size <= 0) return false;
+    if (key.empty() || !values || size <= 0) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("textA", key, values, size, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::keyInt(const string& key, int value, const string& from) {
-    if (key.empty()) return false;
+    if (key.empty()) return VT_FAIL;
     else {
         TKeyValue<int> *tk = new TKeyValue<int>("integer", key, value, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::keyIntA(const string& key, int* values, const int size, const string& from) {
-    if (key.empty() || !values || size <= 0) return false;
+    if (key.empty() || !values || size <= 0) return VT_FAIL;
     else {
         TKeyValue<int> *tk = new TKeyValue<int>("integerA", key, values, size, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::keyFloat(const string& key, float value, const string& from) {
-    if (key.empty()) return false;
+    if (key.empty()) return VT_FAIL;
     else {
         TKeyValue<float> *tk = new TKeyValue<float>("float", key, value, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::keyFloatA(const string& key, float* values, const int size, const string& from) {
-    if (key.empty() || !values || size <= 0) return false;
+    if (key.empty() || !values || size <= 0) return VT_FAIL;
     else {
         TKeyValue<float> *tk = new TKeyValue<float>("floatA", key, values, size, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::keySeqtype(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return false;
+    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("seqtype", key, value, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::keyInouttype(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty() || !this->checkInouttype(value)) return false;
+    if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("inouttype", key, value, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 //bool SLQueryBuilder::keyPermissions(const string& key, const string& value, const string& from) {
-//    if (key.empty() || value.empty()) return false;
+//    if (key.empty() || value.empty()) return VT_FAIL;
 //    else {
 //        TKeyValue<string> *tk = new TKeyValue<string>("permissions", key, value, from);
 //        key_values_main.push_back(tk);
-//        return true;
+//        return VT_OK;
 //    }
 //}
 
 bool SLQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from) {
-    if (key.empty()) return false;
+    if (key.empty()) return VT_FAIL;
     else {
         TKeyValue<time_t> *tk = new TKeyValue<time_t>("timestamp", key, value, from);
         key_values_main.push_back(tk);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty()) return false;
+    if (key.empty() || value.empty()) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("text", key, value, from);
         key_values_where.push_back(tk);
         if (value.compare("NULL") == 0 || value.compare("NOT NULL") == 0) opers.push_back(" IS ");
         else opers.push_back(oper);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from) {
-    if (key.empty()) return false;
+    if (key.empty()) return VT_FAIL;
     else {
         TKeyValue<int> *tk = new TKeyValue<int>("integer", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::whereFloat(const string& key, const float value, const string& oper, const string& from) {
-    if (key.empty()) return false;
+    if (key.empty()) return VT_FAIL;
     else {
         TKeyValue<float> *tk = new TKeyValue<float>("float", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::whereSeqtype(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return false;
+    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("seqtype", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty() || !this->checkInouttype(value)) return false;
+    if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("inouttype", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return true;
+        return VT_OK;
     }
 }
 
 bool SLQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
-    if (key.empty()) return false;
+    if (key.empty()) return VT_FAIL;
     else {
         TKeyValue<time_t> *tk = new TKeyValue<time_t>("timestamp", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return true;
+        return VT_OK;
     }
 }
 
-bool SLQueryBuilder::reset() {
+void SLQueryBuilder::reset() {
     destroyKeys();
     opers.clear();
 }
@@ -530,14 +526,6 @@ void SLQueryBuilder::createParam() {
 }
 
 void SLQueryBuilder::destroyParam() {
-}
-
-bool SLQueryBuilder::checkSeqtype(const string& value) {
-    return (value.compare("images") == 0) || (value.compare("video") == 0) || (value.compare("data") == 0);
-}
-
-bool SLQueryBuilder::checkInouttype(const string& value) {
-    return (value.compare("in") == 0) || (value.compare("inout") == 0) || (value.compare("out") == 0);
 }
 
 void SLQueryBuilder::destroyKeys() {
@@ -571,8 +559,8 @@ string SLQueryBuilder::escapeLiteral(const string& ident) {
 
 ///**********************************************************************/
 
-SLResultSet::SLResultSet(func_map_t *FUNC_MAP, TypeManager *typeManager, Logger *logger)
- : ResultSet(FUNC_MAP, typeManager, logger) {
+SLResultSet::SLResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger)
+ : ResultSet(fmap, typeManager, logger) {
     thisClass = "SLResultSet";
 }
 
@@ -597,7 +585,7 @@ bool SLResultSet::isOk() {
 void SLResultSet::clear() {
     if (this->res) {
         sl_res_t *sl_res = (sl_res_t *) this->res;
-        CALL_SL_sqlite3_free_table(sl_res->res);
+        CALL_SL(fmap, sqlite3_free_table, sl_res->res);
         destruct(sl_res)
     }
 }
@@ -832,34 +820,53 @@ pair< TKeys*, vector<int>* > SLResultSet::getKeysWidths(const int row, bool get_
 
 
 
-SLLibLoader::SLLibLoader() {
-    lt_dlinit();
+SLLibLoader::SLLibLoader(Logger *logger)
+ : LibLoader (logger) {
+    thisClass = "SLLibLoader";
     h_libsqlite = NULL;
+    lt_dlinit();
 }
 
 SLLibLoader::~SLLibLoader() {
-    unload();
+    unloadLibs();
     lt_dlexit();
 };
 
-func_map_t *SLLibLoader::load() {
-    func_map_t *func_map = new func_map_t();
+fmap_t *SLLibLoader::loadLibs() {
+    fmap_t *fmap = new fmap_t();
 
-    if (load_libsqlite(func_map) == 0) {
-        return func_map;
+    if (load_libsqlite(fmap)) {
+        return fmap;
     }
     else {
-        destruct(func_map);
+        destruct(fmap);
         return NULL;
     }
 };
 
-int SLLibLoader::unload() {
-    return unload_libsqlite();;
+void SLLibLoader::unloadLibs() {
+    unload_libsqlite();
 };
 
-int SLLibLoader::load_libsqlite (func_map_t *func_map) {
-    void *funcPtr = NULL;
+bool SLLibLoader:: isLoaded() {
+    return h_libsqlite ? VT_OK : VT_FAIL;
+}
+
+char *SLLibLoader::getLibName() {
+    char *name = NULL;
+    const lt_dlinfo *libsl_info;
+
+    if (h_libsqlite) {
+        libsl_info = lt_dlgetinfo(h_libsqlite);
+        name = libsl_info->name;
+    }
+
+    return name;
+}
+
+bool SLLibLoader::load_libsqlite (fmap_t *fmap) {
+    bool retval     = VT_OK;
+    void *funcPtr   = NULL;
     const string funcStrings[] =
     {"sqlite3_open_v2","sqlite3_close","sqlite3_errmsg","sqlite3_db_status","sqlite3_get_table",
      "sqlite3_db_filename","sqlite3_exec","sqlite3_free","sqlite3_free_table",
@@ -868,21 +875,30 @@ int SLLibLoader::load_libsqlite (func_map_t *func_map) {
 
     h_libsqlite = lt_dlopenext("libsqlite3");
 
-    for(int i = 0; !funcStrings[i].empty(); i++) {
-        funcPtr = lt_dlsym(h_libsqlite, funcStrings[i].c_str());
-        if (funcPtr) func_map->insert(FUNC_MAP_ENTRY("SL_"+funcStrings[i], funcPtr));
-        else return -1;
+    if (h_libsqlite) {
+        for(int i = 0; !funcStrings[i].empty(); i++) {
+            funcPtr = lt_dlsym(h_libsqlite, funcStrings[i].c_str());
+            if (funcPtr) {
+                fmap->insert(FMAP_ENTRY("SL_"+funcStrings[i], funcPtr));
+            }
+            else {
+                logger->warning(555, "Function " + funcStrings[i] + " not loaded.", thisClass+"::load_libsqlite()");
+                retval = VT_FAIL;
+                break;
+            }
+        }
     }
-    return 0;
+    else {
+        logger->warning(556, "Libsqlite library not found.", thisClass+"::load_libsl()");
+        retval = VT_FAIL;
+    }
+
+    return retval;
 }
 
-int SLLibLoader::unload_libsqlite () {
+void SLLibLoader::unload_libsqlite () {
     if (h_libsqlite) {
         lt_dlclose(h_libsqlite);
         h_libsqlite = NULL;
-        return 0;
-    }
-    else {
-        return -1;
     }
 }

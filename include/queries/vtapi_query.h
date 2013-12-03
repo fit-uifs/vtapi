@@ -37,10 +37,9 @@ public:
     /**
      * Construct a query object
      * @param commons pointer of the existing commons object
-     * @param query query string
-     * @param param parameters for passing to the query
+     * @param initString initial query string
      */
-    Query(const Commons& commons, const string& initString = "");//, PGparam *param = NULL);
+    Query(const Commons& commons, const string& initString = "");
     /**
      * Destructor
      */
@@ -53,14 +52,19 @@ public:
 
     /**
      * This will commit your query
-     * @return success of the query
+     * @return success
      */
     bool execute();
     /**
      * Clears the query object to its original state
-     * @return
      */
-    bool reset();
+    void reset();
+
+    /**
+     * Checks query object for validity (query builder, result set)
+     * @return success
+     */
+    bool checkQueryObject();
 
 };
 

@@ -97,6 +97,7 @@ ${OBJECTDIR}/dataset.o: dataset.cpp
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/dataset.o dataset.cpp
 
+<<<<<<< HEAD
 ${OBJECTDIR}/interval.o: interval.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
@@ -106,6 +107,17 @@ ${OBJECTDIR}/keyvalues.o: keyvalues.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} $@.d
 	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
+=======
+${OBJECTDIR}/vtapi_misc.o: vtapi_misc.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtapi_misc.o vtapi_misc.cpp
+
+${OBJECTDIR}/method.o: method.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} $@.d
+	$(COMPILE.cc) -O2 -MMD -MP -MF $@.d -o ${OBJECTDIR}/method.o method.cpp
+>>>>>>> 38365357ebc17bb0a895a4df7351327b44433126
 
 ${OBJECTDIR}/logger.o: logger.cpp 
 	${MKDIR} -p ${OBJECTDIR}

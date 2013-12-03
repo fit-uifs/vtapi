@@ -59,7 +59,7 @@ public:
      * It may be called more times.
      * @param funtext
      * @return success
-     * @unimplemented neimplementováno (pak doplnit do doc)
+     * @todo @b code: neimplementováno (pak doplnit do doc)
      */
     bool function(const string& funtext);
     /**
@@ -67,7 +67,7 @@ public:
      * If not, returns false (no quarantee before version 2).
      * @warning no quarantee before version 2 !!
      * @return success
-     * @unimplemented neimplementováno (potom doplnit i doc)
+     * @todo @b code: neimplementováno (potom doplnit i doc)
      */
     bool join();
     /**
@@ -94,38 +94,38 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
-    bool whereString(const string& key, const string& value, const string& oper = "=", const string& table = "");
+    bool whereString(const string& key, const string& value, const string& oper = "=", const string& from = "");
     /**
      * This is a WHERE statement construction function for integers
      * It can be called several times.
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
-    bool whereInt(const string& key, const int value, const string& oper = "=", const string& table = "");
+    bool whereInt(const string& key, const int value, const string& oper = "=", const string& from = "");
     /**
      * This is a WHERE statement construction function for floats
      * It can be called several times.
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
-    bool whereFloat(const string& key, const float value, const string& oper = "=", const string& table = "");
+    bool whereFloat(const string& key, const float value, const string& oper = "=", const string& from = "");
     /**
      * This is a WHERE statement construction function for seqtype
      * It can be called several times.
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
      bool whereSeqtype(const string& key, const string& value, const string& oper = "=", const string& from = "");
     /**
@@ -134,8 +134,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
      bool whereInouttype(const string& key, const string& value, const string& oper = "=", const string& from = "");
     /**
@@ -144,8 +144,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
 //     bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "");
     /**
@@ -154,8 +154,8 @@ public:
      * @param key key to compare with the value
      * @param value requested value for key
      * @param oper comparision operator between key and value
-     * @param table table where the key is situated
-     * @return
+     * @param from table where the key is situated
+     * @return success
      */
      bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "");
 };

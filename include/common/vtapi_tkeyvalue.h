@@ -24,9 +24,8 @@ typedef vector<TKey *>     TKeyValues;
 
 
 /**
- * @brief A generic class for storing a single keyvalue type
+ * @brief A generic class for storing a single Key-Value(s) pair
  *
- * It uses std::copy (memcpy) to maintain the object data (except pointer targets)
  *
  * @warning
  *     - use PDOs only ... http://en.wikipedia.org/wiki/Plain_old_data_structure <br>
@@ -37,7 +36,6 @@ typedef vector<TKey *>     TKeyValues;
  * @see http://www.cplusplus.com/doc/tutorial/templates/
  * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
  * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
- * @todo @b doc: parametry konstruktorů
  */
 template <typename T>
 class TKeyValue : public TKey {
@@ -53,11 +51,11 @@ public:
     TKeyValue() : TKey(), values(NULL) {};
 
     /**
-     *
-     * @param type
-     * @param key
-     * @param value
-     * @param from table (optional)
+     * Full constructor with single value
+     * @param type key data type
+     * @param key key name (column name)
+     * @param value single value
+     * @param from additional key specification (eg. table)
      */
     TKeyValue(const string& type, const string& key, T value, const string& from = "")
             : TKey(type, key, 1, from) {
@@ -65,16 +63,26 @@ public:
         this->values[0] = value;
         this->typein = typeid(this->values).name();
     }
+    /**
+     * Full constructor with multiple values
+     * @param type key data type
+     * @param key key name (column name)
+     * @param values array of values
+     * @param size values array size
+     * @param from additional key specification (eg. table)
+     */
     TKeyValue (const string& type, const string& key, T* values, const int size, const string& from = "")
             : TKey(type, key, size, from) {
         if (this->size > 0) {
             this->values = new T[this->size];
             std::copy(values, values+this->size, this->values);
         }
-        // memcpy(this->values, values, size*sizeof(values));
         this->typein = typeid(values).name();
     }
 
+    /**
+     * Destructor
+     */
     ~TKeyValue () {
         destructall(values);
         
@@ -100,8 +108,10 @@ public:
 };
 
 
-// tohle kdyz dam jinam, tak je to v haji - proc?
-// to Petr: cti manualy, nejde to. Deklarace a definice template musi byt v jednom souboru
+/**
+ * Prints string representation of Key-Value(s) pair
+ * @return Key-Value string
+ */
 template <class T>
 string TKeyValue<T>::print() {
     string retString = "TKeyValue<" + string(typeid(values).name()) + "> type=" + type +
@@ -111,6 +121,10 @@ string TKeyValue<T>::print() {
     return (retString);
 }
 
+/**
+ * Gets string representation of single value
+ * @return value string
+ */
 template <class T>
 string TKeyValue<T>::getValue() {
     if (values && size > 0) {
@@ -121,6 +135,11 @@ string TKeyValue<T>::getValue() {
     }
 }
 
+/**
+ * Gets string representation of values array
+ * @param limit maximum limit of values (0 = no limit)
+ * @return values string
+ */
 template <class T>
 string TKeyValue<T>::getValues(const int limit) {
     string retString = "";
