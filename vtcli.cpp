@@ -77,8 +77,8 @@ int VTCli::run() {
         else if (command.compare("show") == 0) {
             showCommand (line);
         }
-        else if (command.compare("install") == 0) {
-            installCommand (line);
+        else if (command.compare("load") == 0) {
+            loadCommand (line);
         }
         else if (command.compare("test") == 0) {
             this->vtapi->test();
@@ -193,100 +193,14 @@ void VTCli::insertCommand(string& line) {
             }
         }
         else {
-            filepath = word;
+            pair<string,string> param = pair<string,string>("fullpath",word);
+            params.insert(param);
         }
     }
+
     // insert sequence
     if (input.compare("sequence") == 0) {
-        Sequence *seq = ds->newSequence();
-        // gather params: name, location and type
-        do {
-            // param location and full file(dir)path
-            if (filepath.empty()) {
-                if (params.count("location") == 0) {
-                    cerr << "Insert sequence failed; no file specified." << endl;
-                    break;
-                }
-                else {
-                    fixSlashes(params["location"]);
-                    filepath = ds->getBaseLocation() + ds->getDatasetLocation() + params["location"];
-                }
-            }
-            else {
-                if (params.count("location") == 0) {
-                    string location;
-                    fixSlashes(filepath);
-                    location = createLocationFromPath(filepath, ds->getBaseLocation(), ds->getDatasetLocation());
-                    params.insert(pair<string,string>("location", location));
-                }
-                else {
-                    cerr << "Insert sequence failed; can't specify both location and filepath" << endl;
-                    break;
-                }
-            }
-            // param name
-            if (params.count("name") == 0) {
-                string name = createSeqnameFromPath(filepath);
-                if (name.empty()) {
-                    cerr << "Insert sequence failed; invalid sequence name." << endl;
-                    break;
-                }
-                else {
-                    params.insert(pair<string,string>("name", name));
-                }
-            }
-            // param type (and check validity)
-            if (params.count("type") == 0) {
-                if (isVideoFile(filepath)) {
-                    params.insert(pair<string,string>("type", "video"));
-                }
-                else if (isImageFolder(filepath)) {
-                    params.insert(pair<string,string>("type", "images"));
-                    params["location"].append("/");
-                }
-                else {
-                    cerr << "Insert sequence " + params["name"] + " failed; sequence must be an image folder or a video file." << endl;
-                    break;
-                }
-            }
-            // insert video sequence
-            if (params["type"].compare("video") == 0) {
-                seq->add(params["name"], params["location"], params["type"], seq->getUser(), "", "");
-                if (!seq->addExecute()) {
-                    cerr << "Insert sequence " + params["name"] + " failed; video not inserted." << endl;
-                    break;
-                }
-            }
-            // insert image folder sequence, load list of images
-            else if (params["type"].compare("images") == 0) {
-                set<string> imagelist;
-                int t = 1;
-                if (loadImageList(filepath, imagelist) == 0) {
-                    cerr << "Insert sequence " + params["name"] + " failed; image files could not have been loaded." << endl;
-                    break;
-                }
-                else {
-                    Interval *img = seq->newInterval();
-                    seq->add(params["name"], params["location"], params["type"], seq->getUser(), "", "");
-                    if (!seq->addExecute()) {
-                        cerr << "Insert sequence " + params["name"] + " failed; image folder not inserted." << endl;
-                        break;
-                    }
-                    for (set<string>::iterator it = imagelist.begin(); it != imagelist.end(); ++it) {
-                        img->add(params["name"], t, t, *it, img->getUser(), "");
-                        if (!img->addExecute()) {
-                            cerr << "Insert interval " + (*it) + " failed; image not inserted" << endl;
-                        }
-                        t++;
-                    }
-                    img->select->executed = true;
-                    destruct(img);
-                }
-            }
-        } while (0);
-
-        seq->select->executed = true;
-        destruct(seq);
+        insertSequence(ds, &params);
     }
     // insert interval
     else if (input.compare("interval") == 0) {
@@ -323,43 +237,182 @@ void VTCli::deleteCommand(string& line) {
 void VTCli::showCommand(string& line) {
     cerr << "show command not implemented" << endl;
 }
-//TODO
-void VTCli::installCommand(string& line) {
-    cerr << "install command not implemented" << endl;
-/*
-    string content;
-    ifstream scriptfile (line.c_str(), std::ios::in);
 
-    if (scriptfile)
-    {
-        scriptfile.seekg(0, std::ios::end);
-        content.resize(scriptfile.tellg());
-        scriptfile.seekg(0, std::ios::beg);
-        scriptfile.read(&content[0], content.size());
-        scriptfile.close();
-    }
-    else {
-        this->vtapi->commons->warning("Failed to read file");
+
+void VTCli::loadCommand(string& line) {
+    Dataset* ds;     // active dataset
+    string filepath;
+
+
+    //initialize dataset object
+    ds = this->vtapi->newDataset();
+    ds->next();
+    if (ds->getDataset().empty()) {
+        cerr << "Load failed; no dataset specified to insert into" << endl;
+        destruct(ds);
         return;
     }
 
-    if (!content.empty()) {
-        PGresult* qres = PQparamExec(vtapi->commons->getConnector()->getConn(),
-                NULL, content.c_str(), PGF);
-        if (qres) {
-            KeyValues* kv = new KeyValues(*(this->vtapi->commons));
-            kv->select = new Select(*(this->vtapi->commons));
-            kv->select->res = qres;
-            kv->select->executed = true;
-            kv->printAll();
-            destruct(kv);
+    filepath = ds->getBaseLocation() + ds->getDatasetLocation();
+    fixSlashes(filepath);
+    loadDirectory(ds, filepath);
+
+    destruct(ds);
+}
+
+void VTCli::loadDirectory(Dataset *ds, const string& dirpath) {
+
+    DIR *pDir = NULL;
+    struct dirent *pEntry = NULL;
+
+    if ((pDir = opendir(dirpath.c_str())) == NULL) {
+        cerr << "Load failed; cannot open directory " << dirpath;
+        destruct(ds);
+        return;
+    }
+    while((pEntry = readdir(pDir)) != NULL) {
+        string name (pEntry->d_name);
+        string fullpath = dirpath + "/" + name;
+        if(name.compare(".") == 0 || name.compare("..") == 0) continue;
+
+        if (pEntry->d_type == DT_DIR) {
+            if (isImageFolder(fullpath)) {
+                insertImageFolder(ds, fullpath);
+            }
+            else {
+                loadDirectory(ds, fullpath);
+            }
         }
-        else {
-            string errmsg = line + " : " + PQgeterror();
-            this->vtapi->commons->warning(errmsg);
+        else if (pEntry->d_type == DT_REG) {
+            if (isVideoFile(fullpath)) {
+                insertVideoFile(ds, fullpath);
+            }
         }
     }
-*/
+
+    closedir(pDir);
+}
+
+void VTCli::insertImageFolder(Dataset *ds, const string& dirpath) {
+    map<string,string> params; // insert params
+    pair<string,string> param;
+
+    param = pair<string,string>("fullpath",dirpath);
+    params.insert(param);
+    param = pair<string,string>("type","images");
+    params.insert(param);
+
+    insertSequence(ds, &params);
+}
+
+void VTCli::insertVideoFile(Dataset *ds, const string& filepath) {
+    map<string,string> params; // insert params
+    pair<string,string> param;
+
+    param = pair<string,string>("fullpath", filepath);
+    params.insert(param);
+    param = pair<string,string>("type","video");
+    params.insert(param);
+
+    insertSequence(ds, &params);
+}
+
+void VTCli::insertSequence(Dataset* ds, map<string,string>* params) {
+
+    Sequence *seq = ds->newSequence();
+    string filepath;
+
+    // gather params: name, location and type
+    do {
+
+        filepath = params->count("fullpath") == 0 ? (*params)["fullpath"] : "";
+
+        // param location and full file(dir)path
+        if (filepath.empty()) {
+            if (params->count("location") == 0) {
+                cerr << "Insert sequence failed; no file specified." << endl;
+                break;
+            }
+            else {
+                fixSlashes((*params)["location"]);
+                filepath = ds->getBaseLocation() + ds->getDatasetLocation() + (*params)["location"];
+            }
+        }
+        else {
+            if (params->count("location") == 0) {
+                string location;
+                fixSlashes(filepath);
+                location = createLocationFromPath(filepath, ds->getBaseLocation(), ds->getDatasetLocation());
+                params->insert(pair<string,string>("location", location));
+            }
+            else {
+                cerr << "Insert sequence failed; can't specify both location and filepath" << endl;
+                break;
+            }
+        }
+        // param name
+        if (params->count("name") == 0) {
+            string name = createSeqnameFromPath(filepath);
+            if (name.empty()) {
+                cerr << "Insert sequence failed; invalid sequence name." << endl;
+                break;
+            }
+            else {
+                params->insert(pair<string,string>("name", name));
+            }
+        }
+        // param type (and check validity)
+        if (params->count("type") == 0) {
+            if (isVideoFile(filepath)) {
+                params->insert(pair<string,string>("type", "video"));
+            }
+            else if (isImageFolder(filepath)) {
+                params->insert(pair<string,string>("type", "images"));
+                (*params)["location"].append("/");
+            }
+            else {
+                cerr << "Insert sequence " + (*params)["name"] + " failed; sequence must be an image folder or a video file." << endl;
+                break;
+            }
+        }
+        // insert video sequence
+        if ((*params)["type"].compare("video") == 0) {
+            seq->add((*params)["name"], (*params)["location"], (*params)["type"], seq->getUser(), "", "");
+            if (!seq->addExecute()) {
+                cerr << "Insert sequence " + (*params)["name"] + " failed; video not inserted." << endl;
+                break;
+            }
+        }
+        // insert image folder sequence, load list of images
+        else if ((*params)["type"].compare("images") == 0) {
+            set<string> imagelist;
+            int t = 1;
+            if (loadImageList(filepath, imagelist) == 0) {
+                cerr << "Insert sequence " + (*params)["name"] + " failed; image files could not have been loaded." << endl;
+                break;
+            }
+            else {
+                Interval *img = seq->newInterval();
+                seq->add((*params)["name"], (*params)["location"], (*params)["type"], seq->getUser(), "", "");
+                if (!seq->addExecute()) {
+                    cerr << "Insert sequence " + (*params)["name"] + " failed; image folder not inserted." << endl;
+                    break;
+                }
+                for (set<string>::iterator it = imagelist.begin(); it != imagelist.end(); ++it) {
+                    img->add((*params)["name"], t, t, *it, img->getUser(), "");
+                    if (!img->addExecute()) {
+                        cerr << "Insert interval " + (*it) + " failed; image not inserted" << endl;
+                    }
+                    t++;
+                }
+                img->select->executed = true;
+                destruct(img);
+            }
+        }
+    } while (0);
+
+    seq->select->executed = true;
+    destruct(seq);
 }
 
 bool VTCli::isVideoFile(const string& filepath) {
