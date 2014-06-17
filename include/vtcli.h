@@ -151,6 +151,29 @@ protected:
      */
     int loadImageList(const string& dirpath, set<string>& imagelist);
     /**
+     * Loads directory recursively within dataset
+     * @param dirpath path to dir
+     */
+    void loadDirectory(Dataset *ds, const string& dirpath);
+    /**
+     * Inserts one sequence into db
+     * @param ds dataset
+     * @param params sequence name, location and type
+     */
+    void insertSequence(Dataset *ds, map<string,string> *params);
+    /**
+     * Inserts one sequence (image folder) into db
+     * @param ds dataset
+     * @param dirpath path to image folder
+     */
+    void insertImageFolder(Dataset *ds, const string& dirpath);
+    /**
+     * Inserts one sequence (video file) into db
+     * @param ds dataset
+     * @param dirpath path to image folder
+     */
+    void insertVideoFile(Dataset *ds, const string& filepath);
+    /**
      * Initialize sets holding image/video suffixes
      */
     void initSuffixes();
@@ -190,7 +213,7 @@ protected:
     void updateCommand(string& line);
     void deleteCommand(string& line);
     void showCommand(string& line);
-    void installCommand(string& line);
+    void loadCommand(string& line);
 };
 
 /*
