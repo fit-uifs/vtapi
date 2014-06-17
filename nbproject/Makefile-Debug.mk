@@ -56,16 +56,16 @@ LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopen
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/vtcli
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ./vtcli
 
-${CND_DISTDIR}/vtcli: ${OBJECTFILES}
-	${MKDIR} -p ${CND_DISTDIR}
-	${LINK.cc} -o ${CND_DISTDIR}/vtcli ${OBJECTFILES} ${LDLIBSOPTIONS}
+./vtcli: ${OBJECTFILES}
+	${MKDIR} -p .
+	${LINK.cc} -o ./vtcli ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/vtcli.o: vtcli.cpp 
 	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -Iinclude -I/usr/include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtcli.o vtcli.cpp
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Iinclude -I/usr/include/postgresql -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vtcli.o vtcli.cpp
 
 # Subprojects
 .build-subprojects:
@@ -73,7 +73,7 @@ ${OBJECTDIR}/vtcli.o: vtcli.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/vtcli
+	${RM} ./vtcli
 
 # Subprojects
 .clean-subprojects:

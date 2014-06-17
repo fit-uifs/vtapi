@@ -11,6 +11,7 @@
  */
 
 #include "data/vtapi_interval.h"
+#include <opencv2/opencv.hpp>
 
 using namespace vtapi;
 
@@ -137,3 +138,12 @@ string Image::getImgLocation() {
 string Image::getDataLocation() {
     return (this->getDataLocation() + this->getImgLocation());
 }
+
+#ifdef __OPENCV_CORE_HPP__
+cv::Mat Image::getData() {
+    if (this->image.data) this->image.release();
+    
+    this->image = cv::imread(this->getDataLocation().c_str(), CV_LOAD_IMAGE_COLOR);
+    return this->image;    
+}
+#endif

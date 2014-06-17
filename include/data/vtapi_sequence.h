@@ -16,6 +16,7 @@ namespace vtapi {
 #include "vtapi_keyvalues.h"
 #include "vtapi_interval.h"
 #include "vtapi_process.h"
+#include <opencv2/opencv.hpp>
 
 namespace vtapi {
 
@@ -86,11 +87,20 @@ public:
      * @return string value with the name of the sequence
      */
     string getName();
+    
     /**
      * Get a sequence location
      * @return string value with the location of the sequence
      */
     string getLocation();
+    
+    
+    /**
+     * Get a sequence type
+     * @return string value [video|images|data]
+     */
+    string getType();
+    
     /**
      * Create a new interval specified by a start time and an end time
      * @param t1 start time
@@ -115,12 +125,15 @@ public:
     Process* newProcess(const string& name = "");
 
 #ifdef __OPENCV_CORE_HPP__
+    Image* imageBuffer;
+    cv::Mat frame;
+    
     /**
-     *
-     * @return
-     * @todo @b code: neimplementováno (potom doplnit i doc)
+     * This is to get the data from the sequence - either video frames or images. 
+     * In the second case, the imageBuffer is used and you are not supposed to call next (as well as in the case of video).
+     * @return cv::Mat
      */
-    cv::Mat getNextImage();
+    cv::Mat getData();
 #endif
 
 };
@@ -144,9 +157,8 @@ public:
 
     /**
      * Create a new frame specified by the frame number
-     * @param frame name of the image @b doc: to asi nebude jméno
+     * @param frame number of the image
      * @return pointer to the new image
-     * @todo @b code: neimplementováno (zkontrolovat pak doc)
      */
     Image* newFrame(const int frame = 1);
 
@@ -160,11 +172,12 @@ public:
 
 
 #ifdef __OPENCV_CORE_HPP__
+    cv::VideoCapture capture;
+    
     /**
+     * Opens a video capture (not necessary to call directly)
      * @todo Test
-     * @param name
-     * @return
-     * @todo @b code: neimplementováno (potom doplnit i doc)
+     * @return success
      */
     bool openVideo();
 
@@ -173,7 +186,7 @@ public:
      * @return
      * @todo @b code: neimplementováno (potom doplnit i doc)
      */
-    cv::Mat getNextImage();
+    cv::Mat getData();
 #endif
 
 };

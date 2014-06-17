@@ -65,12 +65,27 @@ public:
     Process* newProcess(const string& name);
 
     /**
-     * Runs a process of this method
+     * Runs a process of this method - abstract
      * @return success
      * @todo code: neimplementováno
      */
     virtual bool run();
+    
 
+    Method* add(const string& name);
+    
+    Method* loadCode();    
+
+    Method* saveCode();    
+    
+    void init();
+    void exit();
+    
+    // getters 
+    
+    // setters
+    bool set() {};
+    
 private:
 
     /**

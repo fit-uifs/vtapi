@@ -80,6 +80,8 @@ public:
         this->typein = typeid(values).name();
     }
 
+    // TODO: tady nekde by melo byt pretypovani na standardni C/databazove typy
+    
     /**
      * Destructor
      */

@@ -143,6 +143,12 @@ public:
      */
     bool add(const string& sequence, const int t, const string& location);
 
+#ifdef __OPENCV_CORE_HPP__    
+    cv::Mat image;
+    
+    cv::Mat getData();
+#endif
+    
 protected:
 
     /**

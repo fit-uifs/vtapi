@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configurationDescriptor version="69">
-  <logicalFolder name="root" displayName="root" projectFiles="true">
+<configurationDescriptor version="94">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
-                   projectFiles="true"
-                   kind="SOURCE_LOGICAL_FOLDER">
-      <logicalFolder name="f1"
-                     displayName="backends"
-                     projectFiles="true"
-                     kind="SOURCE_LOGICAL_FOLDER">
+                   projectFiles="true">
+      <logicalFolder name="f1" displayName="backends" projectFiles="true">
         <itemPath>../include/backends/vtapi_backendfactory.h</itemPath>
         <itemPath>../include/backends/vtapi_connection.h</itemPath>
         <itemPath>../include/backends/vtapi_libloader.h</itemPath>
@@ -16,10 +12,7 @@
         <itemPath>../include/backends/vtapi_resultset.h</itemPath>
         <itemPath>../include/backends/vtapi_typemanager.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="f5"
-                     displayName="common"
-                     projectFiles="true"
-                     kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f5" displayName="common" projectFiles="true">
         <itemPath>../include/common/vtapi_config.h</itemPath>
         <itemPath>../include/common/vtapi_errcodes.h</itemPath>
         <itemPath>../include/common/vtapi_global.h</itemPath>
@@ -30,10 +23,7 @@
         <itemPath>../include/common/vtapi_tkey.h</itemPath>
         <itemPath>../include/common/vtapi_tkeyvalue.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="f3"
-                     displayName="data"
-                     projectFiles="true"
-                     kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f3" displayName="data" projectFiles="true">
         <itemPath>../include/data/vtapi_dataset.h</itemPath>
         <itemPath>../include/data/vtapi_interval.h</itemPath>
         <itemPath>../include/data/vtapi_keyvalues.h</itemPath>
@@ -41,16 +31,10 @@
         <itemPath>../include/data/vtapi_process.h</itemPath>
         <itemPath>../include/data/vtapi_sequence.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="f2"
-                     displayName="postgis"
-                     projectFiles="true"
-                     kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f2" displayName="postgis" projectFiles="true">
         <itemPath>../include/postgis/geos_c.h</itemPath>
       </logicalFolder>
-      <logicalFolder name="f6"
-                     displayName="queries"
-                     projectFiles="true"
-                     kind="SOURCE_LOGICAL_FOLDER">
+      <logicalFolder name="f6" displayName="queries" projectFiles="true">
         <itemPath>../include/queries/vtapi_insert.h</itemPath>
         <itemPath>../include/queries/vtapi_query.h</itemPath>
         <itemPath>../include/queries/vtapi_select.h</itemPath>
@@ -64,8 +48,7 @@
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
-                   projectFiles="true"
-                   kind="SOURCE_LOGICAL_FOLDER">
+                   projectFiles="true">
       <itemPath>../doc/LICENCE.txt</itemPath>
       <itemPath>../README.txt</itemPath>
       <itemPath>../doc/SAMPLES.txt</itemPath>
@@ -74,8 +57,7 @@
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
-                   projectFiles="true"
-                   kind="SOURCE_LOGICAL_FOLDER">
+                   projectFiles="true">
       <itemPath>backend_pg.cpp</itemPath>
       <itemPath>backend_sl.cpp</itemPath>
       <itemPath>commons.cpp</itemPath>
@@ -109,9 +91,9 @@
   <confs>
     <conf name="Debug" type="2">
       <toolsSet>
-        <developmentServer>localhost</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
-        <platform>2</platform>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -163,12 +145,137 @@
                             group="bin"/>
         </packFileList>
       </packaging>
+      <item path="../README.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_backendfactory.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_connection.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_libloader.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_querybuilder.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_resultset.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_typemanager.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_errcodes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_logger.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_misc.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_settings.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_timexer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_tkey.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_tkeyvalue.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_dataset.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_interval.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_sequence.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/postgis/geos_c.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_insert.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_query.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_select.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_update.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_backends.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_commons.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_data.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_queries.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../vtapi.conf" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="backend_pg.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="commons.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="interval.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="keyvalues.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="logger.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="method.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="process.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="query.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="sequence.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="timexer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tkey.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi.ggo" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="vtapi_misc.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi_settings.cpp" ex="false" tool="1" flavor2="0">
+      </item>
     </conf>
     <conf name="Release" type="1">
       <toolsSet>
-        <developmentServer>localhost</developmentServer>
         <compilerSet>GNU|GNU</compilerSet>
-        <platform>2</platform>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -184,12 +291,137 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="../README.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_backendfactory.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_connection.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_libloader.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_querybuilder.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_resultset.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_typemanager.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_errcodes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_logger.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_misc.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_settings.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_timexer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_tkey.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_tkeyvalue.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_dataset.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_interval.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_sequence.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/postgis/geos_c.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_insert.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_query.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_select.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_update.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_backends.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_commons.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_data.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_queries.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../vtapi.conf" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="backend_pg.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="commons.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="interval.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="keyvalues.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="logger.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="method.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="process.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="query.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="sequence.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="timexer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tkey.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi.ggo" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="vtapi_misc.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi_settings.cpp" ex="false" tool="1" flavor2="0">
+      </item>
     </conf>
     <conf name="Windows" type="2">
       <toolsSet>
-        <developmentServer>localhost</developmentServer>
         <compilerSet>MinGW|MinGW</compilerSet>
-        <platform>3</platform>
+        <dependencyChecking>true</dependencyChecking>
+        <rebuildPropChanged>false</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -238,6 +470,131 @@
                             group="bin"/>
         </packFileList>
       </packaging>
+      <item path="../README.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_backendfactory.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_connection.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_libloader.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_querybuilder.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_resultset.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/backends/vtapi_typemanager.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_errcodes.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_logger.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_misc.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_settings.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_timexer.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_tkey.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_tkeyvalue.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_dataset.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_interval.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_sequence.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/postgis/geos_c.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_insert.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_query.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_select.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/queries/vtapi_update.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_backends.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_commons.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_data.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/vtapi_queries.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../vtapi.conf" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="backend_pg.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="commons.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="interval.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="keyvalues.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="logger.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="method.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="process.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="query.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="sequence.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="timexer.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="tkey.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi.ggo" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="vtapi_misc.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="vtapi_settings.cpp" ex="false" tool="1" flavor2="0">
+      </item>
     </conf>
   </confs>
 </configurationDescriptor>

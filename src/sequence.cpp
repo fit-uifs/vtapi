@@ -11,6 +11,7 @@
  */
 
 #include "data/vtapi_sequence.h"
+#include <opencv2/opencv.hpp>
 
 using namespace vtapi;
 
@@ -47,6 +48,10 @@ string Sequence::getLocation() {
     return this->getString("seqlocation");
 }
 
+string Sequence::getType() {
+    return this->getString("seqtype");
+}
+
 Interval* Sequence::newInterval(const int t1, const int t2) {
     return new Interval(*this);
 }
@@ -58,6 +63,27 @@ Image* Sequence::newImage(const string& name) {
     return image;
 }
 
+
+#ifdef __OPENCV_CORE_HPP__
+cv::Mat Sequence::getData() {
+    if (this->frame.data) this->frame.release();
+    
+    if (this->getType().compare("video")) {
+        return dynamic_cast<Video*>(this)->getData();
+    }
+    else if (this->getType().compare("images")) {
+        if (this->imageBuffer == NULL) {
+            this->imageBuffer = this->newImage();
+        }
+        if (this->imageBuffer->next()) {
+            this->frame = this->imageBuffer->getData();
+            return frame;
+        }
+    }
+    
+    return frame;
+}
+#endif
 
 bool Sequence::add(const string& name, const string& location, const string& type) {
     bool retval = VT_OK;
@@ -141,9 +167,24 @@ bool Video::add(string name, string location) {
 }
 
 // TODO: nejak odlisit nestandardni veci
-
-
 #ifdef __OPENCV_HIGHGUI_HPP__
+
+bool Video::openVideo() {
+    if (this->capture.isOpened()) this->capture.release();
+    
+    this->capture = cv::VideoCapture(this->getDataLocation());
+    
+    return this->capture.isOpened();
+}
+
+cv::Mat Video::getData() {
+    if (this->frame.data) this->frame.release();
+    
+    if (this->capture.isOpened() || this->openVideo()) {
+        this->capture >> this->frame;
+    }
+    return this->frame;
+}
 
 VideoPlayer::VideoPlayer(Commons& orig) : Commons(orig) {
     thisClass = "VideoPlayer(Commons&)";
