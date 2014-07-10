@@ -1,0 +1,20 @@
+--- ltmain.sh	2014-07-01 12:33:45 +0000
++++ ltmain.sh	2014-07-01 12:37:02 +0000
+@@ -4301,7 +4301,7 @@
+ 	    if test "$shlibpath_overrides_runpath" = yes && test -n "$shlibpath_var" && test -n "$temp_rpath"; then
+               func_to_host_path "$temp_rpath"
+ 	      cat <<EOF
+-const char * LIB_PATH_VALUE   = "$func_to_host_path_result";
++const char * LIB_PATH_VALUE   = $func_to_host_path_result;
+ EOF
+ 	    else
+ 	      cat <<"EOF"
+@@ -4313,7 +4313,7 @@
+               func_to_host_path "$dllsearchpath:"
+ 	      cat <<EOF
+ const char * EXE_PATH_VARNAME = "PATH";
+-const char * EXE_PATH_VALUE   = "$func_to_host_path_result";
++const char * EXE_PATH_VALUE   = $func_to_host_path_result;
+ EOF
+ 	    else
+ 	      cat <<"EOF"
