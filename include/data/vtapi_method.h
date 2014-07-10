@@ -69,7 +69,7 @@ public:
      * @return success
      * @todo code: neimplementováno
      */
-    virtual bool run();
+    virtual bool run() {return true;}; 
     
 
     Method* add(const string& name);

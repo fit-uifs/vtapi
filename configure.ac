@@ -1,9 +1,10 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script.
 
-AC_PREREQ([2.68]) # vyzaduje alespon autoconf ver. 2.6.8
-AC_INIT([VTApi (Video Terror API)], [1.6], [chmelarp@fit.vutbr.cz], [vtapi], [http://vidte.fit.vutbr.cz])
+AC_INIT([VTApi (Video Terror API)], [2.0], [chmelarp@fit.vutbr.cz], [vtapi], [http://vidte.fit.vutbr.cz])
 AM_INIT_AUTOMAKE
+
+AC_PREREQ([2.68]) # vyzaduje alespon autoconf ver. 2.6.8
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([config.h])
@@ -23,8 +24,12 @@ AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL(libtool)
 
-AC_SUBST([VTAPI_SO_VERSION], [1:6:1])
-AC_SUBST([VTAPI_API_VERSION], [1.6])
+AC_SUBST([VTAPI_SO_VERSION], [2:0:1])
+AC_SUBST([VTAPI_API_VERSION], [2.0])
+
+
+CPPFLAGS="$CPPFLAGS $VTAPI_CPPFLAGS"
+LDFLAGS="$LDFLAGS $VTAPI_LDFLAGS"
 
 
 # ltdl (yum install libtool-ltdl-devel)
@@ -63,13 +68,13 @@ AC_PATH_PROG([PKG_CONFIG], [pkg-config], [AC_MSG_ERROR([pkg-config not available
 opencv_present="yes"
 # PKG_CHECK_MODULES([opencv], [opencv >= 2.4.1], [], [opencv_present="no"])
 
-opencv_MODVERSION=`$PKG_CONFIG opencv --modversion` 
+opencv_MODVERSION=`"$PKG_CONFIG" opencv --modversion` 
 if test -z "$opencv_MODVERSION"
 then
   opencv_present="no"
 else 
-  opencv_CFLAGS=`$PKG_CONFIG opencv --cflags`
-  opencv_LIBS=`$PKG_CONFIG opencv --libs`
+  opencv_CFLAGS=`"$PKG_CONFIG" opencv --cflags`
+  opencv_LIBS=`"$PKG_CONFIG" opencv --libs`
   AC_SUBST([opencv_CFLAGS])
   AC_SUBST([opencv_LIBS])  
 fi
@@ -95,13 +100,13 @@ fi
 # sqlite
 sqlite_present="yes"
 #PKG_CHECK_MODULES([sqlite3], [sqlite3 >= 3.7.0], [],[sqlite_present="no"])
-sqlite3_MODVERSION=`$PKG_CONFIG sqlite3 --modversion` 
+sqlite3_MODVERSION=`"$PKG_CONFIG" sqlite3 --modversion` 
 if test -z "$sqlite3_MODVERSION"
 then
   sqlite_present="no"
 else 
-  sqlite3_CFLAGS=`$PKG_CONFIG sqlite3 --cflags`
-  sqlite3_LIBS=`$PKG_CONFIG sqlite3 --libs`
+  sqlite3_CFLAGS=`"$PKG_CONFIG" sqlite3 --cflags`
+  sqlite3_LIBS=`"$PKG_CONFIG" sqlite3 --libs`
   AC_SUBST([sqlite3_CFLAGS])
   AC_SUBST([sqlite3_LIBS])  
 fi
@@ -198,9 +203,9 @@ else
 fi
 
 TMP_CPPFLAGS="$CPPFLAGS"
-CPPFLAGS="$PQ_CFLAGS"
+CPPFLAGS="$PQ_CFLAGS ${CPPFLAGS}"
 TMP_LIBS="$LIBS"
-LIBS="$PQ_LIBS"
+LIBS="$PQ_LIBS ${LIBS}"
 AC_CHECK_HEADER(libpq-fe.h, [], [postgresql_present="no"]) 
 AC_CHECK_HEADER(libpqtypes.h, [], [postgresql_present="no"])
 # FIXME: some problems on OS Windows
@@ -238,6 +243,8 @@ AS_IF([test "x$with_postgis" != "xno"],
       [],
       [postgis_want=no])
 
+## TODO: small hack to avoid collapse of make due to postgis (!!!DEVEL: comment next line)
+postgis_want="no"
 
 
 if test "x$postgresql_present" = "xno" -o "x$geos_present" = "xno" -o "x$lwgeom_present" = "xno"
@@ -283,6 +290,20 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$HAVE_DOXYGEN"]) # prenese do Makefile.
 AC_FUNC_ERROR_AT_LINE
 AC_FUNC_MALLOC
 AC_CHECK_FUNCS([memset select strchr strcspn strspn strtol])
+
+
+# Platform-dependent variables
+WIN32_EXTRA_LDFLAGS=
+case "$host" in
+ *-*-cygwin*)
+   WIN32_EXTRA_LDFLAGS="-no-undefined"
+ ;;
+ *-*-mingw*)
+   WIN32_EXTRA_LDFLAGS="-no-undefined"
+ ;;
+esac
+AC_SUBST(WIN32_EXTRA_LDFLAGS)
+
 
 AC_OUTPUT_COMMANDS([echo "
 

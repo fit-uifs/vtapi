@@ -16,7 +16,7 @@ namespace vtapi {
 #include "vtapi_keyvalues.h"
 #include "vtapi_interval.h"
 #include "vtapi_process.h"
-#include <opencv2/opencv.hpp>
+//#include <opencv2/opencv.hpp>
 
 namespace vtapi {
 
@@ -124,7 +124,7 @@ public:
      */
     Process* newProcess(const string& name = "");
 
-#ifdef __OPENCV_CORE_HPP__
+#ifdef HAVE_OPENCV
     Image* imageBuffer;
     cv::Mat frame;
     
@@ -171,7 +171,7 @@ public:
     bool add(string name, string location);
 
 
-#ifdef __OPENCV_CORE_HPP__
+#ifdef HAVE_OPENCV
     cv::VideoCapture capture;
     
     /**
@@ -191,7 +191,7 @@ public:
 
 };
 
-#ifdef __OPENCV_HIGHGUI_HPP__
+#ifdef HAVE_OPENCV
 /**
  * @brief This is the ever-simplest video player...
  *

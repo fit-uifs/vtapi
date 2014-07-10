@@ -47,8 +47,8 @@
 
 // libproc library
 // for this you need the libprocps-dev (sometimes libproc-dev, procps-devel) package
-#if !(defined(WIN32) || defined(WIN64))
-#include <proc/readproc.h>
+#if HAVE_READPROC
+  #include <proc/readproc.h>
 #endif
 
 #if HAVE_OPENCV
