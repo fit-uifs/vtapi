@@ -7,9 +7,6 @@
 
 #ifndef VTAPI_INSERT_H
 #define	VTAPI_INSERT_H
-namespace vtapi {
-    class Insert;
-}
 
 #include "vtapi_query.h"
 

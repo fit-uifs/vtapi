@@ -23,13 +23,13 @@ CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=src.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/src.tar
 # Windows configuration
-CND_PLATFORM_Windows=
+CND_PLATFORM_Windows=MinGW-Windows
 CND_ARTIFACT_DIR_Windows=../dist
 CND_ARTIFACT_NAME_Windows=libvtapi.dll
 CND_ARTIFACT_PATH_Windows=../dist/libvtapi.dll
-CND_PACKAGE_DIR_Windows=dist/Windows//package
+CND_PACKAGE_DIR_Windows=dist/Windows/MinGW-Windows/package
 CND_PACKAGE_NAME_Windows=libsrc.dll.tar
-CND_PACKAGE_PATH_Windows=dist/Windows//package/libsrc.dll.tar
+CND_PACKAGE_PATH_Windows=dist/Windows/MinGW-Windows/package/libsrc.dll.tar
 #
 # include compiler specific variables
 #

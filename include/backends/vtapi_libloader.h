@@ -8,21 +8,12 @@
 #ifndef LIBLOADER_H
 #define	LIBLOADER_H
 
-namespace vtapi {
-    class LibLoader;
-    class PGLibLoader;
-    class SLLibLoader;
-}
-
-#include "../common/vtapi_global.h"
-#include "../common/vtapi_logger.h"
 
 namespace vtapi {
 
 
 #define FMAP_ENTRY(func,funcptr)    std::make_pair<string,void *>(func,funcptr)
 
-typedef map<string,void *>              fmap_t;
 
 
 // ========================================= LIBPQTYPES ====================================================

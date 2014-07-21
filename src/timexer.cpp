@@ -10,7 +10,8 @@
  * Methods of TimExer class
  */
 
-#include "common/vtapi_timexer.h"
+#include <vtapi_global.h>
+#include <common/vtapi_timexer.h>
 
 using namespace vtapi;
 

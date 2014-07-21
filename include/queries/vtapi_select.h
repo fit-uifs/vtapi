@@ -8,9 +8,6 @@
 #ifndef VTAPI_SELECT_H
 #define	VTAPI_SELECT_H
 
-namespace vtapi {
-    class Select;
-}
 
 #include "vtapi_query.h"
 

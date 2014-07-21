@@ -10,9 +10,9 @@
  * Methods of VTApi class
  */
 
-#include <vector>
-
-#include "vtapi.h"
+#include <vtapi_global.h>
+#include <common/vtapi_timexer.h>
+#include <vtapi.h>
 
 using namespace vtapi;
 

@@ -8,18 +8,13 @@
 #ifndef VTAPI_SEQUENCE_H
 #define	VTAPI_SEQUENCE_H
 
-namespace vtapi {
-    class Sequence;
-    class Video;
-}
-
 #include "vtapi_keyvalues.h"
-#include "vtapi_interval.h"
-#include "vtapi_process.h"
-#include <opencv2/opencv.hpp>
 
 namespace vtapi {
-
+    
+class Interval;
+class Image;
+class Process;
 
 /**
  * @brief A Sequence class manages videos and images

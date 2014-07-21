@@ -10,7 +10,10 @@
  * Methods of Method class
  */
 
-#include "data/vtapi_method.h"
+#include <vtapi_global.h>
+#include <common/vtapi_tkey.h>
+#include <data/vtapi_process.h>
+#include <data/vtapi_method.h>
 
 using namespace vtapi;
 

@@ -15,8 +15,9 @@
 #include <string.h>
 */
 
-#include "backends/vtapi_typemanager.h"
-#include "common/vtapi_misc.h"
+#include <vtapi_global.h>
+#include <backends/vtapi_typemanager.h>
+#include <common/vtapi_misc.h>
 
 
 void *g_typeManager;

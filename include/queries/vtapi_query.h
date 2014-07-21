@@ -8,16 +8,13 @@
 #ifndef VTAPI_QUERY_H
 #define	VTAPI_QUERY_H
 
-namespace vtapi {
-    class Query;
-}
-
-#include "../vtapi_commons.h"
-#include "../vtapi_backends.h"
+#include "../data/vtapi_commons.h"
 
 namespace vtapi {
+
+class QueryBuilder;
+class ResultSet;
     
-
 /**
  * @brief Base query class
  *

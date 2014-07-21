@@ -10,9 +10,10 @@
  * Methods of KeyValues class
  */
 
-#include <iomanip>
 
-#include "data/vtapi_keyvalues.h"
+#include <vtapi_global.h>
+#include <common/vtapi_tkey.h>
+#include <data/vtapi_keyvalues.h>
 
 using namespace vtapi;
 

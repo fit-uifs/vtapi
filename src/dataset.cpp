@@ -10,7 +10,13 @@
  * Methods of Dataset class
  */
 
-#include "data/vtapi_dataset.h"
+#include <vtapi_global.h>
+#include <data/vtapi_sequence.h>
+#include <data/vtapi_interval.h>
+#include <data/vtapi_method.h>
+#include <data/vtapi_process.h>
+#include <data/vtapi_dataset.h>
+
 
 using namespace vtapi;
 

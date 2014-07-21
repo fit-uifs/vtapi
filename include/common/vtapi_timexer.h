@@ -8,13 +8,6 @@
 #ifndef VTAPI_TIMEXER_H
 #define	VTAPI_TIMEXER_H
 
-namespace vtapi {
-    class TimExer;
-}
-
-#include <time.h>
-
-#include "vtapi_global.h"
 
 namespace vtapi {
 

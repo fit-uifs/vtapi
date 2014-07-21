@@ -8,26 +8,16 @@
 #ifndef VTAPI_BACKENDFACTORY_H
 #define	VTAPI_BACKENDFACTORY_H
 
-namespace vtapi {
-    class BackendFactory;
-}
-
 #include "vtapi_connection.h"
 #include "vtapi_typemanager.h"
 #include "vtapi_querybuilder.h"
 #include "vtapi_resultset.h"
 #include "vtapi_libloader.h"
-#include "../common/vtapi_logger.h"
-#include "../common/vtapi_global.h"
 
 namespace vtapi {
-
-typedef enum {
-    UNKNOWN = 0,
-    SQLITE,
-    POSTGRES
-} backend_t;
-
+ 
+class BackendFactory;
+extern BackendFactory g_BackendFactory;
 
 /**
  * @brief Factory for creating objects of backend-specific polymorphic classes
@@ -48,27 +38,14 @@ typedef enum {
 class BackendFactory {
 public:
 
-    static backend_t        backend;        /**< backend type */
+    backend_t backend;        /**< backend type */
 
     /**
      * Initializes factory with given backend type
      * @param backendType backend type
      * @return success
      */
-    static bool initialize(const string& backendType = "") {
-       if (backendType.compare("sqlite") == 0) {
-           backend = SQLITE;
-           return VT_OK;
-       }
-       else if (backendType.compare("postgres") == 0) {
-           backend = POSTGRES;
-           return VT_OK;
-       }
-       else {
-           backend = UNKNOWN;
-           return VT_FAIL;
-       }
-    };
+    bool initialize(const string& backendType = "");
 
     /**
      * Creates object of class @ref Connection
@@ -77,20 +54,7 @@ public:
      * @param logger message logging object
      * @return NULL if factory is uninitialized, connection object otherwise
      */
-    static Connection* createConnection(fmap_t *fmap, const string& connectionInfo, Logger *logger) {
-        Connection *connection = NULL;
-        switch (backend) {
-            case POSTGRES:
-                connection = new PGConnection(fmap, connectionInfo, logger);
-                break;
-            case SQLITE:
-                connection = new SLConnection(fmap, connectionInfo, logger);
-                break;
-            default:
-                break;
-        }
-        return connection;
-    };
+    Connection* createConnection(fmap_t *fmap, const string& connectionInfo, Logger *logger);
 
     /**
      * Creates object of class @ref TypeManager
@@ -99,20 +63,7 @@ public:
      * @param logger message logging object
      * @return NULL if factory is uninitialized, data type managing object otherwise
      */
-    static TypeManager* createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger) {
-        TypeManager *typeManager = NULL;
-        switch (backend) {
-            case POSTGRES:
-                typeManager = new PGTypeManager(fmap, connection, logger);
-                break;
-            case SQLITE:
-                typeManager = new SLTypeManager(fmap, connection, logger);
-                break;
-            default:
-                break;
-        }
-        return typeManager;
-    };
+    TypeManager* createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger);
 
     /**
      * Creates object of class @ref QueryBuilder
@@ -123,20 +74,7 @@ public:
      * @see Query
      * @return NULL if factory is uninitialized, query building object otherwise
      */
-    static QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString) {
-        QueryBuilder *queryBuilder = NULL;
-        switch (backend) {
-            case POSTGRES:
-                queryBuilder = new PGQueryBuilder(fmap, connection, logger, initString);
-                break;
-            case SQLITE:
-                queryBuilder = new SLQueryBuilder(fmap, connection, logger, initString);
-                break;
-            default:
-                break;
-        }
-        return queryBuilder;
-    };
+    QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString);
 
     /**
      * Creates object of class @ref ResultSet
@@ -145,39 +83,13 @@ public:
      * @param logger message logging object
      * @return NULL if factory is uninitialized, result set object otherwise
      */
-    static ResultSet* createResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger) {
-        ResultSet *resultSet = NULL;
-        switch (backend) {
-            case POSTGRES:
-                resultSet = new PGResultSet(fmap, typeManager, logger);
-                break;
-            case SQLITE:
-                resultSet = new SLResultSet(fmap, typeManager, logger);
-                break;
-            default:
-                break;
-        }
-        return resultSet;
-    };
+    ResultSet* createResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger);
 
     /**
      * Creates object of class @ref LibLoader
      * @return NULL if factory is uninitialized, library loading object otherwise
      */
-    static LibLoader* createLibLoader(Logger *logger) {
-        LibLoader *libLoader = NULL;
-        switch (backend) {
-            case POSTGRES:
-                libLoader = new PGLibLoader(logger);
-                break;
-            case SQLITE:
-                libLoader = new SLLibLoader(logger);
-                break;
-            default:
-                break;
-        }
-        return libLoader;
-    };
+    LibLoader* createLibLoader(Logger *logger);
 };
 
 } // namespace vtapi

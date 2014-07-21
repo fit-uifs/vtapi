@@ -9,19 +9,8 @@
 #define	VTAPI_QUERYBUILDER_H
 
 namespace vtapi {
-    class QueryBuilder;
-    class PGQueryBuilder;
-    class SLQueryBuilder;
-}
 
-#include "vtapi_libloader.h"
-#include "vtapi_connection.h"
-#include "../common/vtapi_tkeyvalue.h"
-#include "../common/vtapi_logger.h"
-#include "../common/vtapi_global.h"
-
-namespace vtapi {
-
+class Connection;
 
 /**
  * @brief Class provides functionality to build various SQL queries

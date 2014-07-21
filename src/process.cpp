@@ -10,7 +10,9 @@
  * Methods of Process class
  */
 
-#include "data/vtapi_process.h"
+#include <vtapi_global.h>
+#include <data/vtapi_interval.h>
+#include <data/vtapi_process.h>
 
 using namespace vtapi;
 
@@ -20,7 +22,7 @@ Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig) {
 
     string query;
 
-    if (BackendFactory::backend == POSTGRES) {
+    if (backend == POSTGRES) {
         query = "\nSELECT P.*, PA1.relname AS inputs, PA2.relname AS outputs\n"
                 "  FROM public.processes P\n"
                 "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode\n"

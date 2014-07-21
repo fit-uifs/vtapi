@@ -10,7 +10,8 @@
  * Methods of TKey class
  */
 
-#include "common/vtapi_tkey.h"
+#include <vtapi_global.h>
+#include <common/vtapi_tkey.h>
 
 using namespace vtapi;
 

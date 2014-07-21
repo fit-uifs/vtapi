@@ -10,7 +10,8 @@
  * Methods of Logger class
  */
 
-#include "common/vtapi_logger.h"
+#include <vtapi_global.h>
+#include <common/vtapi_logger.h>
 
 using namespace vtapi;
 

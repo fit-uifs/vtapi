@@ -19,7 +19,8 @@
 #ifndef VTAPI_H
 #define	VTAPI_H
 
-#include "vtapi_data.h"
+#include "vtapi_global.h"
+#include "data/vtapi_data.h"
 
 namespace vtapi {
 

@@ -14,22 +14,24 @@ GREP=grep
 NM=nm
 CCADMIN=CCadmin
 RANLIB=ranlib
-CC=gcc
-CCC=g++
-CXX=g++
-FC=
-AS=as
+CC=gcc.exe
+CCC=g++.exe
+CXX=g++.exe
+FC=gfortran
+AS=as.exe
 
 # Macros
 CND_PLATFORM=MinGW-Windows
+CND_DLIB_EXT=dll
 CND_CONF=Windows
 CND_DISTDIR=dist
+CND_BUILDDIR=build
 
 # Include project Makefile
 include Makefile
 
 # Object Directory
-OBJECTDIR=build/${CND_CONF}/${CND_PLATFORM}
+OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
@@ -54,24 +56,24 @@ LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopen
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-Windows.mk dist/vtapi.exe
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/vtapi.exe
 
-dist/vtapi.exe: ${OBJECTFILES}
-	${MKDIR} -p dist
-	${LINK.cc} -o ${CND_DISTDIR}/vtapi ${OBJECTFILES} ${LDLIBSOPTIONS} 
+${CND_DISTDIR}/vtapi.exe: ${OBJECTFILES}
+	${MKDIR} -p ${CND_DISTDIR}
+	${LINK.cc} -o ${CND_DISTDIR}/vtapi ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/vtcli.o: vtcli.cpp 
 	${MKDIR} -p ${OBJECTDIR}
-	${RM} $@.d
-	$(COMPILE.cc) -g -Iinclude -I../include/postgresql -MMD -MP -MF $@.d -o ${OBJECTDIR}/vtcli.o vtcli.cpp
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -Iinclude -I../include/postgresql -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vtcli.o vtcli.cpp
 
 # Subprojects
 .build-subprojects:
 
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
-	${RM} -r build/Windows
-	${RM} dist/vtapi.exe
+	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
+	${RM} ${CND_DISTDIR}/vtapi.exe
 
 # Subprojects
 .clean-subprojects:

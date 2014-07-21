@@ -39,9 +39,10 @@
 #ifndef VTAPI_LIBPQ_H
 #define	VTAPI_LIBPQ_H
 
-#include "vtapi_global.h"
 
 
+    
+    
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -184,6 +185,8 @@ void endian_swap8(void *out, void *in);
 #ifdef	__cplusplus
 }
 #endif
+
+
 
 #endif	/* VTAPI_LIBPQ_H */
 

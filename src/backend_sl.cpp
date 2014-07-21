@@ -12,9 +12,15 @@
  *
  */
 
-#include "vtapi_backends.h"
+#include <vtapi_global.h>
+#include <backends/vtapi_backends.h>
 
 using namespace vtapi;
+
+// sqlite database files
+#define SL_DB_PREFIX        "vtapi_"
+#define SL_DB_SUFFIX        ".db"
+#define SL_DB_PUBLIC        "public"
 
 
 SLConnection::SLConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger)

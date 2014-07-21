@@ -8,16 +8,10 @@
 #ifndef VTAPI_KEYVALUES_H
 #define	VTAPI_KEYVALUES_H
 
-namespace vtapi {
-    class KeyValues;
-}
-
-#include "../vtapi_queries.h"
-#include "../vtapi_backends.h"
-#include "../vtapi_commons.h"
+#include "vtapi_commons.h"
+#include "../queries/vtapi_queries.h"
 
 namespace vtapi {
-
 
 // ************************************************************************** //
 /**

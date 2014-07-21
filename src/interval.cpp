@@ -10,8 +10,10 @@
  * Methods of Interval and Image classes
  */
 
-#include "data/vtapi_interval.h"
-#include <opencv2/opencv.hpp>
+#include <vtapi_global.h>
+#include <data/vtapi_sequence.h>
+#include <data/vtapi_interval.h>
+
 
 using namespace vtapi;
 

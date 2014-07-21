@@ -9,17 +9,8 @@
 #define	VTAPI_CONNECTION_H
 
 namespace vtapi {
-    class Connection;
-    class PGConnection;
-    class SLConnection;
-}
 
-#include "vtapi_libloader.h"
-#include "vtapi_resultset.h"
-#include "../common/vtapi_logger.h"
-#include "../common/vtapi_global.h"
-
-namespace vtapi {
+class ResultSet;
 
 
 typedef struct {

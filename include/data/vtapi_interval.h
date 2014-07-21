@@ -8,15 +8,11 @@
 #ifndef VTAPI_INTERVAL_H
 #define	VTAPI_INTERVAL_H
 
-namespace vtapi {
-    class Interval;
-    class Image;
-}
-
 #include "vtapi_keyvalues.h"
-#include "vtapi_sequence.h"
 
 namespace vtapi {
+    
+class Sequence;
 
 
 /**

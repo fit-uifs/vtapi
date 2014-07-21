@@ -7,6 +7,8 @@
  * For more detailed description see header vtcli.h
  */
 
+
+
 #include "vtcli.h"
 
 VTCli::VTCli(const VTApi& api) {
@@ -94,7 +96,7 @@ int VTCli::run() {
         }
     } while (this->interact);
 
-    return VTCLI_OK;
+    return VT_OK;
 }
 
 void VTCli::queryCommand(string& line) {
@@ -622,13 +624,13 @@ int VTCli::fixSlashes(string& path) {
         nsPos--;
         if (nsPos < 0) {
             path.clear();
-            return VTCLI_FAIL;
+            return VT_FAIL;
         }
     } while (path[nsPos] == '/' || path[nsPos] == '\\');
     if (nsPos < len - 1) {
         path = path.substr(0, nsPos + 1);   
     }
-    return VTCLI_OK;
+    return VT_OK;
 }
 
 int VTCli::printHelp() {
@@ -640,7 +642,7 @@ int VTCli::printHelp(const string& what) {
 
     if (this->helpStrings.count(what)) {
         cout << this->helpStrings[what];
-        return VTCLI_OK;
+        return VT_OK;
     }
     else if (!what.compare("query")) {
         hss << endl <<
@@ -711,9 +713,9 @@ int VTCli::printHelp(const string& what) {
     if (!hss.fail()) {
         this->helpStrings.insert(std::make_pair(what,hss.str()));
         cout << hss.str() << endl;
-        return VTCLI_OK;
+        return VT_OK;
     }
-    else return VTCLI_FAIL;
+    else return VT_FAIL;
 }
 
 int VTCli::processArgs(int argc, char** argv) {
@@ -721,7 +723,7 @@ int VTCli::processArgs(int argc, char** argv) {
     if (cmdline_parser2 (argc, argv, &args_info, 0, 1, 0) != 0) {
         helpStrings.insert(std::make_pair("all", ""));
         this->cmdline.clear();
-        return VTCLI_FAIL;
+        return VT_FAIL;
     }
     else {
         // Construct help string
@@ -736,7 +738,7 @@ int VTCli::processArgs(int argc, char** argv) {
         for (int i = 0; i < args_info.inputs_num; i++)
             cmdline.append(args_info.inputs[i]).append(" ");
         cmdline_parser_free (&args_info);
-        return VTCLI_OK;
+        return VT_OK;
     }
 }
 

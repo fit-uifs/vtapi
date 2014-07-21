@@ -10,7 +10,10 @@
  * Methods of Query, Select, Insert and Update classes
  */
 
-#include "vtapi_queries.h"
+#include <vtapi_global.h>
+#include <backends/vtapi_backendfactory.h>
+#include <backends/vtapi_backends.h>
+#include <queries/vtapi_queries.h>
 
 using namespace vtapi;
 
@@ -22,8 +25,8 @@ Query::Query(const Commons& commons, const string& initString)
 : Commons(commons) {
     thisClass       = "Query";
 
-    queryBuilder    = fmap ? BackendFactory::createQueryBuilder(fmap, connection, logger, initString) : NULL;
-    resultSet       = fmap ? BackendFactory::createResultSet(fmap, typeManager, logger) : NULL;
+    queryBuilder    = fmap ? g_BackendFactory.createQueryBuilder(fmap, connection, logger, initString) : NULL;
+    resultSet       = fmap ? g_BackendFactory.createResultSet(fmap, typeManager, logger) : NULL;
     if (queryBuilder) {
         this->queryBuilder->setDataset(this->dataset);
         this->queryBuilder->setTable(this->selection);

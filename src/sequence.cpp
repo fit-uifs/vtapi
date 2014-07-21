@@ -10,8 +10,9 @@
  * Methods of Sequence, Video and VideoPlayer classes
  */
 
-#include "data/vtapi_sequence.h"
-#include <opencv2/opencv.hpp>
+#include <vtapi_global.h>
+#include <data/vtapi_sequence.h>
+#include <data/vtapi_interval.h>
 
 using namespace vtapi;
 

@@ -8,16 +8,12 @@
 #ifndef VTAPI_PROCESS_H
 #define	VTAPI_PROCESS_H
 
-namespace vtapi {
-    class Process;
-}
-
 #include "vtapi_keyvalues.h"
-#include "vtapi_sequence.h"
-#include "vtapi_interval.h"
 
 namespace vtapi {
 
+class Interval;
+class Sequence;
 
 /**
  * @brief A class which represents processes and gets information about them

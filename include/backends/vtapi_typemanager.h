@@ -9,18 +9,9 @@
 #define	VTAPI_TYPEMANAGER_H
 
 namespace vtapi {
-    class TypeManager;
-    class PGTypeManager;
-    class SLTypeManager;
-}
 
-#include "vtapi_libloader.h"
-#include "vtapi_connection.h"
-#include "../common/vtapi_logger.h"
-#include "../common/vtapi_global.h"
-
-namespace vtapi {
-
+ class Connection;
+    
 typedef enum {
     TYPE_UNDEFINED = 0,
     TYPE_ARRAY,

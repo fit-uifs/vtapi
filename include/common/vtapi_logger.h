@@ -8,11 +8,6 @@
 #ifndef VTAPI_LOGGER_H
 #define	VTAPI_LOGGER_H
 
-namespace vtapi {
-    class Logger;
-} 
-
-#include "vtapi_global.h"
 
 namespace vtapi {
 

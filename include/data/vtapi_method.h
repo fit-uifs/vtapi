@@ -8,16 +8,11 @@
 #ifndef VTAPI_METHOD_H
 #define	VTAPI_METHOD_H
 
-namespace vtapi {
-    class Method;
-}
-
 #include "vtapi_keyvalues.h"
-#include "vtapi_process.h"
-#include "../common/vtapi_tkey.h"
 
 namespace vtapi {
 
+class Process;
 
 /**
  * @brief A class which represents methods and gets also their keys
@@ -69,7 +64,7 @@ public:
      * @return success
      * @todo code: neimplementováno
      */
-    virtual bool run();
+    virtual bool run() { return false; }
     
 
     Method* add(const string& name);

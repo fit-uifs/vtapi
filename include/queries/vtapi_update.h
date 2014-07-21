@@ -8,9 +8,6 @@
 #ifndef VTAPI_UPDATE_H
 #define	VTAPI_UPDATE_H
 
-namespace vtapi {
-    class Update;
-}
 
 #include "vtapi_query.h"
 

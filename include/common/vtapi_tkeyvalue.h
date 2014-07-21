@@ -8,15 +8,7 @@
 #ifndef VTAPI_TKEYVALUE_H
 #define	VTAPI_TKEYVALUE_H
 
-namespace vtapi {
-    template <class T>
-    class TKeyValue;
-}
-
-#include <typeinfo>
-
 #include "vtapi_tkey.h"
-#include "vtapi_global.h"
 
 namespace vtapi {
 

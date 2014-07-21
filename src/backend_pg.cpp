@@ -12,13 +12,15 @@
  *
  */
 
-#include <iomanip>
+#include <vtapi_global.h>
+#include <common/vtapi_misc.h>
+#include <backends/vtapi_backends.h>
 
-#include "vtapi_backends.h"
-#include "common/vtapi_misc.h"
+
+// postgres data transfer format: 0=text, 1=binary
+#define PG_FORMAT           1
 
 using namespace vtapi;
-
 
 PGConnection::PGConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger)
 : Connection (fmap, connectionInfo, logger){

@@ -17,9 +17,6 @@
 #ifndef VTCLI_H
 #define	VTCLI_H
 
-#define     VTCLI_OK    0
-#define     VTCLI_FAIL  -1
-
 #include <cstdlib>
 #include <time.h>
 #include <dirent.h>
@@ -30,10 +27,6 @@
 #include <map>
 #include <set>
 
-#include "vtapi.h"
-
-using namespace vtapi;
-
 using std::ifstream;
 using std::iostream;
 using std::stringstream;
@@ -41,11 +34,16 @@ using std::string;
 using std::map;
 using std::set;
 using std::pair;
-
 using std::cin;
 using std::cout;
 using std::cerr;
 using std::endl;
+
+#include "vtapi.h"
+
+using namespace vtapi;
+
+
 
 /**
  * @brief Main VTCli class

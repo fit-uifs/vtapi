@@ -8,16 +8,12 @@
 #ifndef VTAPI_TKEY_H
 #define	VTAPI_TKEY_H
 
-namespace vtapi {
-    class TKey;
-}
-
-#include "vtapi_global.h"
 
 namespace vtapi {
 
+class TKey;
 
-typedef vector<TKey>    TKeys;
+typedef vector<TKey> TKeys;
 
 /**
  * @brief Class represents a generic Key (of the Key-Value pair)

@@ -9,19 +9,8 @@
 #define	VTAPI_RESULTSET_H
 
 namespace vtapi {
-    class ResultSet;
-    class PGResultSet;
-    class SLResultSet;
-}
 
-#include "vtapi_libloader.h"
-#include "vtapi_typemanager.h"
-#include "../common/vtapi_tkey.h"
-#include "../common/vtapi_logger.h"
-#include "../common/vtapi_global.h"
-
-namespace vtapi {
-
+class TypeManager;
 
 typedef struct {
     int     rows;
