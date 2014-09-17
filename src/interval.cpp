@@ -14,7 +14,6 @@
 #include <data/vtapi_sequence.h>
 #include <data/vtapi_interval.h>
 
-
 using namespace vtapi;
 
 
@@ -141,7 +140,7 @@ string Image::getDataLocation() {
     return (this->getDataLocation() + this->getImgLocation());
 }
 
-#ifdef __OPENCV_CORE_HPP__
+#ifdef HAVE_OPENCV
 cv::Mat Image::getData() {
     if (this->image.data) this->image.release();
     

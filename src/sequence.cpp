@@ -65,7 +65,7 @@ Image* Sequence::newImage(const string& name) {
 }
 
 
-#ifdef __OPENCV_CORE_HPP__
+#ifdef HAVE_OPENCV
 cv::Mat Sequence::getData() {
     if (this->frame.data) this->frame.release();
     
@@ -147,7 +147,7 @@ bool Video::add(string name, string location) {
     bool retval = VT_OK;
     string filename = "";
 
-#ifdef __OPENCV_CORE_HPP__
+#ifdef HAVE_OPENCV
     // TODO: P3k check something else???
     filename = baseLocation + datasetLocation + location;
     if (!fileExists(filename)) {
@@ -168,7 +168,7 @@ bool Video::add(string name, string location) {
 }
 
 // TODO: nejak odlisit nestandardni veci
-#ifdef __OPENCV_HIGHGUI_HPP__
+#ifdef HAVE_OPENCV
 
 bool Video::openVideo() {
     if (this->capture.isOpened()) this->capture.release();

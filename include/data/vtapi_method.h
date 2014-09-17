@@ -65,7 +65,7 @@ public:
      * @todo code: neimplementováno
      */
     virtual bool run() { return false; }
-    
+   
 
     Method* add(const string& name);
     
