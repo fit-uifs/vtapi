@@ -374,41 +374,16 @@ time_t KeyValues::getTimestamp(const int col) {
 // =============== GETTERS - GEOMETRIC TYPES ===============================
 #if HAVE_POSTGRESQL
 PGpoint KeyValues::getPoint(const string& key) {
-    return this->getPoint(PQfnumber(select->res, key.c_str()));
+    return select->resultSet->getPoint(key);
 }
 PGpoint KeyValues::getPoint(const int col) {
-    PGpoint point;
-    memset(&point, 0, sizeof(PGpoint));
-    if (! PQgetf(select->res, this->pos, "%point", col, &point)) {
-        logger->warning(314, "Value is not a point");
-    }
-    return point;
+    return select->resultSet->getPoint(col);
 }
 vector<PGpoint>*  KeyValues::getPointV(const string& key) {
-    return this->getPointV(PQfnumber(select->res, key.c_str()));
+    return select->resultSet->getPointV(key);
 }
 vector<PGpoint>*  KeyValues::getPointV(const int col) {
-    PGarray tmp;
-    if (! PQgetf(select->res, this->pos, "%point[]", col, &tmp)) {
-        logger->warning(324, "Value is not an array of points");
-        return NULL;
-    }
-
-    PGpoint value;
-    vector<PGpoint>* values = new vector<PGpoint>;
-
-    for (int i = 0; i < PQntuples(tmp.res); i++) {
-        if (! PQgetf(tmp.res, i, "%point", 0, &value)) {
-            logger->warning(325, "Unexpected value in point array");
-            PQclear(tmp.res);
-            destruct (values);
-            return NULL;
-        }
-        values->push_back(value);
-    }
-    PQclear(tmp.res);
-
-    return values;
+    return select->resultSet->getPointV(col);
 }
 #endif
 #ifdef POSTGIS
