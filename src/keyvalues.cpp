@@ -372,7 +372,7 @@ time_t KeyValues::getTimestamp(const int col) {
 }
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
-#ifdef POSTGIS
+#if HAVE_POSTGRESQL
 PGpoint KeyValues::getPoint(const string& key) {
     return this->getPoint(PQfnumber(select->res, key.c_str()));
 }
@@ -384,6 +384,34 @@ PGpoint KeyValues::getPoint(const int col) {
     }
     return point;
 }
+vector<PGpoint>*  KeyValues::getPointV(const string& key) {
+    return this->getPointV(PQfnumber(select->res, key.c_str()));
+}
+vector<PGpoint>*  KeyValues::getPointV(const int col) {
+    PGarray tmp;
+    if (! PQgetf(select->res, this->pos, "%point[]", col, &tmp)) {
+        logger->warning(324, "Value is not an array of points");
+        return NULL;
+    }
+
+    PGpoint value;
+    vector<PGpoint>* values = new vector<PGpoint>;
+
+    for (int i = 0; i < PQntuples(tmp.res); i++) {
+        if (! PQgetf(tmp.res, i, "%point", 0, &value)) {
+            logger->warning(325, "Unexpected value in point array");
+            PQclear(tmp.res);
+            destruct (values);
+            return NULL;
+        }
+        values->push_back(value);
+    }
+    PQclear(tmp.res);
+
+    return values;
+}
+#endif
+#ifdef POSTGIS
 PGlseg KeyValues::getLineSegment(const string& key) {
     return this->getLineSegment(PQfnumber(select->res, key.c_str()));
 }
@@ -446,7 +474,6 @@ PGpath KeyValues::getPath(const int col){
     }
     return path;
 }
-
 PGcube KeyValues::getCube(const string& key) {
     return this->getCube(PQfnumber(select->res, key.c_str()));
 }
@@ -458,7 +485,6 @@ PGcube KeyValues::getCube(const int col) {
     }
     return cube;
 }
-
 GEOSGeometry *KeyValues::getGeometry(const string& key) {
     return this->getGeometry(PQfnumber(select->res, key.c_str()));
 }
@@ -482,33 +508,6 @@ GEOSGeometry *KeyValues::getLineString(const int col) {
         logger->warning(323, "Value is not a linestring");
     }
     return ls;
-}
-
-vector<PGpoint>*  KeyValues::getPointV(const string& key) {
-    return this->getPointV(PQfnumber(select->res, key.c_str()));
-}
-vector<PGpoint>*  KeyValues::getPointV(const int col) {
-    PGarray tmp;
-    if (! PQgetf(select->res, this->pos, "%point[]", col, &tmp)) {
-        logger->warning(324, "Value is not an array of points");
-        return NULL;
-    }
-
-    PGpoint value;
-    vector<PGpoint>* values = new vector<PGpoint>;
-
-    for (int i = 0; i < PQntuples(tmp.res); i++) {
-        if (! PQgetf(tmp.res, i, "%point", 0, &value)) {
-            logger->warning(325, "Unexpected value in point array");
-            PQclear(tmp.res);
-            destruct (values);
-            return NULL;
-        }
-        values->push_back(value);
-    }
-    PQclear(tmp.res);
-
-    return values;
 }
 #endif
 

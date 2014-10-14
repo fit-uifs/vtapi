@@ -348,20 +348,39 @@ public:
 //    CvMatND *getCvMatND(const int col);
 #endif
 
-    // =============== GETTERS - GEOMETRIC TYPES ===============================
+// =============== GETTERS - GEOMETRIC TYPES ===============================
+    
+#if HAVE_POSTGRESQL
+    /**
+     * Get 2D point specified by the column key
+     * @param key column key
+     * @return 2D Point
+     */
+    PGpoint getPoint(const string& key) {
+        return this->getPoint(this->getKeyIndex(key));
+    };
+    /**
+     * Get 2D point specified by the column index
+     * @param col column index
+     * @return 2D Point
+     */
+    virtual PGpoint getPoint(const int col) = 0;
+    /**
+     * Get array of 2D points specified by the column index
+     * @param key column index
+     * @return vector of 2D Points
+     */
+    vector<PGpoint>*  getPointV(const string& key) {
+        return this->getPointV(this->getKeyIndex(key));
+    };
+    /**
+     * Get array of 2D points specified by the column key
+     * @param col column key
+     * @return vector of 2D Points
+     */
+    virtual vector<PGpoint>*  getPointV(const int col) = 0;
+#endif
 #ifdef POSTGIS
-//    /**
-//     * Get 2D point specified by the column key
-//     * @param key column key
-//     * @return 2D Point
-//     */
-//    PGpoint getPoint(const string& key);
-//    /**
-//     * Get 2D point specified by the column index
-//     * @param col column index
-//     * @return 2D Point
-//     */
-//    PGpoint getPoint(const int col);
 //    /**
 //     * Get line segment specified by the column key
 //     * @param key column key
@@ -472,18 +491,6 @@ public:
 //     * @return GEOS geometry
 //     */
 //    GEOSGeometry* getLineString(const int col);
-//    /**
-//     * Get array of 2D points specified by the column index
-//     * @param key column index
-//     * @return vector of 2D Points
-//     */
-//    vector<PGpoint>*  getPointV(const string& key);
-//    /**
-//     * Get array of 2D points specified by the column key
-//     * @param col column key
-//     * @return vector of 2D Points
-//     */
-//    vector<PGpoint>*  getPointV(const int col);
 #endif
 
     // =============== GETTERS - OTHER =========================================
@@ -564,6 +571,7 @@ public:
     vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
+    PGpoint getPoint(const int col);
 
     pair< TKeys*,vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 
@@ -607,6 +615,7 @@ public:
     vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
+    PGpoint getPoint(const int col);
 
     pair< TKeys*,vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 

@@ -292,7 +292,7 @@ public:
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
     // TODO: geometricke typy
-#ifdef POSTGIS
+#if HAVE_POSTGRESQL
     /**
      * Get 2D point specified by the column key
      * @param key column key
@@ -305,6 +305,20 @@ public:
      * @return 2D Point
      */
     PGpoint getPoint(const int col);
+    /**
+     * Get array of 2D points specified by the column index
+     * @param key column index
+     * @return vector of 2D Points
+     */
+    vector<PGpoint>*  getPointV(const string& key);
+    /**
+     * Get array of 2D points specified by the column key
+     * @param col column key
+     * @return vector of 2D Points
+     */
+    vector<PGpoint>*  getPointV(const int col);
+#endif
+#ifdef POSTGIS
     /**
      * Get line segment specified by the column key
      * @param key column key
@@ -373,7 +387,6 @@ public:
      * @return Path
      */
     PGpath getPath(const int col);
-
     /**
      * Get cube specified by the column index
      * @note Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
@@ -415,18 +428,6 @@ public:
      * @return GEOS geometry
      */
     GEOSGeometry* getLineString(const int col);
-    /**
-     * Get array of 2D points specified by the column index
-     * @param key column index
-     * @return vector of 2D Points
-     */
-    vector<PGpoint>*  getPointV(const string& key);
-    /**
-     * Get array of 2D points specified by the column key
-     * @param col column key
-     * @return vector of 2D Points
-     */
-    vector<PGpoint>*  getPointV(const int col);
 #endif
 
     // =============== GETTERS - OTHER =========================================

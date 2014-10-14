@@ -741,6 +741,21 @@ vector<float>* SLResultSet::getFloatV(const int col) {
     }
 }
 
+    // =============== GETTERS - GEOMETRIC TYPES ===============================
+#ifdef HAVE_POSTGRESQL
+PGpoint SLResultSet::getPoint(const int col) {
+    PGpoint point;
+    memset(&point, 0, sizeof(PGpoint));
+//    if (! PQgetf(select->res, this->pos, "%point", col, &point)) {
+//        logger->warning(314, "Value is not a point");
+//    }
+    return point;
+}
+vector<PGpoint>*  SLResultSet::getPointV(const int col) {
+    return NULL;
+}
+#endif
+
 //// =============== GETTERS - TIMESTAMP =========================================
 
 time_t SLResultSet::getTimestamp(const int col) {

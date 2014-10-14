@@ -1175,6 +1175,43 @@ vector<float>* PGResultSet::getFloatV(const int col) {
     return values;
 }
 
+    // =============== GETTERS - GEOMETRIC TYPES ===============================
+#ifdef HAVE_POSTGRESQL
+PGpoint PGResultSet::getPoint(const int col) {
+    PGresult *pgres = (PGresult *) this->res;
+    PGpoint point;
+    memset(&point, 0, sizeof(PGpoint));
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%point", col, &point)) {
+        logger->warning(314, "Value is not a point", thisClass+"::getPoint()");
+    }
+    return point;
+}
+vector<PGpoint>*  PGResultSet::getPointV(const int col) {
+    PGresult *pgres = (PGresult *) this->res;
+    PGarray tmp;
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%point[]", col, &tmp)) {
+        logger->warning(324, "Value is not an array of points", thisClass+"::getPointV()");
+        return NULL;
+    }
+
+    PGpoint value;
+    vector<PGpoint>* values = new vector<PGpoint>;
+
+    for (int i = 0; i < PQntuples(tmp.res); i++) {
+        if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%point", 0, &value)) {
+            logger->warning(325, "Unexpected value in point array", thisClass+"::getPointV()");
+            CALL_PQ(fmap, PQclear, tmp.res);
+            destruct (values);
+            return NULL;
+        }
+        values->push_back(value);
+    }
+    CALL_PQ(fmap, PQclear, tmp.res);
+
+    return values;
+}
+#endif
+
 // =============== GETTERS - TIMESTAMP =========================================
 
 time_t PGResultSet::getTimestamp(const int col) {
