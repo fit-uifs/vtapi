@@ -1179,8 +1179,7 @@ vector<float>* PGResultSet::getFloatV(const int col) {
 #ifdef HAVE_POSTGRESQL
 PGpoint PGResultSet::getPoint(const int col) {
     PGresult *pgres = (PGresult *) this->res;
-    PGpoint point;
-    memset(&point, 0, sizeof(PGpoint));
+    PGpoint point = {0.0, 0.0};
     if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%point", col, &point)) {
         logger->warning(314, "Value is not a point", thisClass+"::getPoint()");
     }

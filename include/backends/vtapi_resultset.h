@@ -571,7 +571,10 @@ public:
     vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
+    #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
+    vector<PGpoint>*  getPointV(const int col);
+    #endif
 
     pair< TKeys*,vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 
@@ -615,7 +618,10 @@ public:
     vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
+    #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
+    vector<PGpoint>*  getPointV(const int col);
+    #endif
 
     pair< TKeys*,vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 

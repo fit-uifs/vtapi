@@ -744,8 +744,8 @@ vector<float>* SLResultSet::getFloatV(const int col) {
     // =============== GETTERS - GEOMETRIC TYPES ===============================
 #ifdef HAVE_POSTGRESQL
 PGpoint SLResultSet::getPoint(const int col) {
-    PGpoint point;
-    memset(&point, 0, sizeof(PGpoint));
+    PGpoint point = { 0.0, 0.0 };
+//    memset(&point, 0, sizeof(PGpoint));
 //    if (! PQgetf(select->res, this->pos, "%point", col, &point)) {
 //        logger->warning(314, "Value is not a point");
 //    }
