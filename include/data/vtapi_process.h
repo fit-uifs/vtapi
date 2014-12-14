@@ -83,6 +83,28 @@ public:
      * @todo @b code: neimplementováno (zkontrolovat pak i doc)
      */
     Sequence* newSequence(const string& name = "");
+    
+    /**
+     * Prepare output selection table (checks if exist required attributes and if necessary they would be added to the table)
+     * @param method   input method which is a core of the process
+     * @param selection   selection table for outputs
+     * @return success
+     */
+    bool prepareOutput(const string& method, const string& selection="intervals");
+    /**
+     * Diff columns: <required method output columns> - <existing columns in output selection table>
+     * @param table   selection table for outputs
+     * @param columns   all method attributes
+     * @return   vector of columns to be added to the output selection table
+     */
+    map<string,string> diffColumns(const string& table, const TKeys& columns);
+    /**
+     * Ensure an addition of required columns to the output selection table
+     * @param table   selection table for outputs
+     * @param columns   vector of columns to be added
+     * @return   success
+     */
+    bool addColumns(const string& table, const map<string,string>& columns);
 
     // http://stackoverflow.com/questions/205529/c-c-passing-variable-number-of-arguments-around
     /**

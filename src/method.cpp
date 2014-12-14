@@ -52,7 +52,7 @@ TKeys Method::getMethodKeys() {
         KeyValues* kv = new KeyValues(*this);
         kv->select = new Select(*this);
         kv->select->from("public.methods_keys", "keyname");
-        kv->select->from("public.methods_keys", "typname");
+        kv->select->from("public.methods_keys", "typname::text"); // TODO: Is this valid solution for SQLite3?
         kv->select->from("public.methods_keys", "inout");
         kv->select->whereString("mtname", this->method);
 
