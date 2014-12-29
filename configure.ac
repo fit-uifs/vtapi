@@ -188,9 +188,10 @@ then
 
   if test "x${pgsql_present}" = "xyes"
   then
-    PQ_CFLAGS="-I$("${PG_CONFIG}" --includedir)"
-    PQ_LIBS="-L$("${PG_CONFIG}" --libdir) -lpq -lpqtypes"
     PGSQL_VERSION=`${PG_CONFIG} --version`
+    PGSQL_LIBDIR=`${PG_CONFIG} --libdir`
+    PQ_CFLAGS="-I$("${PG_CONFIG}" --includedir)"
+    PQ_LIBS="-L${PGSQL_LIBDIR} -lpq -lpqtypes"
   
     TMP_CPPFLAGS="${CPPFLAGS}"
     CPPFLAGS="${PQ_CFLAGS} ${CPPFLAGS}"
@@ -211,7 +212,8 @@ then
   then
     AC_MSG_WARN([Postgresql is not available.])
   else 
-    AC_DEFINE([HAVE_POSTGRESQL], [1], [postgresql is present])
+    AC_DEFINE([HAVE_POSTGRESQL], [1], [PostgreSQL is present])
+    AC_DEFINE_UNQUOTED([PG_LIB_PATH], ["${PGSQL_LIBDIR}"], [PostgreSQL library path])
     AC_SUBST([PQ_CFLAGS])
     AC_SUBST([PQ_LIBS])
     PGSQL_SUMMARY="${PGSQL_SUMMARY}   (version: ${PGSQL_VERSION})"
