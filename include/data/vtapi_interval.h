@@ -139,7 +139,7 @@ public:
      */
     bool add(const string& sequence, const int t, const string& location);
 
-#ifdef __OPENCV_CORE_HPP__    
+#ifdef HAVE_OPENCV  
     cv::Mat image;
     
     cv::Mat getData();

@@ -8,11 +8,7 @@
 #ifndef VTAPI_BACKENDFACTORY_H
 #define	VTAPI_BACKENDFACTORY_H
 
-#include "vtapi_connection.h"
-#include "vtapi_typemanager.h"
-#include "vtapi_querybuilder.h"
-#include "vtapi_resultset.h"
-#include "vtapi_libloader.h"
+#include "vtapi_backends.h"
 
 namespace vtapi {
  

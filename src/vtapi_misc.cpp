@@ -22,7 +22,7 @@
 
 void *g_typeManager;
 
-
+#ifdef HAVE_POSTGRESQL
 int pg_enum_put (PGtypeArgs *args) {
     return ((vtapi::PGTypeManager *)g_typeManager)->enum_put(args);
 }
@@ -30,7 +30,7 @@ int pg_enum_put (PGtypeArgs *args) {
 int pg_enum_get (PGtypeArgs *args) {
     return ((vtapi::PGTypeManager *)g_typeManager)->enum_get(args);
 }
-
+#endif
 
 void endian_swap2(void *outp, void *inp)
 {
@@ -83,66 +83,7 @@ void endian_swap8(void *outp, void *inp)
     }
 }
 
-#ifdef POSTGIS
-
-/* cube type handlers */
-int cube_put (PGtypeArgs *args) {
-
-    PGcube *cube = va_arg(args->ap, PGcube *);
-    unsigned int * buf = NULL;
-    char * out = NULL;
-    int len = 0, xcnt = 0, dim = 0, varlen = 0;
-
-    if (!args || !cube) return 0;
-
-    /* expand buffer enough */
-    xcnt = cube->dim * 2;
-    len = (2 * sizeof(int)) + (xcnt * sizeof(double));
-    if (args->put.expandBuffer(args, len) == -1) return -1;
-
-    /* put header - varlena and dimensions count */
-    out = args->put.out;
-    varlen = htonl((sizeof(int) * 2) + (xcnt * sizeof(double)));
-    memcpy(out, &varlen, sizeof(int));
-    out += sizeof(int);
-    dim = htonl(cube->dim);
-    memcpy(out, &dim, sizeof(int));
-    out += sizeof(int);
-
-    /* put coordinates */
-    for (int i = 0; i < xcnt; i++) {
-        pq_swap8(out, &cube->x[i], 1);
-        out += sizeof(double);
-    }
-    return len;
-}
-int cube_get (PGtypeArgs *args) {
-    /* get received value and its length */
-    char *val = PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
-    int len = PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
-    int xcnt = (len - (2 * sizeof(int))) / sizeof(double);;  /* coordinates count */
-    double *xp; /* pointer to coordinates */
-
-    PGcube *cube = va_arg(args->ap, PGcube *);
-
-    if (len == 0 || xcnt == 0) {
-        cube->dim = 0;
-        cube->x = NULL;
-        return 0;
-    }
-    
-    pq_swap4(&cube->dim, val + sizeof(int), 1); /* number of dimensions */
-
-    /* allocate and extract coordinates */
-    xp = (double *) (val + 2 * sizeof(int));
-    cube->x = (double *) PQresultAlloc((PGresult *) args->get.result, xcnt * sizeof(double));
-    if (!cube->x) return 0;
-    for (int i = 0; i < xcnt; i++) {
-        pq_swap8(&cube->x[i], xp++, 1);
-    }   
-    return 0;
-}
-
+#ifdef HAVE_POSTGIS
 int geometry_put (PGtypeArgs *args) {
     //TODO
     return 0;
@@ -173,38 +114,6 @@ int geometry_get (PGtypeArgs *args) {
     lwgeom_free(lwgeom);
     lwfree(geom);
 
-    return 0;
-}
-
-/* From support email */
-int enum_put (PGtypeArgs *args) {
-    char *val = va_arg(args->ap, char *);
-    char *out = NULL;
-    int vallen = 0, oid = 0;
-    float sortorder = 0.0;
-
-    if (!args || !val) return 0;
-
-    /* expand buffer enough */
-    vallen = strlen(val);
-    if (args->put.expandBuffer(args, vallen) == -1) return -1;
-
-    out = args->put.out;
-    memcpy(out, val, vallen);
-
-    return vallen;
-}
-/* From support email END */
-
-int enum_get (PGtypeArgs *args) {
-    char *val = PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
-    int len = PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
-    
-    char **result = va_arg(args->ap, char **);
-    *result = (char *) PQresultAlloc((PGresult *) args->get.result, (len+1) * sizeof(char));
-    memcpy(*result, val, len * sizeof(char));
-    result[len] = '\0';
-    
     return 0;
 }
 

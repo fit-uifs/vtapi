@@ -28,10 +28,14 @@ Connection* BackendFactory::createConnection(fmap_t *fmap, const string& connect
     Connection *connection = NULL;
     switch (backend) {
         case POSTGRES:
+#ifdef HAVE_POSTGRESQL
             connection = new PGConnection(fmap, connectionInfo, logger);
+#endif
             break;
         case SQLITE:
-            connection = new SLConnection(fmap, connectionInfo, logger);
+#ifdef HAVE_SQLITE
+       connection = new SLConnection(fmap, connectionInfo, logger);
+#endif
             break;
         default:
             break;
@@ -43,10 +47,14 @@ TypeManager* BackendFactory::createTypeManager(fmap_t *fmap, Connection *connect
     TypeManager *typeManager = NULL;
     switch (backend) {
         case POSTGRES:
-            typeManager = new PGTypeManager(fmap, connection, logger);
-            break;
+#ifdef HAVE_POSTGRESQL
+       typeManager = new PGTypeManager(fmap, connection, logger);
+ #endif
+           break;
         case SQLITE:
-            typeManager = new SLTypeManager(fmap, connection, logger);
+#ifdef HAVE_SQLITE
+        typeManager = new SLTypeManager(fmap, connection, logger);
+#endif
             break;
         default:
             break;
@@ -58,10 +66,14 @@ QueryBuilder* BackendFactory::createQueryBuilder(fmap_t *fmap, Connection *conne
     QueryBuilder *queryBuilder = NULL;
     switch (backend) {
         case POSTGRES:
-            queryBuilder = new PGQueryBuilder(fmap, connection, logger, initString);
-            break;
+#ifdef HAVE_POSTGRESQL
+       queryBuilder = new PGQueryBuilder(fmap, connection, logger, initString);
+#endif
+          break;
         case SQLITE:
+#ifdef HAVE_SQLITE
             queryBuilder = new SLQueryBuilder(fmap, connection, logger, initString);
+#endif
             break;
         default:
             break;
@@ -73,10 +85,14 @@ ResultSet* BackendFactory::createResultSet(fmap_t *fmap, TypeManager *typeManage
     ResultSet *resultSet = NULL;
     switch (backend) {
         case POSTGRES:
-            resultSet = new PGResultSet(fmap, typeManager, logger);
-            break;
+#ifdef HAVE_POSTGRESQL
+     resultSet = new PGResultSet(fmap, typeManager, logger);
+#endif
+         break;
         case SQLITE:
+#ifdef HAVE_SQLITE
             resultSet = new SLResultSet(fmap, typeManager, logger);
+#endif
             break;
         default:
             break;
@@ -88,10 +104,14 @@ LibLoader* BackendFactory::createLibLoader(Logger *logger) {
     LibLoader *libLoader = NULL;
     switch (backend) {
         case POSTGRES:
-            libLoader = new PGLibLoader(logger);
-            break;
+#ifdef HAVE_POSTGRESQL
+      libLoader = new PGLibLoader(logger);
+ #endif
+           break;
         case SQLITE:
+#ifdef HAVE_SQLITE
             libLoader = new SLLibLoader(logger);
+#endif
             break;
         default:
             break;

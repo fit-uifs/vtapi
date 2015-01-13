@@ -197,170 +197,22 @@ vector<float>* KeyValues::getFloatV(const int col) {
 }
 
 // =============== GETTERS - OpenCV MATRICES ===============================
-#ifdef __OPENCV_CORE_C_H__XXX
+#ifdef HAVE_OPENCV
 
 CvMat *KeyValues::getCvMat(const string& key) {
-    return this->getCvMat(PQfnumber(select->res, key.c_str()));
+    return select->resultSet->getCvMat(key);
 }
 
 CvMat *KeyValues::getCvMat(const int col) {
-    CvMat *mat = NULL;
-    PGresult *mres;
-    PGarray step_arr;
-    int type, rows, cols, dims, step_size, data_len;
-    char *data_loc;
-    int *step;
-    void *data;
-
-    // get CvMat header structure
-    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
-        warning(324, "Value is not a correct cvmat type");
-        return NULL;
-    }
-    // parse CvMat header fields
-    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
-        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
-        warning(325, "Incorrect cvmat type");
-        PQclear(mres);
-        return NULL;
-    }
-    // sometimes data type returns with apostrophes ('type')
-    if (data_loc && data_loc[0] == '\'') {
-        int len = strlen(data_loc);
-        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
-        data_loc++;
-    }
-    // construct step[] array
-    step_size = PQntuples(step_arr.res);
-    step = new int [step_size];
-    for (int i = 0; i < step_size; i++) {
-        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
-            warning(310, "Unexpected value in int array");
-            destruct (step);
-            PQclear(step_arr.res);
-            PQclear(mres);
-            return NULL;
-        }
-    }
-    PQclear(step_arr.res);
-
-    // get matrix data from specified column
-    int dataloc_col = PQfnumber(select->res, data_loc);
-    int data_oid;
-    if (dataloc_col < 0) {
-        warning(325, "Invalid column for CvMat user data");
-        data = NULL;
-    }
-    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
-
-    // could be char, short, int, float, double
-    if (data_oid == typeManager->toOid("char")) {
-        //TODO: maybe fix alignment (every row to 4B) ?
-        data = getCharA(dataloc_col, data_len);
-    }
-    else if (data_oid == typeManager->toOid("float4") ||
-            data_oid == typeManager->toOid("real")) {
-        data = getFloatA(dataloc_col, data_len);
-    }
-    else {
-        warning(326, "Unexpected type of CvMat data");
-        data = NULL;
-    }
-    // create CvMat header and set user data
-    if (dims > 0 && data && step) {
-        mat = cvCreateMatHeader(rows, cols, type);
-        cvSetData(mat, data, step[dims-1]);
-    }
-    destruct (step);
-    PQclear(mres);
-
-    return mat;
+    return select->resultSet->getCvMat(col);
 }
 
 CvMatND *KeyValues::getCvMatND(const string& key) {
-    return this->getCvMatND(PQfnumber(select->res, key.c_str()));
+    return select->resultSet->getCvMatND(key);
 }
 
 CvMatND *KeyValues::getCvMatND(const int col) {
-    CvMatND *mat = NULL;
-    PGresult *mres;
-    PGarray step_arr;
-    int type, rows, cols, dims, step_size, data_len;
-    char *data_loc;
-    int *step, *sizes;
-    void *data;
-
-    // get CvMat header structure
-    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
-        warning(324, "Value is not a correct cvmat type");
-        return NULL;
-    }
-    // parse CvMat header fields
-    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
-        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
-        warning(325, "Incorrect cvmat type");
-        PQclear(mres);
-        return NULL;
-    }
-    // sometimes data type returns with apostrophes ('type')
-    if (data_loc && data_loc[0] == '\'') {
-        int len = strlen(data_loc);
-        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
-        data_loc++;
-    }
-    // construct step[] array
-    step_size = PQntuples(step_arr.res);
-    step = new int [step_size];
-    sizes = new int [step_size];
-    for (int i = 0; i < step_size; i++) {
-        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
-            warning(310, "Unexpected value in int array");
-            destruct (step);
-            destruct (sizes);
-            PQclear(step_arr.res);
-            PQclear(mres);
-            return NULL;
-        }
-    }
-    PQclear(step_arr.res);
-
-    // get matrix data from specified column
-    int dataloc_col = PQfnumber(select->res, data_loc);
-    int data_oid = -1;
-    if (dataloc_col < 0) {
-        warning(325, "Invalid column for CvMat user data");
-        data = NULL;
-    }
-    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
-
-    // could be char, short, int, float, double
-    if (data_oid == typeManager->toOid("char")) {
-        //TODO: maybe fix alignment (every row to 4B) ?
-        //TODO: not sure if sizes are counted correctly
-        data = getCharA(dataloc_col, data_len);
-        for (int i = 0; i < step_size; i++)
-            sizes[i] = data_len / step[i];
-    }
-    else if (data_oid == typeManager->toOid("float4") ||
-            data_oid == typeManager->toOid("real")) {
-        //TODO: not sure if sizes are counted correctly
-        data = getFloatA(dataloc_col, data_len);
-        for (int i = 0; i < step_size; i++)
-            sizes[i] = (data_len * sizeof(float)) / step[i];
-    }
-    else {
-        warning(326, "Unexpected type of CvMat data");
-        data = NULL;
-    }
-    // create CvMatND header and set user data
-    if (dims > 0 && data && sizes && step) {
-        mat = cvCreateMatNDHeader(dims, sizes, type);
-        cvSetData(mat, data, step[dims-1]);
-    }
-    destruct (step);
-    PQclear(mres);
-
-    return mat;
+    return select->resultSet->getCvMatND(col);
 }
 #endif
 // =============== GETTERS - TIMESTAMP =========================================
@@ -386,80 +238,70 @@ vector<PGpoint>*  KeyValues::getPointV(const int col) {
     return select->resultSet->getPointV(col);
 }
 #endif
-#ifdef POSTGIS
-PGlseg KeyValues::getLineSegment(const string& key) {
-    return this->getLineSegment(PQfnumber(select->res, key.c_str()));
-}
-PGlseg KeyValues::getLineSegment(const int col){
-    PGlseg lseg;
-    memset(&lseg, 0, sizeof(PGlseg));
-    if (! PQgetf(select->res, this->pos, "%lseg", col, &lseg)) {
-        logger->warning(315, "Value is not a line segment");
-    }
-    return lseg;
-}
 
-PGbox KeyValues::getBox(const string& key){
-    return this->getBox(PQfnumber(select->res, key.c_str()));
-}
-PGbox KeyValues::getBox(const int col){
-    PGbox box;
-    memset(&box, 0, sizeof(PGbox));
-    if (! PQgetf(select->res, this->pos, "%box", col, &box)) {
-        logger->warning(316, "Value is not a box");
-    }
-    return box;
-}
+//PGlseg KeyValues::getLineSegment(const string& key) {
+//    return this->getLineSegment(PQfnumber(select->res, key.c_str()));
+//}
+//PGlseg KeyValues::getLineSegment(const int col){
+//    PGlseg lseg;
+//    memset(&lseg, 0, sizeof(PGlseg));
+//    if (! PQgetf(select->res, this->pos, "%lseg", col, &lseg)) {
+//        logger->warning(315, "Value is not a line segment");
+//    }
+//    return lseg;
+//}
+//
+//PGbox KeyValues::getBox(const string& key){
+//    return this->getBox(PQfnumber(select->res, key.c_str()));
+//}
+//PGbox KeyValues::getBox(const int col){
+//    PGbox box;
+//    memset(&box, 0, sizeof(PGbox));
+//    if (! PQgetf(select->res, this->pos, "%box", col, &box)) {
+//        logger->warning(316, "Value is not a box");
+//    }
+//    return box;
+//}
+//
+//PGcircle KeyValues::getCircle(const string& key){
+//    return this->getCircle(PQfnumber(select->res, key.c_str()));
+//
+//}
+//PGcircle KeyValues::getCircle(const int col){
+//    PGcircle circle;
+//    memset(&circle, 0, sizeof(PGcircle));
+//    if (! PQgetf(select->res, this->pos, "%circle", col, &circle)) {
+//        logger->warning(317, "Value is not a circle");
+//    }
+//    return circle;
+//}
+//
+//PGpolygon KeyValues::getPolygon(const string& key){
+//    return this->getPolygon(PQfnumber(select->res, key.c_str()));
+//
+//}
+//PGpolygon KeyValues::getPolygon(const int col){
+//    PGpolygon polygon;
+//    memset(&polygon, 0, sizeof(PGpolygon));
+//    if (! PQgetf(select->res, this->pos, "%polygon", col, &polygon)) {
+//        logger->warning(318, "Value is not a polygon");
+//    }
+//    return polygon;
+//}
+//PGpath KeyValues::getPath(const string& key){
+//    return this->getPath(PQfnumber(select->res, key.c_str()));
+//
+//}
+//PGpath KeyValues::getPath(const int col){
+//    PGpath path;
+//    memset(&path, 0, sizeof(PGpath));
+//    if (! PQgetf(select->res, this->pos, "%path", col, &path)) {
+//        logger->warning(319, "Value is not a path");
+//    }
+//    return path;
+//}
 
-PGcircle KeyValues::getCircle(const string& key){
-    return this->getCircle(PQfnumber(select->res, key.c_str()));
-
-}
-PGcircle KeyValues::getCircle(const int col){
-    PGcircle circle;
-    memset(&circle, 0, sizeof(PGcircle));
-    if (! PQgetf(select->res, this->pos, "%circle", col, &circle)) {
-        logger->warning(317, "Value is not a circle");
-    }
-    return circle;
-}
-
-PGpolygon KeyValues::getPolygon(const string& key){
-    return this->getPolygon(PQfnumber(select->res, key.c_str()));
-
-}
-PGpolygon KeyValues::getPolygon(const int col){
-    PGpolygon polygon;
-    memset(&polygon, 0, sizeof(PGpolygon));
-    if (! PQgetf(select->res, this->pos, "%polygon", col, &polygon)) {
-        logger->warning(318, "Value is not a polygon");
-    }
-    return polygon;
-}
-
-PGpath KeyValues::getPath(const string& key){
-    return this->getPath(PQfnumber(select->res, key.c_str()));
-
-}
-PGpath KeyValues::getPath(const int col){
-    PGpath path;
-    memset(&path, 0, sizeof(PGpath));
-    if (! PQgetf(select->res, this->pos, "%path", col, &path)) {
-        logger->warning(319, "Value is not a path");
-    }
-    return path;
-}
-PGcube KeyValues::getCube(const string& key) {
-    return this->getCube(PQfnumber(select->res, key.c_str()));
-}
-PGcube KeyValues::getCube(const int col) {
-    PGcube cube;
-    memset(&cube, 0, sizeof(PGcube));
-    if (! PQgetf(select->res, this->pos, "%cube", col, &cube)) {
-        logger->warning(320, "Value is not a cube");
-    }
-    return cube;
-}
+#ifdef HAVE_POSTGIS
 GEOSGeometry *KeyValues::getGeometry(const string& key) {
     return this->getGeometry(PQfnumber(select->res, key.c_str()));
 }

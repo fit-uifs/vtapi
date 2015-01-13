@@ -16,6 +16,7 @@
 #include <common/vtapi_misc.h>
 #include <backends/vtapi_backends.h>
 
+#ifdef HAVE_POSTGRESQL
 
 // postgres data transfer format: 0=text, 1=binary
 #define PG_FORMAT           1
@@ -165,12 +166,11 @@ bool PGTypeManager::registerTypes () {
     }
 
     // PostGIS special types
-#ifdef POSTGIS
+#ifdef HAVE_POSTGIS
     PGregisterType typespg_userdef[] = {
-        {"cube", cube_put, cube_get},
         {"geometry", geometry_put, geometry_get}
     };
-    retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, typespg_userdef, 2, 0);
+    retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, typespg_userdef, 1, 0);
     if (!retreg) {
         logger->warning(666, CALL_PQT(fmap, PQgeterror), thisClass+"::registerTypes()");
         retval = VT_FAIL;
@@ -178,7 +178,7 @@ bool PGTypeManager::registerTypes () {
 #endif
 
     // OpenCV special types
-#ifdef __OPENCV_CORE_HPP__
+#ifdef HAVE_OPENCV
     PGregisterType typescv_comp[] = {
         {"cvmat", NULL, NULL}
     };
@@ -829,11 +829,14 @@ string PGQueryBuilder::escapeIdent(const string& ident) {
     char    *ident_c = CALL_PQ(fmap, PQescapeIdentifier, (PGconn *)connection->getConnectionObject(), ident.c_str(), ident.length());
     string  escaped  = string(ident_c);
     CALL_PQ(fmap, PQfreemem, ident_c);
-    return string(escaped);
+    return escaped;
 }
 
 string PGQueryBuilder::escapeLiteral(const string& literal) {
-    return "";
+    char *literal_c = CALL_PQ(fmap, PQescapeLiteral, (PGconn *)connection->getConnectionObject(), literal.c_str(), literal.length());
+    string  escaped  = string(literal_c);
+    CALL_PQ(fmap, PQfreemem, literal_c);
+    return escaped;
 }
 
 /***********************************************************************************************************************************/
@@ -1175,6 +1178,165 @@ vector<float>* PGResultSet::getFloatV(const int col) {
     return values;
 }
 
+#ifdef HAVE_OPENCV
+
+CvMat *PGResultSet::getCvMat(const int col) {
+    CvMat *mat = NULL;
+//    PGresult *mres;
+//    PGarray step_arr;
+//    int type, rows, cols, dims, step_size, data_len;
+//    char *data_loc;
+//    int *step;
+//    void *data;
+//
+//    // get CvMat header structure
+//    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
+//        warning(324, "Value is not a correct cvmat type");
+//        return NULL;
+//    }
+//    // parse CvMat header fields
+//    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
+//        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
+//        warning(325, "Incorrect cvmat type");
+//        PQclear(mres);
+//        return NULL;
+//    }
+//    // sometimes data type returns with apostrophes ('type')
+//    if (data_loc && data_loc[0] == '\'') {
+//        int len = strlen(data_loc);
+//        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
+//        data_loc++;
+//    }
+//    // construct step[] array
+//    step_size = PQntuples(step_arr.res);
+//    step = new int [step_size];
+//    for (int i = 0; i < step_size; i++) {
+//        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
+//            warning(310, "Unexpected value in int array");
+//            destruct (step);
+//            PQclear(step_arr.res);
+//            PQclear(mres);
+//            return NULL;
+//        }
+//    }
+//    PQclear(step_arr.res);
+//
+//    // get matrix data from specified column
+//    int dataloc_col = PQfnumber(select->res, data_loc);
+//    int data_oid;
+//    if (dataloc_col < 0) {
+//        warning(325, "Invalid column for CvMat user data");
+//        data = NULL;
+//    }
+//    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
+//
+//    // could be char, short, int, float, double
+//    if (data_oid == typeManager->toOid("char")) {
+//        //TODO: maybe fix alignment (every row to 4B) ?
+//        data = getCharA(dataloc_col, data_len);
+//    }
+//    else if (data_oid == typeManager->toOid("float4") ||
+//            data_oid == typeManager->toOid("real")) {
+//        data = getFloatA(dataloc_col, data_len);
+//    }
+//    else {
+//        warning(326, "Unexpected type of CvMat data");
+//        data = NULL;
+//    }
+//    // create CvMat header and set user data
+//    if (dims > 0 && data && step) {
+//        mat = cvCreateMatHeader(rows, cols, type);
+//        cvSetData(mat, data, step[dims-1]);
+//    }
+//    destruct (step);
+//    PQclear(mres);
+
+    return mat;
+}
+
+CvMatND *PGResultSet::getCvMatND(const int col) {
+    CvMatND *mat = NULL;
+//    PGresult *mres;
+//    PGarray step_arr;
+//    int type, rows, cols, dims, step_size, data_len;
+//    char *data_loc;
+//    int *step, *sizes;
+//    void *data;
+//
+//    // get CvMat header structure
+//    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
+//        warning(324, "Value is not a correct cvmat type");
+//        return NULL;
+//    }
+//    // parse CvMat header fields
+//    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
+//        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
+//        warning(325, "Incorrect cvmat type");
+//        PQclear(mres);
+//        return NULL;
+//    }
+//    // sometimes data type returns with apostrophes ('type')
+//    if (data_loc && data_loc[0] == '\'') {
+//        int len = strlen(data_loc);
+//        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
+//        data_loc++;
+//    }
+//    // construct step[] array
+//    step_size = PQntuples(step_arr.res);
+//    step = new int [step_size];
+//    sizes = new int [step_size];
+//    for (int i = 0; i < step_size; i++) {
+//        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
+//            warning(310, "Unexpected value in int array");
+//            destruct (step);
+//            destruct (sizes);
+//            PQclear(step_arr.res);
+//            PQclear(mres);
+//            return NULL;
+//        }
+//    }
+//    PQclear(step_arr.res);
+//
+//    // get matrix data from specified column
+//    int dataloc_col = PQfnumber(select->res, data_loc);
+//    int data_oid = -1;
+//    if (dataloc_col < 0) {
+//        warning(325, "Invalid column for CvMat user data");
+//        data = NULL;
+//    }
+//    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
+//
+//    // could be char, short, int, float, double
+//    if (data_oid == typeManager->toOid("char")) {
+//        //TODO: maybe fix alignment (every row to 4B) ?
+//        //TODO: not sure if sizes are counted correctly
+//        data = getCharA(dataloc_col, data_len);
+//        for (int i = 0; i < step_size; i++)
+//            sizes[i] = data_len / step[i];
+//    }
+//    else if (data_oid == typeManager->toOid("float4") ||
+//            data_oid == typeManager->toOid("real")) {
+//        //TODO: not sure if sizes are counted correctly
+//        data = getFloatA(dataloc_col, data_len);
+//        for (int i = 0; i < step_size; i++)
+//            sizes[i] = (data_len * sizeof(float)) / step[i];
+//    }
+//    else {
+//        warning(326, "Unexpected type of CvMat data");
+//        data = NULL;
+//    }
+//    // create CvMatND header and set user data
+//    if (dims > 0 && data && sizes && step) {
+//        mat = cvCreateMatNDHeader(dims, sizes, type);
+//        cvSetData(mat, data, step[dims-1]);
+//    }
+//    destruct (step);
+//    PQclear(mres);
+
+    return mat;
+}
+#endif
+
     // =============== GETTERS - GEOMETRIC TYPES ===============================
 #ifdef HAVE_POSTGRESQL
 PGpoint PGResultSet::getPoint(const int col) {
@@ -1310,7 +1472,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
 
             // array of PGpoint
             else if (keytype.find("point") != string::npos) {
-#ifdef POSTGIS
+#ifdef HAVE_POSTGIS
 
                 vector<PGpoint>* arr = this->getPointV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
@@ -1331,7 +1493,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
             } break;
 
         case TYPE_COMPOSITE: {
-#ifdef __OPENCV_CORE_C_H__XXX
+#ifdef HAVE_OPENCV
             // OpenCV cvMat type
             if (!keytype.compare("cvmat")) {
                 CvMat *mat = getCvMat(col);
@@ -1356,7 +1518,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
             } break;
 
         case TYPE_GEOMETRIC: {
-#ifdef POSTGIS
+#ifdef HAVE_POSTGIS
             // PostGIS point type
             if (!keytype.compare("point")) {
                 PGpoint point = getPoint(col);
@@ -1422,7 +1584,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
 
 
         case TYPE_USERDEFINED: { // user-defined (cube + postGIS types!!)
-#ifdef POSTGIS
+#ifdef HAVE_POSTGIS
             // PostGIS generic geometry type
             if (!keytype.compare("geometry")) {
                 GEOSGeometry *geo;
@@ -1442,28 +1604,6 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
 
                 GEOSFree(geo_string);
                 GEOSGeom_destroy(geo);
-            }
-            // PostGIS cube type
-            else if (!keytype.compare("cube")) {
-                PGcube cube = getCube(col);
-                int lim = cube.dim;
-                if (arrayLimit && (2 * lim > arrayLimit)) lim = arrayLimit/2;
-                if (cube.x && cube.dim > 0) {
-                    valss << '(';
-                    for (int i = 0; i < lim; i++) {
-                        valss << cube.x[i];
-                        if (i < lim-1) valss << ',';
-                    }
-                    valss << ')';
-                    if (cube.x[lim]) {
-                        valss << ",(";
-                        for (int i = lim; i < 2 * lim; i++) {
-                            valss << cube.x[i];
-                            if (i < lim-1) valss << ',';
-                        }
-                    }
-                    valss << ')';
-                }
             }
 #endif
         } break;
@@ -1624,7 +1764,7 @@ bool PGLibLoader::load_libpq (fmap_t *fmap) {
     lt_dladvise_init (&libpq_advise);
     lt_dladvise_ext(&libpq_advise);
     lt_dladvise_global(&libpq_advise);
-    h_libpq = lt_dlopenadvise("libpq", libpq_advise);
+    h_libpq = lt_dlopenadvise(PG_LIB_PATH "/libpq", libpq_advise);
     lt_dladvise_destroy(&libpq_advise);
 
     if (h_libpq) {
@@ -1660,3 +1800,5 @@ void PGLibLoader::unload_libpq () {
         h_libpq = NULL;
     }
 }
+
+#endif // HAVE_POSTGRESQL

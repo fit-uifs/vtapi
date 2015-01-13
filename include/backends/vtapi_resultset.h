@@ -12,12 +12,13 @@ namespace vtapi {
 
 class TypeManager;
 
+#ifdef HAVE_SQLITE
 typedef struct {
     int     rows;
     int     cols;
     char    **res;
 } sl_res_t;
-
+#endif
 
 /**
  * @brief Class provides interface to the result set object
@@ -321,36 +322,40 @@ public:
     virtual time_t getTimestamp(const int col) = 0;
 
     // =============== GETTERS - OpenCV MATRICES ===============================
-#ifdef __OPENCV_CORE_C_H__
-//    /**
-//     * Get OpenCv matrix (cvMat) specified by the column key
-//     * @param key column key
-//     * @return CvMat structure
-//     */
-//    CvMat *getCvMat(const string& key);
-//    /**
-//     * Get OpenCv matrix (cvMat) specified by the column index
-//     * @param col column index
-//     * @return CvMat structure
-//     */
-//    CvMat *getCvMat(const int col);
-//    /**
-//     * Get OpenCv matrix (cvMatND) specified by the column key
-//     * @param key column key
-//     * @return CvMatND structure
-//     */
-//    CvMatND *getCvMatND(const string& key);
-//    /**
-//     * Get OpenCv matrix (cvMatND) specified by the column index
-//     * @param col column index
-//     * @return CvMatND structure
-//     */
-//    CvMatND *getCvMatND(const int col);
+#ifdef HAVE_OPENCV
+    /**
+     * Get OpenCv matrix (cvMat) specified by the column key
+     * @param key column key
+     * @return CvMat structure
+     */
+    CvMat *getCvMat(const string& key) {
+        return this->getCvMat(this->getKeyIndex(key));
+    }
+    /**
+     * Get OpenCv matrix (cvMat) specified by the column index
+     * @param col column index
+     * @return CvMat structure
+     */
+    virtual CvMat *getCvMat(const int col) = 0;
+    /**
+     * Get OpenCv matrix (cvMatND) specified by the column key
+     * @param key column key
+     * @return CvMatND structure
+     */
+    CvMatND *getCvMatND(const string& key) {
+        return this->getCvMatND(this->getKeyIndex(key));
+    }
+    /**
+     * Get OpenCv matrix (cvMatND) specified by the column index
+     * @param col column index
+     * @return CvMatND structure
+     */
+    virtual CvMatND *getCvMatND(const int col) = 0;
 #endif
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
     
-#if HAVE_POSTGRESQL
+#ifdef HAVE_POSTGRESQL
     /**
      * Get 2D point specified by the column key
      * @param key column key
@@ -380,7 +385,7 @@ public:
      */
     virtual vector<PGpoint>*  getPointV(const int col) = 0;
 #endif
-#ifdef POSTGIS
+
 //    /**
 //     * Get line segment specified by the column key
 //     * @param key column key
@@ -466,31 +471,32 @@ public:
 //     * @return Cube
 //     */
 //    PGcube getCube(const int col);
-//
-//    /**
-//     * Get GEOS geometry type by the column key
-//     * @param key column key
-//     * @return GEOS geometry
-//     */
-//    GEOSGeometry* getGeometry(const string& key);
-//    /**
-//     * Get GEOS geometry type by the column index
-//     * @param col column index
-//     * @return GEOS geometry
-//     */
-//    GEOSGeometry* getGeometry(const int col);
-//    /**
-//     * Get GEOS geometry (linestring) type by the column key
-//     * @param key column key
-//     * @return GEOS geometry
-//     */
-//    GEOSGeometry* getLineString(const string& key);
-//    /**
-//     * Get GEOS geometry (linestring) type by the column index
-//     * @param col column index
-//     * @return GEOS geometry
-//     */
-//    GEOSGeometry* getLineString(const int col);
+    
+#ifdef HAVE_POSTGIS
+    /**
+     * Get GEOS geometry type by the column key
+     * @param key column key
+     * @return GEOS geometry
+     */
+    GEOSGeometry* getGeometry(const string& key);
+    /**
+     * Get GEOS geometry type by the column index
+     * @param col column index
+     * @return GEOS geometry
+     */
+    GEOSGeometry* getGeometry(const int col);
+    /**
+     * Get GEOS geometry (linestring) type by the column key
+     * @param key column key
+     * @return GEOS geometry
+     */
+    GEOSGeometry* getLineString(const string& key);
+    /**
+     * Get GEOS geometry (linestring) type by the column index
+     * @param col column index
+     * @return GEOS geometry
+     */
+    GEOSGeometry* getLineString(const int col);
 #endif
 
     // =============== GETTERS - OTHER =========================================
@@ -539,6 +545,7 @@ protected:
 };
 
 
+#ifdef HAVE_POSTGRESQL
 class PGResultSet : public ResultSet {
 public:
 
@@ -571,10 +578,14 @@ public:
     vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
-    #if HAVE_POSTGRESQL
+#ifdef HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     vector<PGpoint>*  getPointV(const int col);
-    #endif
+#endif
+#ifdef HAVE_OPENCV
+    CvMat *getCvMat(const int col);
+    CvMatND *getCvMatND(const int col);
+#endif
 
     pair< TKeys*,vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 
@@ -584,8 +595,9 @@ protected:
     int getKeyIndex(const string& key);
 
 };
+#endif
 
-
+#ifdef HAVE_SQLITE
 class SLResultSet : public ResultSet {
 public:
 
@@ -622,7 +634,10 @@ public:
     PGpoint getPoint(const int col);
     vector<PGpoint>*  getPointV(const int col);
     #endif
-
+#ifdef HAVE_OPENCV
+    CvMat *getCvMat(const int col);
+    CvMatND *getCvMatND(const int col);
+#endif
     pair< TKeys*,vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 
 protected:
@@ -631,6 +646,7 @@ protected:
     int getKeyIndex(const string& key);
 
 };
+#endif
 
 } // namespace vtapi
 

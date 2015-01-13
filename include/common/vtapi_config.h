@@ -18,6 +18,10 @@
 #ifndef VTAPI_CONFIG_H
 #define VTAPI_CONFIG_H
 
+#ifdef _DEBUG
+#define HAVE_CONFIG_H
+#endif
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif

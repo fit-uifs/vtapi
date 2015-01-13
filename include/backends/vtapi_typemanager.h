@@ -100,7 +100,7 @@ protected:
 
 };
 
-
+#ifdef HAVE_POSTGRESQL
 class PGTypeManager : public TypeManager {
 private:
 
@@ -125,8 +125,9 @@ protected:
     type_category_t mapCategory(char category_char);
     
 };
+#endif
 
-
+#ifdef HAVE_SQLITE
 class SLTypeManager : public TypeManager {
 private:
 
@@ -140,6 +141,7 @@ protected:
     bool loadTypes();
 
 };
+#endif
 
 } // namespace vtapi
 

@@ -263,7 +263,7 @@ public:
     time_t getTimestamp(const int col);
 
     // =============== GETTERS - OpenCV MATRICES ===============================
-#ifdef __OPENCV_CORE_C_H__XXX
+#ifdef HAVE_OPENCV
     /**
      * Get OpenCv matrix (cvMat) specified by the column key
      * @param key column key
@@ -292,7 +292,7 @@ public:
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
     // TODO: geometricke typy
-#if HAVE_POSTGRESQL
+#ifdef HAVE_POSTGRESQL
     /**
      * Get 2D point specified by the column key
      * @param key column key
@@ -318,92 +318,77 @@ public:
      */
     vector<PGpoint>*  getPointV(const int col);
 #endif
-#ifdef POSTGIS
-    /**
-     * Get line segment specified by the column key
-     * @param key column key
-     * @return Line segment
-     */
-    PGlseg getLineSegment(const string& key);
-    /**
-     * Get line segment specified by the column index
-     * @param col column index
-     * @return Line segment
-     */
-    PGlseg getLineSegment(const int col);
-    /**
-     * Get box specified by the column key
-     * @param key column key
-     * @return Box
-     */
-    PGbox getBox(const string& key);
-    /**
-     * Get box specified by the column index
-     * @param col column index
-     * @return Box
-     */
-    PGbox getBox(const int col);
-    /**
-     * Get circle specified by the column key
-     * @param key column key
-     * @return Circle
-     */
-    PGcircle getCircle(const string& key);
-    /**
-     * Get circle specified by the column index
-     * @param col column index
-     * @return Circle
-     */
-    PGcircle getCircle(const int col);
-    /**
-     * Get polygon specified by the column key
-     * @note polygon.pts must be copied out if needed after clearing resultset
-     *          copy_points(polygon.npts, polygon.pts, ...);
-     * @param key column key
-     * @return Polygon
-     */
-    PGpolygon getPolygon(const string& key);
-    /**
-     * Get polygon specified by the column index
-     * @note polygon.pts must be copied out if needed after clearing resultset
-     *          copy_points(polygon.npts, polygon.pts, ...);
-     * @param col column index
-     * @return Polygon
-     */
-    PGpolygon getPolygon(const int col);
-    /**
-     * Get path specified by the column key
-     * @note path.pts must be copied out if needed after clearing resultset
-     *          copy_points(path.npts, path.pts, ...);
-     * @param key column key
-     * @return Path
-     */
-    PGpath getPath(const string& key);
-    /**
-     * Get path specified by the column index
-     * @note path.pts must be copied out if needed after clearing resultset
-     *          copy_points(path.npts, path.pts, ...);
-     * @param col column index
-     * @return Path
-     */
-    PGpath getPath(const int col);
-    /**
-     * Get cube specified by the column index
-     * @note Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
-     * @note Points may have 1-100(CUBE_MAX_DIM) dimensions
-     * @param key column key
-     * @return Cube
-     */
-    PGcube getCube(const string& key);
-    /**
-     * Get cube specified by the column key
-     * @note Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
-     * @note Points may have 1-100(CUBE_MAX_DIM) dimensions
-     * @param col column index
-     * @return Cube
-     */
-    PGcube getCube(const int col);
-
+    
+//    /**
+//     * Get line segment specified by the column key
+//     * @param key column key
+//     * @return Line segment
+//     */
+//    PGlseg getLineSegment(const string& key);
+//    /**
+//     * Get line segment specified by the column index
+//     * @param col column index
+//     * @return Line segment
+//     */
+//    PGlseg getLineSegment(const int col);
+//    /**
+//     * Get box specified by the column key
+//     * @param key column key
+//     * @return Box
+//     */
+//    PGbox getBox(const string& key);
+//    /**
+//     * Get box specified by the column index
+//     * @param col column index
+//     * @return Box
+//     */
+//    PGbox getBox(const int col);
+//    /**
+//     * Get circle specified by the column key
+//     * @param key column key
+//     * @return Circle
+//     */
+//    PGcircle getCircle(const string& key);
+//    /**
+//     * Get circle specified by the column index
+//     * @param col column index
+//     * @return Circle
+//     */
+//    PGcircle getCircle(const int col);
+//    /**
+//     * Get polygon specified by the column key
+//     * @note polygon.pts must be copied out if needed after clearing resultset
+//     *          copy_points(polygon.npts, polygon.pts, ...);
+//     * @param key column key
+//     * @return Polygon
+//     */
+//    PGpolygon getPolygon(const string& key);
+//    /**
+//     * Get polygon specified by the column index
+//     * @note polygon.pts must be copied out if needed after clearing resultset
+//     *          copy_points(polygon.npts, polygon.pts, ...);
+//     * @param col column index
+//     * @return Polygon
+//     */
+//    PGpolygon getPolygon(const int col);
+//    /**
+//     * Get path specified by the column key
+//     * @note path.pts must be copied out if needed after clearing resultset
+//     *          copy_points(path.npts, path.pts, ...);
+//     * @param key column key
+//     * @return Path
+//     */
+//    PGpath getPath(const string& key);
+//    /**
+//     * Get path specified by the column index
+//     * @note path.pts must be copied out if needed after clearing resultset
+//     *          copy_points(path.npts, path.pts, ...);
+//     * @param col column index
+//     * @return Path
+//     */
+//    PGpath getPath(const int col);
+    
+#ifdef HAVE_POSTGIS
     /**
      * Get GEOS geometry type by the column key
      * @param key column key

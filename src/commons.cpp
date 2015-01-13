@@ -94,7 +94,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
 
     doom            = true;             // destruct it with fire
 
-#ifdef POSTGIS
+#ifdef HAVE_POSTGIS
     initGEOS(geos_notice, geos_notice); // initialize GEOS stuff
 #endif
 }
@@ -107,7 +107,7 @@ Commons::~Commons() {
         destruct(libLoader);        
         destruct(logger);
         
-#ifdef POSTGIS
+#ifdef HAVE_POSTGIS
         finishGEOS();
 #endif
     }

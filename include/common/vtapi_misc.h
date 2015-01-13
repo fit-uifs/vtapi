@@ -49,7 +49,7 @@ extern "C" {
 
 extern void *g_typeManager;
 
-
+#ifdef HAVE_POSTGRESQL
 /**
  * Generic put handler for enum types
  * @param
@@ -62,6 +62,8 @@ int pg_enum_put (PGtypeArgs *);
  * @return
  */
 int pg_enum_get (PGtypeArgs *);
+#endif
+
 
 /**
  * Endian swapper for 2-byte long types
@@ -82,7 +84,7 @@ void endian_swap4(void *out, void *in);
  */
 void endian_swap8(void *out, void *in);
 
-//#ifdef POSTGIS
+//#ifdef HAVE_POSTGIS
 //
 //#include <malloc.h>
 //#include <math.h>
@@ -119,67 +121,68 @@ void endian_swap8(void *out, void *in);
 //} PGcube;
 //
 //
-///**
-// * Cube type libpqtypes put handler
-// * @param
-// * @return
-// */
-//int cube_put (PGtypeArgs *);
-///**
-// * Cube type libpqtypes get handler
-// * @param
-// * @return
-// */
-//int cube_get (PGtypeArgs *);
-///**
-// * Geometry type (PostGIS) libpqtypes put handler
-// * @param
-// * @return
-// */
-//int geometry_put (PGtypeArgs *);
-///**
-// * Geometry type (PostGIS) libpqtypes get handler
-// * @param
-// * @return
-// */
-//int geometry_get (PGtypeArgs *);
-//
-///**
-// * liblwgeom requires this to be implemented
-// */
-//// void lwgeom_init_allocators();
-//// FIXME: tohle hlasi konflikt
-//
-///**
-// * Extract serialized PG_LWGEOM geometry from EWKB binary
-// * @param ewkb serialized input
-// * @param flags
-// * @param ewkblen length
-// * @return
-// */
-//PG_LWGEOM * pglwgeom_from_ewkb(uchar *ewkb, int flags, size_t ewkblen);
-///**
-// * Convert LWGEOM type geometry to GEOSGeometry format
-// * @param g
-// * @return
-// */
-//GEOSGeometry * LWGEOM2GEOS(LWGEOM *g);
-///**
-// * Convert POINTARRAY of coordinates to GEOSCoordSeq format
-// * @param
-// * @return
-// */
-//GEOSCoordSeq ptarray_to_GEOSCoordSeq(POINTARRAY *);
-//
-///**
-// * GEOS notice and error handler
-// * @param msg
-// */
-//void geos_notice (const char * fmt, ...);
-//
-//
-//
-//#endif /* POSTGIS */
+#ifdef HAVE_POSTGIS
+/**
+ * Cube type libpqtypes put handler
+ * @param
+ * @return
+ */
+int cube_put (PGtypeArgs *);
+/**
+ * Cube type libpqtypes get handler
+ * @param
+ * @return
+ */
+int cube_get (PGtypeArgs *);
+/**
+ * Geometry type (PostGIS) libpqtypes put handler
+ * @param
+ * @return
+ */
+int geometry_put (PGtypeArgs *);
+/**
+ * Geometry type (PostGIS) libpqtypes get handler
+ * @param
+ * @return
+ */
+int geometry_get (PGtypeArgs *);
+
+/**
+ * liblwgeom requires this to be implemented
+ */
+// void lwgeom_init_allocators();
+// FIXME: tohle hlasi konflikt
+
+/**
+ * Extract serialized PG_LWGEOM geometry from EWKB binary
+ * @param ewkb serialized input
+ * @param flags
+ * @param ewkblen length
+ * @return
+ */
+PG_LWGEOM * pglwgeom_from_ewkb(uchar *ewkb, int flags, size_t ewkblen);
+/**
+ * Convert LWGEOM type geometry to GEOSGeometry format
+ * @param g
+ * @return
+ */
+GEOSGeometry * LWGEOM2GEOS(LWGEOM *g);
+/**
+ * Convert POINTARRAY of coordinates to GEOSCoordSeq format
+ * @param
+ * @return
+ */
+GEOSCoordSeq ptarray_to_GEOSCoordSeq(POINTARRAY *);
+
+/**
+ * GEOS notice and error handler
+ * @param msg
+ */
+void geos_notice (const char * fmt, ...);
+
+
+
+#endif
 
 
 #ifdef	__cplusplus

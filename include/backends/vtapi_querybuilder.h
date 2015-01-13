@@ -331,7 +331,7 @@ protected:
     }
 };
 
-
+#ifdef HAVE_POSTGRESQL
 class PGQueryBuilder : public QueryBuilder {
 private:
 
@@ -382,8 +382,9 @@ protected:
     string escapeIdent(const string& ident);
     string escapeLiteral(const string& literal);
 };
+#endif
 
-
+#ifdef HAVE_SQLITE
 class SLQueryBuilder : public QueryBuilder {
 private:
 
@@ -438,6 +439,7 @@ private:
     void destroyKeys();
 
 };
+#endif
 
 } // namespace vtapi
 

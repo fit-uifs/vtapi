@@ -12,15 +12,17 @@ namespace vtapi {
 
 class ResultSet;
 
-
+#ifdef HAVE_SQLITE
 typedef struct {
     string  database;
 } sl_param_t;
+#endif
 
+#ifdef HAVE_POSTGRESQL
 typedef struct {
     PGparam *args;
 } pg_param_t;
-
+#endif
 
 /**
  * @brief Class encapsulating all database connection functionality including
@@ -107,7 +109,7 @@ public:
 
 };
 
-
+#ifdef HAVE_POSTGRESQL
 class PGConnection : public Connection {
 private:
 
@@ -129,8 +131,9 @@ public:
     void* getConnectionObject();
 
 };
+#endif
 
-
+#ifdef HAVE_SQLITE
 class SLConnection : public Connection {
 private:
 
@@ -167,6 +170,7 @@ private:
     bool attachDatabase(string& dbfile);
 
 };
+#endif
 
 } // namespace vtapi
 

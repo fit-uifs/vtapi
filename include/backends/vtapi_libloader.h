@@ -15,6 +15,7 @@ namespace vtapi {
 #define FMAP_ENTRY(func,funcptr)    std::make_pair<string,void *>(func,funcptr)
 
 
+#ifdef HAVE_POSTGRESQL
 
 // ========================================= LIBPQTYPES ====================================================
 
@@ -76,6 +77,9 @@ typedef char * (*PQ_PQescapeIdentifier)(PGconn *, const char *, size_t);
 
 #define CALL_PQ(FUNC_MAP, PQ_FUNCTION, ...) ((PQ_ ## PQ_FUNCTION) (*FUNC_MAP)[string("PQ_" #PQ_FUNCTION)]) (__VA_ARGS__)
 
+#endif
+#ifdef HAVE_SQLITE
+
 // ================================================= SQLITE ==========================================================
 
 typedef int (*SL_sqlite3_open_v2)(const char *, sqlite3 **, int, const char *);
@@ -91,6 +95,8 @@ typedef void (*SL_sqlite3_free_table)(char **);
 #define CALL_SL(FUNC_MAP, SL_FUNCTION, ...) ((SL_ ## SL_FUNCTION) (*FUNC_MAP)[string("SL_" #SL_FUNCTION)]) (__VA_ARGS__)
 
 // ===================================================================================================================
+
+#endif
 
 /**
  * @brief Class encapsulates runtime loading and unloading of dynamic libraries
@@ -139,7 +145,7 @@ public:
     virtual char *getLibName() = 0;
 };
 
-
+#ifdef HAVE_POSTGRESQL
 class PGLibLoader : public LibLoader {
 private:
 
@@ -164,8 +170,9 @@ private:
     void unload_libpq();
 
 };
+#endif
 
-
+#ifdef HAVE_SQLITE
 class SLLibLoader : public LibLoader {
 private:
 
@@ -186,6 +193,7 @@ private:
     bool load_libsqlite(fmap_t *);
     void unload_libsqlite();
 };
+#endif
 
 } // namespace vtapi
 
