@@ -42,7 +42,8 @@ bool PGConnection::connect (const string& connectionInfo) {
     conn = CALL_PQ(fmap, PQconnectdb, connInfo.c_str());
     retval = isConnected();
     if (!retval) {
-        string errmsg = conn ? string(CALL_PQ(fmap, PQerrorMessage, conn)) : "The connection couldn't have been established.";
+        const char *errmsgc = CALL_PQ(fmap, PQerrorMessage, conn);
+        string errmsg = errmsgc ? errmsgc : "The connection couldn't have been established.";
         logger->error(122, errmsg, thisClass+"::connect()");
     }
     else {
