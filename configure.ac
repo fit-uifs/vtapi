@@ -40,6 +40,7 @@ LDFLAGS="${LDFLAGS} ${VTAPI_LDFLAGS}"
 ### Configure variables
 AC_ARG_VAR(GEOS_CONFIG, [GEOS geos_config file which will be used to build with.])
 AC_ARG_VAR(PG_CONFIG, [PostgreSQL pg_config file which will be used to build with.])
+AC_ARG_VAR(SQLITE_PC, [SQLite sqlite3.pc file which will be used to build with.])
 
 ### Configure with arguments
 AC_ARG_WITH([geosconfig], 
@@ -49,6 +50,10 @@ AC_ARG_WITH([geosconfig],
 AC_ARG_WITH([pgconfig], 
             [AS_HELP_STRING([--with-pgconfig=FILE], [specify an alternative pg_config file])],
             [PG_CONFIG="${withval}"], 
+            [])
+AC_ARG_WITH([sqlitepc],
+            [AS_HELP_STRING([--with-sqlitepc=FILE], [specify an alternative sqlite3.pc file])],
+            [SQLITE_PC="${withval}"], 
             [])
 
 ### Configure without arguments
@@ -126,21 +131,54 @@ AS_IF([test "x${with_sqlite}" = "xno"], [sqlite_want="no"])
 if test "x${sqlite_want}" = "xyes"
 then
   sqlite_present="yes"
-  SQLITE_VERSION=`"${PKG_CONFIG}" sqlite3 --modversion` 
-  if test -z "${SQLITE_VERSION}"
+  
+  if test "x${SQLITE_PC}" = "x"
   then
-    sqlite_present="no"
-  else 
-    SQLITE_CFLAGS=`"$PKG_CONFIG" sqlite3 --cflags`
-    SQLITE_LIBS=`"$PKG_CONFIG" sqlite3 --libs`
-    AC_SUBST([SQLITE_CFLAGS])
-    AC_SUBST([SQLITE_LIBS])  
+    # try to search in current path
+    package=sqlite3
+    SQLITE_VERSION=`"${PKG_CONFIG}" "${package}" --modversion`
+    if test "x${SQLITE_VERSION}" = "x"
+    then
+      sqlite_present="no"
+    fi
+  else
+    # we have specific sqlite3.pc path - so we must check it
+    if test -f "${SQLITE_PC}"
+    then
+      AC_MSG_RESULT([Using user-specified sqlite3.pc file: ${SQLITE_PC}])    
+    else
+      AC_MSG_ERROR([the user-specified sqlite3.pc file (${SQLITE_PC}) does not exist - please, check the specified path or do not set --with-sqlitepc argument.])
+      sqlite_present="no"
+    fi
+    package=${SQLITE_PC}
+  fi
+  
+  if test "x${sqlite_present}" = "xyes"
+  then
+    SQLITE_VERSION=`"${PKG_CONFIG}" "${package}" --modversion`
+    SQLITE_CFLAGS=`"${PKG_CONFIG}" "${package}" --cflags`
+    SQLITE_LIBS=`"${PKG_CONFIG}" "${package}" --libs`
+    SQLITE_LIBDIR=`"${PKG_CONFIG}" "${package}" --variable=libdir`
+    
+    TMP_CPPFLAGS="${CPPFLAGS}"
+    CPPFLAGS="${SQLITE_CFLAGS} ${CPPFLAGS}"
+    TMP_LIBS="${LIBS}"
+    LIBS="${SQLITE_LIBS} ${LIBS}"
+
+    AC_CHECK_HEADER(sqlite3.h, [], [sqlite_present="no"])
+    AC_CHECK_LIB([sqlite3], [sqlite3_open], [], [sqlite_present="no"])
+    
+    CPPFLAGS="${TMP_CPPFLAGS}"
+    LIBS="${TMP_LIBS}"
   fi
 
   SQLITE_SUMMARY="${sqlite_present}"
   if test "x${sqlite_present}" = "xyes" 
   then
     AC_DEFINE([HAVE_SQLITE], [1], [SQLite is present])
+    AC_DEFINE_UNQUOTED([SQLITE_LIB_PATH], ["${SQLITE_LIBDIR}"], [SQLite library path])
+    AC_SUBST([SQLITE_CFLAGS])
+    AC_SUBST([SQLITE_LIBS])
     SQLITE_SUMMARY="${SQLITE_SUMMARY}   (version: ${SQLITE_VERSION})"
   fi
   
@@ -428,6 +466,11 @@ AC_MSG_RESULT()
 AC_MSG_RESULT([ ---------- VTApi configure summary ----------])
 AC_MSG_RESULT([  OpenCV:         ${OPENCV_SUMMARY}])
 AC_MSG_RESULT([  SQLite:         ${SQLITE_SUMMARY}])
+if test "x${sqlite_present}" = "xyes" -a "x${SQLITE_PC}" != "x"
+then
+  AC_MSG_RESULT([                    -> sqlite3.pc custom path: ${SQLITE_PC}])
+fi
+
 AC_MSG_RESULT([  PostgreSQL:     ${PGSQL_SUMMARY]})
 
 if test "x${pgsql_present}" = "xyes"
