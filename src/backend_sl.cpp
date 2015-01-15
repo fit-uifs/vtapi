@@ -917,6 +917,15 @@ vector<PGpoint>*  SLResultSet::getPointV(const int col) {
 }
 #endif
 
+#ifdef HAVE_POSTGIS
+GEOSGeometry* SLResultSet::getGeometry(const int col) {
+    return NULL;
+}
+GEOSGeometry* SLResultSet::getLineString(const int col) {
+    return NULL;
+}
+#endif
+
 //// =============== GETTERS - TIMESTAMP =========================================
 
 time_t SLResultSet::getTimestamp(const int col) {

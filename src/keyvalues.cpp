@@ -303,28 +303,17 @@ vector<PGpoint>*  KeyValues::getPointV(const int col) {
 
 #ifdef HAVE_POSTGIS
 GEOSGeometry *KeyValues::getGeometry(const string& key) {
-    return this->getGeometry(PQfnumber(select->res, key.c_str()));
+    return select->resultSet->getGeometry(key);
 }
 GEOSGeometry *KeyValues::getGeometry(const int col) {
-    GEOSGeometry *geo;
-    if (! PQgetf(select->res, this->pos, "%geometry", col, &geo)) {
-        logger->warning(321, "Value is not a geometry type");
-    }
-    return geo;
+    return select->resultSet->getGeometry(col);
 }
 
 GEOSGeometry *KeyValues::getLineString(const string& key) {
-    return this->getLineString(PQfnumber(select->res, key.c_str()));
+    return select->resultSet->getLineString(key);
 }
 GEOSGeometry *KeyValues::getLineString(const int col) {
-    GEOSGeometry *ls;
-    if (! PQgetf(select->res, this->pos, "%geometry", col, &ls)) {
-        logger->warning(322, "Value is not a geometry type");
-    }
-    else if (ls && GEOSGeomTypeId(ls) != GEOS_LINESTRING) {
-        logger->warning(323, "Value is not a linestring");
-    }
-    return ls;
+    return select->resultSet->getLineString(col);
 }
 #endif
 

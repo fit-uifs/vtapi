@@ -478,7 +478,9 @@ public:
      * @param key column key
      * @return GEOS geometry
      */
-    GEOSGeometry* getGeometry(const string& key);
+    GEOSGeometry* getGeometry(const string& key) {
+        return this->getGeometry(this->getKeyIndex(key));
+    }
     /**
      * Get GEOS geometry type by the column index
      * @param col column index
@@ -490,7 +492,9 @@ public:
      * @param key column key
      * @return GEOS geometry
      */
-    GEOSGeometry* getLineString(const string& key);
+    GEOSGeometry* getLineString(const string& key) {
+        return this->getLineString(this->getKeyIndex(key));
+    }
     /**
      * Get GEOS geometry (linestring) type by the column index
      * @param col column index
@@ -582,6 +586,10 @@ public:
     PGpoint getPoint(const int col);
     vector<PGpoint>*  getPointV(const int col);
 #endif
+#ifdef HAVE_POSTGIS
+    GEOSGeometry* getGeometry(const int col);
+    GEOSGeometry* getLineString(const int col);
+#endif
 #ifdef HAVE_OPENCV
     CvMat *getCvMat(const int col);
     CvMatND *getCvMatND(const int col);
@@ -630,10 +638,14 @@ public:
     vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
-    #if HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     vector<PGpoint>*  getPointV(const int col);
-    #endif
+#endif
+#ifdef HAVE_POSTGIS
+    GEOSGeometry* getGeometry(const int col);
+    GEOSGeometry* getLineString(const int col);
+#endif
 #ifdef HAVE_OPENCV
     CvMat *getCvMat(const int col);
     CvMatND *getCvMatND(const int col);

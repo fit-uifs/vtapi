@@ -1374,6 +1374,24 @@ vector<PGpoint>*  PGResultSet::getPointV(const int col) {
 }
 #endif
 
+#ifdef HAVE_POSTGIS
+GEOSGeometry* SLResultSet::getGeometry(const int col) {
+    PGresult *pgres = (PGresult *) this->res;
+    GEOSGeometry *geo = NULL;
+    if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%geometry", col, &geo)) {
+        logger->warning(325, "Value is not a geometry type");
+    }
+    return geo;
+}
+GEOSGeometry* SLResultSet::getLineString(const int col) {
+    GEOSGeometry *ls = getGeometry(col);
+    if (!ls || GEOSGeomTypeId(ls) != GEOS_LINESTRING) {
+        logger->warning(326, "Value is not a linestring");
+    }
+    return ls;
+}
+#endif
+
 // =============== GETTERS - TIMESTAMP =========================================
 
 time_t PGResultSet::getTimestamp(const int col) {
