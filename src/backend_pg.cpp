@@ -1519,55 +1519,53 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
             } break;
 
         case TYPE_GEOMETRIC: {
-#ifdef HAVE_POSTGIS
-            // PostGIS point type
-            if (!keytype.compare("point")) {
-                PGpoint point = getPoint(col);
-                valss << point.x << " , " << point.y;
-            }
-            // PostGIS box type
-            else if (!keytype.compare("box")) {
-                PGbox box = getBox(col);
-                valss << '(' << box.low.x << " , " << box.low.y << ") , ";
-                valss << '(' << box.high.x << " , " << box.high.y << ')';
-            }
-            // PostGIS line-segment type
-            else if (!keytype.compare("lseg")) {
-                PGlseg lseg = getLineSegment(col);
-                valss << '(' << lseg.pts[0].x << " , " << lseg.pts[0].y << ") ";
-                valss << '(' << lseg.pts[1].x << " , " << lseg.pts[1].y << ')';
-            }
-            // PostGIS circle type
-            else if (!keytype.compare("circle")) {
-                PGcircle circle = getCircle(col);
-                valss << '(' << circle.center.x << " , " << circle.center.y;
-                valss << ") , " << circle.radius;
-            }
-            // PostGIS path type
-            else if (!keytype.compare("path")) {
-                PGpath path = getPath(col);
-                for (int i = 0; i < path.npts; i++) {
-                    valss << '(' << path.pts[i].x << " , " << path.pts[i].y << ')';
-                    if (arrayLimit && i == arrayLimit) {
-                        valss << "...";
-                        break;
-                    }
-                    if (i < path.npts-1) valss << " , ";
-                }
-            }
-            // PostGIS polygon type
-            else if (!keytype.compare("polygon")) {
-                PGpolygon polygon = getPolygon(col);
-                for (int i = 0; i < polygon.npts; i++) {
-                    valss << '(' << polygon.pts[i].x << " , " << polygon.pts[i].y << ')';
-                    if (arrayLimit && i == arrayLimit) {
-                        valss << "...";
-                        break;
-                    }
-                    if (i < polygon.npts-1) valss << " , ";
-                }
-            }
-#endif
+//            // PostGIS point type
+//            if (!keytype.compare("point")) {
+//                PGpoint point = getPoint(col);
+//                valss << point.x << " , " << point.y;
+//            }
+//            // PostGIS box type
+//            else if (!keytype.compare("box")) {
+//                PGbox box = getBox(col);
+//                valss << '(' << box.low.x << " , " << box.low.y << ") , ";
+//                valss << '(' << box.high.x << " , " << box.high.y << ')';
+//            }
+//            // PostGIS line-segment type
+//            else if (!keytype.compare("lseg")) {
+//                PGlseg lseg = getLineSegment(col);
+//                valss << '(' << lseg.pts[0].x << " , " << lseg.pts[0].y << ") ";
+//                valss << '(' << lseg.pts[1].x << " , " << lseg.pts[1].y << ')';
+//            }
+//            // PostGIS circle type
+//            else if (!keytype.compare("circle")) {
+//                PGcircle circle = getCircle(col);
+//                valss << '(' << circle.center.x << " , " << circle.center.y;
+//                valss << ") , " << circle.radius;
+//            }
+//            // PostGIS path type
+//            else if (!keytype.compare("path")) {
+//                PGpath path = getPath(col);
+//                for (int i = 0; i < path.npts; i++) {
+//                    valss << '(' << path.pts[i].x << " , " << path.pts[i].y << ')';
+//                    if (arrayLimit && i == arrayLimit) {
+//                        valss << "...";
+//                        break;
+//                    }
+//                    if (i < path.npts-1) valss << " , ";
+//                }
+//            }
+//            // PostGIS polygon type
+//            else if (!keytype.compare("polygon")) {
+//                PGpolygon polygon = getPolygon(col);
+//                for (int i = 0; i < polygon.npts; i++) {
+//                    valss << '(' << polygon.pts[i].x << " , " << polygon.pts[i].y << ')';
+//                    if (arrayLimit && i == arrayLimit) {
+//                        valss << "...";
+//                        break;
+//                    }
+//                    if (i < polygon.npts-1) valss << " , ";
+//                }
+//            }
             } break;
 
         case TYPE_NUMERIC: {
