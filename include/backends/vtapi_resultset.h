@@ -486,7 +486,7 @@ public:
      * @param col column index
      * @return GEOS geometry
      */
-    GEOSGeometry* getGeometry(const int col);
+    virtual GEOSGeometry* getGeometry(const int col) = 0;
     /**
      * Get GEOS geometry (linestring) type by the column key
      * @param key column key
@@ -500,7 +500,7 @@ public:
      * @param col column index
      * @return GEOS geometry
      */
-    GEOSGeometry* getLineString(const int col);
+    virtual GEOSGeometry* getLineString(const int col) = 0;
 #endif
 
     // =============== GETTERS - OTHER =========================================
