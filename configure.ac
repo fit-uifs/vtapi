@@ -39,6 +39,7 @@ LDFLAGS="${LDFLAGS} ${VTAPI_LDFLAGS}"
 
 ### Configure variables
 AC_ARG_VAR(GEOS_CONFIG, [GEOS geos_config file which will be used to build with.])
+AC_ARG_VAR(LIBPQTYPES_PREFIX, [libpqtypes prefix which will be used to build with.])
 AC_ARG_VAR(PG_CONFIG, [PostgreSQL pg_config file which will be used to build with.])
 AC_ARG_VAR(SQLITE_PC, [SQLite sqlite3.pc file which will be used to build with.])
 
@@ -46,6 +47,10 @@ AC_ARG_VAR(SQLITE_PC, [SQLite sqlite3.pc file which will be used to build with.]
 AC_ARG_WITH([geosconfig], 
             [AS_HELP_STRING([--with-geosconfig=FILE], [specify an alternative geos_config file])],
             [GEOS_CONFIG="${withval}"], 
+            [])
+AC_ARG_WITH([libpqtypes-prefix], 
+            [AS_HELP_STRING([--with-libpqtypes-prefix=PREFIX], [specify an alternative prefix for libpqtypes files])],
+            [LIBPQTYPES_PREFIX="${withval}"], 
             [])
 AC_ARG_WITH([pgconfig], 
             [AS_HELP_STRING([--with-pgconfig=FILE], [specify an alternative pg_config file])],
@@ -236,9 +241,18 @@ then
     TMP_LIBS="${LIBS}"
     LIBS="${PQ_LIBS} ${LIBS}"
     AC_CHECK_HEADER(libpq-fe.h, [], [pgsql_present="no"]) 
+    AC_CHECK_LIB([pq], [PQserverVersion], [], [pgsql_present="no"]) # ??? is this OK on Windows???
+    if test "x${LIBPQTYPES_PREFIX}" != "x"
+    then
+      LIBPQTYPES_PREFIX=${LIBPQTYPES_PREFIX%/}
+      AC_MSG_RESULT([Using user-specified libpqtypes prefix: ${LIBPQTYPES_PREFIX}])  
+      LIBPQTYPES_CPPFLAGS="-I${LIBPQTYPES_PREFIX}/include"
+      LIBPQTYPES_LIBDIR="${LIBPQTYPES_PREFIX}/lib"
+      LIBPQTYPES_LIBS="-L${LIBPQTYPES_LIBDIR}"
+      CPPFLAGS="${LIBPQTYPES_CPPFLAGS} ${CPPFLAGS}"
+      LIBS="${LIBPQTYPES_LIBS} ${LIBS}"
+    fi
     AC_CHECK_HEADER(libpqtypes.h, [], [pgsql_present="no"])
-    # FIXME: some problems on OS Windows
-    AC_CHECK_LIB([pq], [PQserverVersion], [], [pgsql_present="no"])
     AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [pgsql_present="no"])
     CPPFLAGS="${TMP_CPPFLAGS}"
     LIBS="${TMP_LIBS}"
@@ -252,8 +266,11 @@ then
   else 
     AC_DEFINE([HAVE_POSTGRESQL], [1], [PostgreSQL is present])
     AC_DEFINE_UNQUOTED([PG_LIB_PATH], ["${PGSQL_LIBDIR}"], [PostgreSQL library path])
+    AC_DEFINE_UNQUOTED([PQTYPES_LIB_PATH], ["${LIBPQTYPES_LIBDIR}"], [libpqtypes library path])
     AC_SUBST([PQ_CFLAGS])
     AC_SUBST([PQ_LIBS])
+    AC_SUBST([LIBPQTYPES_CPPFLAGS])
+    AC_SUBST([LIBPQTYPES_LIBS])
     PGSQL_SUMMARY="${PGSQL_SUMMARY}   (version: ${PGSQL_VERSION})"
   fi
   
@@ -472,10 +489,13 @@ then
 fi
 
 AC_MSG_RESULT([  PostgreSQL:     ${PGSQL_SUMMARY]})
-
 if test "x${pgsql_present}" = "xyes"
 then
   AC_MSG_RESULT([                    -> pg_config path: ${PG_CONFIG}])
+  if test "x${LIBPQTYPES_PREFIX}" != "x"
+  then
+    AC_MSG_RESULT([                    -> libpqtypes prefix: ${LIBPQTYPES_PREFIX}])
+  fi
 fi
 
 AC_MSG_RESULT([  PostGIS:        ${POSTGIS_SUMMARY]})
