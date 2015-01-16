@@ -84,56 +84,35 @@ void endian_swap4(void *out, void *in);
  */
 void endian_swap8(void *out, void *in);
 
-//#ifdef HAVE_POSTGIS
-//
-//#include <malloc.h>
-//#include <math.h>
-//
-//
-///* postgres headers format */
-//typedef union
-//{
-//    struct                      /* Normal varlena (4-byte length) */
-//    {
-//    uint32      va_header;
-//    char        va_data[1];
-//    }           va_4byte;
-//    struct                      /* Compressed-in-line format */
-//    {
-//         uint32      va_header;
-//         uint32      va_rawsize; /* Original data size (excludes header) */
-//         char        va_data[1]; /* Compressed data */
-//    }           va_compressed;
-//} varattrib_4b;
-//
-///* some useful macros extracted from postgres.h */
-//#define SET_VARSIZE(PTR, len) \
-//(((varattrib_4b *) (PTR))->va_4byte.va_header = (len) & 0x3FFFFFFF)
-//#define VARDATA(PTR)            (((varattrib_4b *) (PTR))->va_4byte.va_data)
-//#define VARHDRSZ		((int32) sizeof(int32))
-//#define SERIALIZED_FORM(x) ((uchar *)VARDATA((x)))
-//
-///* custom cube struct */
-//typedef struct
-//{
-//    unsigned int dim; /* number of cube dimensions */
-//    double *x;  /* coordinates */
-//} PGcube;
-//
-//
 #ifdef HAVE_POSTGIS
-/**
- * Cube type libpqtypes put handler
- * @param
- * @return
- */
-int cube_put (PGtypeArgs *);
-/**
- * Cube type libpqtypes get handler
- * @param
- * @return
- */
-int cube_get (PGtypeArgs *);
+
+#include <malloc.h>
+#include <math.h>
+
+
+/* postgres headers format */
+typedef union
+{
+    struct                      /* Normal varlena (4-byte length) */
+    {
+    uint32      va_header;
+    char        va_data[1];
+    }           va_4byte;
+    struct                      /* Compressed-in-line format */
+    {
+         uint32      va_header;
+         uint32      va_rawsize; /* Original data size (excludes header) */
+         char        va_data[1]; /* Compressed data */
+    }           va_compressed;
+} varattrib_4b;
+
+/* some useful macros extracted from postgres.h */
+#define SET_VARSIZE(PTR, len) \
+(((varattrib_4b *) (PTR))->va_4byte.va_header = (len) & 0x3FFFFFFF)
+#define VARDATA(PTR)            (((varattrib_4b *) (PTR))->va_4byte.va_data)
+#define VARHDRSZ		((int32) sizeof(int32))
+#define SERIALIZED_FORM(x) ((uchar *)VARDATA((x)))
+
 /**
  * Geometry type (PostGIS) libpqtypes put handler
  * @param

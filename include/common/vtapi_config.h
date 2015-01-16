@@ -26,12 +26,6 @@
 #include "config.h"
 #endif
 
-
-// comment this, if there is no PostGIS extension in the database
-#if HAVE_POSTGIS
-  #define POSTGIS
-#endif
-
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
 #define COPYRDBUF
 
@@ -67,7 +61,9 @@
  #include <opencv2/highgui/highgui.hpp>
 #endif 
 
-#if HAVE_GEOS
+#ifdef HAVE_POSTGIS
+
+#ifdef HAVE_GEOS
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
 #ifdef	__cplusplus
 extern "C" {
@@ -76,7 +72,6 @@ extern "C" {
 #ifdef	__cplusplus
 }
 #endif
-
 #endif // HAVE_GEOS
 
 // postGIS 2.0
@@ -88,6 +83,8 @@ extern "C" {
 #ifdef	__cplusplus
 }
 #endif // __cplusplus
+
+#endif // HAVE_POSTGIS
 
 
 #endif	/* VTAPI_CONFIG_H */
