@@ -304,7 +304,7 @@ then
 
   ### PostGIS - liblwgeom => -llwgeom
   lwgeom_present="yes"
-  AC_CHECK_HEADER(liblwgeom.h, [], [lwgeom_present="no"])
+#  AC_CHECK_HEADER(liblwgeom.h, [], [lwgeom_present="no"]) TODO: use postgres/liblwgeom/liblwgeom.h from vtapi or liblwgeom.h from original package??
   AC_CHECK_LIB([lwgeom], [lwgeom_to_ewkt], [], [lwgeom_present="no"])
 
 
@@ -314,7 +314,7 @@ then
   if test "x${GEOS_CONFIG}" = "x"
   then
     # try to search in current path
-    AC_PATH_PROG([GEOS_CONFIG], [geos_config])
+    AC_PATH_PROG([GEOS_CONFIG], [geos-config])
     if test "x${GEOS_CONFIG}" = "x"
     then
       geos_present="no"
