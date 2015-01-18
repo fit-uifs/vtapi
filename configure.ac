@@ -24,8 +24,10 @@ AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL(libtool)
 
-AC_SUBST([VTAPI_SO_VERSION], [2:0:1])
-AC_SUBST([VTAPI_API_VERSION], [2.0])
+VTAPI_API_VERSION=2.0
+VTAPI_SO_VERSION=${VTAPI_API_VERSION//\./\:}
+AC_SUBST([VTAPI_API_VERSION])
+AC_SUBST([VTAPI_SO_VERSION])
 
 
 CPPFLAGS="${CPPFLAGS} ${VTAPI_CPPFLAGS}"
@@ -67,6 +69,9 @@ AC_ARG_WITH([pgsql], AS_HELP_STRING([--without-pgsql], [compile without PostgreS
 AC_ARG_WITH([postgis], AS_HELP_STRING([--without-postgis], [compile without PostGIS support]))
 AC_ARG_WITH([postgresql], AS_HELP_STRING([--without-postgresql], [alias for --without-pgsql]))
 AC_ARG_WITH([sqlite], AS_HELP_STRING([--without-sqlite], [compile without SQLite support (i.e. force PostgreSQL)]))
+
+### Configure enable arguments
+AC_ARG_ENABLE([doc], AS_HELP_STRING([--enable-doc], [Build the documentation]))
 
 
 
@@ -295,6 +300,7 @@ fi
 #####   PostGIS and its components presence check                         #####
 ###############################################################################
 postgis_want="yes"
+postgis_want="disabled" # FIXME: small hack due to postgis problems - for development, comment this line
 
 AS_IF([test "x${with_postgis}" = "xno"], [postgis_want="no"])
 
@@ -388,6 +394,10 @@ elif test "x${pgsql_want}" = "xno"
 then
   AC_MSG_NOTICE([PostGIS support disabled due to disabled PostgreSQL (by user through --without-pgsql argument).])
   POSTGIS_SUMMARY="disabled due to disabled PostgreSQL" # by user (through --without-postgis)"
+elif test "x${postgis_want}" = "xdisabled"
+then
+  AC_MSG_NOTICE([PostGIS support hard-disabled (There's some issues on postgis support).])
+  POSTGIS_SUMMARY="hard-disabled (due to some issues)"
 else
   AC_MSG_NOTICE([PostGIS support disabled (by user through --without-postgis argument).])
   POSTGIS_SUMMARY="disabled" # by user (through --without-postgis)"
@@ -399,14 +409,18 @@ fi
 ###############################################################################
 #####   Documentation of VTApi                                            #####
 ###############################################################################
-AC_ARG_ENABLE([doc], AS_HELP_STRING([--enable-doc], [Build the documentation]))
-
-with_doc=no
+DOC_SUMMARY="no"
 AS_IF([test "x${enable_doc}" = "xyes"], [
-    with_doc=yes
-
-    AC_CHECK_PROG(HAVE_DOXYGEN, doxygen, true)
+  AC_CHECK_PROG(HAVE_DOXYGEN, doxygen, true)
+  AC_SUBST([HAVE_DOXYGEN])
+  if test "x${HAVE_DOXYGEN}" = "x"
+  then
+    AC_MSG_WARN([could not find Doxygen. You may need to install doxygen to build the documentation.])
+    DOC_SUMMARY="${DOC_SUMMARY} (Doxygen was not found)"
+  else
     AC_CONFIG_FILES([doc/Makefile doc/Doxyfile])
+    DOC_SUMMARY="yes"
+  fi
 ])
 AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$HAVE_DOXYGEN"]) # prenese do Makefile.am podminku - HAVE_DOXYGEN se testuje jen pokud je povoleny
 
@@ -480,7 +494,7 @@ AC_OUTPUT
 
 AC_MSG_RESULT()
 AC_MSG_RESULT()
-AC_MSG_RESULT([ ---------- VTApi configure summary ----------])
+AC_MSG_RESULT([ ---------- VTApi ${VTAPI_API_VERSION} configure summary ----------])
 AC_MSG_RESULT([  OpenCV:         ${OPENCV_SUMMARY}])
 AC_MSG_RESULT([  SQLite:         ${SQLITE_SUMMARY}])
 if test "x${sqlite_present}" = "xyes" -a "x${SQLITE_PC}" != "x"
@@ -512,6 +526,6 @@ then
 fi
 
 AC_MSG_RESULT([  proc/procps:    ${readproc_present}])
-AC_MSG_RESULT([  documentation:  ${with_doc}])
+AC_MSG_RESULT([  documentation:  ${DOC_SUMMARY}])
 AC_MSG_RESULT()
 AC_MSG_RESULT()
