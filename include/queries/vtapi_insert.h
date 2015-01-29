@@ -26,12 +26,12 @@ public:
      * @param commons configuration object of Commons class
      * @param initString initialization string (query/table or empty)
      */
-    Insert(const Commons& commons, const string& initString = "");
+    Insert(const Commons& commons, const std::string& initString = "");
     /**
      * Get INSERT query string
      * @return query string
      */
-    string getQuery();
+    std::string getQuery();
     /**
      * Execute INSERT query
      * @return success
@@ -45,7 +45,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool keyString(const string& key, const string& value, const string& from = "");
+    bool keyString(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -56,7 +56,7 @@ public:
      * @return success
      * @todo @b code: neimplementováno (pak zkontrolovat doc)
      */
-    bool keyStringA(const string& key, string* values, const int size, const string& from = "");
+    bool keyStringA(const std::string& key, std::string* values, const int size, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -65,7 +65,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool keyInt(const string& key, int value, const string& from = "");
+    bool keyInt(const std::string& key, int value, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -75,7 +75,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool keyIntA(const string& key, int* values, const int size, const string& from = "");
+    bool keyIntA(const std::string& key, int* values, const int size, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -84,7 +84,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool keyFloat(const string& key, float value, const string& from = "");
+    bool keyFloat(const std::string& key, float value, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -94,7 +94,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool keyFloatA(const string& key, float* values, const int size, const string& from = "");
+    bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -103,7 +103,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool keySeqtype(const string& key, const string& value, const string& from = "");
+    bool keySeqtype(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -112,7 +112,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool keyInouttype(const string& key, const string& value, const string& from = "");
+    bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -121,7 +121,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-//    bool keyPermissions(const string& key, const string& value, const string& from = "");
+//    bool keyPermissions(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -130,7 +130,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool keyTimestamp(const string& key, const time_t& value, const string& from = "");
+    bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
 
 };
 

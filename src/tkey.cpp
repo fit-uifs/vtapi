@@ -13,6 +13,10 @@
 #include <vtapi_global.h>
 #include <common/vtapi_tkey.h>
 
+using std::string;
+using std::cout;
+using std::endl;
+
 using namespace vtapi;
 
 

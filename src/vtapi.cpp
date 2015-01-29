@@ -14,6 +14,11 @@
 #include <common/vtapi_timexer.h>
 #include <vtapi.h>
 
+using std::string;
+using std::cout;
+using std::cerr;
+using std::endl;
+
 using namespace vtapi;
 
 
@@ -39,7 +44,7 @@ VTApi::VTApi(int argc, char** argv) {
         cerr << "Aborting: Database connection info missing. Use \"-h\" for help. " << endl;
         cerr << "Use config file (--config=\"/path/to/somefile.conf\") or check help for command line option \"-c\"." << endl;
         cmdline_parser_free (&args_info);
-        destruct (cli_params);
+        vt_destruct(cli_params);
         throw new std::exception();
     }
     // TODO: user authentization here
@@ -50,7 +55,7 @@ VTApi::VTApi(int argc, char** argv) {
         cerr << "Error parsing config arguments" << endl;
     }
     cmdline_parser_free (&args_info);
-    destruct (cli_params);
+    vt_destruct(cli_params);
 }
 
 VTApi::VTApi(const string& configFile) {
@@ -324,7 +329,7 @@ void VTApi::testSequence(Dataset *dataset) {
     sequence->print();
 
     cout << "** SHOWING all sequences" << endl;
-    destruct (sequence);
+    vt_destruct(sequence);
     sequence = dataset->newSequence();
     sequence->next();
     sequence->printAll();
@@ -388,7 +393,7 @@ void VTApi::testImage(Sequence *sequence) {
         else cout << tags[i] << ", ";
     }
     cout << endl;
-    destructall (tags);
+    vt_destructall(tags);
 
     image->add(interval->getSequenceName(), t1, "nosuchimage.jpg");
     // image->insert->keyFloat("sizeKB", 100.3);
@@ -397,7 +402,7 @@ void VTApi::testImage(Sequence *sequence) {
     image->insert->keyFloatA("test", kf, 5);
 
     image->insert->execute();     // or next() must be called after inserting all voluntary fields such as above
-    destruct (image);    // if not called execute() or next(), the insert destructor raises a warning
+    vt_destruct(image);    // if not called execute() or next(), the insert destructor raises a warning
 
     image = sequence->newImage("nosuchimage.jpg");
     image->next();      // in case of update, the next() must be called
@@ -415,7 +420,7 @@ void VTApi::testImage(Sequence *sequence) {
     cout << "DELETING Image " << sn << endl;
     Query* query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
     query->execute();
-    destruct (query);
+    vt_destruct(query);
 
     cout << "DONE testing image.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;

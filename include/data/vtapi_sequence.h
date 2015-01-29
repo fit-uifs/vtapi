@@ -29,8 +29,8 @@ class Process;
 class Sequence : public KeyValues {
 /* Memebers
 protected:
-    string file_name_video; // < File name of a video
-    string file_name_image; // < File name of an image */
+    std::string file_name_video; // < File name of a video
+    std::string file_name_image; // < File name of an image */
 //Methods
 public:
     /**
@@ -38,7 +38,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param name specific sequence name
      */
-    Sequence(const KeyValues& orig, const string& name = "");
+    Sequence(const KeyValues& orig, const std::string& name = "");
 
     /**
      * Move to a next sequence and set sequence name and location varibles
@@ -54,7 +54,7 @@ public:
      * @param type type of the sequence
      * @return success
      */
-    bool add(const string& name, const string& location, const string& type);
+    bool add(const std::string& name, const std::string& location, const std::string& type);
 
     /**
      * Add new sequence to a database table - full insert
@@ -66,8 +66,8 @@ public:
      * @param notes optional description
      * @return success
      */
-    bool add(const string& name, const string& location, const string& type,
-    const string& userid, const string& groupid, const string& notes);
+    bool add(const std::string& name, const std::string& location, const std::string& type,
+    const std::string& userid, const std::string& groupid, const std::string& notes);
 
     /**
      * Execute SQL INSERT command for sequence
@@ -84,20 +84,20 @@ public:
      * Get a sequence name
      * @return string value with the name of the sequence
      */
-    string getName();
+    std::string getName();
     
     /**
      * Get a sequence location
      * @return string value with the location of the sequence
      */
-    string getLocation();
+    std::string getLocation();
     
     
     /**
      * Get a sequence type
      * @return string value [video|images|data]
      */
-    string getType();
+    std::string getType();
     
     /**
      * Create a new interval specified by a start time and an end time
@@ -112,7 +112,7 @@ public:
      * @param name name of the image
      * @return pointer to the new image
      */
-    Image* newImage(const string& name = "");
+    Image* newImage(const std::string& name = "");
 
     /**
      *
@@ -120,7 +120,7 @@ public:
      * @return
      * @todo @b code: neimplementováno (potom doplnit i doc)
      */
-    Process* newProcess(const string& name = "");
+    Process* newProcess(const std::string& name = "");
 
 #ifdef HAVE_OPENCV
     Image* imageBuffer;
@@ -151,7 +151,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param name specific sequence name
      */
-    Video(const KeyValues& orig, const string& name);
+    Video(const KeyValues& orig, const std::string& name);
 
     /**
      * Create a new frame specified by the frame number
@@ -166,7 +166,7 @@ public:
      * @param location of the video
      * @return success
      */
-    bool add(string name, string location);
+    bool add(std::string name, std::string location);
 
 
 #ifdef HAVE_OPENCV
@@ -204,12 +204,12 @@ public:
  */
 class VideoPlayer : public Commons {
 protected:
-    string videoOutput;
+    std::string videoOutput;
     //
 
-    vector<Image> images;
-    vector<Video> videos;
-    vector<Interval> intervals;
+    std::vector<Image> images;
+    std::vector<Video> videos;
+    std::vector<Interval> intervals;
 
 public:
     /**
@@ -225,8 +225,8 @@ public:
     bool playerAdd(Video& video);
     bool playerAdd(Interval& interval);
 
-    bool setPlayerOutput(string filename);
-    string getPlayerOutput();
+    bool setPlayerOutput(std::string filename);
+    std::string getPlayerOutput();
 
     /**
      * This function simply plays what added before

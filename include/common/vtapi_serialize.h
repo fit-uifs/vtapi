@@ -17,7 +17,7 @@ namespace vtapi {
  * @return string
  */
 template <class T>
-inline string toString(const T& value) {
+inline std::string toString(const T& value) {
     std::ostringstream ostr;
     ostr << value;
     return ostr.str();
@@ -29,10 +29,10 @@ inline string toString(const T& value) {
  * @return time string
  */
 template <>
-inline string toString <time_t>(const time_t& value) {
+inline std::string toString <time_t>(const time_t& value) {
     char buff[20];
     strftime(buff, 20, "%Y-%m-%d %H:%M:%S", gmtime(&value));
-    return string(buff);
+    return std::string(buff);
 };
 
 /**
@@ -40,7 +40,7 @@ inline string toString <time_t>(const time_t& value) {
  * @param value time string
  * @return timestamp
  */
-inline time_t toTimestamp(const string& value) {
+inline time_t toTimestamp(const std::string& value) {
     struct tm ts = {0};
     sscanf(value.c_str(), "%d-%d-%d %d:%d:%d", &ts.tm_year, &ts.tm_mon, &ts.tm_mday, &ts.tm_hour, &ts.tm_min, &ts.tm_sec);
     ts.tm_year -= 1900;
@@ -56,14 +56,14 @@ inline time_t toTimestamp(const string& value) {
 template<class T>
 inline T* deserializeA(char *buffer, int& size) {
     T *ret  = NULL;
-    string valStr   = string(buffer);     
+    std::string valStr   = std::string(buffer);     
     
     if ((valStr.find('[', 0) == 0) && (valStr.find(']', 0) == valStr.length()-1)) {
         size_t leftPos  = 1;
         size_t nextPos  = 1;
         size            = 1;
         leftPos         = valStr.find(',', 1);
-        while ( leftPos != string::npos) {
+        while ( leftPos != std::string::npos) {
             size++;
             leftPos     = valStr.find(',', leftPos+1);
         }
@@ -72,7 +72,7 @@ inline T* deserializeA(char *buffer, int& size) {
         leftPos     = 1;
         for (int i = 0; i < size; i++) {
             nextPos = valStr.find_first_of(",]", leftPos+1);
-            stringstream(valStr.substr(leftPos, nextPos-leftPos)) >> ret[i];
+            std::stringstream(valStr.substr(leftPos, nextPos-leftPos)) >> ret[i];
             leftPos     = nextPos + 1;
         }
         
@@ -80,7 +80,7 @@ inline T* deserializeA(char *buffer, int& size) {
     else {
         ret     = new T[1];
         size    = 1;
-        stringstream(valStr) >> ret[0];
+        std::stringstream(valStr) >> ret[0];
     }
 
     return ret;
@@ -92,26 +92,26 @@ inline T* deserializeA(char *buffer, int& size) {
  * @return values vector
  */
 template<class T>
-inline vector<T>* deserializeV(char *buffer) {
-    vector<T> *ret  = NULL;
-    string valStr   = string(buffer);
+inline std::vector<T>* deserializeV(char *buffer) {
+    std::vector<T> *ret  = NULL;
+    std::string valStr   = std::string(buffer);
 
     if ((valStr.find('[', 0) == 0) && (valStr.find(']', 0) == valStr.length()-1)) {
         size_t leftPos  = 1;
         size_t nextPos  = 1;
         int size        = 1;
         leftPos         = valStr.find(',', 1);
-        while ( leftPos != string::npos) {
+        while ( leftPos != std::string::npos) {
             size++;
             leftPos     = valStr.find(',', leftPos+1);
         }
 
-        ret         = new vector<T>;
+        ret         = new std::vector<T>;
         leftPos     = 1;
         for (int i = 0; i < size; i++) {
             T val;
             nextPos = valStr.find_first_of(",]", leftPos+1);
-            stringstream(valStr.substr(leftPos, nextPos-leftPos)) >> val;
+            std::stringstream(valStr.substr(leftPos, nextPos-leftPos)) >> val;
             ret->push_back(val);
             leftPos     = nextPos + 1;
         }
@@ -119,8 +119,8 @@ inline vector<T>* deserializeV(char *buffer) {
     }
     else {
         T val;
-        ret     = new vector<T>;        
-        stringstream(valStr) >> val;
+        ret = new std::vector<T>;        
+        std::stringstream(valStr) >> val;
         ret->push_back(val);
     }
 

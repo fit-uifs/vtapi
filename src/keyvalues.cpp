@@ -15,6 +15,14 @@
 #include <common/vtapi_tkey.h>
 #include <data/vtapi_keyvalues.h>
 
+using std::string;
+using std::stringstream;
+using std::vector;
+using std::pair;
+using std::cout;
+using std::cerr;
+using std::endl;
+
 using namespace vtapi;
 
 
@@ -49,7 +57,7 @@ KeyValues::~KeyValues() {
         vt_destruct(update);
     }
 
-    destruct (select);
+    vt_destruct(select);
 }
 
 KeyValues* KeyValues::next() {

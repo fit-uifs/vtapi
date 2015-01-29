@@ -17,6 +17,11 @@
 
 #ifdef HAVE_SQLITE
 
+using std::string;
+using std::stringstream;
+using std::vector;
+using std::pair;
+
 using namespace vtapi;
 
 // sqlite database files
@@ -778,7 +783,7 @@ CvMat *SLResultSet::getCvMat(const int col) {
 //    for (int i = 0; i < step_size; i++) {
 //        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
 //            warning(310, "Unexpected value in int array");
-//            destruct (step);
+//            vt_destruct(step);
 //            PQclear(step_arr.res);
 //            PQclear(mres);
 //            return NULL;
@@ -813,7 +818,7 @@ CvMat *SLResultSet::getCvMat(const int col) {
 //        mat = cvCreateMatHeader(rows, cols, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
-//    destruct (step);
+//    vt_destruct(step);
 //    PQclear(mres);
 
     return mat;
@@ -853,8 +858,8 @@ CvMatND *SLResultSet::getCvMatND(const int col) {
 //    for (int i = 0; i < step_size; i++) {
 //        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
 //            warning(310, "Unexpected value in int array");
-//            destruct (step);
-//            destruct (sizes);
+//            vt_destruct(step);
+//            vt_destruct(sizes);
 //            PQclear(step_arr.res);
 //            PQclear(mres);
 //            return NULL;
@@ -895,7 +900,7 @@ CvMatND *SLResultSet::getCvMatND(const int col) {
 //        mat = cvCreateMatNDHeader(dims, sizes, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
-//    destruct (step);
+//    vt_destruct(step);
 //    PQclear(mres);
 
     return mat;

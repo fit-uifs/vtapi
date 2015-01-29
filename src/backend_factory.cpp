@@ -2,6 +2,8 @@
 #include <vtapi_global.h>
 #include <backends/vtapi_backendfactory.h>
 
+using std::string;
+
 using namespace vtapi;
     
     

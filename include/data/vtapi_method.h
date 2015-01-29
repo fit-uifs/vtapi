@@ -33,7 +33,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param name specific name of method, which we can construct
      */
-    Method(const KeyValues& orig, const string& name = "");
+    Method(const KeyValues& orig, const std::string& name = "");
 
     /**
      * Move to a next method and set a method name and its methodkeys variables
@@ -46,7 +46,7 @@ public:
      * Get a name of the current method
      * @return string value with the name of the method
      */
-    string getName();
+    std::string getName();
     /**
      * This is used to refresh the methodKeys vector
      * @return TKeys
@@ -57,7 +57,7 @@ public:
      * Create new process for current dataset
      * @return pointer to new process
      */
-    Process* newProcess(const string& name);
+    Process* newProcess(const std::string& name);
 
     /**
      * Runs a process of this method - abstract
@@ -67,7 +67,7 @@ public:
     virtual bool run() { return false; }
    
 
-    Method* add(const string& name);
+    Method* add(const std::string& name);
     
     Method* loadCode();    
 
@@ -81,7 +81,7 @@ public:
     // setters
     bool set() {};
     
-    string getLastError() { return string(""); }
+    std::string getLastError() { return std::string(""); }
     void releaseProcess(Process *p) {}
 
 private:
@@ -91,7 +91,7 @@ private:
      * @param inout
      * @todo code: neimplementováno (pak doplnit i doc)
      */
-    void printData(const string& inout);
+    void printData(const std::string& inout);
 
 };
 

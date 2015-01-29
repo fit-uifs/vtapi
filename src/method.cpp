@@ -15,8 +15,9 @@
 #include <data/vtapi_process.h>
 #include <data/vtapi_method.h>
 
-using namespace vtapi;
+using std::string;
 
+using namespace vtapi;
 
 Method::Method(const KeyValues& orig, const string& name) : KeyValues(orig) {
     thisClass = "Method";

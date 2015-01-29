@@ -22,8 +22,8 @@ namespace vtapi {
 class Select : public Query {
 protected:
 
-    string                          groupby;    /**< String used for the GROUP BY statement */
-    string                          orderby;    /**< String used for the ORDER BY statement */
+    std::string                     groupby;    /**< String used for the GROUP BY statement */
+    std::string                     orderby;    /**< String used for the ORDER BY statement */
 
     int                             limit;      /**< Specify a size (a number of rows) of the resultset */
     int                             offset;     /**< Specify an index of row, where the resultset starts */
@@ -35,12 +35,12 @@ public:
      * @param commons configuration object of Commons class
      * @param initString initialization string (query)
      */
-    Select(const Commons& commons, const string& initString = "");
+    Select(const Commons& commons, const std::string& initString = "");
     /**
      * Get SELECT query string
      * @return query string
      */
-    string getQuery();
+    std::string getQuery();
     /**
      * Execute SELECT query and fetch result
      * @return success
@@ -58,7 +58,7 @@ public:
      * @return success
      * @todo @b code: neimplementováno (pak doplnit do doc)
      */
-    bool function(const string& funtext);
+    bool function(const std::string& funtext);
     /**
      * This is used to join tables if they can be performed automatically.
      * If not, returns false (no quarantee before version 2).
@@ -84,7 +84,7 @@ public:
      * @param column column for select
      * @return success
      */
-    bool from(const string& table, const string& column);
+    bool from(const std::string& table, const std::string& column);
     /**
      * This is a WHERE statement construction function
      * It can be called several times.
@@ -94,7 +94,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-    bool whereString(const string& key, const string& value, const string& oper = "=", const string& from = "");
+    bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for integers
      * It can be called several times.
@@ -104,7 +104,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-    bool whereInt(const string& key, const int value, const string& oper = "=", const string& from = "");
+    bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for floats
      * It can be called several times.
@@ -114,7 +114,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-    bool whereFloat(const string& key, const float value, const string& oper = "=", const string& from = "");
+    bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for seqtype
      * It can be called several times.
@@ -124,7 +124,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-     bool whereSeqtype(const string& key, const string& value, const string& oper = "=", const string& from = "");
+     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for inouttype
      * It can be called several times.
@@ -134,7 +134,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-     bool whereInouttype(const string& key, const string& value, const string& oper = "=", const string& from = "");
+     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for permissions
      * It can be called several times.
@@ -144,7 +144,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-//     bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "");
+//     bool wherePermissions(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for timestamp
      * It can be called several times.
@@ -154,7 +154,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-     bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "");
+     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
 };
 
 } // namespace vtapi

@@ -36,7 +36,7 @@ public:
      * @param commons pointer of the existing commons object
      * @param initString initial query string
      */
-    Query(const Commons& commons, const string& initString = "");
+    Query(const Commons& commons, const std::string& initString = "");
     /**
      * Destructor
      */
@@ -45,7 +45,7 @@ public:
      * This expands the query, so you can check it before the execution
      * @return string value with the query
      */
-    string getQuery();
+    std::string getQuery();
 
     /**
      * This will commit your query

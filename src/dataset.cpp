@@ -18,6 +18,8 @@
 #include <data/vtapi_dataset.h>
 
 
+using std::string;
+
 using namespace vtapi;
 
 

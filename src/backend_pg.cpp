@@ -21,6 +21,11 @@
 // postgres data transfer format: 0=text, 1=binary
 #define PG_FORMAT           1
 
+using std::string;
+using std::stringstream;
+using std::vector;
+using std::pair;
+
 using namespace vtapi;
 
 PGConnection::PGConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger)
@@ -929,7 +934,7 @@ char *PGResultSet::getCharA(const int col, int& size) {
             logger->warning(304, "Unexpected value in char array", thisClass+"::getCharA()");
             size = -1;
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
     }
@@ -1025,7 +1030,7 @@ int* PGResultSet::getIntA(const int col, int& size) {
             logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntA()");
             size = -1;
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
     }
@@ -1049,7 +1054,7 @@ vector<int>* PGResultSet::getIntV(const int col) {
         if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%int4", 0, &value)) {
             logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntV()");
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
         values->push_back(value);
@@ -1083,8 +1088,8 @@ vector< vector<int>* >* PGResultSet::getIntVV(const int col) {
             if (! CALL_PQT(fmap, PQgetf, tmp.res, i*tmp.dims[1]+j, "%int4", 0, &value)) {
                 logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntVV()");
                 CALL_PQ(fmap, PQclear, tmp.res);
-                for (int x = 0; x < (*arrays).size(); x++) destruct ((*arrays)[x]);
-                destruct (arrays);
+                for (int x = 0; x < (*arrays).size(); x++) vt_destruct((*arrays)[x]);
+                vt_destruct(arrays);
                 return NULL;
             }
             arr->push_back(value);
@@ -1146,7 +1151,7 @@ float* PGResultSet::getFloatA(const int col, int& size) {
             logger->warning(312, "Unexpected value in float array", thisClass+"::getFloatA()");
             size = -1;
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
     }
@@ -1169,7 +1174,7 @@ vector<float>* PGResultSet::getFloatV(const int col) {
         if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%float4", 0, &value)) {
             logger->warning(312, "Unexpected value in float array", thisClass+"::getFloatV()");
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
         values->push_back(value);
@@ -1214,7 +1219,7 @@ CvMat *PGResultSet::getCvMat(const int col) {
 //    for (int i = 0; i < step_size; i++) {
 //        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
 //            warning(310, "Unexpected value in int array");
-//            destruct (step);
+//            vt_destruct(step);
 //            PQclear(step_arr.res);
 //            PQclear(mres);
 //            return NULL;
@@ -1249,7 +1254,7 @@ CvMat *PGResultSet::getCvMat(const int col) {
 //        mat = cvCreateMatHeader(rows, cols, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
-//    destruct (step);
+//    vt_destruct(step);
 //    PQclear(mres);
 
     return mat;
@@ -1289,8 +1294,8 @@ CvMatND *PGResultSet::getCvMatND(const int col) {
 //    for (int i = 0; i < step_size; i++) {
 //        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
 //            warning(310, "Unexpected value in int array");
-//            destruct (step);
-//            destruct (sizes);
+//            vt_destruct(step);
+//            vt_destruct(sizes);
 //            PQclear(step_arr.res);
 //            PQclear(mres);
 //            return NULL;
@@ -1331,7 +1336,7 @@ CvMatND *PGResultSet::getCvMatND(const int col) {
 //        mat = cvCreateMatNDHeader(dims, sizes, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
-//    destruct (step);
+//    vt_destruct(step);
 //    PQclear(mres);
 
     return mat;
@@ -1363,7 +1368,7 @@ vector<PGpoint>*  PGResultSet::getPointV(const int col) {
         if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%point", 0, &value)) {
             logger->warning(325, "Unexpected value in point array", thisClass+"::getPointV()");
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
         values->push_back(value);
@@ -1459,7 +1464,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
                         }
                         if (i < (*arr).size()-1) valss << ",";
                     }
-                    destruct (arr);
+                    vt_destruct(arr);
                 }
             }
             
@@ -1475,7 +1480,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
                         }
                         if (i < (*arr).size()-1) valss << ",";
                     }
-                    destruct (arr);
+                    vt_destruct(arr);
                 }
             }
 
@@ -1485,7 +1490,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
                     int arr_size;
                     char *arr = this->getCharA(col, arr_size);
                     for (int i = 0; i < arr_size; i++) valss << arr[i];
-                    destruct (arr);
+                    vt_destruct(arr);
                 }
             }
 
@@ -1502,7 +1507,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
                     }
                     if (i < (*arr).size()-1) valss << ",";
                 }
-                destruct (arr);
+                vt_destruct(arr);
 #endif
             }
 

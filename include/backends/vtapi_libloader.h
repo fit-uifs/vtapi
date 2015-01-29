@@ -12,7 +12,7 @@
 namespace vtapi {
 
 
-#define FMAP_ENTRY(func,funcptr)    std::make_pair<string,void *>(func,funcptr)
+#define FMAP_ENTRY(func,funcptr)   std::make_pair<std::string,void *>(func,funcptr)
 
 
 #ifdef HAVE_POSTGRESQL
@@ -107,7 +107,7 @@ typedef void (*SL_sqlite3_free_table)(char **);
 class LibLoader {
 protected:
     Logger          *logger;        /**< logger object for output messaging */
-    string          thisClass;      /**< class name */
+    std::string     thisClass;      /**< class name */
 
 public:
 

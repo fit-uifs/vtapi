@@ -12,7 +12,7 @@
 
 namespace vtapi {
 
-typedef vector<TKey *>     TKeyValues;
+typedef std::vector<TKey *>     TKeyValues;
 
 
 /**
@@ -33,7 +33,7 @@ template <typename T>
 class TKeyValue : public TKey {
 public:
 
-    string      typein;     /**< This attribute is there for validation */
+    std::string typein;     /**< This attribute is there for validation */
     T           *values;    /**< values */
 
 public:
@@ -49,7 +49,7 @@ public:
      * @param value single value
      * @param from additional key specification (eg. table)
      */
-    TKeyValue(const string& type, const string& key, T value, const string& from = "")
+    TKeyValue(const std::string& type, const std::string& key, T value, const std::string& from = "")
             : TKey(type, key, 1, from) {
         this->values = new T[1];
         this->values[0] = value;
@@ -63,7 +63,7 @@ public:
      * @param size values array size
      * @param from additional key specification (eg. table)
      */
-    TKeyValue (const string& type, const string& key, T* values, const int size, const string& from = "")
+    TKeyValue (const std::string& type, const std::string& key, T* values, const int size, const std::string& from = "")
             : TKey(type, key, size, from) {
         if (this->size > 0) {
             this->values = new T[this->size];
@@ -86,19 +86,19 @@ public:
      * Print values from TKey members
      * @return string which contains a dump of TKey members
      */
-    string print();
+    std::string print();
 
     /**
      * Gets string representation of the first value
      * @return representation of value(s)
      */
-    string getValue();
+    std::string getValue();
     /**
      * Gets string representation of first limit values
      * @param limit how many values, less than 0 = unlimited
      * @return representation of value(s)
      */
-    string getValues(const int limit = 0);
+    std::string getValues(const int limit = 0);
 };
 
 
@@ -107,11 +107,11 @@ public:
  * @return Key-Value string
  */
 template <class T>
-string TKeyValue<T>::print() {
-    string retString = "TKeyValue<" + string(typeid(values).name()) + "> type=" + type +
+std::string TKeyValue<T>::print() {
+    std::string retString = "TKeyValue<" + std::string(typeid(values).name()) + "> type=" + type +
             ", key=" + key + ", from=" + from + ", size=" + toString(size) + ",\n  values=";
     retString += this->getValues();
-    cout << retString << endl;
+    std::cout << retString << std::endl;
     return (retString);
 }
 
@@ -120,12 +120,12 @@ string TKeyValue<T>::print() {
  * @return value string
  */
 template <class T>
-string TKeyValue<T>::getValue() {
+std::string TKeyValue<T>::getValue() {
     if (values && size > 0) {
         return toString(values[0]);
     }
     else {
-        return string("");
+        return std::string("");
     }
 }
 
@@ -135,8 +135,8 @@ string TKeyValue<T>::getValue() {
  * @return values string
  */
 template <class T>
-string TKeyValue<T>::getValues(const int limit) {
-    string retString = "";
+std::string TKeyValue<T>::getValues(const int limit) {
+    std::string retString = "";
     if (values && size > 0) {
         if (size > 1) retString += "[";
         for(int i = 0; (i < size) && (limit <= 0 || i < limit); ++i) {

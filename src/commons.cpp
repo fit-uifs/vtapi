@@ -15,6 +15,9 @@
 #include <common/vtapi_misc.h>
 #include <data/vtapi_commons.h>
 
+using std::string;
+using std::ifstream;
+
 using namespace vtapi;
 
 Commons::Commons(const Commons& orig) {

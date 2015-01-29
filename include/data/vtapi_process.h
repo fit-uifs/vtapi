@@ -40,7 +40,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param name specific name of process, which we can construct
      */
-    Process(const KeyValues& orig, const string& name = "");
+    Process(const KeyValues& orig, const std::string& name = "");
 
     /**
      * Individual next() for processes, which stores current process
@@ -55,17 +55,17 @@ public:
      * Get a process name
      * @return string value with a process name
      */
-    string getName();
+    std::string getName();
     /**
      * Get a name of a table where are stored an input data
      * @return string value with an input data table name
      */
-    string getInputs();
+    std::string getInputs();
     /**
      * Get a name of a table where are stored an output data
      * @return string value with an output data table name
      */
-    string getOutputs();
+    std::string getOutputs();
 
     /**
      * A dangerous and rather discouraged function...
@@ -76,7 +76,7 @@ public:
      * @return
      * @todo @b doc: má to cenu komentovat? :) Případně doplnit
      */
-    bool add(const string& method, const string& name, const string& selection="intervals");
+    bool add(const std::string& method, const std::string& name, const std::string& selection="intervals");
 
     /**
      * Create new interval for process
@@ -92,7 +92,7 @@ public:
      * @return new sequence
      * @todo @b code: neimplementováno (zkontrolovat pak i doc)
      */
-    Sequence* newSequence(const string& name = "");
+    Sequence* newSequence(const std::string& name = "");
     
     /**
      * Prepare output selection table (checks if exist required attributes and if necessary they would be added to the table)
@@ -100,21 +100,21 @@ public:
      * @param selection   selection table for outputs
      * @return success
      */
-    bool prepareOutput(const string& method, const string& selection="intervals");
+    bool prepareOutput(const std::string& method, const std::string& selection="intervals");
     /**
      * Diff columns: <required method output columns> - <existing columns in output selection table>
      * @param table   selection table for outputs
      * @param columns   all method attributes
      * @return   vector of columns to be added to the output selection table
      */
-    map<string,string> diffColumns(const string& table, const TKeys& columns);
+    std::map<std::string,std::string> diffColumns(const std::string& table, const TKeys& columns);
     /**
      * Ensure an addition of required columns to the output selection table
      * @param table   selection table for outputs
      * @param columns   vector of columns to be added
      * @return   success
      */
-    bool addColumns(const string& table, const map<string,string>& columns);
+    bool addColumns(const std::string& table, const std::map<std::string,std::string>& columns);
 
     // http://stackoverflow.com/questions/205529/c-c-passing-variable-number-of-arguments-around
     /**
@@ -126,8 +126,8 @@ public:
     bool run(...);
 
 
-    string getID() { return string(""); }
-    string getErrorMessage() { return string(""); }
+    std::string getID() { return std::string(""); }
+    std::string getErrorMessage() { return std::string(""); }
     Interval *newResults() { return NULL; }
 
 };

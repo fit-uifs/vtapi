@@ -23,17 +23,17 @@
 #include <time.h>
 
 // use stuff from standard library
-using std::string;
-using std::vector;
-using std::map;
-using std::set;
-using std::pair;
-using std::ifstream;
-using std::ofstream;
-using std::stringstream;
-using std::cout;
-using std::cerr;
-using std::endl;
+//using std::string;
+//using std::vector;
+//using std::map;
+//using std::set;
+//using std::pair;
+//using std::ifstream;
+//using std::ofstream;
+//using std::stringstream;
+//using std::cout;
+//using std::cerr;
+//using std::endl;
 
 // be nice while destructing
 #define vt_destruct(v)         if (v) { delete(v); (v) = NULL; }
@@ -50,7 +50,7 @@ using std::endl;
 namespace vtapi {
 
 // dynamically loaded functions
-typedef map<string,void *> fmap_t;
+typedef std::map<std::string,void *> fmap_t;
 
 // backend type
 typedef enum {

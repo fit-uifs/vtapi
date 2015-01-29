@@ -41,7 +41,7 @@ public:
      * @param backendType backend type
      * @return success
      */
-    bool initialize(const string& backendType = "");
+    bool initialize(const std::string& backendType = "");
 
     /**
      * Creates object of class @ref Connection
@@ -50,7 +50,7 @@ public:
      * @param logger message logging object
      * @return NULL if factory is uninitialized, connection object otherwise
      */
-    Connection* createConnection(fmap_t *fmap, const string& connectionInfo, Logger *logger);
+    Connection* createConnection(fmap_t *fmap, const std::string& connectionInfo, Logger *logger);
 
     /**
      * Creates object of class @ref TypeManager
@@ -70,7 +70,7 @@ public:
      * @see Query
      * @return NULL if factory is uninitialized, query building object otherwise
      */
-    QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString);
+    QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const std::string& initString);
 
     /**
      * Creates object of class @ref ResultSet

@@ -13,7 +13,7 @@ namespace vtapi {
 
 class TKey;
 
-typedef vector<TKey> TKeys;
+typedef std::vector<TKey> TKeys;
 
 /**
  * @brief Class represents a generic Key (of the Key-Value pair)
@@ -24,10 +24,10 @@ typedef vector<TKey> TKeys;
  */
 class TKey {
 public:
-    string      type;    /**< Name of the data type */
-    string      key;     /**< Name of the column */
+    std::string type;    /**< Name of the data type */
+    std::string key;     /**< Name of the column */
     int         size;    /**< positive for array, 0 for single value, -1 for NULL */
-    string      from;    /**< The source (table) */
+    std::string from;    /**< The source (table) */
 
 public:
     /**
@@ -46,7 +46,7 @@ public:
      * @param size negative for NULL, 1 for single value, more than 1 for vectors
      * @param from additional key specification (eg. table)
      */
-    TKey(const string& type, const string& key, const int size, const string& from = "") : type(type), key(key), size(size), from(from) {};
+    TKey(const std::string& type, const std::string& key, const int size, const std::string& from = "") : type(type), key(key), size(size), from(from) {};
 
     virtual ~TKey() {};
 
@@ -54,19 +54,19 @@ public:
      * Print data
      * @return string of TKey data
      */
-    virtual string print();
+    virtual std::string print();
 
     /**
      * Gets string representation of the first value
      * @return representation of value(s)
      */
-    virtual string getValue() { return ""; };
+    virtual std::string getValue() { return ""; };
     /**
      * Gets string representation of first limit values
      * @param limit how many values
      * @return representation of value(s)
      */
-    virtual string getValues(const int limit = 0) { return ""; };
+    virtual std::string getValues(const int limit = 0) { return ""; };
 
 };
 

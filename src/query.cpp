@@ -15,6 +15,8 @@
 #include <backends/vtapi_backends.h>
 #include <queries/vtapi_queries.h>
 
+using std::string;
+
 using namespace vtapi;
 
 

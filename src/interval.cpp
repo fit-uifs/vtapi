@@ -14,6 +14,8 @@
 #include <data/vtapi_sequence.h>
 #include <data/vtapi_interval.h>
 
+using std::string;
+
 using namespace vtapi;
 
 

@@ -30,7 +30,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param selection specific name of a selection table
      */
-    Interval(const KeyValues& orig, const string& selection = "intervals");
+    Interval(const KeyValues& orig, const std::string& selection = "intervals");
 
     /**
      * Unnecessary
@@ -43,7 +43,7 @@ public:
      * Get sequence name of parent sequence
      * @return sequence string
      */
-    string getSequenceName();
+    std::string getSequenceName();
 
     /**
      * Get sequence object of parent sequence
@@ -70,7 +70,7 @@ public:
      * @param location location of the image
      * @return success
      */
-    bool add(const string& sequence, const int t1, const int t2 = -1, const string& location = "");
+    bool add(const std::string& sequence, const int t1, const int t2 = -1, const std::string& location = "");
     /**
      * Add new interval to the table - full insert
      * @param sequence interval name
@@ -81,8 +81,8 @@ public:
      * @param notes optional description
      * @return success
      */
-    bool add(const string& sequence, const int t1, const int t2, const string& location,
-    const string& userid, const string& notes);
+    bool add(const std::string& sequence, const int t1, const int t2, const std::string& location,
+    const std::string& userid, const std::string& notes);
     /**
      * This is used to support updates
      * @return success (in derived classes)
@@ -116,7 +116,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param selection specific name of a selection table
      */
-    Image(const KeyValues& orig, const string& selection = "intervals");
+    Image(const KeyValues& orig, const std::string& selection = "intervals");
 
     /**
      * Get a sequence (order) number of the current image (interval)
@@ -129,7 +129,7 @@ public:
      * @return string value with the location of the data
      * @note overloading getDataLocation from Commons
      */
-    string getDataLocation();
+    std::string getDataLocation();
     /**
      * Simply adds an image (interval) to the sequence table (no checking)
      * @param sequence interval name
@@ -137,7 +137,7 @@ public:
      * @param location location of the image
      * @return success
      */
-    bool add(const string& sequence, const int t, const string& location);
+    bool add(const std::string& sequence, const int t, const std::string& location);
 
 #ifdef HAVE_OPENCV  
     cv::Mat image;
@@ -151,7 +151,7 @@ protected:
      * This is here just for image name
      * @return string value with the location of the image
      */
-    string getImgLocation();
+    std::string getImgLocation();
 
 };
 

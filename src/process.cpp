@@ -16,6 +16,10 @@
 
 #include "data/vtapi_method.h"
 
+using std::string;
+using std::map;
+using std::pair;
+
 using namespace vtapi;
 
 
