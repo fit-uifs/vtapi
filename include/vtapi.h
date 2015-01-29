@@ -19,7 +19,7 @@
 #ifndef VTAPI_H
 #define	VTAPI_H
 
-#include "vtapi_global.h"
+#include "common/vtapi_config.h"
 #include "data/vtapi_data.h"
 
 namespace vtapi {
@@ -55,7 +55,7 @@ public:
      * @deprecated
      * @param configFile location
      */
-    VTApi(const std::string& configFile);
+    VTApi(const std::string& configFile = std::string("./vtapi.conf"));
 
     /**
      * Constructor
@@ -104,7 +104,7 @@ public:
      * @param name
      * @return
      */
-    Method* newMethod(const std::string& name = "");
+    Method* newMethod(const std::string& name = "", Method::fCallback = NULL, void *pContext = NULL);
     Method* addMethod(const Method& method);
 
 private:

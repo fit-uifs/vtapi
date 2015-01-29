@@ -10,8 +10,9 @@
  * Methods of VTApi class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_timexer.h>
+
 #include <vtapi.h>
 
 using std::string;

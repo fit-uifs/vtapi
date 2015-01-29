@@ -123,7 +123,6 @@ public:
      * @todo @b code: neimplementováno
      */
     bool run();
-    bool run(...);
 
 
     std::string getID() { return std::string(""); }

@@ -8,8 +8,11 @@
 #ifndef VTAPI_COMMONS_H
 #define	VTAPI_COMMONS_H
 
-#include "backends/vtapi_backendfactory.h"
 #include "backends/vtapi_backends.h"
+#include "common/vtapi_config.h"
+#include "common/vtapi_settings.h"
+#include "common/vtapi_logger.h"
+
 
 namespace vtapi {
 

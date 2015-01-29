@@ -10,7 +10,8 @@
  * Methods of TKey class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
+#include <common/vtapi_serialize.h>
 #include <common/vtapi_tkey.h>
 
 using std::string;

@@ -8,9 +8,10 @@
 #ifndef LIBLOADER_H
 #define	LIBLOADER_H
 
-
 namespace vtapi {
 
+// dynamically loaded functions
+typedef std::map<std::string,void *> fmap_t;
 
 #define FMAP_ENTRY(func,funcptr)   std::make_pair<std::string,void *>(func,funcptr)
 

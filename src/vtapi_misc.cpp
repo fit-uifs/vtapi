@@ -15,8 +15,8 @@
 #include <string.h>
 */
 
-#include <vtapi_global.h>
-#include <backends/vtapi_typemanager.h>
+#include <common/vtapi_global.h>
+#include <backends/vtapi_backends.h>
 #include <common/vtapi_misc.h>
 
 

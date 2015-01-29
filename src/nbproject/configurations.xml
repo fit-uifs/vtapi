@@ -15,7 +15,7 @@
       </logicalFolder>
       <logicalFolder name="f5" displayName="common" projectFiles="true">
         <itemPath>../include/common/vtapi_config.h</itemPath>
-        <itemPath>../include/common/vtapi_errcodes.h</itemPath>
+        <itemPath>../include/common/vtapi_global.h</itemPath>
         <itemPath>../include/common/vtapi_logger.h</itemPath>
         <itemPath>../include/common/vtapi_misc.h</itemPath>
         <itemPath>../include/common/vtapi_serialize.h</itemPath>
@@ -44,7 +44,6 @@
         <itemPath>../include/queries/vtapi_update.h</itemPath>
       </logicalFolder>
       <itemPath>../include/vtapi.h</itemPath>
-      <itemPath>../include/vtapi_global.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -190,7 +189,7 @@
       </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../include/common/vtapi_errcodes.h" ex="false" tool="3" flavor2="0">
+      <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_logger.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -239,8 +238,6 @@
       <item path="../include/queries/vtapi_update.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/vtapi.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../include/vtapi_global.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../vtapi.conf" ex="false" tool="3" flavor2="0">
       </item>
@@ -344,7 +341,7 @@
       </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../include/common/vtapi_errcodes.h" ex="false" tool="3" flavor2="0">
+      <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_logger.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -393,8 +390,6 @@
       <item path="../include/queries/vtapi_update.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/vtapi.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../include/vtapi_global.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../vtapi.conf" ex="false" tool="3" flavor2="0">
       </item>
@@ -531,7 +526,7 @@
       </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../include/common/vtapi_errcodes.h" ex="false" tool="3" flavor2="0">
+      <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_logger.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -580,8 +575,6 @@
       <item path="../include/queries/vtapi_update.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/vtapi.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../include/vtapi_global.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../vtapi.conf" ex="false" tool="3" flavor2="0">
       </item>

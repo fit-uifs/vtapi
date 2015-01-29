@@ -12,8 +12,9 @@
  *
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_misc.h>
+#include "common/vtapi_serialize.h"
 #include <backends/vtapi_backends.h>
 
 #ifdef HAVE_POSTGRESQL

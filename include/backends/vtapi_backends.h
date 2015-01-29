@@ -8,6 +8,20 @@
 #ifndef VTAPI_BACKENDS_H
 #define	VTAPI_BACKENDS_H
 
+#include "common/vtapi_config.h"
+#include "common/vtapi_logger.h"
+
+namespace vtapi {
+
+// backend type
+typedef enum {
+    UNKNOWN = 0,
+    SQLITE,
+    POSTGRES
+} backend_t;
+
+}
+
 #include "vtapi_libloader.h"
 #include "vtapi_connection.h"
 #include "vtapi_querybuilder.h"

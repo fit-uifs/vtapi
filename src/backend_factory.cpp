@@ -1,6 +1,8 @@
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
+#include <common/vtapi_serialize.h>
 #include <backends/vtapi_backendfactory.h>
+
 
 using std::string;
 

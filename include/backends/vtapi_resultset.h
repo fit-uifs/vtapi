@@ -8,6 +8,8 @@
 #ifndef VTAPI_RESULTSET_H
 #define	VTAPI_RESULTSET_H
 
+#include "common/vtapi_tkeyvalue.h"
+
 namespace vtapi {
 
 class TypeManager;

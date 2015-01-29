@@ -8,6 +8,7 @@
 #ifndef VTAPI_TYPEMANAGER_H
 #define	VTAPI_TYPEMANAGER_H
 
+
 namespace vtapi {
 
  class Connection;

@@ -8,6 +8,8 @@
 #ifndef VTAPI_TKEYVALUE_H
 #define	VTAPI_TKEYVALUE_H
 
+#include <typeinfo>
+#include <common/vtapi_serialize.h>
 #include "vtapi_tkey.h"
 
 namespace vtapi {

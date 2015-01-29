@@ -10,7 +10,7 @@
  * Methods of Query, Select, Insert and Update classes
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <backends/vtapi_backendfactory.h>
 #include <backends/vtapi_backends.h>
 #include <queries/vtapi_queries.h>

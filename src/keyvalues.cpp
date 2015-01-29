@@ -11,7 +11,7 @@
  */
 
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_tkey.h>
 #include <data/vtapi_keyvalues.h>
 

@@ -10,7 +10,7 @@
  * Methods of Commons class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <backends/vtapi_backendfactory.h>
 #include <common/vtapi_misc.h>
 #include <data/vtapi_commons.h>

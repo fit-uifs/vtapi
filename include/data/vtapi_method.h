@@ -23,6 +23,9 @@ class Process;
  */
 class Method : public KeyValues {
 public:
+    typedef void (*fCallback)(Process::STATE_T state, Process *process, void *context);
+
+public:
 
     TKeys methodKeys; /**< A vector of key-value pairs*/
 
@@ -33,7 +36,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param name specific name of method, which we can construct
      */
-    Method(const KeyValues& orig, const std::string& name = "");
+    Method(const KeyValues& orig, const std::string& name = "", fCallback callback = NULL, void *pContext = NULL);
 
     /**
      * Move to a next method and set a method name and its methodkeys variables
@@ -59,14 +62,6 @@ public:
      */
     Process* newProcess(const std::string& name);
 
-    /**
-     * Runs a process of this method - abstract
-     * @return success
-     * @todo code: neimplementováno
-     */
-    virtual bool run() { return false; }
-   
-
     Method* add(const std::string& name);
     
     Method* loadCode();    
@@ -84,6 +79,10 @@ public:
     std::string getLastError() { return std::string(""); }
     void releaseProcess(Process *p) {}
 
+protected:
+    fCallback callback;
+    void *pCallbackContext;
+    
 private:
 
     /**

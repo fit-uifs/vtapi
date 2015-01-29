@@ -40,6 +40,7 @@
 #define	VTAPI_LIBPQ_H
 
 
+#include "common/vtapi_config.h"
 
     
     

@@ -10,7 +10,7 @@
  * Methods of Dataset class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <data/vtapi_sequence.h>
 #include <data/vtapi_interval.h>
 #include <data/vtapi_method.h>

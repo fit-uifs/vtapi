@@ -8,6 +8,8 @@
 #ifndef VTAPI_QUERYBUILDER_H
 #define	VTAPI_QUERYBUILDER_H
 
+#include "common/vtapi_tkeyvalue.h"
+
 namespace vtapi {
 
 class Connection;

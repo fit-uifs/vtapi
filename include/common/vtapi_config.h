@@ -18,6 +18,19 @@
 #ifndef VTAPI_CONFIG_H
 #define VTAPI_CONFIG_H
 
+// standard library
+#include <iomanip>
+#include <cstdlib>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <time.h>
+
+
 #ifdef _DEBUG
 #define HAVE_CONFIG_H
 #endif

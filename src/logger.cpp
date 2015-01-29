@@ -10,7 +10,8 @@
  * Methods of Logger class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
+#include "common/vtapi_serialize.h"
 #include <common/vtapi_logger.h>
 
 using std::string;
