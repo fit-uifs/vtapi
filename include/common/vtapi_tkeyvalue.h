@@ -78,7 +78,7 @@ public:
      * Destructor
      */
     ~TKeyValue () {
-        destructall(values);
+        vt_destructall(values);
         
     }
 

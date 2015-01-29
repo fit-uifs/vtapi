@@ -194,7 +194,7 @@ SLQueryBuilder::SLQueryBuilder(fmap_t *fmap, Connection *connection, Logger *log
 
  SLQueryBuilder::~SLQueryBuilder() {
      sl_param_t *sl_param = (sl_param_t *)param;
-     destruct(sl_param);
+     vt_destruct(sl_param);
      destroyKeys();
 }
 
@@ -538,10 +538,10 @@ void SLQueryBuilder::destroyParam() {
 
 void SLQueryBuilder::destroyKeys() {
     for (TKeyValues::iterator it = key_values_main.begin(); it != key_values_main.end(); ++it) {
-        destruct(*it);
+        vt_destruct(*it);
     }
     for (TKeyValues::iterator it = key_values_where.begin(); it != key_values_where.end(); ++it) {
-        destruct(*it);
+        vt_destruct(*it);
     }
 }
 
@@ -594,7 +594,7 @@ void SLResultSet::clear() {
     if (this->res) {
         sl_res_t *sl_res = (sl_res_t *) this->res;
         CALL_SL(fmap, sqlite3_free_table, sl_res->res);
-        destruct(sl_res)
+        vt_destruct(sl_res)
     }
 }
 
@@ -972,8 +972,8 @@ pair< TKeys*, vector<int>* > SLResultSet::getKeysWidths(const int row, bool get_
 
     if (!get_widths && keys) return std::make_pair(keys, widths);
     else if (!widths || !keys || sl_res->cols != keys->size() || sl_res->cols == 0 || sl_res->rows == 0) {
-        destruct(widths);
-        destruct(keys);
+        vt_destruct(widths);
+        vt_destruct(keys);
         return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
     }
 
@@ -1002,8 +1002,8 @@ pair< TKeys*, vector<int>* > SLResultSet::getKeysWidths(const int row, bool get_
     }
 
     if (widths->size() != keys->size()) {
-        destruct(widths);
-        destruct(keys);
+        vt_destruct(widths);
+        vt_destruct(keys);
         return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
     }
     else return std::make_pair(keys, widths);
@@ -1030,7 +1030,7 @@ fmap_t *SLLibLoader::loadLibs() {
         return fmap;
     }
     else {
-        destruct(fmap);
+        vt_destruct(fmap);
         return NULL;
     }
 };

@@ -786,7 +786,7 @@ void PGQueryBuilder::destroyParam() {
         if (param_kill->args) {
             CALL_PQT(fmap, PQparamClear, param_kill->args);
         }
-        destruct(param_kill);
+        vt_destruct(param_kill);
     }
 }
 
@@ -1649,8 +1649,8 @@ pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_
 
     if (!get_widths && keys) return std::make_pair(keys, widths);
     else if (!widths || !keys || cols != keys->size() || cols == 0 || rows == 0) {
-        destruct(widths);
-        destruct(keys);
+        vt_destruct(widths);
+        vt_destruct(keys);
         return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
     }
 
@@ -1679,8 +1679,8 @@ pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_
         }
     }
     if (widths->size() != keys->size()) {
-        destruct(widths);
-        destruct(keys);
+        vt_destruct(widths);
+        vt_destruct(keys);
         return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
     }
     else return std::make_pair(keys, widths);
@@ -1707,7 +1707,7 @@ fmap_t *PGLibLoader::loadLibs() {
 
     retval &= load_libpq(fmap);
     retval &= load_libpqtypes(fmap);
-    if (!retval) destruct(fmap);
+    if (!retval) vt_destruct(fmap);
 
     return retval ? fmap : NULL;
 };

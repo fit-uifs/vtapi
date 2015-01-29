@@ -101,11 +101,11 @@ Commons::Commons(const gengetopt_args_info& args_info) {
 
 Commons::~Commons() {
     if (doom) {
-        destruct(typeManager);
-        destruct(connection);
-        destruct(fmap);
-        destruct(libLoader);        
-        destruct(logger);
+        vt_destruct(typeManager);
+        vt_destruct(connection);
+        vt_destruct(fmap);
+        vt_destruct(libLoader);        
+        vt_destruct(logger);
         
 #ifdef HAVE_POSTGIS
         finishGEOS();

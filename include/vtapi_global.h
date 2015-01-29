@@ -36,8 +36,8 @@ using std::cerr;
 using std::endl;
 
 // be nice while destructing
-#define destruct(v)         if (v) { delete(v); (v) = NULL; }
-#define destructall(v)      if (v) { delete[](v); (v) = NULL; }
+#define vt_destruct(v)         if (v) { delete(v); (v) = NULL; }
+#define vt_destructall(v)      if (v) { delete[](v); (v) = NULL; }
 
 // generic stuff used everywhere
 #include "common/vtapi_config.h"

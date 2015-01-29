@@ -70,7 +70,7 @@ string Process::getOutputs() {
 bool Process::add(const string& method, const string& name, const string& selection) {
     bool retval = VT_OK;
 
-    destruct(insert);
+    vt_destruct(insert);
     insert = new Insert(*this, "processes");
     retval &= insert->keyString("mtname", method);
     retval &= insert->keyString("prsname", name);
@@ -84,8 +84,8 @@ bool Process::add(const string& method, const string& name, const string& select
 //        retval &= update->execute();
     }
     
-    destruct(insert);
-//    destruct(update);
+    vt_destruct(insert);
+//    vt_destruct(update);
 
     return retval;
 }
@@ -110,7 +110,7 @@ bool Process::prepareOutput(const string& method, const string& selection) {
       retval = this->addColumns(selection, colsToAdd);
     }
     
-    destruct(mth);
+    vt_destruct(mth);
     
     return retval;
 }
@@ -143,8 +143,8 @@ map<string,string> Process::diffColumns(const string& table, const TKeys& method
         }
     }
     
-    destruct(kv->select);
-    destruct(kv);
+    vt_destruct(kv->select);
+    vt_destruct(kv);
     
     return colsToAdd;
 }
@@ -162,7 +162,7 @@ bool Process::addColumns(const string& table, const map<string,string>& colsToAd
         Query* query = new Query(*this, queryString + ";");
         retval = query->execute();
         
-        destruct(query);
+        vt_destruct(query);
     }
     return retval;
 }

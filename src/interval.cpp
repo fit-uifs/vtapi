@@ -59,7 +59,7 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
     bool retval = VT_OK;
     int te2 = (t2 < 0) ? t1 : t2;
 
-    destruct(insert);
+    vt_destruct(insert);
     insert = new Insert(*this, this->selection);
     retval &= insert->keyString("seqname", sequence);
     retval &= insert->keyInt("t1", t1);
@@ -100,7 +100,7 @@ bool Interval::addExecute() {
 bool Interval::preSet() {
     bool retval = VT_OK;
 
-    destruct(update);
+    vt_destruct(update);
     update = new Update(*this, this->selection);
     retval &= update->whereString("seqname", sequence);
     retval &= update->whereInt("t1", this->getInt("t1"));

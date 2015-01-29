@@ -74,7 +74,7 @@ VTApi::VTApi(const VTApi& orig)
 }
 
 VTApi::~VTApi() {
-    destruct(commons);
+    vt_destruct(commons);
 }
 
 
@@ -132,8 +132,8 @@ void VTApi::test() {
     this->testProcess(dataset);
     
     cout << "** CLEANUP" << endl;
-    destruct(sequence);
-    destruct(dataset);
+    vt_destruct(sequence);
+    vt_destruct(dataset);
     cout << endl << "---------------------------------------------------------------" << endl;
 
 #ifdef PROCPS_PROC_READPROC_H
@@ -143,7 +143,7 @@ void VTApi::test() {
 #endif
     cout << "This took " << timex->getClock() << " s of processor and " << timex->getTime()  << " s of real time.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
-    destruct(timex);
+    vt_destruct(timex);
 
     cout << "DONE ALL ... see warnings." << endl;
 }
@@ -222,7 +222,7 @@ void VTApi::testPerformance() {
 //while (interval->next()) {
 //        svm = interval->getFloatA("svm", size);
 //        cout << toString(svm) << endl;
-//        destruct(svm);
+//        vt_destruct(svm);
 //    }
 
 }
@@ -272,9 +272,9 @@ void VTApi::testGenericClasses() {
     kvFloatA.print();
 
     cout << "** CLEANUP" << endl;
-    destruct(int_deserial);
-    destruct(fl_deserial);
-    destruct(kvStringPt);
+    vt_destruct(int_deserial);
+    vt_destruct(fl_deserial);
+    vt_destruct(kvStringPt);
 
     cout << endl << "DONE testing generic classes.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -296,8 +296,8 @@ void VTApi::testDataset() {
     cout << "There are " << kv->getInt8(0) << " sequences in this dataset." << endl;
 
     cout << "** CLEANUP" << endl;
-    destruct(kv);
-    destruct(dataset);
+    vt_destruct(kv);
+    vt_destruct(dataset);
 
     cout << endl << "DONE testing dataset.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -334,8 +334,8 @@ void VTApi::testSequence(Dataset *dataset) {
     query->execute();
 
     cout << "** CLEANUP" << endl;
-    destruct(query);
-    destruct(sequence);
+    vt_destruct(query);
+    vt_destruct(sequence);
 
     cout << endl << "DONE testing sequence.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -361,8 +361,8 @@ void VTApi::testInterval(Sequence *sequence) {
     else for (int i = 0; i < keys->size(); ++i) (*keys)[i].print();
 
     cout << "** CLEANUP" << endl;
-    destruct(keys);
-    destruct(interval);
+    vt_destruct(keys);
+    vt_destruct(interval);
     
     cout << endl << "DONE testing interval.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -378,7 +378,7 @@ void VTApi::testImage(Sequence *sequence) {
     cout << image->getLocation() << endl;
     Sequence* tmpSeq = image->getParentSequence();
     tmpSeq->print();
-    destruct(tmpSeq);
+    vt_destruct(tmpSeq);
     int cnt = 0;
 
     // this is how to print arrays
@@ -406,7 +406,7 @@ void VTApi::testImage(Sequence *sequence) {
     float* kf2 = image->getFloatA("test", kfl);
     for (int i=0; i < kfl; ++i) cout << kf2[i] << " ";
     cout << endl;
-    destructall(kf2);
+    vt_destructall(kf2);
 
     image->setString("imglocation", "tudlenudle.png");
     image->setExecute();  // NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
@@ -434,7 +434,7 @@ void VTApi::testVideo(Dataset *dataset) {
     cout << "** PLAYING video " << video->getName() << " ... press any key to exit." << endl;
     VideoPlayer* player = new VideoPlayer(*video);
     player->play();
-    destruct(player);
+    vt_destruct(player);
 #else
     cout << "** CANNOT PLAY VIDEO " << video->getName() << endl;
 #endif
@@ -449,8 +449,8 @@ void VTApi::testVideo(Dataset *dataset) {
     query->execute();
 
     cout << "** CLEANUP" << endl;
-    destruct(query);
-    destruct(video);
+    vt_destruct(query);
+    vt_destruct(video);
 
     cout << endl << "DONE testing video.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -472,7 +472,7 @@ void VTApi::testMethod(Dataset *dataset) {
     }
 
     cout << "** CLEANUP" << endl;
-    destruct(method);
+    vt_destruct(method);
 
     cout << endl << "DONE testing method.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -490,7 +490,7 @@ void VTApi::testProcess(Dataset *dataset) {
 //    process->add("test", "test");
 
     cout << "** CLEANUP" << endl;
-    destruct(process);
+    vt_destruct(process);
 
     cout << endl << "DONE testing process.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;

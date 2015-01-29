@@ -24,6 +24,16 @@ class Sequence;
  */
 class Process : public KeyValues {
 public:
+    typedef enum _STATE_T
+    {
+        STATE_INIT,
+        STATE_STARTED,
+        STATE_RUNNING,
+        STATE_DONE,
+        STATE_ERROR
+    } STATE_T;
+    
+public:
 
     /**
      * Constructor for processes
@@ -116,6 +126,9 @@ public:
     bool run(...);
 
 
+    string getID() { return string(""); }
+    string getErrorMessage() { return string(""); }
+    Interval *newResults() { return NULL; }
 
 };
 

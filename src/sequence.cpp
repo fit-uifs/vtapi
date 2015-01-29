@@ -89,7 +89,7 @@ cv::Mat Sequence::getData() {
 bool Sequence::add(const string& name, const string& location, const string& type) {
     bool retval = VT_OK;
 
-    destruct(insert);
+    vt_destruct(insert);
     insert = new Insert(*this, "sequences");
     retval &= insert->keyString("seqname", name);
     retval &= insert->keyString("seqlocation", location);
@@ -125,7 +125,7 @@ bool Sequence::addExecute() {
 }
 
 bool Sequence::preSet() {
-    destruct(update);
+    vt_destruct(update);
 
     update = new Update(*this, "sequences");
     update->whereString("seqname", this->sequence);
@@ -158,7 +158,7 @@ bool Video::add(string name, string location) {
 #endif
     
     if (retval) {
-        destruct(insert);
+        vt_destruct(insert);
         insert = new Insert(*this, "sequences");
         retval &= insert->keyString("seqname", name);
         retval &= insert->keyString("seqlocation", location);

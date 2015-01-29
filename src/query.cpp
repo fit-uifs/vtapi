@@ -37,8 +37,8 @@ Query::Query(const Commons& commons, const string& initString)
 Query::~Query() {
     if (!executed) logger-> warning(208, "The query was not executed after the last change\n" + this->getQuery(), thisClass+"::~Query()");
 
-    destruct(resultSet);
-    destruct(queryBuilder);
+    vt_destruct(resultSet);
+    vt_destruct(queryBuilder);
 }
 
 string Query::getQuery() {

@@ -38,7 +38,7 @@ KeyValues::~KeyValues() {
         if (!insert->executed) {
             logger->warning(313, "There should be something inserted: \n" + insert->getQuery(), thisClass+"~KeyValues()");
         }
-        destruct(insert);
+        vt_destruct(insert);
     }
 
     // whether should be something updated
@@ -46,7 +46,7 @@ KeyValues::~KeyValues() {
         if (!update->executed) {
             logger->warning(314, "There should be something updated: \n" + update->getQuery(), thisClass+"~KeyValues()");
         }
-        destruct(update);
+        vt_destruct(update);
     }
 
     destruct (select);
@@ -58,13 +58,13 @@ KeyValues* KeyValues::next() {
     // whether should be something inserted
     if (insert) {
         if (!insert->executed) insert->execute();  // FIXME: here should be the store fun instead
-        destruct(insert);
+        vt_destruct(insert);
     }
 
     // whether should be something updated
     if (update) {
         if (!update->executed) update->execute();  // FIXME: here should be the store fun instead
-        destruct(update);
+        vt_destruct(update);
     }
 
     // check the Select, each subclass is responsible of
@@ -342,7 +342,7 @@ bool KeyValues::print() {
             printFooter(1);
         }
         else cout << "(empty)" << endl;
-        destruct(fInfo.first); destruct(fInfo.second);
+        vt_destruct(fInfo.first); vt_destruct(fInfo.second);
         select->resultSet->setPosition(origpos);
         return VT_OK;
     }
@@ -363,7 +363,7 @@ bool KeyValues::printAll() {
             printFooter(select->resultSet->countRows());
         }
         else cout << "(empty)" << endl;
-        destruct(fInfo.first); destruct(fInfo.second);
+        vt_destruct(fInfo.first); vt_destruct(fInfo.second);
         select->resultSet->setPosition(origpos);
         return VT_OK;
     }
@@ -462,7 +462,7 @@ bool KeyValues::preSet() {
     // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
     logger->warning(3010, "Set inherited from KeyValues at class " + thisClass, thisClass+"::preSet()");
 
-    destruct(update);
+    vt_destruct(update);
     update = new Update(*this);
 
     return update ? VT_OK : VT_FAIL;

@@ -81,6 +81,9 @@ public:
     // setters
     bool set() {};
     
+    string getLastError() { return string(""); }
+    void releaseProcess(Process *p) {}
+
 private:
 
     /**
