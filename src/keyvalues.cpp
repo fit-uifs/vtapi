@@ -205,7 +205,7 @@ vector<float>* KeyValues::getFloatV(const int col) {
 }
 
 // =============== GETTERS - OpenCV MATRICES ===============================
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 
 CvMat *KeyValues::getCvMat(const string& key) {
     return select->resultSet->getCvMat(key);
@@ -309,7 +309,7 @@ vector<PGpoint>*  KeyValues::getPointV(const int col) {
 //    return path;
 //}
 
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
 GEOSGeometry *KeyValues::getGeometry(const string& key) {
     return select->resultSet->getGeometry(key);
 }

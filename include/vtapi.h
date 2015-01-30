@@ -20,7 +20,7 @@
 #define	VTAPI_H
 
 #include "common/vtapi_config.h"
-#include "data/vtapi_data.h"
+#include "data/vtapi_dataset.h"
 
 namespace vtapi {
 
@@ -104,7 +104,7 @@ public:
      * @param name
      * @return
      */
-    Method* newMethod(const std::string& name = "", Method::fCallback = NULL, void *pContext = NULL);
+    Method* newMethod(const std::string& name = "");
     Method* addMethod(const Method& method);
 
 private:

@@ -8,7 +8,9 @@
 #ifndef VTAPI_QUERYBUILDER_H
 #define	VTAPI_QUERYBUILDER_H
 
-#include "common/vtapi_tkeyvalue.h"
+#include "vtapi_backendlibs.h"
+#include "../common/vtapi_logger.h"
+#include "../common/vtapi_tkeyvalue.h"
 
 namespace vtapi {
 
@@ -333,7 +335,7 @@ protected:
     }
 };
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 class PGQueryBuilder : public QueryBuilder {
 private:
 
@@ -386,7 +388,7 @@ protected:
 };
 #endif
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 class SLQueryBuilder : public QueryBuilder {
 private:
 

@@ -56,7 +56,7 @@ double TimExer::getMeanClock() {
 }
 
 // have libproc-dev?
-#ifdef PROCPS_PROC_READPROC_H
+#if HAVE_READPROC
 
 int TimExer::getPID() {
     struct proc_t usage;

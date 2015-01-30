@@ -9,11 +9,11 @@
 #define	VTAPI_PROCESS_H
 
 #include "vtapi_keyvalues.h"
+#include "vtapi_sequence.h"
+#include "vtapi_interval.h"
+#include "../common/vtapi_tkeyvalue.h"
 
 namespace vtapi {
-
-class Interval;
-class Sequence;
 
 /**
  * @brief A class which represents processes and gets information about them
@@ -33,15 +33,19 @@ public:
         STATE_ERROR
     } STATE_T;
     
+    typedef void (*fCallback)(STATE_T state, Process *process, void *context);
+
 public:
 
     /**
      * Constructor for processes
      * @param orig pointer to the parrent KeyValues object
+     * @param process only for specific method
      * @param name specific name of process, which we can construct
      */
     Process(const KeyValues& orig, const std::string& name = "");
 
+    virtual ~Process();
     /**
      * Individual next() for processes, which stores current process
      * and selection to commons
@@ -57,7 +61,12 @@ public:
      */
     std::string getName();
     /**
-     * Get a name of a table where are stored an input data
+     * Get current process state
+     * @return state
+     */
+    STATE_T getState();
+    /**
+     * Get process name for input data for this process
      * @return string value with an input data table name
      */
     std::string getInputs();
@@ -66,17 +75,64 @@ public:
      * @return string value with an output data table name
      */
     std::string getOutputs();
+    /**
+     * Get process which output are input for this process
+     * @return process object
+     */
+    Process *getInputProcess();
+    /**
+     * Get output intervals of this process
+     * @return output intervals
+     */
+    Interval *getOutputData();
+    /**
+     * Get numeric process param
+     * @param key param name
+     * @return param value
+     */
+    int getParamInt(const std::string& key);
+    /**
+     * Get string process param
+     * @param key param name
+     * @return param value
+     */
+    std::string getParamString(const std::string& key);
 
     /**
-     * A dangerous and rather discouraged function...
-     * @deprecated by the human power
-     * @param method
-     * @param name
-     * @param selection
-     * @return
-     * @todo @b doc: má to cenu komentovat? :) Případně doplnit
+     * Sets output data from another process as inputs for this one
+     * @param processName input process name
      */
-    bool add(const std::string& method, const std::string& name, const std::string& selection="intervals");
+    void setInputs(const std::string& processName);
+    /**
+     * Sets integer argument
+     * @param key arg name
+     * @param value arg value
+     */
+    void setParamInt(const std::string& key, int value);
+    /**
+     * Sets string process argument
+     * @param key arg name
+     * @param value arg value
+     */
+    void setParamString(const std::string& key, const std::string& value);
+    /**
+     * Sets process status update callback
+     * @param callback callback function
+     * @param pContext context supplied to callbacks
+     */
+    void setCallback(fCallback callback, void *pContext);
+    
+    virtual bool preSet();
+
+    /**
+     * Add new process instance into database, use Method->addProcess() instead
+     * @param method method name
+     * @param name new process name
+     * @param params serialized process params
+     * @param outputs output table
+     * @return
+     */
+    bool add(const std::string& method, const std::string& name, const std::string& params = "", const std::string& outputs="intervals");
 
     /**
      * Create new interval for process
@@ -118,16 +174,22 @@ public:
 
     // http://stackoverflow.com/questions/205529/c-c-passing-variable-number-of-arguments-around
     /**
-     * Runs the Method's derivate run() with default parameters Method->run(*this);
+     * Runs process
      * @return success
-     * @todo @b code: neimplementováno
      */
     bool run();
 
-
-    std::string getID() { return std::string(""); }
-    std::string getErrorMessage() { return std::string(""); }
-    Interval *newResults() { return NULL; }
+protected:
+    TKeyValues params;
+    bool bParamsDirty;
+    
+    fCallback callback;
+    void *pCallbackContext;
+    
+protected:
+    std::string constructName();
+    std::string serializeParams();
+    void deserializeParams(std::string paramString);
 
 };
 

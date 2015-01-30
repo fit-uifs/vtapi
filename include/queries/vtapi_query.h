@@ -9,11 +9,10 @@
 #define	VTAPI_QUERY_H
 
 #include "../data/vtapi_commons.h"
+#include "../backends/vtapi_querybuilder.h"
+#include "../backends/vtapi_resultset.h"
 
 namespace vtapi {
-
-class QueryBuilder;
-class ResultSet;
     
 /**
  * @brief Base query class

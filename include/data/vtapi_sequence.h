@@ -10,14 +10,8 @@
 
 #include "vtapi_keyvalues.h"
 #include "vtapi_interval.h"
-#include "vtapi_process.h"
-
 
 namespace vtapi {
-    
-class Interval;
-class Image;
-class Process;
 
 /**
  * @brief A Sequence class manages videos and images
@@ -114,15 +108,7 @@ public:
      */
     Image* newImage(const std::string& name = "");
 
-    /**
-     *
-     * @param name
-     * @return
-     * @todo @b code: neimplementováno (potom doplnit i doc)
-     */
-    Process* newProcess(const std::string& name = "");
-
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     Image* imageBuffer;
     cv::Mat frame;
     
@@ -169,7 +155,7 @@ public:
     bool add(std::string name, std::string location);
 
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     cv::VideoCapture capture;
     
     /**
@@ -189,7 +175,7 @@ public:
 
 };
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 /**
  * @brief This is the ever-simplest video player...
  *

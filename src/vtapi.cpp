@@ -113,7 +113,7 @@ void VTApi::test() {
     
     cout << endl << "---------------------------------------------------------------" << endl;
     TimExer* timex = new TimExer();
-#ifdef PROCPS_PROC_READPROC_H
+#if HAVE_READPROC
     cout << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory.";
 #else
     cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes...";
@@ -142,7 +142,7 @@ void VTApi::test() {
     vt_destruct(dataset);
     cout << endl << "---------------------------------------------------------------" << endl;
 
-#ifdef PROCPS_PROC_READPROC_H
+#if HAVE_READPROC
     cout << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory." << endl;
 #else
     cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes...";
@@ -436,7 +436,7 @@ void VTApi::testVideo(Dataset *dataset) {
     video->next();
     video->print();
 
-#ifdef __OPENCV_HIGHGUI_HPP__
+#if HAVE_OPENCV
     cout << "** PLAYING video " << video->getName() << " ... press any key to exit." << endl;
     VideoPlayer* player = new VideoPlayer(*video);
     player->play();

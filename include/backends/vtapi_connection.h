@@ -8,21 +8,25 @@
 #ifndef VTAPI_CONNECTION_H
 #define	VTAPI_CONNECTION_H
 
+#include "vtapi_backendlibs.h"
+#include "../common/vtapi_logger.h"
+
 namespace vtapi {
 
 class ResultSet;
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 typedef struct {
     std::string  database;
 } sl_param_t;
 #endif
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 typedef struct {
     PGparam *args;
 } pg_param_t;
 #endif
+
 
 /**
  * @brief Class encapsulating all database connection functionality including
@@ -109,7 +113,7 @@ public:
 
 };
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 class PGConnection : public Connection {
 private:
 
@@ -133,7 +137,7 @@ public:
 };
 #endif
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 class SLConnection : public Connection {
 private:
 

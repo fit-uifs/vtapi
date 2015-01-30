@@ -9,7 +9,7 @@ using std::string;
 using namespace vtapi;
     
     
-BackendFactory vtapi::g_BackendFactory;
+BackendFactory::backend_t BackendFactory::backend = UNKNOWN;
 
 
 bool BackendFactory::initialize(const string& backendType) {
@@ -32,12 +32,12 @@ Connection* BackendFactory::createConnection(fmap_t *fmap, const string& connect
     Connection *connection = NULL;
     switch (backend) {
         case POSTGRES:
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
             connection = new PGConnection(fmap, connectionInfo, logger);
 #endif
             break;
         case SQLITE:
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
        connection = new SLConnection(fmap, connectionInfo, logger);
 #endif
             break;
@@ -51,12 +51,12 @@ TypeManager* BackendFactory::createTypeManager(fmap_t *fmap, Connection *connect
     TypeManager *typeManager = NULL;
     switch (backend) {
         case POSTGRES:
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
        typeManager = new PGTypeManager(fmap, connection, logger);
  #endif
            break;
         case SQLITE:
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
         typeManager = new SLTypeManager(fmap, connection, logger);
 #endif
             break;
@@ -70,12 +70,12 @@ QueryBuilder* BackendFactory::createQueryBuilder(fmap_t *fmap, Connection *conne
     QueryBuilder *queryBuilder = NULL;
     switch (backend) {
         case POSTGRES:
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
        queryBuilder = new PGQueryBuilder(fmap, connection, logger, initString);
 #endif
           break;
         case SQLITE:
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
             queryBuilder = new SLQueryBuilder(fmap, connection, logger, initString);
 #endif
             break;
@@ -89,12 +89,12 @@ ResultSet* BackendFactory::createResultSet(fmap_t *fmap, TypeManager *typeManage
     ResultSet *resultSet = NULL;
     switch (backend) {
         case POSTGRES:
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
      resultSet = new PGResultSet(fmap, typeManager, logger);
 #endif
          break;
         case SQLITE:
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
             resultSet = new SLResultSet(fmap, typeManager, logger);
 #endif
             break;
@@ -108,12 +108,12 @@ LibLoader* BackendFactory::createLibLoader(Logger *logger) {
     LibLoader *libLoader = NULL;
     switch (backend) {
         case POSTGRES:
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
       libLoader = new PGLibLoader(logger);
  #endif
            break;
         case SQLITE:
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
             libLoader = new SLLibLoader(logger);
 #endif
             break;

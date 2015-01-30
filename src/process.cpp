@@ -11,10 +11,8 @@
  */
 
 #include <common/vtapi_global.h>
-#include <data/vtapi_interval.h>
+#include <data/vtapi_method.h>
 #include <data/vtapi_process.h>
-
-#include "data/vtapi_method.h"
 
 using std::string;
 using std::map;
@@ -25,33 +23,49 @@ using namespace vtapi;
 
 Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig) {
     thisClass = "Process";
+    bParamsDirty = false;
+    callback = NULL;
+    pCallbackContext = NULL;
 
     string query;
 
-    if (backend == POSTGRES) {
-        query = "\nSELECT P.*, PA1.relname AS inputs, PA2.relname AS outputs\n"
-                "  FROM public.processes P\n"
-                "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode\n"
-                "  LEFT JOIN pg_catalog.pg_class PA2 ON P.outputs::regclass = PA2.relfilenode";
-    }
-    else {
-        query = "\nSELECT * from public.processes";
-    }
+    //TODO: for SQLite
+//    if (backend == POSTGRES) {
+    query = "SELECT P.*, PA1.relname AS inputs\n"
+            "  FROM " + this->getDataset() + ".processes P\n"
+            "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode";
+//    }
+//    else {
+//        query = "\nSELECT * from public.processes";
+//    }
 
+    this->select = new Select(orig, query.c_str());
+
+    if (!this->method.empty()) {
+        this->select->whereString("mtname", this->method);
+    }
+    
     if (!name.empty()) {
-        query += "  WHERE P.prsname='" + name + "'";
+        this->select->whereString("prsname", name);
         this->process = name;
     }
-    query += ";";
-    this->select = new Select(orig, query.c_str());
 }
 
+Process::~Process() {
+    for (size_t i = 0; i < this->params.size(); i++) delete this->params[i];
+}
 
 bool Process::next() {
+    if (!this->params.empty() && bParamsDirty) {
+        this->select->whereString("params", serializeParams());
+        bParamsDirty = false;
+    }
+    
     KeyValues* kv = ((KeyValues*)this)->next();
     if (kv) {
         process = this->getName();
         selection = this->getOutputs();
+        if (this->params.empty()) deserializeParams(this->getString("params"));
     }
 
     return kv;
@@ -62,6 +76,10 @@ string Process::getName() {
     return this->getString("prsname");
 }
 
+Process::STATE_T Process::getState() {
+    return (Process::STATE_T)this->getInt("state");
+}
+
 string Process::getInputs() {
     return this->getString("inputs");
 }
@@ -70,20 +88,71 @@ string Process::getOutputs() {
     return this->getString("outputs");
 }
 
+Process *Process::getInputProcess() {
+    string inputs = getInputs();
+    
+    return inputs.empty() ? NULL : new Process(*this, inputs);
+}
 
-bool Process::add(const string& method, const string& name, const string& selection) {
+Interval *Process::getOutputData() {
+    return NULL;
+}
+
+int Process::getParamInt(const std::string& key) {
+    for (size_t i = 0; i < this->params.size(); i++) {
+        if (this->params[i]->key.compare(key) == 0) {
+            return ((TKeyValue<int> *)this->params[i])->values[0];
+        }
+    }
+    return -1;
+}
+
+std::string Process::getParamString(const std::string& key) {
+    for (size_t i = 0; i < this->params.size(); i++) {
+        if (this->params[i]->key.compare(key) == 0) {
+            return ((TKeyValue<std::string> *)this->params[i])->getValue();
+        }
+    }
+    return "";
+}
+
+
+void Process::setInputs(const std::string& processName) {
+    this->setString("inputs", processName);
+}
+
+void Process::setParamInt(const std::string& key, int value) {
+    bParamsDirty = true;
+    this->params.push_back(new TKeyValue<int>("int", key, value));
+}
+
+void Process::setParamString(const std::string& key, const std::string& value) {
+    bParamsDirty = true;
+    this->params.push_back(new TKeyValue<std::string>("string", key, value));
+}
+
+void Process::setCallback(fCallback callback, void *pContext) {
+    this->callback = callback;
+    this->pCallbackContext = pContext;
+}
+
+bool Process::add(const std::string& method, const std::string& name, const std::string& params, const std::string& outputs) {
     bool retval = VT_OK;
-
+    
     vt_destruct(insert);
     insert = new Insert(*this, "processes");
     retval &= insert->keyString("mtname", method);
     retval &= insert->keyString("prsname", name);
-    retval &= insert->keyString("outputs", selection);
+    retval &= insert->keyString("params", params);
+    retval &= insert->keyString("outputs", this->getDataset() + "." + outputs);
     if (retval) retval &= insert->execute();
+    
+    this->select->executed = true;
 
     // this is the fun
     if (retval) {
-        retval = this->prepareOutput(method, selection);
+
+        //retval = this->prepareOutput(method, selection);
 //        update = new Update(*this, "ALTER TABLE \""+ selection +"\" ADD COLUMN \""+ name +"\" real[];");
 //        retval &= update->execute();
     }
@@ -94,6 +163,15 @@ bool Process::add(const string& method, const string& name, const string& select
     return retval;
 }
 
+bool Process::preSet() {
+    vt_destruct(update);
+
+    update = new Update(*this, "processes");
+    update->whereString("prsname", this->process);
+    update->executed = true;
+
+    return VT_OK;
+}
 
 Interval* Process::newInterval(const int t1, const int t2) {
     return new Interval(*this);
@@ -169,4 +247,89 @@ bool Process::addColumns(const string& table, const map<string,string>& colsToAd
         vt_destruct(query);
     }
     return retval;
+}
+
+bool Process::run() {
+    string name = constructName();
+    if (!name.empty()) {
+        this->select->whereString("prsname", name);
+    }
+    
+    bool ret = add(this->method, name, serializeParams(), this->method + "out");
+    
+    if (ret) {
+        //TODO: launch
+    }
+    
+    
+    return ret;
+}
+
+std::string Process::constructName()
+{
+    std::stringstream ss;
+    
+    srand (time(NULL));
+    ss << this->method << "proc" << rand()%500 + 5;
+    
+    return ss.str();
+}
+
+std::string Process::serializeParams()
+{
+    std::stringstream ss;
+
+    ss << "{";
+    
+    for (size_t i = 0; i < this->params.size(); i++) {
+        ss << params[i]->key << ":";
+        if (params[i]->type.compare("int")) {
+            ss << ((TKeyValue<int> *)params[i])->getValue();
+        }
+        else if (params[i]->type.compare("string")) {
+            ss << ((TKeyValue<std::string> *)params[i])->getValue();
+        }
+        else {
+            ss << "0";
+        }
+        if (i < this->params.size()-1) ss << ",";
+    }
+    
+    ss << "}";
+
+    return ss.str();
+}
+
+void Process::deserializeParams(std::string paramString)
+{
+    char *str = new char[paramString.length() + 1];
+    char *token = NULL;
+    char *value = NULL;
+    char *endptr;
+    int val;
+    TKey *key = NULL;
+    
+    strcpy(str, paramString.c_str());
+    
+    token = strtok(str+1, ",");
+    while(token) {
+        value = strchr(token, ':');
+        *(value++) = '\0';
+        
+        size_t len = strlen(value);
+        if (value[len-1] == '}') value[len-1] = '\0';
+        
+        val = strtol(value, &endptr, 10);
+        if (endptr && !*endptr) {
+            key = new TKeyValue<int>("int", token, val);
+        }
+        else {
+            key = new TKeyValue<std::string>("string", token, value);
+        }
+        this->params.push_back(key);
+        
+        token = strtok(NULL, ",");
+    }
+    
+    delete[] str;
 }

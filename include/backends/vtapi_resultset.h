@@ -8,13 +8,15 @@
 #ifndef VTAPI_RESULTSET_H
 #define	VTAPI_RESULTSET_H
 
-#include "common/vtapi_tkeyvalue.h"
+#include "vtapi_backendlibs.h"
+#include "../common/vtapi_logger.h"
+#include "../common/vtapi_tkeyvalue.h"
 
 namespace vtapi {
 
 class TypeManager;
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 typedef struct {
     int     rows;
     int     cols;
@@ -324,7 +326,7 @@ public:
     virtual time_t getTimestamp(const int col) = 0;
 
     // =============== GETTERS - OpenCV MATRICES ===============================
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     /**
      * Get OpenCv matrix (cvMat) specified by the column key
      * @param key column key
@@ -357,7 +359,7 @@ public:
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
     
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
     /**
      * Get 2D point specified by the column key
      * @param key column key
@@ -474,7 +476,7 @@ public:
 //     */
 //    PGcube getCube(const int col);
     
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     /**
      * Get GEOS geometry type by the column key
      * @param key column key
@@ -551,7 +553,7 @@ protected:
 };
 
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 class PGResultSet : public ResultSet {
 public:
 
@@ -584,15 +586,15 @@ public:
     std::vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     std::vector<PGpoint>*  getPointV(const int col);
 #endif
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     GEOSGeometry* getGeometry(const int col);
     GEOSGeometry* getLineString(const int col);
 #endif
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     CvMat *getCvMat(const int col);
     CvMatND *getCvMatND(const int col);
 #endif
@@ -607,7 +609,7 @@ protected:
 };
 #endif
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 class SLResultSet : public ResultSet {
 public:
 
@@ -644,11 +646,11 @@ public:
     PGpoint getPoint(const int col);
     std::vector<PGpoint>*  getPointV(const int col);
 #endif
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     GEOSGeometry* getGeometry(const int col);
     GEOSGeometry* getLineString(const int col);
 #endif
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     CvMat *getCvMat(const int col);
     CvMatND *getCvMatND(const int col);
 #endif

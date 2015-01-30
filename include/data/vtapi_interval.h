@@ -139,7 +139,7 @@ public:
      */
     bool add(const std::string& sequence, const int t, const std::string& location);
 
-#ifdef HAVE_OPENCV  
+#if HAVE_OPENCV  
     cv::Mat image;
     
     cv::Mat getData();

@@ -8,11 +8,13 @@
 #ifndef VTAPI_TYPEMANAGER_H
 #define	VTAPI_TYPEMANAGER_H
 
+#include "vtapi_backendlibs.h"
+#include "../common/vtapi_logger.h"
 
 namespace vtapi {
 
- class Connection;
-    
+class Connection;
+
 typedef enum {
     TYPE_UNDEFINED = 0,
     TYPE_ARRAY,
@@ -101,7 +103,7 @@ protected:
 
 };
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 class PGTypeManager : public TypeManager {
 private:
 
@@ -126,9 +128,10 @@ protected:
     type_category_t mapCategory(char category_char);
     
 };
+
 #endif
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 class SLTypeManager : public TypeManager {
 private:
 

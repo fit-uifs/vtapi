@@ -13,10 +13,14 @@
  */
 
 #include <common/vtapi_global.h>
-#include "common/vtapi_serialize.h"
-#include <backends/vtapi_backends.h>
+#include <common/vtapi_serialize.h>
+#include <backends/vtapi_connection.h>
+#include <backends/vtapi_libloader.h>
+#include <backends/vtapi_querybuilder.h>
+#include <backends/vtapi_resultset.h>
+#include <backends/vtapi_typemanager.h>
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 
 using std::string;
 using std::stringstream;
@@ -749,7 +753,7 @@ vector<float>* SLResultSet::getFloatV(const int col) {
     }
 }
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 
 CvMat *SLResultSet::getCvMat(const int col) {
     CvMat *mat = NULL;
@@ -909,7 +913,7 @@ CvMatND *SLResultSet::getCvMatND(const int col) {
 #endif
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 PGpoint SLResultSet::getPoint(const int col) {
     PGpoint point = { 0.0, 0.0 };
 //    memset(&point, 0, sizeof(PGpoint));
@@ -923,7 +927,7 @@ vector<PGpoint>*  SLResultSet::getPointV(const int col) {
 }
 #endif
 
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
 GEOSGeometry* SLResultSet::getGeometry(const int col) {
     return NULL;
 }

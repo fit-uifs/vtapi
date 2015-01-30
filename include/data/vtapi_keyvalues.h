@@ -9,7 +9,9 @@
 #define	VTAPI_KEYVALUES_H
 
 #include "vtapi_commons.h"
-#include "../queries/vtapi_queries.h"
+#include "../queries/vtapi_select.h"
+#include "../queries/vtapi_insert.h"
+#include "../queries/vtapi_update.h"
 
 namespace vtapi {
 
@@ -263,7 +265,7 @@ public:
     time_t getTimestamp(const int col);
 
     // =============== GETTERS - OpenCV MATRICES ===============================
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     /**
      * Get OpenCv matrix (cvMat) specified by the column key
      * @param key column key
@@ -292,7 +294,7 @@ public:
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
     // TODO: geometricke typy
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
     /**
      * Get 2D point specified by the column key
      * @param key column key
@@ -388,7 +390,7 @@ public:
 //     */
 //    PGpath getPath(const int col);
     
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     /**
      * Get GEOS geometry type by the column key
      * @param key column key

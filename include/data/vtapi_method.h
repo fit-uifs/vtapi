@@ -9,6 +9,7 @@
 #define	VTAPI_METHOD_H
 
 #include "vtapi_keyvalues.h"
+#include "vtapi_process.h"
 
 namespace vtapi {
 
@@ -23,9 +24,6 @@ class Process;
  */
 class Method : public KeyValues {
 public:
-    typedef void (*fCallback)(Process::STATE_T state, Process *process, void *context);
-
-public:
 
     TKeys methodKeys; /**< A vector of key-value pairs*/
 
@@ -36,7 +34,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param name specific name of method, which we can construct
      */
-    Method(const KeyValues& orig, const std::string& name = "", fCallback callback = NULL, void *pContext = NULL);
+    Method(const KeyValues& orig, const std::string& name = "");
 
     /**
      * Move to a next method and set a method name and its methodkeys variables
@@ -57,10 +55,17 @@ public:
     TKeys getMethodKeys();
 
     /**
-     * Create new process for current dataset
-     * @return pointer to new process
+     * Create process object for access to existing processes
+     * @return pointer to new process object
      */
-    Process* newProcess(const std::string& name);
+    Process* newProcess(const std::string& name = "");
+    /**
+     * Create process object for starting new process
+     * @param callback process status update callback
+     * @param pContext supplied callback context
+     * @return 
+     */
+    Process* addProcess(Process::fCallback callback = NULL, void *pContext = NULL);  
 
     Method* add(const std::string& name);
     
@@ -71,17 +76,7 @@ public:
     void init();
     void exit();
     
-    // getters 
-    
-    // setters
-    bool set() {};
-    
     std::string getLastError() { return std::string(""); }
-    void releaseProcess(Process *p) {}
-
-protected:
-    fCallback callback;
-    void *pCallbackContext;
     
 private:
 

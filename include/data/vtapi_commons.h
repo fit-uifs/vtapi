@@ -8,11 +8,12 @@
 #ifndef VTAPI_COMMONS_H
 #define	VTAPI_COMMONS_H
 
-#include "backends/vtapi_backends.h"
-#include "common/vtapi_config.h"
-#include "common/vtapi_settings.h"
-#include "common/vtapi_logger.h"
-
+#include "../common/vtapi_config.h"
+#include "../common/vtapi_settings.h"
+#include "../common/vtapi_logger.h"
+#include "../backends/vtapi_connection.h"
+#include "../backends/vtapi_typemanager.h"
+#include "../backends/vtapi_libloader.h"
 
 namespace vtapi {
 
@@ -45,7 +46,7 @@ protected:
     Logger          *logger;            /**< Logger object */
     fmap_t          *fmap;              /**< Map of library functions */
 
-    backend_t       backend;            /**< Used backend type */
+    std::string     backend;            /**< Used backend type */
     std::string     dbconn;             /**< Connection string / databases folder */
     format_t        format;             /**< Output format */
     std::string     input;              /**< A filename from which we read an input */

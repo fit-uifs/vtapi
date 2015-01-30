@@ -9,13 +9,11 @@
 #define	VTAPI_DATASET_H
 
 #include "vtapi_keyvalues.h"
+#include "vtapi_sequence.h"
+#include "vtapi_method.h"
+#include "vtapi_process.h"
 
 namespace vtapi {
-    
-class Sequence;
-class Video;
-class Method;
-class Process;
 
 /**
  * @brief This class should always be on the path of your program...

@@ -142,7 +142,7 @@ string Image::getDataLocation() {
     return (this->getDataLocation() + this->getImgLocation());
 }
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 cv::Mat Image::getData() {
     if (this->image.data) this->image.release();
     
