@@ -40,6 +40,7 @@ using std::cerr;
 using std::endl;
 
 #include "vtapi.h"
+#include "vtapi_global.h"
 
 using namespace vtapi;
 

@@ -23,7 +23,7 @@ VTCli::VTCli(int argc, char** argv){
 }
 
 VTCli::~VTCli() {
-    destruct(this->vtapi);
+    vt_destruct(this->vtapi);
 }
 
 int VTCli::run() {
@@ -103,7 +103,7 @@ void VTCli::queryCommand(string& line) {
     if (!line.empty()) {
         Query *query = new Query(*(this->vtapi->commons), line);
         query->execute();
-        destruct(query);
+        vt_destruct(query);
     }
 }
 
@@ -124,7 +124,7 @@ void VTCli::selectCommand(string& line) {
         ds->select->whereString("dslocation", params["location"]);
         ds->next();
         ds->printAll();
-        destruct(ds);
+        vt_destruct(ds);
     }
     // select sequence
     else if (!input.compare("sequence")) {
@@ -134,7 +134,7 @@ void VTCli::selectCommand(string& line) {
         seq->select->whereSeqtype("seqtyp", params["type"]);
         seq->next();
         seq->printAll();
-        destruct(seq);
+        vt_destruct(seq);
     }
     // select interval
     else if (!input.compare("interval")) {
@@ -145,7 +145,7 @@ void VTCli::selectCommand(string& line) {
         in->select->whereString("imglocation", params["location"]);
         in->next();
         in->printAll();
-        destruct(in);
+        vt_destruct(in);
     }
     // select process
     else if (!input.compare("process")) {
@@ -156,7 +156,7 @@ void VTCli::selectCommand(string& line) {
         pr->select->whereString("outputs", params["outputs"]);
         pr->next();
         pr->printAll();
-        destruct(pr);
+        vt_destruct(pr);
     }
     // select method
     else if (!input.compare("method")) {
@@ -165,7 +165,7 @@ void VTCli::selectCommand(string& line) {
         me->select->whereString("mtname", params["name"]);
         me->next();
         me->printAll();
-        destruct(me);
+        vt_destruct(me);
     }
 }
 
@@ -181,7 +181,7 @@ void VTCli::insertCommand(string& line) {
     ds->next();
     if (ds->getDataset().empty()) {
         cerr << "Insert failed; no dataset specified to insert into" << endl;
-        destruct(ds);
+        vt_destruct(ds);
         return;
     }
     // parse command line
@@ -211,8 +211,8 @@ void VTCli::insertCommand(string& line) {
         in->add(params["seqname"], atoi(params["t1"].c_str()),
                 atoi(params["t2"].c_str()), params["location"]);
         in->insert->execute();
-        destruct (in);
-        destruct (seq);
+        vt_destruct(in);
+        vt_destruct(seq);
     }
 
     // insert process
@@ -224,7 +224,7 @@ void VTCli::insertCommand(string& line) {
         cerr << "Only insert: sequence/interval/process" << endl;
     }
 
-    destruct (ds);
+    vt_destruct(ds);
 }
 
 //TODO
@@ -251,7 +251,7 @@ void VTCli::loadCommand(string& line) {
     ds->next();
     if (ds->getDataset().empty()) {
         cerr << "Load failed; no dataset specified to insert into" << endl;
-        destruct(ds);
+        vt_destruct(ds);
         return;
     }
 
@@ -259,7 +259,7 @@ void VTCli::loadCommand(string& line) {
     fixSlashes(filepath);
     loadDirectory(ds, filepath);
 
-    destruct(ds);
+    vt_destruct(ds);
 }
 
 void VTCli::loadDirectory(Dataset *ds, const string& dirpath) {
@@ -269,7 +269,7 @@ void VTCli::loadDirectory(Dataset *ds, const string& dirpath) {
 
     if ((pDir = opendir(dirpath.c_str())) == NULL) {
         cerr << "Load failed; cannot open directory " << dirpath;
-        destruct(ds);
+        vt_destruct(ds);
         return;
     }
     while((pEntry = readdir(pDir)) != NULL) {
@@ -408,13 +408,13 @@ void VTCli::insertSequence(Dataset* ds, map<string,string>* params) {
                     t++;
                 }
                 img->select->executed = true;
-                destruct(img);
+                vt_destruct(img);
             }
         }
     } while (0);
 
     seq->select->executed = true;
-    destruct(seq);
+    vt_destruct(seq);
 }
 
 bool VTCli::isVideoFile(const string& filepath) {
@@ -783,7 +783,7 @@ int main(int argc, char** argv) {
 
     vtcli->run();
 
-    destruct (vtcli);
+    vt_destruct(vtcli);
 
     return 0;
 
