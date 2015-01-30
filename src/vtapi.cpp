@@ -10,9 +10,15 @@
  * Methods of VTApi class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_timexer.h>
+
 #include <vtapi.h>
+
+using std::string;
+using std::cout;
+using std::cerr;
+using std::endl;
 
 using namespace vtapi;
 
@@ -39,7 +45,7 @@ VTApi::VTApi(int argc, char** argv) {
         cerr << "Aborting: Database connection info missing. Use \"-h\" for help. " << endl;
         cerr << "Use config file (--config=\"/path/to/somefile.conf\") or check help for command line option \"-c\"." << endl;
         cmdline_parser_free (&args_info);
-        destruct (cli_params);
+        vt_destruct(cli_params);
         throw new std::exception();
     }
     // TODO: user authentization here
@@ -50,7 +56,7 @@ VTApi::VTApi(int argc, char** argv) {
         cerr << "Error parsing config arguments" << endl;
     }
     cmdline_parser_free (&args_info);
-    destruct (cli_params);
+    vt_destruct(cli_params);
 }
 
 VTApi::VTApi(const string& configFile) {
@@ -74,7 +80,7 @@ VTApi::VTApi(const VTApi& orig)
 }
 
 VTApi::~VTApi() {
-    destruct(commons);
+    vt_destruct(commons);
 }
 
 
@@ -107,7 +113,7 @@ void VTApi::test() {
     
     cout << endl << "---------------------------------------------------------------" << endl;
     TimExer* timex = new TimExer();
-#ifdef PROCPS_PROC_READPROC_H
+#if HAVE_READPROC
     cout << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory.";
 #else
     cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes...";
@@ -132,18 +138,18 @@ void VTApi::test() {
     this->testProcess(dataset);
     
     cout << "** CLEANUP" << endl;
-    destruct(sequence);
-    destruct(dataset);
+    vt_destruct(sequence);
+    vt_destruct(dataset);
     cout << endl << "---------------------------------------------------------------" << endl;
 
-#ifdef PROCPS_PROC_READPROC_H
+#if HAVE_READPROC
     cout << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory." << endl;
 #else
     cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes...";
 #endif
     cout << "This took " << timex->getClock() << " s of processor and " << timex->getTime()  << " s of real time.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
-    destruct(timex);
+    vt_destruct(timex);
 
     cout << "DONE ALL ... see warnings." << endl;
 }
@@ -222,7 +228,7 @@ void VTApi::testPerformance() {
 //while (interval->next()) {
 //        svm = interval->getFloatA("svm", size);
 //        cout << toString(svm) << endl;
-//        destruct(svm);
+//        vt_destruct(svm);
 //    }
 
 }
@@ -272,9 +278,9 @@ void VTApi::testGenericClasses() {
     kvFloatA.print();
 
     cout << "** CLEANUP" << endl;
-    destruct(int_deserial);
-    destruct(fl_deserial);
-    destruct(kvStringPt);
+    vt_destruct(int_deserial);
+    vt_destruct(fl_deserial);
+    vt_destruct(kvStringPt);
 
     cout << endl << "DONE testing generic classes.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -296,8 +302,8 @@ void VTApi::testDataset() {
     cout << "There are " << kv->getInt8(0) << " sequences in this dataset." << endl;
 
     cout << "** CLEANUP" << endl;
-    destruct(kv);
-    destruct(dataset);
+    vt_destruct(kv);
+    vt_destruct(dataset);
 
     cout << endl << "DONE testing dataset.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -324,7 +330,7 @@ void VTApi::testSequence(Dataset *dataset) {
     sequence->print();
 
     cout << "** SHOWING all sequences" << endl;
-    destruct (sequence);
+    vt_destruct(sequence);
     sequence = dataset->newSequence();
     sequence->next();
     sequence->printAll();
@@ -334,8 +340,8 @@ void VTApi::testSequence(Dataset *dataset) {
     query->execute();
 
     cout << "** CLEANUP" << endl;
-    destruct(query);
-    destruct(sequence);
+    vt_destruct(query);
+    vt_destruct(sequence);
 
     cout << endl << "DONE testing sequence.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -361,8 +367,8 @@ void VTApi::testInterval(Sequence *sequence) {
     else for (int i = 0; i < keys->size(); ++i) (*keys)[i].print();
 
     cout << "** CLEANUP" << endl;
-    destruct(keys);
-    destruct(interval);
+    vt_destruct(keys);
+    vt_destruct(interval);
     
     cout << endl << "DONE testing interval.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -378,7 +384,7 @@ void VTApi::testImage(Sequence *sequence) {
     cout << image->getLocation() << endl;
     Sequence* tmpSeq = image->getParentSequence();
     tmpSeq->print();
-    destruct(tmpSeq);
+    vt_destruct(tmpSeq);
     int cnt = 0;
 
     // this is how to print arrays
@@ -388,7 +394,7 @@ void VTApi::testImage(Sequence *sequence) {
         else cout << tags[i] << ", ";
     }
     cout << endl;
-    destructall (tags);
+    vt_destructall(tags);
 
     image->add(interval->getSequenceName(), t1, "nosuchimage.jpg");
     // image->insert->keyFloat("sizeKB", 100.3);
@@ -397,7 +403,7 @@ void VTApi::testImage(Sequence *sequence) {
     image->insert->keyFloatA("test", kf, 5);
 
     image->insert->execute();     // or next() must be called after inserting all voluntary fields such as above
-    destruct (image);    // if not called execute() or next(), the insert destructor raises a warning
+    vt_destruct(image);    // if not called execute() or next(), the insert destructor raises a warning
 
     image = sequence->newImage("nosuchimage.jpg");
     image->next();      // in case of update, the next() must be called
@@ -406,7 +412,7 @@ void VTApi::testImage(Sequence *sequence) {
     float* kf2 = image->getFloatA("test", kfl);
     for (int i=0; i < kfl; ++i) cout << kf2[i] << " ";
     cout << endl;
-    destructall(kf2);
+    vt_destructall(kf2);
 
     image->setString("imglocation", "tudlenudle.png");
     image->setExecute();  // NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
@@ -415,7 +421,7 @@ void VTApi::testImage(Sequence *sequence) {
     cout << "DELETING Image " << sn << endl;
     Query* query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".intervals WHERE t1=" + toString(t1) + ";");
     query->execute();
-    destruct (query);
+    vt_destruct(query);
 
     cout << "DONE testing image.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -430,11 +436,11 @@ void VTApi::testVideo(Dataset *dataset) {
     video->next();
     video->print();
 
-#ifdef __OPENCV_HIGHGUI_HPP__
+#if HAVE_OPENCV
     cout << "** PLAYING video " << video->getName() << " ... press any key to exit." << endl;
     VideoPlayer* player = new VideoPlayer(*video);
     player->play();
-    destruct(player);
+    vt_destruct(player);
 #else
     cout << "** CANNOT PLAY VIDEO " << video->getName() << endl;
 #endif
@@ -449,8 +455,8 @@ void VTApi::testVideo(Dataset *dataset) {
     query->execute();
 
     cout << "** CLEANUP" << endl;
-    destruct(query);
-    destruct(video);
+    vt_destruct(query);
+    vt_destruct(video);
 
     cout << endl << "DONE testing video.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -472,7 +478,7 @@ void VTApi::testMethod(Dataset *dataset) {
     }
 
     cout << "** CLEANUP" << endl;
-    destruct(method);
+    vt_destruct(method);
 
     cout << endl << "DONE testing method.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;
@@ -490,7 +496,7 @@ void VTApi::testProcess(Dataset *dataset) {
 //    process->add("test", "test");
 
     cout << "** CLEANUP" << endl;
-    destruct(process);
+    vt_destruct(process);
 
     cout << endl << "DONE testing process.";
     cout << endl << "---------------------------------------------------------------" << endl << endl;

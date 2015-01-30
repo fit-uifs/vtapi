@@ -9,9 +9,9 @@
 #define VTAPI_SETTINGS_H
 
 /* If we use autoconf.  */
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+//#ifdef HAVE_CONFIG_H
+//#include "config.h"
+//#endif
 
 #include <stdio.h> /* for FILE */
 

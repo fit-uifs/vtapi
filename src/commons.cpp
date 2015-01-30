@@ -10,10 +10,13 @@
  * Methods of Commons class
  */
 
-#include <vtapi_global.h>
-#include <backends/vtapi_backendfactory.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_misc.h>
+#include <backends/vtapi_backendfactory.h>
 #include <data/vtapi_commons.h>
+
+using std::string;
+using std::ifstream;
 
 using namespace vtapi;
 
@@ -52,14 +55,15 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     thisClass       = "Commons(init)";
 
     // initialize factory (backend_arg is required)
-    g_BackendFactory.initialize(string(args_info.backend_arg));
-    backend         = g_BackendFactory.backend;
+    backend         = args_info.backend_arg;
+    BackendFactory::initialize(backend);
+    
     // get connection string (postgres) or databases folder (sqlite)
-    switch (backend) {
-        case POSTGRES:
+    switch (BackendFactory::backend) {
+        case BackendFactory::POSTGRES:
             dbconn  = string(args_info.connection_arg);
             break;
-        case SQLITE:
+        case BackendFactory::SQLITE:
             dbconn  = string(args_info.dbfolder_arg);
             break;
         default:
@@ -69,12 +73,11 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     // initialize logger (log_arg has default value)
     logger          = new Logger(string(args_info.log_arg), args_info.verbose_given);
     // link libraries and load functions into fmap
-    libLoader       = g_BackendFactory.createLibLoader(logger);
+    libLoader       = BackendFactory::createLibLoader(logger);
     fmap            = libLoader->loadLibs();
     // initialize connection and type managing
-    connection      = fmap ? g_BackendFactory.createConnection(fmap, dbconn, logger) : NULL;
-    typeManager     = fmap ? g_BackendFactory.createTypeManager(fmap, connection, logger) : NULL;
-    g_typeManager   = (void *)typeManager; // global kvuli pg_enum_* handlerum
+    connection      = fmap ? BackendFactory::createConnection(fmap, dbconn, logger) : NULL;
+    typeManager     = fmap ? BackendFactory::createTypeManager(fmap, connection, logger) : NULL;
 
     // other args (see vtapi.conf)
     dataset         = args_info.dataset_given   ? string(args_info.dataset_arg)     : string ("");
@@ -94,20 +97,20 @@ Commons::Commons(const gengetopt_args_info& args_info) {
 
     doom            = true;             // destruct it with fire
 
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     initGEOS(geos_notice, geos_notice); // initialize GEOS stuff
 #endif
 }
 
 Commons::~Commons() {
     if (doom) {
-        destruct(typeManager);
-        destruct(connection);
-        destruct(fmap);
-        destruct(libLoader);        
-        destruct(logger);
+        vt_destruct(typeManager);
+        vt_destruct(connection);
+        vt_destruct(fmap);
+        vt_destruct(libLoader);        
+        vt_destruct(logger);
         
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
         finishGEOS();
 #endif
     }
@@ -165,7 +168,7 @@ string Commons::getUser() {
 
 bool Commons::checkCommonsObject() {
     return !(
-         g_BackendFactory.backend == UNKNOWN ||
+         BackendFactory::backend == BackendFactory::UNKNOWN ||
         !libLoader || !libLoader->isLoaded() || !fmap ||
         !connection ||
         !typeManager ||

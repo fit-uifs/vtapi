@@ -27,8 +27,8 @@ namespace vtapi {
 class Logger {
 protected:
 
-    string          logFilename;    /**< Name of the file for storing logs */
-    ofstream        logStream;      /**< Stream of file for storing logs */
+    std::string     logFilename;    /**< Name of the file for storing logs */
+    std::ofstream   logStream;      /**< Stream of file for storing logs */
     bool            verbose;        /**< Print queries and debug info */
 
 public:
@@ -38,7 +38,7 @@ public:
      * @param filename Name of the file for storing logs
      * @param verbose verbosity
      */
-    Logger(const string& filename = "", bool verbose = false);
+    Logger(const std::string& filename = "", bool verbose = false);
     /**
      * Destructor
      */
@@ -48,37 +48,37 @@ public:
      * Log function puts a timestamp with the message into the logstream
      * @param message logged message
      */
-    void log(const string& message);
+    void log(const std::string& message);
     /**
      * Debug function flushes a timestamp with the message immediately into the logstream
      * @param message logged message
      */
-    void debug(const string& message);
+    void debug(const std::string& message);
 
     /**
      * This is to write to the standard error log
      * @param message logged message
      */
-    void write(const string& message);
+    void write(const std::string& message);
     /**
      * Get a timestamp for logging
      * @return string value with timestamp
      * @note Timestamp format is "YYYY-MM-DD HH:NN:SS", where NN represents minutes
      */
-    string timestamp();
+    std::string timestamp();
         /**
      * This causes a serious death
      * @param errnum number of the error
      * @param logline error message to display
      * @param thisMethod method in which error occurred
      */
-    void error(int errnum, const string& logline, const string& thisMethod);
+    void error(int errnum, const std::string& logline, const std::string& thisMethod);
     /**
      * This causes a serious death
      * @param message error message to display
      * @param thisMethod method in which error occurred
      */
-    void error(const string& message, const string& thisMethod);
+    void error(const std::string& message, const std::string& thisMethod);
 
     /**
      * This is just a warning
@@ -86,13 +86,13 @@ public:
      * @param logline warning message to display
      * @param thisMethod method in which warning occurred
      */
-    void warning(int errnum, const string& logline, const string& thisMethod);
+    void warning(int errnum, const std::string& logline, const std::string& thisMethod);
     /**
      * This is just a warning
      * @param message warning message to display
      * @param thisMethod method in which warning occurred
      */
-    void warning(const string& message, const string& thisMethod);
+    void warning(const std::string& message, const std::string& thisMethod);
 
 };
 

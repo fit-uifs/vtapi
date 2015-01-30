@@ -12,14 +12,24 @@
  *
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_misc.h>
-#include <backends/vtapi_backends.h>
+#include <common/vtapi_serialize.h>
+#include <backends/vtapi_connection.h>
+#include <backends/vtapi_libloader.h>
+#include <backends/vtapi_querybuilder.h>
+#include <backends/vtapi_resultset.h>
+#include <backends/vtapi_typemanager.h>
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 
 // postgres data transfer format: 0=text, 1=binary
 #define PG_FORMAT           1
+
+using std::string;
+using std::stringstream;
+using std::vector;
+using std::pair;
 
 using namespace vtapi;
 
@@ -140,14 +150,26 @@ void* PGConnection::getConnectionObject() {
 }
 
 
+static PGTypeManager *g_typeManager = NULL;
+
+static int pg_enum_put (PGtypeArgs *args) {
+    return g_typeManager ? g_typeManager->enum_put(args) : 0;
+}
+
+static int pg_enum_get (PGtypeArgs *args) {
+    return g_typeManager ? g_typeManager->enum_get(args) : 0;
+}
+
 PGTypeManager::PGTypeManager(fmap_t *fmap, Connection *connection, Logger *logger)
 : TypeManager(fmap, connection, logger) {
     thisClass = "PGTypeManager";
     this->loadTypes();
     this->registerTypes();
+    if (!g_typeManager) g_typeManager = this;
 }
 
 PGTypeManager::~PGTypeManager() {
+    if (g_typeManager == this) g_typeManager = NULL;
 }
 
 bool PGTypeManager::registerTypes () {
@@ -167,7 +189,7 @@ bool PGTypeManager::registerTypes () {
     }
 
     // PostGIS special types
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     PGregisterType typespg_userdef[] = {
         {"geometry", geometry_put, geometry_get}
     };
@@ -179,7 +201,7 @@ bool PGTypeManager::registerTypes () {
 #endif
 
     // OpenCV special types
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     PGregisterType typescv_comp[] = {
         {"cvmat", NULL, NULL}
     };
@@ -317,61 +339,69 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
     string tablesStr;
     string whereStr;
 
-    if (this->keys_main.empty()) return initString; // in case of a direct query
+    // construct main part of the query
+    if (!this->keys_main.empty()) {
+        // go through keys
+        for (int i = 0; i < keys_main.size(); i++) {
+            string tmpTable     = !keys_main[i].from.empty() ? keys_main[i].from : this->table;
+            string tmpColumn    = keys_main[i].key;
+            size_t dotPos       = tmpTable.find(".");
+            bool addTable       = true;
 
-    // go through keys
-    for (int i = 0; i < keys_main.size(); i++) {
-        string tmpTable     = !keys_main[i].from.empty() ? keys_main[i].from : this->table;
-        string tmpColumn    = keys_main[i].key;
-        size_t dotPos       = tmpTable.find(".");
-        bool addTable       = true;
-
-        // get escaped table
-        if (dotPos == string::npos) {
-            tmpTable = this->escapeIdent(this->dataset) + "." + this->escapeIdent(tmpTable);
-        }
-        else {
-            tmpTable = this->escapeIdent(tmpTable.substr(0,dotPos)) + "." + this->escapeIdent(tmpTable.substr(dotPos+1,string::npos));
-        }
-        // get and add escaped column
-        if (tmpColumn.empty() || tmpColumn.compare("*") == 0) {
-            columnsStr  += tmpTable + "." + "*" +", ";
-        }
-        else {
-            columnsStr  += tmpTable + "." + this->escapeColumn(tmpColumn, "");
-            columnsStr  += " AS " + this->escapeLiteral(tmpColumn)  + ", ";
-        }
-        // check if table already exists
-        for (int j = 0; j < i; j++) {
-            if (keys_main[i].from.compare(keys_main[j].from) == 0 ||
-               (keys_main[i].from.empty() && keys_main[j].from.empty())) {
-                addTable = false;
-                break;
+            // get escaped table
+            if (dotPos == string::npos) {
+                tmpTable = this->escapeIdent(this->dataset) + "." + this->escapeIdent(tmpTable);
+            }
+            else {
+                tmpTable = this->escapeIdent(tmpTable.substr(0,dotPos)) + "." + this->escapeIdent(tmpTable.substr(dotPos+1,string::npos));
+            }
+            // get and add escaped column
+            if (tmpColumn.empty() || tmpColumn.compare("*") == 0) {
+                columnsStr  += tmpTable + "." + "*" +", ";
+            }
+            else {
+                columnsStr  += tmpTable + "." + this->escapeColumn(tmpColumn, "");
+                columnsStr  += " AS " + this->escapeLiteral(tmpColumn)  + ", ";
+            }
+            // check if table already exists
+            for (int j = 0; j < i; j++) {
+                if (keys_main[i].from.compare(keys_main[j].from) == 0 ||
+                   (keys_main[i].from.empty() && keys_main[j].from.empty())) {
+                    addTable = false;
+                    break;
+                }
+            }
+            // add table
+            if (addTable) {
+                tablesStr   += tmpTable + ", ";
             }
         }
-        // add table
-        if (addTable) {
-            tablesStr   += tmpTable + ", ";
+        // erase commas
+        if (!columnsStr.empty())    columnsStr.erase(columnsStr.length()-2);
+        if (!tablesStr.empty())     tablesStr.erase(tablesStr.length()-2);
+
+        // construct main part of the query
+        queryString = "SELECT " + columnsStr + "\n FROM " + tablesStr;
+        if (tablesStr.empty() || columnsStr.empty()) {
+            logger->error(201, queryString, thisClass+"::getSelectQuery()");
         }
     }
-    // erase commas
-    if (!columnsStr.empty())    columnsStr.erase(columnsStr.length()-2);
-    if (!tablesStr.empty())     tablesStr.erase(tablesStr.length()-2);
-
-    // construct main part of the query
-    queryString = "SELECT " + columnsStr + "\n FROM " + tablesStr;
-    if (tablesStr.empty() || columnsStr.empty()) {
-        logger->error(201, queryString, thisClass+"::getSelectQuery()");
+    // keys are empty, use direct query
+    else {
+        queryString = this->initString;
     }
+    
     // construct WHERE and the rest of it all
-    for (int i = 0; i < keys_where.size(); i++) {
-        if (!whereStr.empty()) whereStr += " AND ";
-        whereStr += this->escapeColumn(keys_where[i].key, keys_where[i].from);
-        whereStr += opers[i];
-        whereStr += "$" + toString(keys_where_order[i]);
-    }
-    if (!whereStr.empty()) {
-        queryString += "\n WHERE " + whereStr;
+    if (!this->keys_where.empty()) {
+        for (int i = 0; i < keys_where.size(); i++) {
+            if (!whereStr.empty()) whereStr += " AND ";
+            whereStr += this->escapeColumn(keys_where[i].key, keys_where[i].from);
+            whereStr += opers[i];
+            whereStr += "$" + toString(keys_where_order[i]);
+        }
+        if (!whereStr.empty()) {
+            queryString += "\n WHERE " + whereStr;
+        }
     }
     if (!groupby.empty()) {
         queryString += "\n GROUP BY " + groupby;
@@ -386,6 +416,7 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
         queryString += "\n OFFSET " + toString(offset);
     }
     queryString += ";";
+
     return (queryString);
 }
 
@@ -786,7 +817,7 @@ void PGQueryBuilder::destroyParam() {
         if (param_kill->args) {
             CALL_PQT(fmap, PQparamClear, param_kill->args);
         }
-        destruct(param_kill);
+        vt_destruct(param_kill);
     }
 }
 
@@ -929,7 +960,7 @@ char *PGResultSet::getCharA(const int col, int& size) {
             logger->warning(304, "Unexpected value in char array", thisClass+"::getCharA()");
             size = -1;
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
     }
@@ -1025,7 +1056,7 @@ int* PGResultSet::getIntA(const int col, int& size) {
             logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntA()");
             size = -1;
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
     }
@@ -1049,7 +1080,7 @@ vector<int>* PGResultSet::getIntV(const int col) {
         if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%int4", 0, &value)) {
             logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntV()");
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
         values->push_back(value);
@@ -1083,8 +1114,8 @@ vector< vector<int>* >* PGResultSet::getIntVV(const int col) {
             if (! CALL_PQT(fmap, PQgetf, tmp.res, i*tmp.dims[1]+j, "%int4", 0, &value)) {
                 logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntVV()");
                 CALL_PQ(fmap, PQclear, tmp.res);
-                for (int x = 0; x < (*arrays).size(); x++) destruct ((*arrays)[x]);
-                destruct (arrays);
+                for (int x = 0; x < (*arrays).size(); x++) vt_destruct((*arrays)[x]);
+                vt_destruct(arrays);
                 return NULL;
             }
             arr->push_back(value);
@@ -1146,7 +1177,7 @@ float* PGResultSet::getFloatA(const int col, int& size) {
             logger->warning(312, "Unexpected value in float array", thisClass+"::getFloatA()");
             size = -1;
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
     }
@@ -1169,7 +1200,7 @@ vector<float>* PGResultSet::getFloatV(const int col) {
         if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%float4", 0, &value)) {
             logger->warning(312, "Unexpected value in float array", thisClass+"::getFloatV()");
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
         values->push_back(value);
@@ -1179,7 +1210,7 @@ vector<float>* PGResultSet::getFloatV(const int col) {
     return values;
 }
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 
 CvMat *PGResultSet::getCvMat(const int col) {
     CvMat *mat = NULL;
@@ -1214,7 +1245,7 @@ CvMat *PGResultSet::getCvMat(const int col) {
 //    for (int i = 0; i < step_size; i++) {
 //        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
 //            warning(310, "Unexpected value in int array");
-//            destruct (step);
+//            vt_destruct(step);
 //            PQclear(step_arr.res);
 //            PQclear(mres);
 //            return NULL;
@@ -1249,7 +1280,7 @@ CvMat *PGResultSet::getCvMat(const int col) {
 //        mat = cvCreateMatHeader(rows, cols, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
-//    destruct (step);
+//    vt_destruct(step);
 //    PQclear(mres);
 
     return mat;
@@ -1289,8 +1320,8 @@ CvMatND *PGResultSet::getCvMatND(const int col) {
 //    for (int i = 0; i < step_size; i++) {
 //        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
 //            warning(310, "Unexpected value in int array");
-//            destruct (step);
-//            destruct (sizes);
+//            vt_destruct(step);
+//            vt_destruct(sizes);
 //            PQclear(step_arr.res);
 //            PQclear(mres);
 //            return NULL;
@@ -1331,7 +1362,7 @@ CvMatND *PGResultSet::getCvMatND(const int col) {
 //        mat = cvCreateMatNDHeader(dims, sizes, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
-//    destruct (step);
+//    vt_destruct(step);
 //    PQclear(mres);
 
     return mat;
@@ -1339,7 +1370,7 @@ CvMatND *PGResultSet::getCvMatND(const int col) {
 #endif
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 PGpoint PGResultSet::getPoint(const int col) {
     PGresult *pgres = (PGresult *) this->res;
     PGpoint point = {0.0, 0.0};
@@ -1363,7 +1394,7 @@ vector<PGpoint>*  PGResultSet::getPointV(const int col) {
         if (! CALL_PQT(fmap, PQgetf, tmp.res, i, "%point", 0, &value)) {
             logger->warning(325, "Unexpected value in point array", thisClass+"::getPointV()");
             CALL_PQ(fmap, PQclear, tmp.res);
-            destruct (values);
+            vt_destruct(values);
             return NULL;
         }
         values->push_back(value);
@@ -1374,7 +1405,7 @@ vector<PGpoint>*  PGResultSet::getPointV(const int col) {
 }
 #endif
 
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
 GEOSGeometry* PGResultSet::getGeometry(const int col) {
     PGresult *pgres = (PGresult *) this->res;
     GEOSGeometry *geo = NULL;
@@ -1459,7 +1490,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
                         }
                         if (i < (*arr).size()-1) valss << ",";
                     }
-                    destruct (arr);
+                    vt_destruct(arr);
                 }
             }
             
@@ -1475,7 +1506,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
                         }
                         if (i < (*arr).size()-1) valss << ",";
                     }
-                    destruct (arr);
+                    vt_destruct(arr);
                 }
             }
 
@@ -1485,13 +1516,13 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
                     int arr_size;
                     char *arr = this->getCharA(col, arr_size);
                     for (int i = 0; i < arr_size; i++) valss << arr[i];
-                    destruct (arr);
+                    vt_destruct(arr);
                 }
             }
 
             // array of PGpoint
             else if (keytype.find("point") != string::npos) {
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
 
                 vector<PGpoint>* arr = this->getPointV(col);
                 if (arr) for (int i = 0; i < (*arr).size(); i++) {
@@ -1502,7 +1533,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
                     }
                     if (i < (*arr).size()-1) valss << ",";
                 }
-                destruct (arr);
+                vt_destruct(arr);
 #endif
             }
 
@@ -1512,7 +1543,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
             } break;
 
         case TYPE_COMPOSITE: {
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
             // OpenCV cvMat type
             if (!keytype.compare("cvmat")) {
                 CvMat *mat = getCvMat(col);
@@ -1601,7 +1632,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
 
 
         case TYPE_USERDEFINED: { // user-defined (cube + postGIS types!!)
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
             // PostGIS generic geometry type
             if (!keytype.compare("geometry")) {
                 GEOSGeometry *geo;
@@ -1649,8 +1680,8 @@ pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_
 
     if (!get_widths && keys) return std::make_pair(keys, widths);
     else if (!widths || !keys || cols != keys->size() || cols == 0 || rows == 0) {
-        destruct(widths);
-        destruct(keys);
+        vt_destruct(widths);
+        vt_destruct(keys);
         return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
     }
 
@@ -1679,8 +1710,8 @@ pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_
         }
     }
     if (widths->size() != keys->size()) {
-        destruct(widths);
-        destruct(keys);
+        vt_destruct(widths);
+        vt_destruct(keys);
         return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
     }
     else return std::make_pair(keys, widths);
@@ -1707,7 +1738,7 @@ fmap_t *PGLibLoader::loadLibs() {
 
     retval &= load_libpq(fmap);
     retval &= load_libpqtypes(fmap);
-    if (!retval) destruct(fmap);
+    if (!retval) vt_destruct(fmap);
 
     return retval ? fmap : NULL;
 };

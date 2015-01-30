@@ -8,8 +8,12 @@
 #ifndef VTAPI_COMMONS_H
 #define	VTAPI_COMMONS_H
 
-#include "backends/vtapi_backendfactory.h"
-#include "backends/vtapi_backends.h"
+#include "../common/vtapi_config.h"
+#include "../common/vtapi_settings.h"
+#include "../common/vtapi_logger.h"
+#include "../backends/vtapi_connection.h"
+#include "../backends/vtapi_typemanager.h"
+#include "../backends/vtapi_libloader.h"
 
 namespace vtapi {
 
@@ -26,7 +30,7 @@ typedef enum {
  *
  * This class is inherited by many and many other classes, but it manages just single resources,
  * thus there may bee a doom if someone destroys the original ones. Well, destructor should only happen
- * when isDoom is false, which is set by the only constructor: Commons(string connStr); .
+ * when isDoom is false, which is set by the only constructor: Commons(std::string connStr); .
  *
  * @see Basic information on page @ref KEYVALUES
  *
@@ -34,7 +38,7 @@ typedef enum {
  *//***************************************************************************/
 class Commons {
 protected:
-    string thisClass; /**< This should be filled in each constructor of a derived class */
+    std::string thisClass; /**< This should be filled in each constructor of a derived class */
 
     Connection      *connection;        /**< Connection object */
     TypeManager     *typeManager;       /**< Datatypes management object */
@@ -42,26 +46,26 @@ protected:
     Logger          *logger;            /**< Logger object */
     fmap_t          *fmap;              /**< Map of library functions */
 
-    backend_t       backend;            /**< Used backend type */
-    string          dbconn;             /**< Connection string / databases folder */
+    std::string     backend;            /**< Used backend type */
+    std::string     dbconn;             /**< Connection string / databases folder */
     format_t        format;             /**< Output format */
-    string          input;              /**< A filename from which we read an input */
-    string          output;             /**< A filename into which we write an output */
-    string          user;               /**< Current user */
-    string          baseLocation;       /**< Base path location */
+    std::string     input;              /**< A filename from which we read an input */
+    std::string     output;             /**< A filename into which we write an output */
+    std::string     user;               /**< Current user */
+    std::string     baseLocation;       /**< Base path location */
     int             queryLimit;         /**< Limit number of rows fetched at once */
     int             arrayLimit;         /**< Limit amount of printed array elements */
 
     // THESE ARE USED IN THE UNDERLYING CLASSES HIERARCHY FOR ANYTHING NECESSARY
-    string          dataset;            /**< Current dataset name */
-    string          datasetLocation;    /**< Current dataset location */
-    string          sequence;           /**< Current sequence name */
-    string          sequenceLocation;   /**< Current sequence location */
-    string          selection;          /**< Current selection name */
+    std::string     dataset;            /**< Current dataset name */
+    std::string     datasetLocation;    /**< Current dataset location */
+    std::string     sequence;           /**< Current sequence name */
+    std::string     sequenceLocation;   /**< Current sequence location */
+    std::string     selection;          /**< Current selection name */
 
     // NOT YET IMPLEMENTED
-    string          method;             /**< Current method name */
-    string          process;            /**< Current process name */
+    std::string     method;             /**< Current method name */
+    std::string     process;            /**< Current process name */
 
     bool            doom;               /**< For destructor purposes */
 
@@ -87,7 +91,7 @@ public:
      * @param format
      * @unimplemented
      */
-    void read(const string& format="");
+    void read(const std::string& format="");
 
     // some functions that may be useful
     /**
@@ -105,42 +109,42 @@ public:
      * Get name of current dataset
      * @return dataset name
      */
-    string getDataset();
+    std::string getDataset();
     /**
      * Get name of current sequence
      * @return sequence name
      */
-    string getSequence();
+    std::string getSequence();
     /**
      * Get name of current selection
      * @return selection name
      */
-    string getSelection();
+    std::string getSelection();
     /**
      * Get base location path
      * @return base location
      */
-    string getBaseLocation();
+    std::string getBaseLocation();
     /**
      * Get dataset location path
      * @return dataset location
      */
-    string getDatasetLocation();
+    std::string getDatasetLocation();
     /**
      * Get sequence location path
      * @return sequence location
      */
-    string getSequenceLocation();
+    std::string getSequenceLocation();
     /**
      * Get data location path
      * @return data location
      */
-    string getDataLocation();
+    std::string getDataLocation();
     /**
      * Get user name
      * @return user name
      */
-    string getUser();
+    std::string getUser();
 
     /**
      * Checks commons object for validity (connection etc.)
@@ -152,7 +156,7 @@ public:
      * @param filename
      * @return success
      */
-    static bool fileExists(const string& filename);
+    static bool fileExists(const std::string& filename);
 
 private:
 
@@ -161,7 +165,7 @@ private:
      * @param format string format
      * @return format_t value
      */
-    format_t mapFormat(const string& format);
+    format_t mapFormat(const std::string& format);
 
 };
 

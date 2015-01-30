@@ -9,6 +9,7 @@
 #define	VTAPI_METHOD_H
 
 #include "vtapi_keyvalues.h"
+#include "vtapi_process.h"
 
 namespace vtapi {
 
@@ -33,7 +34,7 @@ public:
      * @param orig pointer to the parrent KeyValues object
      * @param name specific name of method, which we can construct
      */
-    Method(const KeyValues& orig, const string& name = "");
+    Method(const KeyValues& orig, const std::string& name = "");
 
     /**
      * Move to a next method and set a method name and its methodkeys variables
@@ -46,7 +47,7 @@ public:
      * Get a name of the current method
      * @return string value with the name of the method
      */
-    string getName();
+    std::string getName();
     /**
      * This is used to refresh the methodKeys vector
      * @return TKeys
@@ -54,20 +55,19 @@ public:
     TKeys getMethodKeys();
 
     /**
-     * Create new process for current dataset
-     * @return pointer to new process
+     * Create process object for access to existing processes
+     * @return pointer to new process object
      */
-    Process* newProcess(const string& name);
-
+    Process* newProcess(const std::string& name = "");
     /**
-     * Runs a process of this method - abstract
-     * @return success
-     * @todo code: neimplementováno
+     * Create process object for starting new process
+     * @param callback process status update callback
+     * @param pContext supplied callback context
+     * @return 
      */
-    virtual bool run() { return false; }
-   
+    Process* addProcess(Process::fCallback callback = NULL, void *pContext = NULL);  
 
-    Method* add(const string& name);
+    Method* add(const std::string& name);
     
     Method* loadCode();    
 
@@ -76,10 +76,7 @@ public:
     void init();
     void exit();
     
-    // getters 
-    
-    // setters
-    bool set() {};
+    std::string getLastError() { return std::string(""); }
     
 private:
 
@@ -88,7 +85,7 @@ private:
      * @param inout
      * @todo code: neimplementováno (pak doplnit i doc)
      */
-    void printData(const string& inout);
+    void printData(const std::string& inout);
 
 };
 

@@ -8,12 +8,13 @@
 #ifndef VTAPI_BACKENDFACTORY_H
 #define	VTAPI_BACKENDFACTORY_H
 
-#include "vtapi_backends.h"
+#include "vtapi_libloader.h"
+#include "vtapi_connection.h"
+#include "vtapi_querybuilder.h"
+#include "vtapi_resultset.h"
+#include "vtapi_typemanager.h"
 
 namespace vtapi {
- 
-class BackendFactory;
-extern BackendFactory g_BackendFactory;
 
 /**
  * @brief Factory for creating objects of backend-specific polymorphic classes
@@ -33,15 +34,24 @@ extern BackendFactory g_BackendFactory;
  */
 class BackendFactory {
 public:
+    
+// backend type
+typedef enum {
+    UNKNOWN = 0,
+    SQLITE,
+    POSTGRES
+} backend_t;
 
-    backend_t backend;        /**< backend type */
+public:
+
+    static backend_t backend;        /**< backend type */
 
     /**
      * Initializes factory with given backend type
      * @param backendType backend type
      * @return success
      */
-    bool initialize(const string& backendType = "");
+    static bool initialize(const std::string& backendType = "");
 
     /**
      * Creates object of class @ref Connection
@@ -50,7 +60,7 @@ public:
      * @param logger message logging object
      * @return NULL if factory is uninitialized, connection object otherwise
      */
-    Connection* createConnection(fmap_t *fmap, const string& connectionInfo, Logger *logger);
+    static Connection* createConnection(fmap_t *fmap, const std::string& connectionInfo, Logger *logger);
 
     /**
      * Creates object of class @ref TypeManager
@@ -59,7 +69,7 @@ public:
      * @param logger message logging object
      * @return NULL if factory is uninitialized, data type managing object otherwise
      */
-    TypeManager* createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger);
+    static TypeManager* createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger);
 
     /**
      * Creates object of class @ref QueryBuilder
@@ -70,7 +80,7 @@ public:
      * @see Query
      * @return NULL if factory is uninitialized, query building object otherwise
      */
-    QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString);
+    static QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const std::string& initString);
 
     /**
      * Creates object of class @ref ResultSet
@@ -79,13 +89,13 @@ public:
      * @param logger message logging object
      * @return NULL if factory is uninitialized, result set object otherwise
      */
-    ResultSet* createResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger);
+    static ResultSet* createResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger);
 
     /**
      * Creates object of class @ref LibLoader
      * @return NULL if factory is uninitialized, library loading object otherwise
      */
-    LibLoader* createLibLoader(Logger *logger);
+    static LibLoader* createLibLoader(Logger *logger);
 };
 
 } // namespace vtapi

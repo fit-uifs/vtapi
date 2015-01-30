@@ -15,22 +15,10 @@
 #include <string.h>
 */
 
-#include <vtapi_global.h>
-#include <backends/vtapi_typemanager.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_misc.h>
 
 
-void *g_typeManager;
-
-#ifdef HAVE_POSTGRESQL
-int pg_enum_put (PGtypeArgs *args) {
-    return ((vtapi::PGTypeManager *)g_typeManager)->enum_put(args);
-}
-
-int pg_enum_get (PGtypeArgs *args) {
-    return ((vtapi::PGTypeManager *)g_typeManager)->enum_get(args);
-}
-#endif
 
 void endian_swap2(void *outp, void *inp)
 {
@@ -83,7 +71,7 @@ void endian_swap8(void *outp, void *inp)
     }
 }
 
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
 int geometry_put (PGtypeArgs *args) {
     //TODO
     return 0;

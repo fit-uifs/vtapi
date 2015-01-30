@@ -19,8 +19,8 @@
 #ifndef VTAPI_H
 #define	VTAPI_H
 
-#include "vtapi_global.h"
-#include "data/vtapi_data.h"
+#include "common/vtapi_config.h"
+#include "data/vtapi_dataset.h"
 
 namespace vtapi {
 
@@ -55,7 +55,7 @@ public:
      * @deprecated
      * @param configFile location
      */
-    VTApi(const string& configFile);
+    VTApi(const std::string& configFile = std::string("./vtapi.conf"));
 
     /**
      * Constructor
@@ -65,7 +65,7 @@ public:
      * @param user
      * @param password
      */
-    VTApi(const string& connStr, const string& location, const string& user, const string& password);
+    VTApi(const std::string& connStr, const std::string& location, const std::string& user, const std::string& password);
 
     /**
      * Copy constructor
@@ -97,14 +97,14 @@ public:
      * @param name specific dataset name
      * @return new dataset
      */
-    Dataset* newDataset(const string& name = "");
+    Dataset* newDataset(const std::string& name = "");
 
     /**
      * Methodology shortcuts
      * @param name
      * @return
      */
-    Method* newMethod(const string& name = "");
+    Method* newMethod(const std::string& name = "");
     Method* addMethod(const Method& method);
 
 private:

@@ -40,30 +40,13 @@
 #define	VTAPI_LIBPQ_H
 
 
+#include "vtapi_config.h"
 
     
     
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-extern void *g_typeManager;
-
-#ifdef HAVE_POSTGRESQL
-/**
- * Generic put handler for enum types
- * @param
- * @return
- */
-int pg_enum_put (PGtypeArgs *);
-/**
- * Generic get handler for enum types
- * @param
- * @return
- */
-int pg_enum_get (PGtypeArgs *);
-#endif
-
 
 /**
  * Endian swapper for 2-byte long types
@@ -84,7 +67,7 @@ void endian_swap4(void *out, void *in);
  */
 void endian_swap8(void *out, void *in);
 
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
 
 #include <malloc.h>
 #include <math.h>

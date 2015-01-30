@@ -61,7 +61,7 @@ public:
     double getMeanClock();
 
 
-#ifdef PROCPS_PROC_READPROC_H
+#if HAVE_READPROC
 
     /**
      * @return PID

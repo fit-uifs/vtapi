@@ -9,13 +9,11 @@
 #define	VTAPI_DATASET_H
 
 #include "vtapi_keyvalues.h"
+#include "vtapi_sequence.h"
+#include "vtapi_method.h"
+#include "vtapi_process.h"
 
 namespace vtapi {
-    
-class Sequence;
-class Video;
-class Method;
-class Process;
 
 /**
  * @brief This class should always be on the path of your program...
@@ -38,7 +36,7 @@ public:
      * @param name specific dataset name
      * @todo @b doc: nejsem si jist, zda i zde je parametr "const KeyValues& orig" nadřazený prvek
      */
-    Dataset(const KeyValues& orig, const string& name = "");
+    Dataset(const KeyValues& orig, const std::string& name = "");
 
     /**
      * Move to a next dataset and set dataset name and location varibles
@@ -51,41 +49,41 @@ public:
      * Get name of the current dataset
      * @return name name of the current dataset
      */
-    string getName();
+    std::string getName();
 
     /**
      * Get location of the current dataset
      * @return location of the current dataset
      */
-    string getLocation();
+    std::string getLocation();
 
     /**
      * Create new sequence object for the current dataset
      * @param name sequence name (no name = represent all sequences)
      * @return pointer to the new sequence object
      */
-    Sequence* newSequence(const string& name = "");
+    Sequence* newSequence(const std::string& name = "");
 
     /**
      * Create new video (sequence) object for the current dataset
      * @param name video (sequence) name (no name = represent all sequences)
      * @return pointer to the new video object
      */
-    Video* newVideo(const string& name = "");
+    Video* newVideo(const std::string& name = "");
 
     /**
      * Create new method object for the current dataset
      * @param name method name (no name = represent all methods)
      * @return pointer to the new method object
      */
-    Method* newMethod(const string& name = "");
+    Method* newMethod(const std::string& name = "");
 
     /**
      * Create new process object for the current dataset
      * @param name process name (no name = represent all processes)
      * @return pointer to the new process object
      */
-    Process* newProcess(const string& name = "");
+    Process* newProcess(const std::string& name = "");
 
 };
 

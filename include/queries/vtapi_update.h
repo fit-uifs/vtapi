@@ -27,12 +27,12 @@ public:
      * @param commons configuration object of Commons class
      * @param initString initialization string (query/table or empty)
      */
-    Update(const Commons& commons, const string& initString = "");
+    Update(const Commons& commons, const std::string& initString = "");
     /**
      * Get UPDATE query string
      * @return query string
      */
-    string getQuery();
+    std::string getQuery();
     /**
      * Execute UPDATE query
      * @return success
@@ -46,7 +46,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setString(const string& key, const string& value, const string& from = "");
+    bool setString(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -57,7 +57,7 @@ public:
      * @return success
      * @todo @b code: neimplementováno (pak zkontrolovat doc)
      */
-    bool setStringA(const string& key, string* values, const int size, const string& from = "");
+    bool setStringA(const std::string& key, std::string* values, const int size, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -66,7 +66,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setInt(const string& key, int value, const string& from = "");
+    bool setInt(const std::string& key, int value, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -76,7 +76,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setIntA(const string& key, int* values, const int size, const string& from = "");
+    bool setIntA(const std::string& key, int* values, const int size, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -85,7 +85,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setFloat(const string& key, float value, const string& from = "");
+    bool setFloat(const std::string& key, float value, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -95,7 +95,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setFloatA(const string& key, float* values, const int size, const string& from = "");
+    bool setFloatA(const std::string& key, float* values, const int size, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -104,7 +104,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setSeqtype(const string& key, const string& value, const string& from = "");
+    bool setSeqtype(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -113,7 +113,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setInouttype(const string& key, const string& value, const string& from = "");
+    bool setInouttype(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -122,7 +122,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-//    bool setPermissions(const string& key, const string& value, const string& from = "");
+//    bool setPermissions(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to set keys (columns) and values
      * It may be called several times.
@@ -131,7 +131,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setTimestamp(const string& key, const time_t& value, const string& from = "");
+    bool setTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
         /**
      * This is a WHERE statement construction function
      * It can be called several times.
@@ -141,7 +141,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-    bool whereString(const string& key, const string& value, const string& oper = "=", const string& from = "");
+    bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for integers
      * It can be called several times.
@@ -151,7 +151,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-    bool whereInt(const string& key, const int value, const string& oper = "=", const string& from = "");
+    bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for floats
      * It can be called several times.
@@ -161,7 +161,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-    bool whereFloat(const string& key, const float value, const string& oper = "=", const string& from = "");
+    bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for seqtype
      * It can be called several times.
@@ -171,7 +171,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-     bool whereSeqtype(const string& key, const string& value, const string& oper = "=", const string& from = "");
+     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for inouttype
      * It can be called several times.
@@ -181,7 +181,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-     bool whereInouttype(const string& key, const string& value, const string& oper = "=", const string& from = "");
+     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for permissions
      * It can be called several times.
@@ -191,7 +191,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-//     bool wherePermissions(const string& key, const string& value, const string& oper = "=", const string& from = "");
+//     bool wherePermissions(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for timestamp
      * It can be called several times.
@@ -201,7 +201,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-     bool whereTimestamp(const string& key, const time_t& value, const string& oper = "=", const string& from = "");
+     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
 
 };
 

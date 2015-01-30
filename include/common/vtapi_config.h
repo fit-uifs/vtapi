@@ -18,13 +18,21 @@
 #ifndef VTAPI_CONFIG_H
 #define VTAPI_CONFIG_H
 
-#ifdef _DEBUG
-#define HAVE_CONFIG_H
-#endif
+// by configure script
+#include "vtapi_autoconfig.h"
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
+// standard library
+#include <iomanip>
+#include <cstdlib>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <time.h>
+#include <typeinfo>
 
 // comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
 #define COPYRDBUF
@@ -34,7 +42,7 @@
 
 // libpqtypes + pq
 #if HAVE_POSTGRESQL
-  #include <libpqtypes.h> // tohle se pak poresi configure
+  #include <libpqtypes.h> 
 #endif
 
 // sqlite
@@ -52,18 +60,11 @@
 #if HAVE_OPENCV
 // OpenCV header files
  #include <opencv2/opencv.hpp>
- #include <opencv2/highgui/highgui.hpp>
- //OpenCV
- #include <opencv2/core/core.hpp>
- #include <opencv2/core/core_c.h>
- #include <opencv2/imgproc/imgproc.hpp>
- //This adds the ability to debug image and video
- #include <opencv2/highgui/highgui.hpp>
 #endif 
 
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
 
-#ifdef HAVE_GEOS
+#if HAVE_GEOS
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
 #ifdef	__cplusplus
 extern "C" {

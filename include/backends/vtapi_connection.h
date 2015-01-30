@@ -8,21 +8,25 @@
 #ifndef VTAPI_CONNECTION_H
 #define	VTAPI_CONNECTION_H
 
+#include "vtapi_backendlibs.h"
+#include "../common/vtapi_logger.h"
+
 namespace vtapi {
 
 class ResultSet;
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 typedef struct {
-    string  database;
+    std::string  database;
 } sl_param_t;
 #endif
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 typedef struct {
     PGparam *args;
 } pg_param_t;
 #endif
+
 
 /**
  * @brief Class encapsulating all database connection functionality including
@@ -35,11 +39,11 @@ class Connection {
 protected:
 
     fmap_t      *fmap;          /**< function address book */
-    string      connInfo;       /**< connection string to access the database */
+    std::string connInfo;       /**< connection string to access the database */
     Logger      *logger;        /**< logger object for output messaging */
-    string      thisClass;      /**< class name */
+    std::string thisClass;      /**< class name */
 
-    string      errorMessage;   /**< error message string */
+    std::string errorMessage;   /**< error message string */
 
 public:
     /**
@@ -48,7 +52,7 @@ public:
      * @param connectionInfo initial connection string @see vtapi.conf
      * @param logger logger object
      */
-    Connection (fmap_t *fmap, const string& connectionInfo, Logger *logger) {
+    Connection (fmap_t *fmap, const std::string& connectionInfo, Logger *logger) {
         this->logger    = logger;
         this->connInfo  = connectionInfo;
         this->fmap      = fmap;
@@ -63,13 +67,13 @@ public:
      * @param connectionInfo connection string @see vtapi.conf
      * @return success
      */
-    virtual bool connect (const string& connectionInfo) = 0;
+    virtual bool connect (const std::string& connectionInfo) = 0;
     /**
      * Reconnects to database
      * @param connectionInfo connection string @see vtapi.conf
      * @return success
      */
-    virtual bool reconnect (const string& connectionInfo = "") = 0;
+    virtual bool reconnect (const std::string& connectionInfo = "") = 0;
     /**
      * Disconnects from database
      */
@@ -86,7 +90,7 @@ public:
      * @param param query parameters
      * @return success
      */
-    virtual bool execute(const string& query, void *param) = 0;
+    virtual bool execute(const std::string& query, void *param) = 0;
     /**
      * Executes query and fetc hes new result set
      * @param query SQl query string
@@ -94,7 +98,7 @@ public:
      * @param resultSet new result set object
      * @return number of rows fetched or negative value on error
      */
-    virtual int fetch(const string& query, void *param, ResultSet *resultSet) = 0;
+    virtual int fetch(const std::string& query, void *param, ResultSet *resultSet) = 0;
 
     /**
      * Gets database connection object
@@ -105,11 +109,11 @@ public:
      * Returns last error message
      * @return
      */
-    string getErrorMessage() { return this->errorMessage; };
+    std::string getErrorMessage() { return this->errorMessage; };
 
 };
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 class PGConnection : public Connection {
 private:
 
@@ -117,23 +121,23 @@ private:
 
 public:
 
-    PGConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger = NULL);
+    PGConnection(fmap_t *fmap, const std::string& connectionInfo, Logger* logger = NULL);
     ~PGConnection();
 
-    bool connect (const string& connectionInfo);
-    bool reconnect (const string& connectionInfo);
+    bool connect (const std::string& connectionInfo);
+    bool reconnect (const std::string& connectionInfo);
     void disconnect ();
     bool isConnected ();
 
-    bool execute(const string& query, void *param);
-    int fetch(const string& query, void *param, ResultSet *resultSet);
+    bool execute(const std::string& query, void *param);
+    int fetch(const std::string& query, void *param, ResultSet *resultSet);
 
     void* getConnectionObject();
 
 };
 #endif
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 class SLConnection : public Connection {
 private:
 
@@ -141,16 +145,16 @@ private:
 
 public:
 
-    SLConnection(fmap_t *fmap, const string& connectionInfo, Logger* logger = NULL);
+    SLConnection(fmap_t *fmap, const std::string& connectionInfo, Logger* logger = NULL);
     ~SLConnection();
 
-    bool connect (const string& connectionInfo);
-    bool reconnect (const string& connectionInfo);
+    bool connect (const std::string& connectionInfo);
+    bool reconnect (const std::string& connectionInfo);
     void disconnect ();
     bool isConnected ();
 
-    bool execute(const string& query, void *param);
-    int fetch(const string& query, void *param, ResultSet *resultSet);
+    bool execute(const std::string& query, void *param);
+    int fetch(const std::string& query, void *param, ResultSet *resultSet);
 
     void* getConnectionObject();
 
@@ -161,13 +165,13 @@ private:
      * @param path input/output string
      * @return success
      */
-    bool fixSlashes(string& path);
+    bool fixSlashes(std::string& path);
     /**
      * Attaches database vtapi_[dbfile].db
      * @param db
      * @return success
      */
-    bool attachDatabase(string& dbfile);
+    bool attachDatabase(std::string& dbfile);
 
 };
 #endif

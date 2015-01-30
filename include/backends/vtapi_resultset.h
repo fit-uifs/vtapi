@@ -8,11 +8,15 @@
 #ifndef VTAPI_RESULTSET_H
 #define	VTAPI_RESULTSET_H
 
+#include "vtapi_backendlibs.h"
+#include "../common/vtapi_logger.h"
+#include "../common/vtapi_tkeyvalue.h"
+
 namespace vtapi {
 
 class TypeManager;
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 typedef struct {
     int     rows;
     int     cols;
@@ -33,7 +37,7 @@ protected:
     fmap_t          *fmap;          /**< function address book */
     TypeManager     *typeManager;   /**< object for type manipulation */
     Logger          *logger;        /**< logger object for output messaging */
-    string          thisClass;      /**< class name */
+    std::string     thisClass;      /**< class name */
 
     int             pos;            /**< position within resultset */
     void            *res;           /**< result object */
@@ -119,7 +123,7 @@ public:
      * @param arrayLimit array length to print
      * @return string representation of field value
      */
-    virtual string getValue(const int col, const int arrayLimit = 0) = 0;
+    virtual std::string getValue(const int col, const int arrayLimit = 0) = 0;
 
     // =============== GETTERS FOR CHAR, CHAR ARRAYS AND STRINGS ===============
     /**
@@ -127,7 +131,7 @@ public:
      * @param key column key
      * @return character
      */
-    char getChar(const string& key) {
+    char getChar(const std::string& key) {
         return this->getChar(this->getKeyIndex(key));
     }
     /**
@@ -142,7 +146,7 @@ public:
      * @param size size of the array of char values
      * @return character array
      */
-    char *getCharA(const string& key, int& size) {
+    char *getCharA(const std::string& key, int& size) {
         return this->getCharA(this->getKeyIndex(key), size);
     };
     /**
@@ -157,7 +161,7 @@ public:
      * @param key column key
      * @return character array
      */
-    string getString(const string& key) {
+    std::string getString(const std::string& key) {
         return this->getString(this->getKeyIndex(key));
     };
     /**
@@ -165,7 +169,7 @@ public:
      * @param col column index
      * @return string value
      */
-    virtual string getString(const int col) = 0;
+    virtual std::string getString(const int col) = 0;
 
     // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==============
     /**
@@ -173,7 +177,7 @@ public:
      * @param key column key
      * @return integer value
      */
-    int getInt(const string& key) {
+    int getInt(const std::string& key) {
         return this->getInt(this->getKeyIndex(key));
     };
     /**
@@ -187,7 +191,7 @@ public:
      * @param key column key
      * @return long integer value
      */
-    long getInt8(const string& key) {
+    long getInt8(const std::string& key) {
         return this->getInt8(this->getKeyIndex(key));
     };
     /**
@@ -202,7 +206,7 @@ public:
      * @param size size of the array of integer values
      * @return array of integer values
      */
-    int *getIntA(const string& key, int& size) {
+    int *getIntA(const std::string& key, int& size) {
         return this->getIntA(this->getKeyIndex(key), size);
     };
     /**
@@ -217,7 +221,7 @@ public:
      * @param key column key
      * @return vector of integer values
      */
-    vector<int> *getIntV(const string& key) {
+    std::vector<int> *getIntV(const std::string& key) {
         return this->getIntV(this->getKeyIndex(key));
     };
     /**
@@ -225,13 +229,13 @@ public:
      * @param col index of column
      * @return vector of integer values
      */
-    virtual vector<int> *getIntV(const int col) = 0;
+    virtual std::vector<int> *getIntV(const int col) = 0;
     /**
      * Get a vector of integer vectors specified by a column key
      * @param key column key
      * @return  vector of vectors of integer values
      */
-    vector< vector<int>* > *getIntVV(const string& key) {
+    std::vector< std::vector<int>* > *getIntVV(const std::string& key) {
         return this->getIntVV(this->getKeyIndex(key));
     };
     /**
@@ -239,7 +243,7 @@ public:
      * @param col index of column
      * @return  vector of vectors of integer values
      */
-    virtual vector< vector<int>* > *getIntVV(const int col) = 0;
+    virtual std::vector< std::vector<int>* > *getIntVV(const int col) = 0;
     
 
     // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
@@ -248,7 +252,7 @@ public:
      * @param key column key
      * @return float value
      */
-    float getFloat(const string& key) {
+    float getFloat(const std::string& key) {
         return this->getFloat(this->getKeyIndex(key));
     };
     /**
@@ -262,7 +266,7 @@ public:
      * @param key column key
      * @return double value
      */
-    double getFloat8(const string& key) {
+    double getFloat8(const std::string& key) {
         return this->getFloat8(this->getKeyIndex(key));
     };
     /**
@@ -277,7 +281,7 @@ public:
      * @param size size of the array of float values
      * @return array of float values
      */
-    float* getFloatA(const string& key, int& size) {
+    float* getFloatA(const std::string& key, int& size) {
         return this->getFloatA(this->getKeyIndex(key), size);
     };
     /**
@@ -292,7 +296,7 @@ public:
      * @param key column key
      * @return vector of float values
      */
-    vector<float> *getFloatV(const string& key) {
+    std::vector<float> *getFloatV(const std::string& key) {
         return this->getFloatV(this->getKeyIndex(key));
     };
     /**
@@ -300,7 +304,7 @@ public:
      * @param col index of column
      * @return vector of integer values
      */
-    virtual vector<float> *getFloatV(const int col) = 0;
+    virtual std::vector<float> *getFloatV(const int col) = 0;
     
 
     //TODO: is it needed a vector of float vectors as in case of integers?
@@ -311,7 +315,7 @@ public:
      * @param key column key
      * @return Timestamp info
      */
-    time_t getTimestamp(const string& key) {
+    time_t getTimestamp(const std::string& key) {
         return this->getTimestamp(this->getKeyIndex(key));
     };
     /**
@@ -322,13 +326,13 @@ public:
     virtual time_t getTimestamp(const int col) = 0;
 
     // =============== GETTERS - OpenCV MATRICES ===============================
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     /**
      * Get OpenCv matrix (cvMat) specified by the column key
      * @param key column key
      * @return CvMat structure
      */
-    CvMat *getCvMat(const string& key) {
+    CvMat *getCvMat(const std::string& key) {
         return this->getCvMat(this->getKeyIndex(key));
     }
     /**
@@ -342,7 +346,7 @@ public:
      * @param key column key
      * @return CvMatND structure
      */
-    CvMatND *getCvMatND(const string& key) {
+    CvMatND *getCvMatND(const std::string& key) {
         return this->getCvMatND(this->getKeyIndex(key));
     }
     /**
@@ -355,13 +359,13 @@ public:
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
     
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
     /**
      * Get 2D point specified by the column key
      * @param key column key
      * @return 2D Point
      */
-    PGpoint getPoint(const string& key) {
+    PGpoint getPoint(const std::string& key) {
         return this->getPoint(this->getKeyIndex(key));
     };
     /**
@@ -375,7 +379,7 @@ public:
      * @param key column index
      * @return vector of 2D Points
      */
-    vector<PGpoint>*  getPointV(const string& key) {
+    std::vector<PGpoint>*  getPointV(const std::string& key) {
         return this->getPointV(this->getKeyIndex(key));
     };
     /**
@@ -383,7 +387,7 @@ public:
      * @param col column key
      * @return vector of 2D Points
      */
-    virtual vector<PGpoint>*  getPointV(const int col) = 0;
+    virtual std::vector<PGpoint>*  getPointV(const int col) = 0;
 #endif
 
 //    /**
@@ -391,7 +395,7 @@ public:
 //     * @param key column key
 //     * @return Line segment
 //     */
-//    PGlseg getLineSegment(const string& key);
+//    PGlseg getLineSegment(const std::string& key);
 //    /**
 //     * Get line segment specified by the column index
 //     * @param col column index
@@ -403,7 +407,7 @@ public:
 //     * @param key column key
 //     * @return Box
 //     */
-//    PGbox getBox(const string& key);
+//    PGbox getBox(const std::string& key);
 //    /**
 //     * Get box specified by the column index
 //     * @param col column index
@@ -415,7 +419,7 @@ public:
 //     * @param key column key
 //     * @return Circle
 //     */
-//    PGcircle getCircle(const string& key);
+//    PGcircle getCircle(const std::string& key);
 //    /**
 //     * Get circle specified by the column index
 //     * @param col column index
@@ -429,7 +433,7 @@ public:
 //     * @param key column key
 //     * @return Polygon
 //     */
-//    PGpolygon getPolygon(const string& key);
+//    PGpolygon getPolygon(const std::string& key);
 //    /**
 //     * Get polygon specified by the column index
 //     * @note polygon.pts must be copied out if needed after clearing resultset
@@ -445,7 +449,7 @@ public:
 //     * @param key column key
 //     * @return Path
 //     */
-//    PGpath getPath(const string& key);
+//    PGpath getPath(const std::string& key);
 //    /**
 //     * Get path specified by the column index
 //     * @note path.pts must be copied out if needed after clearing resultset
@@ -462,7 +466,7 @@ public:
 //     * @param key column key
 //     * @return Cube
 //     */
-//    PGcube getCube(const string& key);
+//    PGcube getCube(const std::string& key);
 //    /**
 //     * Get cube specified by the column key
 //     * @note Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
@@ -472,13 +476,13 @@ public:
 //     */
 //    PGcube getCube(const int col);
     
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     /**
      * Get GEOS geometry type by the column key
      * @param key column key
      * @return GEOS geometry
      */
-    GEOSGeometry* getGeometry(const string& key) {
+    GEOSGeometry* getGeometry(const std::string& key) {
         return this->getGeometry(this->getKeyIndex(key));
     }
     /**
@@ -492,7 +496,7 @@ public:
      * @param key column key
      * @return GEOS geometry
      */
-    GEOSGeometry* getLineString(const string& key) {
+    GEOSGeometry* getLineString(const std::string& key) {
         return this->getLineString(this->getKeyIndex(key));
     }
     /**
@@ -509,7 +513,7 @@ public:
      * @param key column key
      * @return integer with the OID value
      */
-    int getIntOid(const string& key) {
+    int getIntOid(const std::string& key) {
         return this->getIntOid(this->getKeyIndex(key));
     };
     /**
@@ -529,7 +533,7 @@ public:
      * @return metadata for print, pair consisting of two vectors:
      *  a) Tkeys - column types etc., b) ints - column widths
      */
-    virtual pair< TKeys*,vector<int>* > getKeysWidths(const int row, bool get_widths, const int arrayLimit) = 0;
+    virtual std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row, bool get_widths, const int arrayLimit) = 0;
 
 protected:
 
@@ -538,18 +542,18 @@ protected:
      * @param col column index
      * @return type name
      */
-    virtual string getKeyType(const int col) = 0;
+    virtual std::string getKeyType(const int col) = 0;
     /**
      * Gets index of given column name
      * @param key column name
      * @return column index
      */
-    virtual int getKeyIndex(const string& key) = 0;
+    virtual int getKeyIndex(const std::string& key) = 0;
 
 };
 
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 class PGResultSet : public ResultSet {
 public:
 
@@ -566,46 +570,46 @@ public:
     TKey getKey(int col);
     TKeys* getKeys();
 
-    string getValue(const int col, const int arrayLimit = 0);
+    std::string getValue(const int col, const int arrayLimit = 0);
 
     char getChar(const int pos);
     char *getCharA(const int pos, int& size);
-    string getString(const int col);
+    std::string getString(const int col);
     int getInt(const int col);
     long getInt8(const int col);
     int* getIntA(const int col, int& size);
-    vector<int>* getIntV(const int col);
-    vector< vector<int>* >* getIntVV(const int col);
+    std::vector<int>* getIntV(const int col);
+    std::vector< std::vector<int>* >* getIntVV(const int col);
     float getFloat(const int col);
     double getFloat8(const int col);
     float* getFloatA(const int col, int& size);
-    vector<float>* getFloatV(const int col);
+    std::vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
-    vector<PGpoint>*  getPointV(const int col);
+    std::vector<PGpoint>*  getPointV(const int col);
 #endif
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     GEOSGeometry* getGeometry(const int col);
     GEOSGeometry* getLineString(const int col);
 #endif
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     CvMat *getCvMat(const int col);
     CvMatND *getCvMatND(const int col);
 #endif
 
-    pair< TKeys*,vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
+    std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 
 protected:
 
-    string getKeyType(const int col);
-    int getKeyIndex(const string& key);
+    std::string getKeyType(const int col);
+    int getKeyIndex(const std::string& key);
 
 };
 #endif
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 class SLResultSet : public ResultSet {
 public:
 
@@ -622,40 +626,40 @@ public:
     TKey getKey(int col);
     TKeys* getKeys();
 
-    string getValue(const int col, const int arrayLimit = 0);
+    std::string getValue(const int col, const int arrayLimit = 0);
 
     char getChar(const int pos);
     char *getCharA(const int pos, int& size);
-    string getString(const int col);
+    std::string getString(const int col);
     int getInt(const int col);
     long getInt8(const int col);
     int* getIntA(const int col, int& size);
-    vector<int>* getIntV(const int col);
-    vector< vector<int>* >* getIntVV(const int col);
+    std::vector<int>* getIntV(const int col);
+    std::vector< std::vector<int>* >* getIntVV(const int col);
     float getFloat(const int col);
     double getFloat8(const int col);
     float* getFloatA(const int col, int& size);
-    vector<float>* getFloatV(const int col);
+    std::vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
 #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
-    vector<PGpoint>*  getPointV(const int col);
+    std::vector<PGpoint>*  getPointV(const int col);
 #endif
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
     GEOSGeometry* getGeometry(const int col);
     GEOSGeometry* getLineString(const int col);
 #endif
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     CvMat *getCvMat(const int col);
     CvMatND *getCvMatND(const int col);
 #endif
-    pair< TKeys*,vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
+    std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 
 protected:
 
-    string getKeyType(const int col);
-    int getKeyIndex(const string& key);
+    std::string getKeyType(const int col);
+    int getKeyIndex(const std::string& key);
 
 };
 #endif

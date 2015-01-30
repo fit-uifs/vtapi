@@ -12,10 +12,20 @@
  *
  */
 
-#include <vtapi_global.h>
-#include <backends/vtapi_backends.h>
+#include <common/vtapi_global.h>
+#include <common/vtapi_serialize.h>
+#include <backends/vtapi_connection.h>
+#include <backends/vtapi_libloader.h>
+#include <backends/vtapi_querybuilder.h>
+#include <backends/vtapi_resultset.h>
+#include <backends/vtapi_typemanager.h>
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
+
+using std::string;
+using std::stringstream;
+using std::vector;
+using std::pair;
 
 using namespace vtapi;
 
@@ -194,7 +204,7 @@ SLQueryBuilder::SLQueryBuilder(fmap_t *fmap, Connection *connection, Logger *log
 
  SLQueryBuilder::~SLQueryBuilder() {
      sl_param_t *sl_param = (sl_param_t *)param;
-     destruct(sl_param);
+     vt_destruct(sl_param);
      destroyKeys();
 }
 
@@ -538,10 +548,10 @@ void SLQueryBuilder::destroyParam() {
 
 void SLQueryBuilder::destroyKeys() {
     for (TKeyValues::iterator it = key_values_main.begin(); it != key_values_main.end(); ++it) {
-        destruct(*it);
+        vt_destruct(*it);
     }
     for (TKeyValues::iterator it = key_values_where.begin(); it != key_values_where.end(); ++it) {
-        destruct(*it);
+        vt_destruct(*it);
     }
 }
 
@@ -594,7 +604,7 @@ void SLResultSet::clear() {
     if (this->res) {
         sl_res_t *sl_res = (sl_res_t *) this->res;
         CALL_SL(fmap, sqlite3_free_table, sl_res->res);
-        destruct(sl_res)
+        vt_destruct(sl_res)
     }
 }
 
@@ -743,7 +753,7 @@ vector<float>* SLResultSet::getFloatV(const int col) {
     }
 }
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 
 CvMat *SLResultSet::getCvMat(const int col) {
     CvMat *mat = NULL;
@@ -778,7 +788,7 @@ CvMat *SLResultSet::getCvMat(const int col) {
 //    for (int i = 0; i < step_size; i++) {
 //        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
 //            warning(310, "Unexpected value in int array");
-//            destruct (step);
+//            vt_destruct(step);
 //            PQclear(step_arr.res);
 //            PQclear(mres);
 //            return NULL;
@@ -813,7 +823,7 @@ CvMat *SLResultSet::getCvMat(const int col) {
 //        mat = cvCreateMatHeader(rows, cols, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
-//    destruct (step);
+//    vt_destruct(step);
 //    PQclear(mres);
 
     return mat;
@@ -853,8 +863,8 @@ CvMatND *SLResultSet::getCvMatND(const int col) {
 //    for (int i = 0; i < step_size; i++) {
 //        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
 //            warning(310, "Unexpected value in int array");
-//            destruct (step);
-//            destruct (sizes);
+//            vt_destruct(step);
+//            vt_destruct(sizes);
 //            PQclear(step_arr.res);
 //            PQclear(mres);
 //            return NULL;
@@ -895,7 +905,7 @@ CvMatND *SLResultSet::getCvMatND(const int col) {
 //        mat = cvCreateMatNDHeader(dims, sizes, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
-//    destruct (step);
+//    vt_destruct(step);
 //    PQclear(mres);
 
     return mat;
@@ -903,7 +913,7 @@ CvMatND *SLResultSet::getCvMatND(const int col) {
 #endif
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 PGpoint SLResultSet::getPoint(const int col) {
     PGpoint point = { 0.0, 0.0 };
 //    memset(&point, 0, sizeof(PGpoint));
@@ -917,7 +927,7 @@ vector<PGpoint>*  SLResultSet::getPointV(const int col) {
 }
 #endif
 
-#ifdef HAVE_POSTGIS
+#if HAVE_POSTGIS
 GEOSGeometry* SLResultSet::getGeometry(const int col) {
     return NULL;
 }
@@ -972,8 +982,8 @@ pair< TKeys*, vector<int>* > SLResultSet::getKeysWidths(const int row, bool get_
 
     if (!get_widths && keys) return std::make_pair(keys, widths);
     else if (!widths || !keys || sl_res->cols != keys->size() || sl_res->cols == 0 || sl_res->rows == 0) {
-        destruct(widths);
-        destruct(keys);
+        vt_destruct(widths);
+        vt_destruct(keys);
         return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
     }
 
@@ -1002,8 +1012,8 @@ pair< TKeys*, vector<int>* > SLResultSet::getKeysWidths(const int row, bool get_
     }
 
     if (widths->size() != keys->size()) {
-        destruct(widths);
-        destruct(keys);
+        vt_destruct(widths);
+        vt_destruct(keys);
         return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
     }
     else return std::make_pair(keys, widths);
@@ -1030,7 +1040,7 @@ fmap_t *SLLibLoader::loadLibs() {
         return fmap;
     }
     else {
-        destruct(fmap);
+        vt_destruct(fmap);
         return NULL;
     }
 };

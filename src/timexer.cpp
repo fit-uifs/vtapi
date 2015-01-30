@@ -10,7 +10,7 @@
  * Methods of TimExer class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_timexer.h>
 
 using namespace vtapi;
@@ -56,7 +56,7 @@ double TimExer::getMeanClock() {
 }
 
 // have libproc-dev?
-#ifdef PROCPS_PROC_READPROC_H
+#if HAVE_READPROC
 
 int TimExer::getPID() {
     struct proc_t usage;

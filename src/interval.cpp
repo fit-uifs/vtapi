@@ -10,9 +10,11 @@
  * Methods of Interval and Image classes
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <data/vtapi_sequence.h>
 #include <data/vtapi_interval.h>
+
+using std::string;
 
 using namespace vtapi;
 
@@ -59,7 +61,7 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
     bool retval = VT_OK;
     int te2 = (t2 < 0) ? t1 : t2;
 
-    destruct(insert);
+    vt_destruct(insert);
     insert = new Insert(*this, this->selection);
     retval &= insert->keyString("seqname", sequence);
     retval &= insert->keyInt("t1", t1);
@@ -100,7 +102,7 @@ bool Interval::addExecute() {
 bool Interval::preSet() {
     bool retval = VT_OK;
 
-    destruct(update);
+    vt_destruct(update);
     update = new Update(*this, this->selection);
     retval &= update->whereString("seqname", sequence);
     retval &= update->whereInt("t1", this->getInt("t1"));
@@ -140,7 +142,7 @@ string Image::getDataLocation() {
     return (this->getDataLocation() + this->getImgLocation());
 }
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 cv::Mat Image::getData() {
     if (this->image.data) this->image.release();
     

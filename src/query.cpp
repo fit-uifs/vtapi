@@ -10,10 +10,14 @@
  * Methods of Query, Select, Insert and Update classes
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <backends/vtapi_backendfactory.h>
-#include <backends/vtapi_backends.h>
-#include <queries/vtapi_queries.h>
+#include <queries/vtapi_query.h>
+#include <queries/vtapi_select.h>
+#include <queries/vtapi_insert.h>
+#include <queries/vtapi_update.h>
+
+using std::string;
 
 using namespace vtapi;
 
@@ -25,8 +29,8 @@ Query::Query(const Commons& commons, const string& initString)
 : Commons(commons) {
     thisClass       = "Query";
 
-    queryBuilder    = fmap ? g_BackendFactory.createQueryBuilder(fmap, connection, logger, initString) : NULL;
-    resultSet       = fmap ? g_BackendFactory.createResultSet(fmap, typeManager, logger) : NULL;
+    queryBuilder    = fmap ? BackendFactory::createQueryBuilder(fmap, connection, logger, initString) : NULL;
+    resultSet       = fmap ? BackendFactory::createResultSet(fmap, typeManager, logger) : NULL;
     if (queryBuilder) {
         this->queryBuilder->setDataset(this->dataset);
         this->queryBuilder->setTable(this->selection);
@@ -37,8 +41,8 @@ Query::Query(const Commons& commons, const string& initString)
 Query::~Query() {
     if (!executed) logger-> warning(208, "The query was not executed after the last change\n" + this->getQuery(), thisClass+"::~Query()");
 
-    destruct(resultSet);
-    destruct(queryBuilder);
+    vt_destruct(resultSet);
+    vt_destruct(queryBuilder);
 }
 
 string Query::getQuery() {

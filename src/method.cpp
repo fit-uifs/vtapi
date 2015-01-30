@@ -10,20 +10,24 @@
  * Methods of Method class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <common/vtapi_tkey.h>
 #include <data/vtapi_process.h>
 #include <data/vtapi_method.h>
 
+using std::string;
+
 using namespace vtapi;
 
-
-Method::Method(const KeyValues& orig, const string& name) : KeyValues(orig) {
+Method::Method(const KeyValues& orig, const string& name)
+    : KeyValues(orig) {
     thisClass = "Method";
     
     select = new Select(orig);
     select->from("public.methods", "*");
     select->whereString("mtname", name);
+    
+    this->method = name;
 }
 
 bool Method::next() {
@@ -43,6 +47,14 @@ string Method::getName() {
 Process* Method::newProcess(const string& name) {
     return (new Process(*this, name));
 }
+
+Process* Method::addProcess(Process::fCallback callback, void *pContext) {
+    // don't call add() until process is run
+    Process *p = new Process(*this);
+    if (callback) p->setCallback(callback, pContext);
+    return p;
+}
+
 
 TKeys Method::getMethodKeys() {
     if (methodKeys.empty()) {
@@ -69,6 +81,7 @@ TKeys Method::getMethodKeys() {
     }
     return methodKeys;
 }
+
 
 
 

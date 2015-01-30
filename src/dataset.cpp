@@ -10,13 +10,15 @@
  * Methods of Dataset class
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <data/vtapi_sequence.h>
 #include <data/vtapi_interval.h>
 #include <data/vtapi_method.h>
 #include <data/vtapi_process.h>
 #include <data/vtapi_dataset.h>
 
+
+using std::string;
 
 using namespace vtapi;
 

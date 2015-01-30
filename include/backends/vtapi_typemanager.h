@@ -8,10 +8,13 @@
 #ifndef VTAPI_TYPEMANAGER_H
 #define	VTAPI_TYPEMANAGER_H
 
+#include "vtapi_backendlibs.h"
+#include "../common/vtapi_logger.h"
+
 namespace vtapi {
 
- class Connection;
-    
+class Connection;
+
 typedef enum {
     TYPE_UNDEFINED = 0,
     TYPE_ARRAY,
@@ -35,8 +38,8 @@ typedef struct {
 } type_metadata_t;
 
 
-typedef map<int,string>                 oid_map_t;
-typedef map<string, type_metadata_t>    types_map_t;
+typedef std::map<int,std::string>                 oid_map_t;
+typedef std::map<std::string, type_metadata_t>    types_map_t;
 
 
 /**
@@ -49,7 +52,7 @@ protected:
     fmap_t          *fmap;          /**< function address book */
     Connection      *connection;    /**< connection object */
     Logger          *logger;        /**< logger object for output messaging */
-    string          thisClass;      /**< class name */
+    std::string     thisClass;      /**< class name */
 
     oid_map_t       oid_map;        /**< types indexed by their OID */
     types_map_t     types_map;      /**< types metadata */
@@ -77,8 +80,8 @@ public:
      * @param oid type OID
      * @return type name
      */
-    string toTypname(int oid) {        
-        return (oid_map.count(oid) > 0) ? oid_map[oid] : string("");
+    std::string toTypname(int oid) {        
+        return (oid_map.count(oid) > 0) ? oid_map[oid] : std::string("");
     };
 
     /**
@@ -86,7 +89,7 @@ public:
      * @param name type name
      * @return type metadata struct
      */
-    type_metadata_t getTypeMetadata(const string& name) {
+    type_metadata_t getTypeMetadata(const std::string& name) {
         return (types_map.count(name) > 0) ? types_map[name] : type_metadata_t();
     }
 
@@ -100,11 +103,11 @@ protected:
 
 };
 
-#ifdef HAVE_POSTGRESQL
+#if HAVE_POSTGRESQL
 class PGTypeManager : public TypeManager {
 private:
 
-    set<string> reftypes;
+    std::set<std::string>reftypes;
 
     
 
@@ -125,9 +128,10 @@ protected:
     type_category_t mapCategory(char category_char);
     
 };
+
 #endif
 
-#ifdef HAVE_SQLITE
+#if HAVE_SQLITE
 class SLTypeManager : public TypeManager {
 private:
 

@@ -10,9 +10,12 @@
  * Methods of Sequence, Video and VideoPlayer classes
  */
 
-#include <vtapi_global.h>
+#include <common/vtapi_global.h>
 #include <data/vtapi_sequence.h>
 #include <data/vtapi_interval.h>
+
+using std::string;
+using std::vector;
 
 using namespace vtapi;
 
@@ -65,7 +68,7 @@ Image* Sequence::newImage(const string& name) {
 }
 
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 cv::Mat Sequence::getData() {
     if (this->frame.data) this->frame.release();
     
@@ -89,7 +92,7 @@ cv::Mat Sequence::getData() {
 bool Sequence::add(const string& name, const string& location, const string& type) {
     bool retval = VT_OK;
 
-    destruct(insert);
+    vt_destruct(insert);
     insert = new Insert(*this, "sequences");
     retval &= insert->keyString("seqname", name);
     retval &= insert->keyString("seqlocation", location);
@@ -125,7 +128,7 @@ bool Sequence::addExecute() {
 }
 
 bool Sequence::preSet() {
-    destruct(update);
+    vt_destruct(update);
 
     update = new Update(*this, "sequences");
     update->whereString("seqname", this->sequence);
@@ -147,7 +150,7 @@ bool Video::add(string name, string location) {
     bool retval = VT_OK;
     string filename = "";
 
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
     // TODO: P3k check something else???
     filename = baseLocation + datasetLocation + location;
     if (!fileExists(filename)) {
@@ -158,7 +161,7 @@ bool Video::add(string name, string location) {
 #endif
     
     if (retval) {
-        destruct(insert);
+        vt_destruct(insert);
         insert = new Insert(*this, "sequences");
         retval &= insert->keyString("seqname", name);
         retval &= insert->keyString("seqlocation", location);
@@ -168,7 +171,7 @@ bool Video::add(string name, string location) {
 }
 
 // TODO: nejak odlisit nestandardni veci
-#ifdef HAVE_OPENCV
+#if HAVE_OPENCV
 
 bool Video::openVideo() {
     if (this->capture.isOpened()) this->capture.release();
