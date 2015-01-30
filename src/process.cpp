@@ -302,6 +302,8 @@ std::string Process::serializeParams()
 
 void Process::deserializeParams(std::string paramString)
 {
+    if (paramString.empty()) return;
+    
     char *str = new char[paramString.length() + 1];
     char *token = NULL;
     char *value = NULL;
