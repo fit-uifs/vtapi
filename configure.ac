@@ -7,7 +7,7 @@ AM_INIT_AUTOMAKE
 AC_PREREQ([2.63]) # originally, there was autoconf ver. 2.68, but it seems that 2.63 is also OK ;)
 
 AC_CONFIG_MACRO_DIR([m4])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([include/common/vtapi_autoconfig.h])
 
 # Checks for programs.
 AC_PROG_CXX
