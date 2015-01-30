@@ -7,9 +7,17 @@
  * For more detailed description see header vtcli.h
  */
 
-
+#include <cstdlib>
+#include <time.h>
+#include <dirent.h>
+#include <fstream>
+#include <iostream>
+#include <sstream>
 
 #include "vtcli.h"
+
+using namespace vtapi;
+using namespace std;
 
 VTCli::VTCli(const VTApi& api) {
     this->vtapi = new VTApi(api);
@@ -23,11 +31,10 @@ VTCli::VTCli(int argc, char** argv){
 }
 
 VTCli::~VTCli() {
-    vt_destruct(this->vtapi);
+    if (this->vtapi) delete this->vtapi;
 }
 
 int VTCli::run() {
-
     string line, command;
     bool do_help = false;
 
@@ -96,14 +103,14 @@ int VTCli::run() {
         }
     } while (this->interact);
 
-    return VT_OK;
+    return 0;
 }
 
 void VTCli::queryCommand(string& line) {
     if (!line.empty()) {
         Query *query = new Query(*(this->vtapi->commons), line);
         query->execute();
-        vt_destruct(query);
+        delete query;
     }
 }
 
@@ -124,7 +131,7 @@ void VTCli::selectCommand(string& line) {
         ds->select->whereString("dslocation", params["location"]);
         ds->next();
         ds->printAll();
-        vt_destruct(ds);
+        delete ds;
     }
     // select sequence
     else if (!input.compare("sequence")) {
@@ -134,7 +141,7 @@ void VTCli::selectCommand(string& line) {
         seq->select->whereSeqtype("seqtyp", params["type"]);
         seq->next();
         seq->printAll();
-        vt_destruct(seq);
+        delete seq;
     }
     // select interval
     else if (!input.compare("interval")) {
@@ -145,7 +152,7 @@ void VTCli::selectCommand(string& line) {
         in->select->whereString("imglocation", params["location"]);
         in->next();
         in->printAll();
-        vt_destruct(in);
+        delete in;
     }
     // select process
     else if (!input.compare("process")) {
@@ -156,7 +163,7 @@ void VTCli::selectCommand(string& line) {
         pr->select->whereString("outputs", params["outputs"]);
         pr->next();
         pr->printAll();
-        vt_destruct(pr);
+        delete pr;
     }
     // select method
     else if (!input.compare("method")) {
@@ -165,7 +172,7 @@ void VTCli::selectCommand(string& line) {
         me->select->whereString("mtname", params["name"]);
         me->next();
         me->printAll();
-        vt_destruct(me);
+        delete me;
     }
 }
 
@@ -181,7 +188,7 @@ void VTCli::insertCommand(string& line) {
     ds->next();
     if (ds->getDataset().empty()) {
         cerr << "Insert failed; no dataset specified to insert into" << endl;
-        vt_destruct(ds);
+        delete ds;
         return;
     }
     // parse command line
@@ -211,8 +218,8 @@ void VTCli::insertCommand(string& line) {
         in->add(params["seqname"], atoi(params["t1"].c_str()),
                 atoi(params["t2"].c_str()), params["location"]);
         in->insert->execute();
-        vt_destruct(in);
-        vt_destruct(seq);
+        delete in;
+        delete seq;
     }
 
     // insert process
@@ -224,7 +231,7 @@ void VTCli::insertCommand(string& line) {
         cerr << "Only insert: sequence/interval/process" << endl;
     }
 
-    vt_destruct(ds);
+    delete ds;
 }
 
 //TODO
@@ -251,7 +258,7 @@ void VTCli::loadCommand(string& line) {
     ds->next();
     if (ds->getDataset().empty()) {
         cerr << "Load failed; no dataset specified to insert into" << endl;
-        vt_destruct(ds);
+        delete ds;
         return;
     }
 
@@ -259,7 +266,7 @@ void VTCli::loadCommand(string& line) {
     fixSlashes(filepath);
     loadDirectory(ds, filepath);
 
-    vt_destruct(ds);
+    delete ds;
 }
 
 void VTCli::loadDirectory(Dataset *ds, const string& dirpath) {
@@ -269,7 +276,7 @@ void VTCli::loadDirectory(Dataset *ds, const string& dirpath) {
 
     if ((pDir = opendir(dirpath.c_str())) == NULL) {
         cerr << "Load failed; cannot open directory " << dirpath;
-        vt_destruct(ds);
+        delete ds;
         return;
     }
     while((pEntry = readdir(pDir)) != NULL) {
@@ -408,13 +415,13 @@ void VTCli::insertSequence(Dataset* ds, map<string,string>* params) {
                     t++;
                 }
                 img->select->executed = true;
-                vt_destruct(img);
+                delete img;
             }
         }
     } while (0);
 
     seq->select->executed = true;
-    vt_destruct(seq);
+    delete seq;
 }
 
 bool VTCli::isVideoFile(const string& filepath) {
@@ -606,7 +613,7 @@ string VTCli::cutCSV(string& word) {
     return csv;
 }
 
-int VTCli::fixSlashes(string& path) {
+bool VTCli::fixSlashes(string& path) {
     size_t len = path.length();
     size_t slPos = 0;
     size_t nsPos = len;
@@ -624,25 +631,26 @@ int VTCli::fixSlashes(string& path) {
         nsPos--;
         if (nsPos < 0) {
             path.clear();
-            return VT_FAIL;
+            return false;
         }
     } while (path[nsPos] == '/' || path[nsPos] == '\\');
     if (nsPos < len - 1) {
         path = path.substr(0, nsPos + 1);   
     }
-    return VT_OK;
+    
+    return true;
 }
 
-int VTCli::printHelp() {
-    return this->printHelp("all");
+void VTCli::printHelp() {
+    this->printHelp("all");
 }
 
-int VTCli::printHelp(const string& what) {
+void VTCli::printHelp(const string& what) {
     stringstream hss;
 
     if (this->helpStrings.count(what)) {
         cout << this->helpStrings[what];
-        return VT_OK;
+        return;
     }
     else if (!what.compare("query")) {
         hss << endl <<
@@ -713,17 +721,15 @@ int VTCli::printHelp(const string& what) {
     if (!hss.fail()) {
         this->helpStrings.insert(std::make_pair(what,hss.str()));
         cout << hss.str() << endl;
-        return VT_OK;
     }
-    else return VT_FAIL;
 }
 
-int VTCli::processArgs(int argc, char** argv) {
+bool VTCli::processArgs(int argc, char** argv) {
     gengetopt_args_info args_info;
     if (cmdline_parser2 (argc, argv, &args_info, 0, 1, 0) != 0) {
         helpStrings.insert(std::make_pair("all", ""));
         this->cmdline.clear();
-        return VT_FAIL;
+        return false;
     }
     else {
         // Construct help string
@@ -738,31 +744,9 @@ int VTCli::processArgs(int argc, char** argv) {
         for (int i = 0; i < args_info.inputs_num; i++)
             cmdline.append(args_info.inputs[i]).append(" ");
         cmdline_parser_free (&args_info);
-        return VT_OK;
+        return true;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -778,15 +762,9 @@ int VTCli::processArgs(int argc, char** argv) {
  * @return sucess
  */
 int main(int argc, char** argv) {
+    VTCli app(argc, argv);
 
-    VTCli* vtcli = new VTCli(argc, argv);
-
-    vtcli->run();
-
-    vt_destruct(vtcli);
-
-    return 0;
-
+    return app.run();
 }
 
 

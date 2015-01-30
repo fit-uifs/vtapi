@@ -17,34 +17,13 @@
 #ifndef VTCLI_H
 #define	VTCLI_H
 
-#include <cstdlib>
-#include <time.h>
-#include <dirent.h>
-#include <fstream>
-#include <iostream>
-#include <sstream>
 #include <string>
 #include <map>
 #include <set>
 
-using std::ifstream;
-using std::iostream;
-using std::stringstream;
-using std::string;
-using std::map;
-using std::set;
-using std::pair;
-using std::cin;
-using std::cout;
-using std::cerr;
-using std::endl;
-
 #include "vtapi.h"
-#include "vtapi_global.h"
 
 using namespace vtapi;
-
-
 
 /**
  * @brief Main VTCli class
@@ -74,42 +53,40 @@ public:
      *      eg.: ./vtcli --config=./vtapi.conf
      *  one-time    - runs one time command (toggled when command line arguments contain an unknown string)
      *      eg.: ./vtcli --config=./vtapi.conf insert sequence /mnt/data/seq/video.mpg
-     * @return VTCLI_OK on success, VTCLI_FAIL on failure
+     * @return error code
      */
     int run();
     /**
      * Prints basic help
-     * @return VTCLI_OK on success, VTCLI_FAIL on failure
      */
-    int printHelp();
+    void printHelp();
     /**
      * Prints command-specific help
      * @param what command with which to help
-     * @return VTCLI_OK on success, VTCLI_FAIL on failure
      */
-    int printHelp(const string& what);
+    void printHelp(const std::string& what);
 
 protected:
 
     VTApi* vtapi;
     bool interact;
-    string cmdline;
-    map<string,string> helpStrings;
-    set<string> videoSuffixes;
-    set<string> imageSuffixes;
+    std::string cmdline;
+    std::map<std::string,std::string> helpStrings;
+    std::set<std::string> videoSuffixes;
+    std::set<std::string> imageSuffixes;
     
     /**
      * Creates key/value std::pair from string in key=value format
      * @param word Input string
      * @return Key,Value std::pair
      */
-    std::pair<string,string> createKeyValue(const string& word);
+    std::pair<std::string,std::string> createKeyValue(const std::string& word);
     /**
      * Creates sequence name (filename without suffix) from its full path
      * @param filepath full file(dir)path
      * @return sequence name
      */
-    string createSeqnameFromPath(const string& filepath);
+    std::string createSeqnameFromPath(const std::string& filepath);
     /**
      * Creates sequence location (within dataset) from its full path
      * @param filepath full file(dir)path
@@ -117,61 +94,61 @@ protected:
      * @param datasetLocation dataset data location
      * @return sequence location
      */
-    string createLocationFromPath(const string& filepath, const string& baseLocation, const string& datasetLocation);
+    std::string createLocationFromPath(const std::string& filepath, const std::string& baseLocation, const std::string& datasetLocation);
     /**
      * Checks if string is valid parameter key=value
      * @param word checked string
      * @return bool value
      */
-    bool isParam(const string& word);
+    bool isParam(const std::string& word);
     /**
      * Checks if filepath points to a video file
      * @param filepath full filepath
      * @return bool value
      */
-    bool isVideoFile(const string& filepath);
+    bool isVideoFile(const std::string& filepath);
     /**
      * Checks if filepath points to a image file
      * @param filepath full filepath
      * @return bool value
      */
-    bool isImageFile(const string& filepath);
+    bool isImageFile(const std::string& filepath);
     /**
      * Checks if dirpath points to a directory with at least one image in it
      * @param dirpath full path to directory
      * @return bool value
      */
-    bool isImageFolder(const string& dirpath);
+    bool isImageFolder(const std::string& dirpath);
     /**
      * Loads list of images within a folder
      * @param dirpath image folder
      * @param imagelist set of loaded image filenames
      * @return count of images loaded
      */
-    int loadImageList(const string& dirpath, set<string>& imagelist);
+    int loadImageList(const std::string& dirpath, std::set<std::string>& imagelist);
     /**
      * Loads directory recursively within dataset
      * @param dirpath path to dir
      */
-    void loadDirectory(Dataset *ds, const string& dirpath);
+    void loadDirectory(Dataset *ds, const std::string& dirpath);
     /**
      * Inserts one sequence into db
      * @param ds dataset
      * @param params sequence name, location and type
      */
-    void insertSequence(Dataset *ds, map<string,string> *params);
+    void insertSequence(Dataset *ds, std::map<std::string,std::string> *params);
     /**
      * Inserts one sequence (image folder) into db
      * @param ds dataset
      * @param dirpath path to image folder
      */
-    void insertImageFolder(Dataset *ds, const string& dirpath);
+    void insertImageFolder(Dataset *ds, const std::string& dirpath);
     /**
      * Inserts one sequence (video file) into db
      * @param ds dataset
      * @param dirpath path to image folder
      */
-    void insertVideoFile(Dataset *ds, const string& filepath);
+    void insertVideoFile(Dataset *ds, const std::string& filepath);
     /**
      * Initialize sets holding image/video suffixes
      */
@@ -179,40 +156,40 @@ protected:
     /**
      * Changes all slashes within a path to '/' and removes slashes at its end
      * @param path path to modify
-     * @return VTCLI_OK on success, VTCLI_FAIL on failure
+     * @return success
      */
-    int fixSlashes(string& path);
+    bool fixSlashes(std::string& path);
     /**
      * Cuts and returns the first word from the input command line
      * @param line input command line
      * @return First word
      */
-    string cutWord(string& line);
+    std::string cutWord(std::string& line);
     /**
      * Cuts and returns the first CSV value from the input command line
      * @param line input command line
      * @return First CSV value
      */
-    string cutCSV(string& word);
+    std::string cutCSV(std::string& word);
     /**
      * Reads if command was supplied from command line arguments and forms help string
      * @param argc command line argument count
      * @param argv command line arguments
-     * @return VTCLI_OK on success, VTCLI_FAIL on failure
+     * @return success
      */
-    int processArgs(int argc, char** argv);
+    bool processArgs(int argc, char** argv);
 
     /**
      * 
      * @param line
      */
-    void queryCommand(string& line);
-    void selectCommand(string& line);
-    void insertCommand(string& line);
-    void updateCommand(string& line);
-    void deleteCommand(string& line);
-    void showCommand(string& line);
-    void loadCommand(string& line);
+    void queryCommand(std::string& line);
+    void selectCommand(std::string& line);
+    void insertCommand(std::string& line);
+    void updateCommand(std::string& line);
+    void deleteCommand(std::string& line);
+    void showCommand(std::string& line);
+    void loadCommand(std::string& line);
 };
 
 /*
