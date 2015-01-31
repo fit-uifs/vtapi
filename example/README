@@ -1,0 +1,79 @@
+===========================================================
+Ukazka spousteni a retezeni procesu pomoci VTApi
+===========================================================
+kontaktni osoby:
+ ifroml[at]fit.vutbr.cz
+ ivolf[at]fit.vutbr.cz
+
+===========================================================
+Historie
+===========================================================
+ 31.1.2015
+   - vytvoren launcher, moduly demo1/demo2 a databaze
+
+===========================================================
+Obsah
+===========================================================
+Launcher
+- launcher.cpp + Makefile (+ NetBeans projekt)
+- retezi moduly demo1/demo2
+- dotazuje se na parametry modulu a jejich typy
+- dotazuje se na hodnoty parametry pro dany proces
+- ziskava vysledky vypoctu ruznymi zpusoby podle urcitych kriterii
+- podrobneji viz zdrojovy kod
+
+Demo1 modul
+- mod_demo1/*
+- provadi narocnejsi operace nad celym datasetem videi ("offline modul")
+
+Demo2 modul
+- mod_demo2/*
+- zpracovava vysledky z demo1 pro jedno zadane video ("online modul")
+
+make_all.sh
+- provede make VTApi, launcheru a modulu
+
+vtapi.conf
+- konfiguracni soubor VTApi
+
+sql/demo-schema.sql
+- SQL skript pro vytvoreni/reset demo schematu databaze
+
+sql/reset-schema.sh
+- spoustec SQL skriptu demo-schema.sql
+
+modules/*
+- zkompilovane moduly
+
+build/*
+- smeti z buildu
+
+===========================================================
+Jak na to?
+===========================================================
+Nastavit vtapi.conf (v image prednastaveno)
+- cesta k datum
+- connection string do databaze
+- nazev datasetu/schematu
+
+Kompilace vseho
+./make_all.sh
+
+Test launcheru
+./launcher
+
+Reset databaze
+./sql/reset-schema.sh
+
+===========================================================
+Vlastni moduly
+===========================================================
+Pouzitelny modul musi splnovat nasledujici nalezitosti:
+- zaznam v tabulce public.methods
+- v cilenem datasetu/schematu tabulku <modul>out pro vystupy procesu,
+  ktera bude mit standardni strukturu (viz napr. demo.demo1out) + sloupce
+  pro vystupy (v demo.demo1out se jedna o sloupec vals[])
+- zkompilovana binarka s nazvem modulu v adresari ./modules,
+  ktera korektne pouziva VTApi
+
+
