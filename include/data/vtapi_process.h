@@ -127,12 +127,11 @@ public:
     /**
      * Add new process instance into database, use Method->addProcess() instead
      * @param method method name
-     * @param name new process name
      * @param params serialized process params
      * @param outputs output table
      * @return
      */
-    bool add(const std::string& method, const std::string& name, const std::string& params = "", const std::string& outputs="intervals");
+    bool add(const std::string& method, const std::string& params = "", const std::string& outputs="intervals");
 
     /**
      * Create new interval for process

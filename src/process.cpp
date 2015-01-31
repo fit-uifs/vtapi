@@ -31,9 +31,9 @@ Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig) {
 
     //TODO: for SQLite
 //    if (backend == POSTGRES) {
-    query = "SELECT P.*, PA1.relname AS inputs\n"
+    query = "SELECT P.*, PA.relname AS outputs\n"
             "  FROM " + this->getDataset() + ".processes P\n"
-            "  LEFT JOIN pg_catalog.pg_class PA1 ON P.inputs::regclass = PA1.relfilenode";
+            "  LEFT JOIN pg_catalog.pg_class PA ON P.outputs::regclass = PA.relfilenode";
 //    }
 //    else {
 //        query = "\nSELECT * from public.processes";
@@ -46,8 +46,8 @@ Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig) {
     }
     
     if (!name.empty()) {
-        this->select->whereString("prsname", name);
         this->process = name;
+        select->whereString("prsname", name);
     }
 }
 
@@ -56,15 +56,22 @@ Process::~Process() {
 }
 
 bool Process::next() {
-    if (!this->params.empty() && bParamsDirty) {
-        this->select->whereString("params", serializeParams());
-        bParamsDirty = false;
+//    if (!this->params.empty() && bParamsDirty) {
+//        this->select->whereString("params", serializeParams());
+//        bParamsDirty = false;
+//    }
+    
+    // process is being added
+    if (insert) {
+        if (this->process.empty()) this->process = constructName();
+        insert->keyString("prsname", this->process);
+        select->whereString("prsname", this->process);
     }
     
     KeyValues* kv = ((KeyValues*)this)->next();
     if (kv) {
-        process = this->getName();
-        selection = this->getOutputs();
+        this->process   = this->getName();
+        this->selection = this->getOutputs();
         if (this->params.empty()) deserializeParams(this->getString("params"));
     }
 
@@ -118,7 +125,8 @@ std::string Process::getParamString(const std::string& key) {
 
 
 void Process::setInputs(const std::string& processName) {
-    this->setString("inputs", processName);
+    if (insert) insert->keyString("inputs", processName);
+    else this->setString("inputs", processName);
 }
 
 void Process::setParamInt(const std::string& key, int value) {
@@ -136,28 +144,23 @@ void Process::setCallback(fCallback callback, void *pContext) {
     this->pCallbackContext = pContext;
 }
 
-bool Process::add(const std::string& method, const std::string& name, const std::string& params, const std::string& outputs) {
+bool Process::add(const std::string& method, const std::string& params, const std::string& outputs) {
     bool retval = VT_OK;
     
     vt_destruct(insert);
     insert = new Insert(*this, "processes");
     retval &= insert->keyString("mtname", method);
-    retval &= insert->keyString("prsname", name);
     retval &= insert->keyString("params", params);
     retval &= insert->keyString("outputs", this->getDataset() + "." + outputs);
-    if (retval) retval &= insert->execute();
-    
-    this->select->executed = true;
 
     // this is the fun
     if (retval) {
-
+        next();
         //retval = this->prepareOutput(method, selection);
 //        update = new Update(*this, "ALTER TABLE \""+ selection +"\" ADD COLUMN \""+ name +"\" real[];");
 //        retval &= update->execute();
     }
     
-    vt_destruct(insert);
 //    vt_destruct(update);
 
     return retval;
@@ -165,10 +168,8 @@ bool Process::add(const std::string& method, const std::string& name, const std:
 
 bool Process::preSet() {
     vt_destruct(update);
-
     update = new Update(*this, "processes");
     update->whereString("prsname", this->process);
-    update->executed = true;
 
     return VT_OK;
 }
@@ -250,12 +251,7 @@ bool Process::addColumns(const string& table, const map<string,string>& colsToAd
 }
 
 bool Process::run() {
-    string name = constructName();
-    if (!name.empty()) {
-        this->select->whereString("prsname", name);
-    }
-    
-    bool ret = add(this->method, name, serializeParams(), this->method + "out");
+    bool ret = add(this->method, serializeParams(), this->method + "out");
     
     if (ret) {
         //TODO: launch

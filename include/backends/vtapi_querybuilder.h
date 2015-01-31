@@ -384,6 +384,7 @@ protected:
 
     std::string escapeColumn(const std::string& key, const std::string& table);
     std::string escapeIdent(const std::string& ident);
+    std::string escapeAlias(const std::string& key);
     std::string escapeLiteral(const std::string& literal);
 };
 #endif

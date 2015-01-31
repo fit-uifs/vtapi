@@ -361,7 +361,7 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
             }
             else {
                 columnsStr  += tmpTable + "." + this->escapeColumn(tmpColumn, "");
-                columnsStr  += " AS " + this->escapeLiteral(tmpColumn)  + ", ";
+                columnsStr  += " AS " + this->escapeAlias(tmpColumn)  + ", ";
             }
             // check if table already exists
             for (int j = 0; j < i; j++) {
@@ -402,21 +402,23 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
         if (!whereStr.empty()) {
             queryString += "\n WHERE " + whereStr;
         }
+        
+        if (!groupby.empty()) {
+            queryString += "\n GROUP BY " + groupby;
+        }
+        if (!orderby.empty()) {
+            queryString += "\n ORDER BY " + orderby;
+        }
+        if (limit > 0) {
+            queryString += "\n LIMIT " + toString(limit);
+        }
+        if (offset > 0) {
+            queryString += "\n OFFSET " + toString(offset);
+        }
+        queryString += ";";
     }
-    if (!groupby.empty()) {
-        queryString += "\n GROUP BY " + groupby;
-    }
-    if (!orderby.empty()) {
-        queryString += "\n ORDER BY " + orderby;
-    }
-    if (limit > 0) {
-        queryString += "\n LIMIT " + toString(limit);
-    }
-    if (offset > 0) {
-        queryString += "\n OFFSET " + toString(offset);
-    }
-    queryString += ";";
 
+    printf("%s\n", queryString.c_str());
     return (queryString);
 }
 
@@ -855,6 +857,10 @@ string PGQueryBuilder::escapeColumn(const string& key, const string& table) {
 //    return ret;
     return (!table.empty() ? (escapeIdent(table) + ".") : "") + escapeIdent(key.substr(0, keyLength)) + rest;
 
+}
+
+string PGQueryBuilder::escapeAlias(const string& key) {
+    return key.substr(0, key.find(':'));
 }
 
 string PGQueryBuilder::escapeIdent(const string& ident) {

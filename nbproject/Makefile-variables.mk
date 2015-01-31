@@ -7,21 +7,21 @@ CND_BASEDIR=`pwd`
 CND_BUILDDIR=build
 CND_DISTDIR=dist
 # Debug configuration
-CND_PLATFORM_Debug=
+CND_PLATFORM_Debug=GNU-Linux-x86
 CND_ARTIFACT_DIR_Debug=.
 CND_ARTIFACT_NAME_Debug=vtcli
 CND_ARTIFACT_PATH_Debug=./vtcli
-CND_PACKAGE_DIR_Debug=dist/Debug//package
+CND_PACKAGE_DIR_Debug=dist/Debug/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Debug=vtapi.tar
-CND_PACKAGE_PATH_Debug=dist/Debug//package/vtapi.tar
+CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/vtapi.tar
 # Release configuration
-CND_PLATFORM_Release=
-CND_ARTIFACT_DIR_Release=dist/Release/
+CND_PLATFORM_Release=GNU-Linux-x86
+CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
 CND_ARTIFACT_NAME_Release=vtapi
-CND_ARTIFACT_PATH_Release=dist/Release//vtapi
-CND_PACKAGE_DIR_Release=dist/Release//package
+CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/vtapi
+CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=vtapi.tar
-CND_PACKAGE_PATH_Release=dist/Release//package/vtapi.tar
+CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/vtapi.tar
 # Windows configuration
 CND_PLATFORM_Windows=MinGW-Windows
 CND_ARTIFACT_DIR_Windows=dist
