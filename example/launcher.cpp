@@ -265,7 +265,8 @@ int main()
         
         printf("\nmodule %s parameters:\n", demo1.getName().c_str());
         for (size_t i = 0; i < keys.size(); i++) {
-            printf("%s %s\n", keys[i].type.c_str(), keys[i].key.c_str());
+            printf("%s: %s %s \n",
+                keys[i].from.c_str(), keys[i].type.c_str(), keys[i].key.c_str());
         }
         
     }
