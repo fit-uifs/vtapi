@@ -15,14 +15,6 @@
  * U prvniho modulu jsou komentare, co je treba vzdy ve tride zmenit/doimplementovat.
 */
 
-#define XSTR(s) STR(s)
-#define STR(s) #s
-
-// nahodne parametry spoustenych procesu
-#define RAND_PARAM1      (rand() % 1000)
-#define RAND_PARAM2      (rand() % 1000)
-#define DEF_VIDEO       "video3"
-
 // format process ID
 #define GET_PROCESS_ID(id,m,p1,p2) \
     { std::stringstream ss; ss << m.getName() << "p_" << p1 << "_" << p2; id == ss.str(); }
@@ -237,11 +229,11 @@ void Demo2Callback(Process::STATE_T state, Process *process, void *context)
 ///////////////////////////////////////////////////////////
 int main()
 {
-    // load random process parameters
+    // zvolime nejake parametry procesu
     srand(time(NULL));
-    int param1 = RAND_PARAM1;
-    int param2 = RAND_PARAM2;
-    std::string video = DEF_VIDEO;
+    int param1 = rand() % 1000;
+    int param2 = rand() % 1000;
+    std::string video = "video3";
     
     // VTApi instance
     // - tento konstruktor pouzije konfiguraci z ./vtapi.conf
