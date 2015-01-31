@@ -121,6 +121,11 @@ public:
      */
     std::string getSelection();
     /**
+     * Get name of current process
+     * @return process name
+     */
+    std::string getProcess();
+    /**
      * Get base location path
      * @return base location
      */

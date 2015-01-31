@@ -182,8 +182,8 @@ bool SLConnection::attachDatabase(string& dbfile) {
 
 
 
-SLTypeManager::SLTypeManager(fmap_t *fmap, Connection *connection, Logger *logger)
-: TypeManager(fmap, connection, logger) {
+SLTypeManager::SLTypeManager(fmap_t *fmap, Connection *connection, Logger *logger, string& schema)
+: TypeManager(fmap, connection, logger, schema) {
     thisClass = "SLTypeManager";
 }
 
@@ -196,8 +196,8 @@ bool SLTypeManager::loadTypes() {
 
 
 
-SLQueryBuilder::SLQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString)
-: QueryBuilder (fmap, connection, logger, initString) {
+SLQueryBuilder::SLQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger, const string& initString)
+: QueryBuilder (fmap, connection, typeManager, logger, initString) {
     thisClass   = "SLQueryBuilder";
     param       = (void *) new sl_param_t();
 }

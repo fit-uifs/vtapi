@@ -15,6 +15,7 @@
 namespace vtapi {
 
 class Connection;
+class TypeManager;
 
 /**
  * @brief Class provides functionality to build various SQL queries
@@ -35,6 +36,7 @@ protected:
 
     fmap_t              *fmap;          /**< library functions address book */
     Connection          *connection;    /**< connection object */
+    TypeManager         *typeManager;   /**< type manager object */
     Logger              *logger;        /**< logger object for output messaging */
     std::string         thisClass;      /**< class name */
 
@@ -53,8 +55,9 @@ public:
      * @param logger logger object for output messaging
      * @param initString initialization string (query/table or empty)
      */
-    QueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const std::string& initString = "") {
+    QueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger, const std::string& initString = "") {
         this->initString    = initString;
+        this->typeManager   = typeManager;
         this->logger        = logger;
         this->connection    = connection;
         this->fmap          = fmap;
@@ -348,7 +351,7 @@ private:
 
 public:
 
-    PGQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger = NULL, const std::string& initString = "");
+    PGQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger = NULL, const std::string& initString = "");
     ~PGQueryBuilder();
 
     std::string getGenericQuery();
@@ -384,6 +387,7 @@ protected:
 
     std::string escapeColumn(const std::string& key, const std::string& table);
     std::string escapeIdent(const std::string& ident);
+    std::string escapeAlias(const std::string& key);
     std::string escapeLiteral(const std::string& literal);
 };
 #endif
@@ -397,7 +401,7 @@ private:
 
 public:
 
-    SLQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger = NULL, const std::string& initString = "");
+    SLQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger = NULL, const std::string& initString = "");
     ~SLQueryBuilder();
 
     std::string getGenericQuery();

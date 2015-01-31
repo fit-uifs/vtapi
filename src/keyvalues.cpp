@@ -521,6 +521,22 @@ bool KeyValues::setExecute() {
 
 
 // =================== ADDERS (Insert) =========================================
+bool KeyValues::addString(const std::string& key, const std::string& value) {
+    return this->insert ? this->insert->keyString(key, value) : VT_FAIL;
+}
+bool KeyValues::addInt(const std::string& key, int value) {
+    return this->insert ? this->insert->keyInt(key, value) : VT_FAIL;
+}
+bool KeyValues::addIntA(const std::string& key, int* value, int size) {
+    return this->insert ? this->insert->keyIntA(key, value, size) : VT_FAIL;
+}
+bool KeyValues::addFloat(const std::string& key, float value) {
+    return this->insert ? this->insert->keyFloat(key, value) : VT_FAIL;
+}
+bool KeyValues::addFloatA(const std::string& key, float* value, int size) {
+    return this->insert ? this->insert->keyFloatA(key, value, size) : VT_FAIL;
+}
+    
 bool KeyValues::addExecute() {
     if (this->insert) return this->insert->execute();
     else return VT_FAIL;

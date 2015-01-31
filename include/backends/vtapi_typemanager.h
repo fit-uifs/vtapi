@@ -47,6 +47,13 @@ typedef std::map<std::string, type_metadata_t>    types_map_t;
  * retrieving information about data types.
  */
 class TypeManager {
+public:
+    typedef enum {
+        TYPE_SEQTYPE,
+        TYPE_INOUTTYPE,
+        TYPE_CVMAT
+    } USER_DEFINED_TYPE;
+    
 protected:
 
     fmap_t          *fmap;          /**< function address book */
@@ -57,6 +64,7 @@ protected:
     oid_map_t       oid_map;        /**< types indexed by their OID */
     types_map_t     types_map;      /**< types metadata */
 
+    std::string     schema;         /**< types schema */
 public:
 
     /**
@@ -65,10 +73,11 @@ public:
      * @param connection database connection object
      * @param logger logger object
      */
-    TypeManager(fmap_t *fmap, Connection *connection, Logger *logger) {
+    TypeManager(fmap_t *fmap, Connection *connection, Logger *logger, std::string &schema) {
         this->logger        = logger;
         this->connection    = connection;
         this->fmap          = fmap;
+        this->schema        = schema;
     };
     /**
      * Virtual destructor
@@ -93,6 +102,23 @@ public:
         return (types_map.count(name) > 0) ? types_map[name] : type_metadata_t();
     }
 
+    /**
+     * Retrieve user defined type name for schema
+     * @param type type enum value
+     * @param prefix prefix for return value
+     * @return string type string
+     */
+    std::string getTypeName(USER_DEFINED_TYPE type, const char *prefix = NULL) {
+        std::stringstream ss;
+        if (prefix) ss << prefix;
+        ss << this->schema << ".";
+        switch(type) {
+            case TYPE_SEQTYPE:  ss << "seqtype"; break;
+            case TYPE_INOUTTYPE:ss << "inouttype"; break;
+            case TYPE_CVMAT:    ss << "cvmat"; break;
+        }
+        return ss.str();
+    }
 protected:
 
     /**
@@ -113,7 +139,7 @@ private:
 
 public:
 
-    PGTypeManager(fmap_t *fmap, Connection *connection, Logger* logger);
+    PGTypeManager(fmap_t *fmap, Connection *connection, Logger* logger, std::string &schema);
     ~PGTypeManager();
 
     int enum_put (PGtypeArgs *args);
@@ -137,7 +163,7 @@ private:
 
 public:
 
-    SLTypeManager(fmap_t *fmap, Connection *connection, Logger* logger);
+    SLTypeManager(fmap_t *fmap, Connection *connection, Logger* logger, std::string &schema);
     ~SLTypeManager();
 
 protected:

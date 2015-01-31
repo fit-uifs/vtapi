@@ -75,9 +75,6 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     // link libraries and load functions into fmap
     libLoader       = BackendFactory::createLibLoader(logger);
     fmap            = libLoader->loadLibs();
-    // initialize connection and type managing
-    connection      = fmap ? BackendFactory::createConnection(fmap, dbconn, logger) : NULL;
-    typeManager     = fmap ? BackendFactory::createTypeManager(fmap, connection, logger) : NULL;
 
     // other args (see vtapi.conf)
     dataset         = args_info.dataset_given   ? string(args_info.dataset_arg)     : string ("");
@@ -95,6 +92,10 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     
     baseLocation    = args_info.location_given  ? string(args_info.location_arg)    : string("");
 
+    // initialize connection and type managing
+    connection      = fmap ? BackendFactory::createConnection(fmap, dbconn, logger) : NULL;
+    typeManager     = fmap ? BackendFactory::createTypeManager(fmap, connection, logger, dataset) : NULL;
+    
     doom            = true;             // destruct it with fire
 
 #if HAVE_POSTGIS
@@ -137,6 +138,11 @@ string Commons::getSequence() {
 string Commons::getSelection() {
     if (selection.empty()) logger->warning(155, "No selection specified", thisClass+"::getSelection()");
     return selection;
+}
+
+string Commons::getProcess() {
+    if (process.empty()) logger->warning(161, "No process specified", thisClass+"::getProcess()");
+    return process;
 }
 
 string Commons::getBaseLocation() {

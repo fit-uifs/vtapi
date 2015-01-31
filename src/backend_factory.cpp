@@ -47,17 +47,17 @@ Connection* BackendFactory::createConnection(fmap_t *fmap, const string& connect
     return connection;
 };
 
-TypeManager* BackendFactory::createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger) {
+TypeManager* BackendFactory::createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger, std::string &schema) {
     TypeManager *typeManager = NULL;
     switch (backend) {
         case POSTGRES:
 #if HAVE_POSTGRESQL
-       typeManager = new PGTypeManager(fmap, connection, logger);
+       typeManager = new PGTypeManager(fmap, connection, logger, schema);
  #endif
            break;
         case SQLITE:
 #if HAVE_SQLITE
-        typeManager = new SLTypeManager(fmap, connection, logger);
+        typeManager = new SLTypeManager(fmap, connection, logger, schema);
 #endif
             break;
         default:
@@ -66,17 +66,17 @@ TypeManager* BackendFactory::createTypeManager(fmap_t *fmap, Connection *connect
     return typeManager;
 };
 
-QueryBuilder* BackendFactory::createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const string& initString) {
+QueryBuilder* BackendFactory::createQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger, const string& initString) {
     QueryBuilder *queryBuilder = NULL;
     switch (backend) {
         case POSTGRES:
 #if HAVE_POSTGRESQL
-       queryBuilder = new PGQueryBuilder(fmap, connection, logger, initString);
+       queryBuilder = new PGQueryBuilder(fmap, connection, typeManager, logger, initString);
 #endif
           break;
         case SQLITE:
 #if HAVE_SQLITE
-            queryBuilder = new SLQueryBuilder(fmap, connection, logger, initString);
+            queryBuilder = new SLQueryBuilder(fmap, connection, typeManager, logger, initString);
 #endif
             break;
         default:
