@@ -12,7 +12,9 @@ bin_PROGRAMS = vtcli
 vtcli_SOURCES = vtcli.cpp
 vtcli_CFLAGS = $(PQ_CFLAGS) $(LIBLWGEOM_CFLAGS) $(GEOS_CFLAGS) $(OPENCV_CFLAGS) $(SQLITE_CFLAGS) $(LTDL_CFLAGS) $(READPROC_CFLAGS)
 vtcli_CXXFLAGS = $(PQ_CFLAGS) $(LIBLWGEOM_CFLAGS) $(GEOS_CFLAGS) $(OPENCV_CFLAGS) $(SQLITE_CFLAGS) $(LTDL_CFLAGS) $(READPROC_CFLAGS)
-vtcli_LDFLAGS = -no-install -L$(abs_top_builddir)/src/.libs $(DEPS_LIBS) $(OPENCV_LIBS) $(SQLITE_LIBS) $(LIBPQTYPES_LIBS) $(PQ_LIBS) $(LIBLWGEOM_LIBS) $(GEOS_LIBS) $(LTDL_LIBS) $(READPROC_LIBS) -lvtapi
+#vtcli_LDFLAGS = -no-install -L$(abs_top_builddir)/src/.libs $(DEPS_LIBS) $(OPENCV_LIBS) $(SQLITE_LIBS) $(LIBPQTYPES_LIBS) $(PQ_LIBS) $(LIBLWGEOM_LIBS) $(GEOS_LIBS) $(LTDL_LIBS) $(READPROC_LIBS) -lvtapi
+vtcli_LDFLAGS = -no-install -L$(abs_top_builddir)/src/.libs $(DEPS_LIBS) -lvtapi -lopencv_core
+
 
 #LDADD = -lvtapi
 

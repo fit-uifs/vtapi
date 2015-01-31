@@ -92,6 +92,24 @@ AC_PATH_PROG([PKG_CONFIG], [pkg-config], [AC_MSG_ERROR([could not find pkg-confi
 
 
 ###############################################################################
+#####   Core tools - some useful functions                                #####
+###############################################################################
+
+### Strip absolute path of *.so libs (/path/to/lib/libXYZ.so) to format "-L/path/to/lib -lXYZ" for LD
+function stripLibsAbsolutePath () {
+  local TMP_LIBS=`echo $1 | sed -r 's@([[^ ]]*/)?lib([[-_.A-Za-z0-9]]+)\.so(\s|$)@ \-l\2 @g'`
+  local TMP_LDIR=`echo $1 | grep -o -E '[[^ ]]+/lib[[-_.A-Za-z0-9]]+\.so' | head -n 1`
+  if test "x${TMP_LDIR}" != "x"
+  then
+    TMP_LDIR=`echo ${TMP_LDIR} | sed -r 's@([[^ ]]+)/lib[[-_.A-Za-z0-9]]+\.so@\-L\1@'`
+    TMP_LIBS="${TMP_LDIR} ${TMP_LIBS}"
+  fi
+  echo "${TMP_LIBS}"
+}
+
+
+
+###############################################################################
 #####   OpenCV presence check                                             #####
 ###############################################################################
 opencv_want="yes"
@@ -109,9 +127,9 @@ then
     opencv_present="no"
   else 
     OPENCV_CFLAGS=`"${PKG_CONFIG}" opencv --cflags`
-    OPENCV_LIBS=`"${PKG_CONFIG}" opencv --libs`
+    OPENCV_LIBS=`stripLibsAbsolutePath "$("${PKG_CONFIG}" opencv --libs)"`
     AC_SUBST([OPENCV_CFLAGS])
-    AC_SUBST([OPENCV_LIBS])  
+    AC_SUBST([OPENCV_LIBS])
   fi
 
   if test "x${opencv_present}" = "xno"
