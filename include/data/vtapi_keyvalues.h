@@ -526,18 +526,10 @@ public:
     bool setExecute();
 
     // =============== ADDERS (Insert) ========================================
-    /**
-     *
-     * @param key
-     * @param value
-     * @return
-     * @todo @b code: všechny addX neimplementovány
-     */
+
     bool addString(const std::string& key, const std::string& value);
-    bool addInt(const std::string& key, const std::string& value);
     bool addInt(const std::string& key, int value);
     bool addIntA(const std::string& key, int* value, int size);
-    bool addFloat(const std::string& key, const std::string& value);
     bool addFloat(const std::string& key, float value);
     bool addFloatA(const std::string& key, float* value, int size);
 

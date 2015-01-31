@@ -99,6 +99,11 @@ public:
      */
     bool preSet();
 
+    /**
+     * Represent intervals only for selected sequence
+     * @param seqname sequence name
+     */
+    void filterBySequence(const std::string& seqname);
 };
 
 /**

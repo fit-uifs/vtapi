@@ -29,7 +29,7 @@ Query::Query(const Commons& commons, const string& initString)
 : Commons(commons) {
     thisClass       = "Query";
 
-    queryBuilder    = fmap ? BackendFactory::createQueryBuilder(fmap, connection, logger, initString) : NULL;
+    queryBuilder    = fmap ? BackendFactory::createQueryBuilder(fmap, connection, typeManager, logger, initString) : NULL;
     resultSet       = fmap ? BackendFactory::createResultSet(fmap, typeManager, logger) : NULL;
     if (queryBuilder) {
         this->queryBuilder->setDataset(this->dataset);

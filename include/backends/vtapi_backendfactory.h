@@ -67,20 +67,22 @@ public:
      * @param fmap library functions address book
      * @param connection connection object
      * @param logger message logging object
+     * @param schema database schema for types
      * @return NULL if factory is uninitialized, data type managing object otherwise
      */
-    static TypeManager* createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger);
+    static TypeManager* createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger, std::string &schema);
 
     /**
      * Creates object of class @ref QueryBuilder
      * @param fmap library functions address book
      * @param connection connection object
+     * @param typeManager type manager object
      * @param logger message logging object
      * @param initString initializing string (query or table)
      * @see Query
      * @return NULL if factory is uninitialized, query building object otherwise
      */
-    static QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, Logger *logger, const std::string& initString);
+    static QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger, const std::string& initString);
 
     /**
      * Creates object of class @ref ResultSet

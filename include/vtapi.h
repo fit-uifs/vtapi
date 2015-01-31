@@ -12,8 +12,6 @@
  * Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * Tomas Volf, ivolf (at) fit.vutbr.cz
  *
- *
- * @todo @b doc[PC]: dodelat create db
  */
 
 #ifndef VTAPI_H
@@ -106,7 +104,13 @@ public:
      */
     Method* newMethod(const std::string& name = "");
     Method* addMethod(const Method& method);
-
+    
+    /**
+     * Initialize app as vtapi process instance
+     * @return process instance object
+     */
+    Process *initProcess();
+    
 private:
 
     void testGenericClasses();

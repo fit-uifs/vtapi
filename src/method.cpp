@@ -52,6 +52,7 @@ Process* Method::addProcess(Process::fCallback callback, void *pContext) {
     // don't call add() until process is run
     Process *p = new Process(*this);
     if (callback) p->setCallback(callback, pContext);
+    p->add();
     return p;
 }
 

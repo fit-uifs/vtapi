@@ -71,7 +71,7 @@ public:
      */
     std::string getInputs();
     /**
-     * Get a name of a table where are stored an output data
+     * Get a name of a table where output data are stored
      * @return string value with an output data table name
      */
     std::string getOutputs();
@@ -80,6 +80,11 @@ public:
      * @return process object
      */
     Process *getInputProcess();
+    /**
+     * Get input intervals of this process
+     * @return input intervals
+     */
+    Interval *getInputData();
     /**
      * Get output intervals of this process
      * @return output intervals
@@ -91,6 +96,12 @@ public:
      * @return param value
      */
     int getParamInt(const std::string& key);
+    /**
+     * Get floating point numeric process param
+     * @param key param name
+     * @return param value
+     */
+    double getParamDouble(const std::string& key);
     /**
      * Get string process param
      * @param key param name
@@ -104,11 +115,22 @@ public:
      */
     void setInputs(const std::string& processName);
     /**
+     * Sets output table for this process
+     * @param table input process name
+     */
+    void setOutputs(const std::string& table);
+    /**
      * Sets integer argument
      * @param key arg name
      * @param value arg value
      */
     void setParamInt(const std::string& key, int value);
+    /**
+     * Sets floating number argument
+     * @param key arg name
+     * @param value arg value
+     */
+    void setParamDouble(const std::string& key, double value);
     /**
      * Sets string process argument
      * @param key arg name
@@ -122,16 +144,20 @@ public:
      */
     void setCallback(fCallback callback, void *pContext);
     
+    /**
+     * Represent processes only with specific input process. Use this before calling next()
+     * @param processName input process name
+     */
+    void filterByInputs(const std::string& processName);
+    
     virtual bool preSet();
 
     /**
      * Add new process instance into database, use Method->addProcess() instead
-     * @param method method name
-     * @param params serialized process params
      * @param outputs output table
      * @return
      */
-    bool add(const std::string& method, const std::string& params = "", const std::string& outputs="intervals");
+    bool add(const std::string& outputs="");
 
     /**
      * Create new interval for process
@@ -179,8 +205,8 @@ public:
     bool run();
 
 protected:
+    std::string inputs;
     TKeyValues params;
-    bool bParamsDirty;
     
     fCallback callback;
     void *pCallbackContext;

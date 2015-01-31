@@ -88,6 +88,12 @@ Dataset* VTApi::newDataset(const string& name) {
     return (new Dataset(*commons, name));
 }
 
+Process *VTApi::initProcess() {
+    if (this->commons->getProcess().empty()) return NULL;
+    
+    return new Process(*this->commons);
+}
+
 
 
 
