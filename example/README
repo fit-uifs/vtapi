@@ -31,7 +31,8 @@ Demo2 modul
 - zpracovava vysledky z demo1 pro jedno zadane video ("online modul")
 
 make_all.sh
-- provede make VTApi, launcheru a modulu
+- provede make VTApi, launcheru a modulu (pozor, je treba nejprve spustit
+  "./autogen.sh" a "./configure" s pripadnymi parametry v hlavnim adresari VTApi)
 
 vtapi.conf
 - konfiguracni soubor VTApi
