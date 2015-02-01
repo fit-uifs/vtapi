@@ -102,23 +102,6 @@ public:
         return (types_map.count(name) > 0) ? types_map[name] : type_metadata_t();
     }
 
-    /**
-     * Retrieve user defined type name for schema
-     * @param type type enum value
-     * @param prefix prefix for return value
-     * @return string type string
-     */
-    std::string getTypeName(USER_DEFINED_TYPE type, const char *prefix = NULL) {
-        std::stringstream ss;
-        if (prefix) ss << prefix;
-        ss << this->schema << ".";
-        switch(type) {
-            case TYPE_SEQTYPE:  ss << "seqtype"; break;
-            case TYPE_INOUTTYPE:ss << "inouttype"; break;
-            case TYPE_CVMAT:    ss << "cvmat"; break;
-        }
-        return ss.str();
-    }
 protected:
 
     /**

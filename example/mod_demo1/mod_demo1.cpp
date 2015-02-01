@@ -60,7 +60,7 @@ void do_work(Process *process, Dataset *dataset) {
         //std::string path = video->getLocation();
         
         // anotace bude treba pro prvnich 10 framu
-        output->add(video->getName(), 1, 10);
+        output->add(video->getName(), 1, 10, "", "demouser", "random-generated");
         
         // spocitame dummy vysledek a ulozime
         vals[0] += param1 / 1000.0;

@@ -52,6 +52,10 @@ build/*
 ===========================================================
 Jak na to?
 ===========================================================
+Vytvoreni databaze (v image vytvoreno)
+- hlavni schema:  ../postgresql/createdb.sql
+- demo schema:    sql/demo-schema.sql
+
 Nastavit vtapi.conf (v image prednastaveno)
 - cesta k datum
 - connection string do databaze
@@ -63,7 +67,7 @@ Kompilace vseho
 Test launcheru
 ./launcher
 
-Reset databaze
+Reset databaze do puvodniho stavu
 ./sql/reset-schema.sh
 
 ===========================================================

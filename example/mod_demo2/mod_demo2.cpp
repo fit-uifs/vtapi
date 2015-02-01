@@ -74,7 +74,7 @@ void do_work(Process *p, Dataset *ds) {
         delete input;
         
         // ulozime vystupni udalost pro 1. frame s nejakym nazvem
-        output->add(video->getName(), 1, 1);
+        output->add(video->getName(), 1, 1, "", "demouser", "random-generated");
         output->addString("event_name", event_name.c_str());
         output->addInt("event_arg", event_arg);
         output->addExecute();

@@ -27,64 +27,69 @@ SET search_path = public, pg_catalog;
 SET default_with_oids = false;
 
 
-CREATE SCHEMA public;
+-- create public schema
+CREATE SCHEMA IF NOT EXISTS public;
 
--- výètové datové typy
-CREATE TYPE inouttype AS ENUM ('in', 'inout', 'out'); 
-CREATE TYPE seqtype 	AS ENUM ('video', 'images', 'data');
+GRANT ALL ON SCHEMA public TO vidte;
+GRANT ALL ON SCHEMA public TO postgres;
+GRANT ALL ON SCHEMA public TO public;
 
--- tabulka se seznamem datasetù
+
+-- user-defined data types
+CREATE TYPE seqtype AS ENUM
+   ('video',
+    'images',
+    'data');
+ALTER TYPE seqtype OWNER TO vidte;
+
+CREATE TYPE inouttype AS ENUM
+   ('in',
+    'out',
+    'out_param',
+    'in_param');
+ALTER TYPE inouttype OWNER TO vidte;
+
+CREATE TYPE cvmat AS
+   (type integer,
+    dims integer,
+    step_arr integer[],
+    rows integer,
+    cols integer,
+    data_loc character varying);
+ALTER TYPE cvmat OWNER TO vidte;
+
+
+-- dataset list
 CREATE TABLE datasets (
     dsname name NOT NULL,
-    dslocation character varying,
+    dslocation character varying NOT NULL,
     userid name,
     groupid name,
     created timestamp without time zone DEFAULT now(),
-    changed timestamp without time zone,
     notes text,
     CONSTRAINT dataset_pk PRIMARY KEY (dsname)
 );                    
 
--- tabulka s dostupnými metodami
+-- method list
 CREATE TABLE methods (
     mtname name NOT NULL,
     userid name,
+    groupid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
     CONSTRAINT methods_pk PRIMARY KEY (mtname)
 );
 
--- tabulka s parametry metod
+-- methods parameters definition
 CREATE TABLE methods_keys (
     mtname name NOT NULL,
     keyname name NOT NULL,
     typname regtype NOT NULL,
-    "inout" inouttype NOT NULL,
+    inout inouttype NOT NULL,
+    default_num numeric[],
+    default_str varchar[]
     CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
     CONSTRAINT methods_keys_mtname_fkey FOREIGN KEY (mtname)
-			REFERENCES methods(mtname)
+      REFERENCES methods(mtname)
 );
 
--- tabulka s definovanými procesy
-CREATE TABLE processes (
-    mtname name,
-    prsname name NOT NULL,
-    inputs regclass,
-    outputs regclass,
-    userid name,
-    created timestamp without time zone,
-    notes text,
-    CONSTRAINT processes_pk PRIMARY KEY (prsname),
-    CONSTRAINT method_fk FOREIGN KEY (mtname)
-			REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE RESTRICT
-);
-
--- tabulka selekcí
-CREATE TABLE selections (
-    selname regclass NOT NULL,
-    dataset character varying NOT NULL,
-    userid name,
-    created timestamp without time zone DEFAULT now(),
-    notes text,
-    CONSTRAINT selections_pk PRIMARY KEY (selname)
-);

@@ -174,16 +174,13 @@ PGTypeManager::~PGTypeManager() {
 
 bool PGTypeManager::registerTypes () {
     bool retreg = VT_OK, retval = VT_OK;
-    string seqtype = getTypeName(TYPE_SEQTYPE);
-    string inouttype = getTypeName(TYPE_INOUTTYPE);
-    string cvmat = getTypeName(TYPE_CVMAT);
 
     // general types registered at all times
     PGregisterType types_userdef[] =
     {
-        {seqtype.c_str(), pg_enum_put, pg_enum_get},
-        {inouttype.c_str(), pg_enum_put, pg_enum_get}//,
-        //{"permissions", pg_enum_put, pg_enum_get}, // change 2 to 3 in next command
+        {"public.seqtype", pg_enum_put, pg_enum_get},
+        {"public.inouttype", pg_enum_put, pg_enum_get}//,
+        //{"public.permissions", pg_enum_put, pg_enum_get}, // change 2 to 3 in next command
     };
     retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_USERDEFINED, types_userdef, 2, 0);
     if (!retreg) {
@@ -206,7 +203,7 @@ bool PGTypeManager::registerTypes () {
     // OpenCV special types
 #if HAVE_OPENCV
     PGregisterType typescv_comp[] = {
-        {cvmat.c_str(), NULL, NULL}
+        {"public.cvmat", NULL, NULL}
     };
     retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_COMPOSITE, typescv_comp, 1, 0);
     if (!retreg) {
@@ -749,7 +746,7 @@ bool PGQueryBuilder::whereSeqtype(const string& key, const string& value, const 
         keys_where_order.push_back(keysCnt++);
         opers.push_back(oper);
         if (!param) createParam();
-        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, typeManager->getTypeName(TypeManager::TYPE_SEQTYPE, "%").c_str(), value.c_str());
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%public.seqtype", value.c_str());
         return VT_OK;
     }
 }
@@ -763,7 +760,7 @@ bool PGQueryBuilder::whereInouttype(const string& key, const string& value, cons
         keys_where_order.push_back(keysCnt++);
         opers.push_back(oper);
         if (!param) createParam();
-        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, typeManager->getTypeName(TypeManager::TYPE_INOUTTYPE, "%").c_str(), value.c_str());
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%public.inouttype", value.c_str());
         return VT_OK;
     }
 }
