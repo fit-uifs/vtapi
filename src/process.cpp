@@ -286,7 +286,7 @@ bool Process::run() {
     if (this->callback) this->callback(STATE_STARTED, this, pCallbackContext);
     
     std::stringstream ss;
-    ss << "./modules/" << this->method << " --process=" << this->process;
+    ss << "./modules/" << this->method << " --config=" << this->configfile << " --process=" << this->process;
     
     ret = (std::system(ss.str().c_str()) == 0);
     

@@ -32,7 +32,7 @@ using namespace vtapi;
 class CDemo1Module;
 class CDemo2Module;
 
-int main();
+int main(int argc, char *argv[]);
 static void Demo1Callback(Process::STATE_T state, Process *process, void *context);
 static void Demo2Callback(Process::STATE_T state, Process *process, void *context);
 
@@ -227,7 +227,7 @@ void Demo2Callback(Process::STATE_T state, Process *process, void *context)
 ///////////////////////////////////////////////////////////
 // MAIN
 ///////////////////////////////////////////////////////////
-int main()
+int main(int argc, char *argv[])
 {
     // zvolime nejake parametry procesu
     srand(time(NULL));
@@ -236,8 +236,7 @@ int main()
     std::string video = "video3";
     
     // VTApi instance
-    // - tento konstruktor pouzije konfiguraci z ./vtapi.conf
-    VTApi *vtapi = new VTApi();
+    VTApi *vtapi = new VTApi(argc, argv);
     
     // priklad retezeni 2 demo modulu, viz popis v hlavicce souboru
     try

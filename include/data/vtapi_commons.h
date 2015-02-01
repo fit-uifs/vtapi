@@ -46,6 +46,7 @@ protected:
     Logger          *logger;            /**< Logger object */
     fmap_t          *fmap;              /**< Map of library functions */
 
+    std::string     configfile;         /**< VTApi config file */
     std::string     backend;            /**< Used backend type */
     std::string     dbconn;             /**< Connection string / databases folder */
     format_t        format;             /**< Output format */

@@ -23,10 +23,12 @@ using namespace vtapi;
 Commons::Commons(const Commons& orig) {
     thisClass       = "Commons(copy)";
 
+    
     libLoader       = orig.libLoader;
     logger          = orig.logger;
     connection      = orig.connection;
     dbconn          = orig.dbconn;
+    configfile      = orig.configfile;
     backend         = orig.backend;
     typeManager     = orig.typeManager;
     fmap            = orig.fmap;
@@ -77,6 +79,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     fmap            = libLoader->loadLibs();
 
     // other args (see vtapi.conf)
+    configfile      = args_info.config_arg;
     dataset         = args_info.dataset_given   ? string(args_info.dataset_arg)     : string ("");
     sequence        = args_info.sequence_given  ? string(args_info.sequence_arg)    : string ("");
     method          = args_info.method_given    ? string(args_info.method_arg)      : string ("");
