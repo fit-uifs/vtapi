@@ -118,8 +118,8 @@ bool Sequence::addExecute() {
     time_t now = 0;
 
     if (this->insert) {
-        time(&now);
-        retval &= insert->keyTimestamp("created", now);
+//        time(&now);
+//        retval &= insert->keyTimestamp("created", now);
         if (retval) retval &= insert->execute();
     }
     else retval = VT_FAIL;
