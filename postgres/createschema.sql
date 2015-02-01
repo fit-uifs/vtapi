@@ -97,7 +97,7 @@ CREATE INDEX intervals_process_idx ON intervals(process);
 
 -- insert into dataset list
 INSERT INTO public.datasets(dsname, dslocation, userid, groupid, notes)
-	VALUES ('test', 'data/test/', 'testuser', 'testgroup', 'testovaci dataset');
+    VALUES ('test', 'data/test/', 'testuser', 'testgroup', 'testovaci dataset');
 
 
 

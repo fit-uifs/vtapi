@@ -30,9 +30,8 @@ SET default_with_oids = false;
 -- create public schema
 CREATE SCHEMA IF NOT EXISTS public;
 
-GRANT ALL ON SCHEMA public TO vidte;
 GRANT ALL ON SCHEMA public TO postgres;
-GRANT ALL ON SCHEMA public TO public;
+GRANT ALL ON SCHEMA public TO PUBLIC;
 
 
 -- user-defined data types
@@ -40,14 +39,13 @@ CREATE TYPE seqtype AS ENUM
    ('video',
     'images',
     'data');
-ALTER TYPE seqtype OWNER TO vidte;
 
 CREATE TYPE inouttype AS ENUM
    ('in',
     'out',
-    'out_param',
-    'in_param');
-ALTER TYPE inouttype OWNER TO vidte;
+    'in_param',
+    'out_param'
+    );
 
 CREATE TYPE cvmat AS
    (type integer,
@@ -56,7 +54,6 @@ CREATE TYPE cvmat AS
     rows integer,
     cols integer,
     data_loc character varying);
-ALTER TYPE cvmat OWNER TO vidte;
 
 
 -- dataset list
@@ -64,7 +61,6 @@ CREATE TABLE datasets (
     dsname name NOT NULL,
     dslocation character varying NOT NULL,
     userid name,
-    groupid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
     CONSTRAINT dataset_pk PRIMARY KEY (dsname)
@@ -74,7 +70,6 @@ CREATE TABLE datasets (
 CREATE TABLE methods (
     mtname name NOT NULL,
     userid name,
-    groupid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
     CONSTRAINT methods_pk PRIMARY KEY (mtname)
@@ -87,7 +82,7 @@ CREATE TABLE methods_keys (
     typname regtype NOT NULL,
     inout inouttype NOT NULL,
     default_num numeric[],
-    default_str varchar[]
+    default_str varchar[],
     CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
     CONSTRAINT methods_keys_mtname_fkey FOREIGN KEY (mtname)
       REFERENCES methods(mtname)
