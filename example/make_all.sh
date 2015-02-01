@@ -1,8 +1,8 @@
 #!/bin/sh
-cd ..
+cd ../src
 make
 
-cd example
+cd ../example
 make
 
 cd mod_demo1
