@@ -87,7 +87,7 @@ CREATE TABLE methods_keys (
     typname regtype NOT NULL,
     inout inouttype NOT NULL,
     default_num numeric[],
-    default_str varchar[]
+    default_str varchar[],
     CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
     CONSTRAINT methods_keys_mtname_fkey FOREIGN KEY (mtname)
       REFERENCES methods(mtname)
