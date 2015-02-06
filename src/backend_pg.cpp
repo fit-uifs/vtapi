@@ -5,10 +5,7 @@
  * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
  * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * @section DESCRIPTION
- *
- * Methods of all PostgreSQL-specific polymorphic classes:
- *  - PGConnection, PGTypeManager, PGResultSet, PGQueryBuilder and PGLibLoader
+ * @brief   Methods of all PostgreSQL-specific polymorphic classes: PGConnection, PGTypeManager, PGResultSet, PGQueryBuilder and PGLibLoader
  *
  */
 

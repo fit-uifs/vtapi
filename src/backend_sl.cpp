@@ -5,10 +5,7 @@
  * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
  * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * @section DESCRIPTION
- *
- * Methods of all SQLite-specific polymorphic classes:
- *  - SLConnection, SLTypeManager, SLResultSet, SLQueryBuilder and SLLibLoader
+ * @brief Methods of all SQLite-specific polymorphic classes: SLConnection, SLTypeManager, SLResultSet, SLQueryBuilder and SLLibLoader
  *
  */
 
