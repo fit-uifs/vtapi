@@ -5,9 +5,7 @@
  * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
  * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * @section DESCRIPTION
- *
- * Methods of Process class
+ * @brief   Methods of Process class
  */
 
 #include <common/vtapi_global.h>
@@ -365,6 +363,7 @@ void Process::deserializeParams(std::string paramString)
     token = strtok(str+1, ",");
     while(token) {
         value = strchr(token, ':');
+        if (!value) break;
         *(value++) = '\0';
         
         size_t len = strlen(value);
