@@ -267,29 +267,17 @@ public:
     // =============== GETTERS - OpenCV MATRICES ===============================
 #if HAVE_OPENCV
     /**
-     * Get OpenCv matrix (cvMat) specified by the column key
+     * Get OpenCv matrix (cv::Mat) specified by the column key
      * @param key column key
      * @return CvMat structure
      */
-    CvMat *getCvMat(const std::string& key);
+    cv::Mat *getCvMat(const std::string& key);
     /**
-     * Get OpenCv matrix (cvMat) specified by the column index
+     * Get OpenCv matrix (cv::Mat) specified by the column index
      * @param col column index
      * @return CvMat structure
      */
-    CvMat *getCvMat(const int col);
-    /**
-     * Get OpenCv matrix (cvMatND) specified by the column key
-     * @param key column key
-     * @return CvMatND structure
-     */
-    CvMatND *getCvMatND(const std::string& key);
-    /**
-     * Get OpenCv matrix (cvMatND) specified by the column index
-     * @param col column index
-     * @return CvMatND structure
-     */
-    CvMatND *getCvMatND(const int col);
+    cv::Mat *getCvMat(const int col);
 #endif
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
@@ -532,7 +520,11 @@ public:
     bool addIntA(const std::string& key, int* value, int size);
     bool addFloat(const std::string& key, float value);
     bool addFloatA(const std::string& key, float* value, int size);
-
+    
+#if HAVE_OPENCV
+    bool addCvMat(const std::string& key, cv::Mat& value);
+#endif
+    
     /**
      * Execute SQL INSERT command
      * @return success

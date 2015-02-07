@@ -224,7 +224,12 @@ bool Insert::keyTimestamp(const string& key, const time_t& value, const string& 
     executed = false;
     this->queryBuilder->keyTimestamp(key, value, from);
 }
-
+#ifdef HAVE_OPENCV
+bool Insert::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) {
+    executed = false;
+    this->queryBuilder->keyCvMat(key, value, from);
+}
+#endif
 
 //================================= UPDATE =====================================
 

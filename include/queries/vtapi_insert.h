@@ -131,7 +131,18 @@ public:
      * @return success
      */
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
-
+    
+#if HAVE_OPENCV
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+    bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
+#endif
 };
 
 } // namespace vtapi

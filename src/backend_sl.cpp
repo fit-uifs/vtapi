@@ -474,6 +474,17 @@ bool SLQueryBuilder::keyTimestamp(const string& key, const time_t& value, const 
     }
 }
 
+#if HAVE_OPENCV
+bool SLQueryBuilder::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) {
+    if (key.empty()) return VT_FAIL;
+    else {
+        TKeyValue<cv::Mat> *tk = new TKeyValue<cv::Mat>("cvmat", key, value, from);
+        key_values_main.push_back(tk);
+        return VT_OK;
+    }
+}
+#endif 
+
 bool SLQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from) {
     if (key.empty() || value.empty()) return VT_FAIL;
     else {
@@ -755,8 +766,8 @@ vector<float>* SLResultSet::getFloatV(const int col) {
 
 #if HAVE_OPENCV
 
-CvMat *SLResultSet::getCvMat(const int col) {
-    CvMat *mat = NULL;
+cv::Mat *SLResultSet::getCvMat(const int col) {
+    cv::Mat *mat = NULL;
 //    PGresult *mres;
 //    PGarray step_arr;
 //    int type, rows, cols, dims, step_size, data_len;
@@ -821,88 +832,6 @@ CvMat *SLResultSet::getCvMat(const int col) {
 //    // create CvMat header and set user data
 //    if (dims > 0 && data && step) {
 //        mat = cvCreateMatHeader(rows, cols, type);
-//        cvSetData(mat, data, step[dims-1]);
-//    }
-//    vt_destruct(step);
-//    PQclear(mres);
-
-    return mat;
-}
-
-CvMatND *SLResultSet::getCvMatND(const int col) {
-    CvMatND *mat = NULL;
-//    PGresult *mres;
-//    PGarray step_arr;
-//    int type, rows, cols, dims, step_size, data_len;
-//    char *data_loc;
-//    int *step, *sizes;
-//    void *data;
-//
-//    // get CvMat header structure
-//    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
-//        warning(324, "Value is not a correct cvmat type");
-//        return NULL;
-//    }
-//    // parse CvMat header fields
-//    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
-//        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
-//        warning(325, "Incorrect cvmat type");
-//        PQclear(mres);
-//        return NULL;
-//    }
-//    // sometimes data type returns with apostrophes ('type')
-//    if (data_loc && data_loc[0] == '\'') {
-//        int len = strlen(data_loc);
-//        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
-//        data_loc++;
-//    }
-//    // construct step[] array
-//    step_size = PQntuples(step_arr.res);
-//    step = new int [step_size];
-//    sizes = new int [step_size];
-//    for (int i = 0; i < step_size; i++) {
-//        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
-//            warning(310, "Unexpected value in int array");
-//            vt_destruct(step);
-//            vt_destruct(sizes);
-//            PQclear(step_arr.res);
-//            PQclear(mres);
-//            return NULL;
-//        }
-//    }
-//    PQclear(step_arr.res);
-//
-//    // get matrix data from specified column
-//    int dataloc_col = PQfnumber(select->res, data_loc);
-//    int data_oid = -1;
-//    if (dataloc_col < 0) {
-//        warning(325, "Invalid column for CvMat user data");
-//        data = NULL;
-//    }
-//    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
-//
-//    // could be char, short, int, float, double
-//    if (data_oid == typeManager->toOid("char")) {
-//        //TODO: maybe fix alignment (every row to 4B) ?
-//        //TODO: not sure if sizes are counted correctly
-//        data = getCharA(dataloc_col, data_len);
-//        for (int i = 0; i < step_size; i++)
-//            sizes[i] = data_len / step[i];
-//    }
-//    else if (data_oid == typeManager->toOid("float4") ||
-//            data_oid == typeManager->toOid("real")) {
-//        //TODO: not sure if sizes are counted correctly
-//        data = getFloatA(dataloc_col, data_len);
-//        for (int i = 0; i < step_size; i++)
-//            sizes[i] = (data_len * sizeof(float)) / step[i];
-//    }
-//    else {
-//        warning(326, "Unexpected type of CvMat data");
-//        data = NULL;
-//    }
-//    // create CvMatND header and set user data
-//    if (dims > 0 && data && sizes && step) {
-//        mat = cvCreateMatNDHeader(dims, sizes, type);
 //        cvSetData(mat, data, step[dims-1]);
 //    }
 //    vt_destruct(step);

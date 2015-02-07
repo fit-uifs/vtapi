@@ -17,6 +17,8 @@
         </gdb_signals>
         <gdb_options>
           <DebugOptions>
+            <option name="debug_command"
+                    value="&quot;${OUTPUT_PATH}&quot; --config=./local.conf --process=demo2p_video1_demo1p_5000_25"/>
           </DebugOptions>
         </gdb_options>
         <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
@@ -26,6 +28,10 @@
       </nativedebugger>
       <runprofile version="9">
         <runcommandpicklist>
+          <runcommandpicklistitem>modules</runcommandpicklistitem>
+          <runcommandpicklistitem>.../modules/demo2</runcommandpicklistitem>
+          <runcommandpicklistitem>.modules/demo2</runcommandpicklistitem>
+          <runcommandpicklistitem>modules/demo2</runcommandpicklistitem>
           <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
         </runcommandpicklist>
         <runcommand>"${OUTPUT_PATH}"</runcommand>

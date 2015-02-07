@@ -224,6 +224,18 @@ public:
      */
     virtual bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "") = 0;
 
+#ifdef HAVE_OPENCV
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+    virtual bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "") = 0;
+#endif
+    
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -370,7 +382,10 @@ public:
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
 //    bool keyPermissions(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
-
+#if HAVE_OPENCV
+    bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
+#endif
+    
     bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");
     bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
@@ -420,7 +435,10 @@ public:
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
 //    bool keyPermissions(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
-
+#if HAVE_OPENCV
+    bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
+#endif
+    
     bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");
     bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
@@ -428,7 +446,7 @@ public:
     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
 //    bool wherePermissions(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
-
+    
     void reset();
     void createParam();
     void destroyParam();
