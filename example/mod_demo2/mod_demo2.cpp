@@ -60,7 +60,7 @@ void do_work(Process *p, Dataset *ds) {
         Interval *input = p->getInputData();
         input->filterBySequence(videoName);
         while (input->next()) {
-            // ziskame vypocitany vektor
+            // ziskame predvypocitany vektor floatu
             int size = 0;
             float *vals = input->getFloatA("vals", size);
             if (vals) {
@@ -69,6 +69,15 @@ void do_work(Process *p, Dataset *ds) {
                     event_arg += (int)(vals[i] * 10);
                 }
                 delete[] vals;
+            }
+            // ziskame predvypocitanou matici
+            cv::Mat1f *mat = (cv::Mat1f *)input->getCvMat("features");
+            if (mat) {
+                // provedeme dummy zpracovani
+                for (cv::Mat1f::iterator it = mat->begin(); it != mat->end(); it++) {
+                    event_arg += (int) (*it * 10.0);
+                }
+                delete mat;
             }
         }
         delete input;

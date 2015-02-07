@@ -205,20 +205,12 @@ vector<float>* KeyValues::getFloatV(const int col) {
 // =============== GETTERS - OpenCV MATRICES ===============================
 #if HAVE_OPENCV
 
-CvMat *KeyValues::getCvMat(const string& key) {
+cv::Mat *KeyValues::getCvMat(const string& key) {
     return select->resultSet->getCvMat(key);
 }
 
-CvMat *KeyValues::getCvMat(const int col) {
+cv::Mat *KeyValues::getCvMat(const int col) {
     return select->resultSet->getCvMat(col);
-}
-
-CvMatND *KeyValues::getCvMatND(const string& key) {
-    return select->resultSet->getCvMatND(key);
-}
-
-CvMatND *KeyValues::getCvMatND(const int col) {
-    return select->resultSet->getCvMatND(col);
 }
 #endif
 // =============== GETTERS - TIMESTAMP =========================================
@@ -534,6 +526,11 @@ bool KeyValues::addFloat(const std::string& key, float value) {
 bool KeyValues::addFloatA(const std::string& key, float* value, int size) {
     return this->insert ? this->insert->keyFloatA(key, value, size) : VT_FAIL;
 }
+#if HAVE_OPENCV
+bool KeyValues::addCvMat(const std::string& key, cv::Mat& value) {
+    return this->insert ? this->insert->keyCvMat(key, value) : VT_FAIL;
+}
+#endif
     
 bool KeyValues::addExecute() {
     if (this->insert) return this->insert->execute();

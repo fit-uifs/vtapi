@@ -285,7 +285,7 @@ bool Process::run() {
     
     std::stringstream ss;
     ss << "./modules/" << this->method << " --config=" << this->configfile << " --process=" << this->process;
-    
+    printf("%s\n", ss.str().c_str());
     ret = (std::system(ss.str().c_str()) == 0);
     
     if (this->callback) this->callback(ret ? STATE_DONE : STATE_ERROR, this, pCallbackContext);
@@ -363,6 +363,7 @@ void Process::deserializeParams(std::string paramString)
     token = strtok(str+1, ",");
     while(token) {
         value = strchr(token, ':');
+        if (!value) break;
         *(value++) = '\0';
         
         size_t len = strlen(value);

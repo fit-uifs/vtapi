@@ -328,11 +328,11 @@ public:
     // =============== GETTERS - OpenCV MATRICES ===============================
 #if HAVE_OPENCV
     /**
-     * Get OpenCv matrix (cvMat) specified by the column key
+     * Get OpenCv matrix (cv::Mat) specified by the column key
      * @param key column key
      * @return CvMat structure
      */
-    CvMat *getCvMat(const std::string& key) {
+    cv::Mat *getCvMat(const std::string& key) {
         return this->getCvMat(this->getKeyIndex(key));
     }
     /**
@@ -340,21 +340,7 @@ public:
      * @param col column index
      * @return CvMat structure
      */
-    virtual CvMat *getCvMat(const int col) = 0;
-    /**
-     * Get OpenCv matrix (cvMatND) specified by the column key
-     * @param key column key
-     * @return CvMatND structure
-     */
-    CvMatND *getCvMatND(const std::string& key) {
-        return this->getCvMatND(this->getKeyIndex(key));
-    }
-    /**
-     * Get OpenCv matrix (cvMatND) specified by the column index
-     * @param col column index
-     * @return CvMatND structure
-     */
-    virtual CvMatND *getCvMatND(const int col) = 0;
+    virtual cv::Mat *getCvMat(const int col) = 0;
 #endif
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
@@ -598,8 +584,7 @@ public:
     GEOSGeometry* getLineString(const int col);
 #endif
 #if HAVE_OPENCV
-    CvMat *getCvMat(const int col);
-    CvMatND *getCvMatND(const int col);
+    cv::Mat *getCvMat(const int col);
 #endif
 
     std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
@@ -654,8 +639,7 @@ public:
     GEOSGeometry* getLineString(const int col);
 #endif
 #if HAVE_OPENCV
-    CvMat *getCvMat(const int col);
-    CvMatND *getCvMatND(const int col);
+    cv::Mat *getCvMat(const int col);
 #endif
     std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 

@@ -73,6 +73,7 @@ CREATE TABLE demo1out (
     t1 integer NOT NULL,
     t2 integer NOT NULL,
     vals real[],
+    features public.cvmat,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
@@ -123,9 +124,11 @@ demo2	demouser	auto-generated
 demo1	param1	integer	in_param	{50}	\N
 demo1	param2	integer	in_param	{720}	\N
 demo1	vals	real[]	out	\N	\N
+demo1	features	public.cvmat	out	\N	\N
 demo2	event_arg	integer	out	\N	\N
 demo2	event_name	varchar	out	\N	\N
 demo2	vals	real[]	in	{0.0,0.0,0.0}	\N
+demo2	features	public.cvmat	in	\N	\N
 demo2	video	varchar	in_param	\N	\N
 \.
 
@@ -146,12 +149,12 @@ demo2	demo2p_video1_demo1p_11_50	demo2out	demo1p_11_50	{video:video1}	demouser	p
 demo2	demo2p_video3_demo1p_11_50	demo2out	demo1p_11_50	{video:video3}	demouser	pre-generated
 \.
 
-\copy demo1out (seqname, process, t1, t2, vals, userid, notes) FROM stdin ;
-video1	demo1p_5000_25	1	1	{1.8,2.3,2.5}	demouser	pre-generated
-video2	demo1p_5000_25	2	1	{1.6}	demouser	pre-generated
-video3	demo1p_5000_25	1	1	{1.8}	demouser	pre-generated
-video3	demo1p_5000_25	5	32	{7.9,2.9,0.01}	demouser	pre-generated
-video3	demo1p_5000_25	7	15	{2.9,0.07,1.5}	demouser	pre-generated
+\copy demo1out (seqname, process, t1, t2, vals, features, userid, notes) FROM stdin ;
+video1	demo1p_5000_25	1	1	{1.8,2.3,2.5}	(5,"{3,1}","\\\\x00000000cdcccc3dcdcc4c3e")	demouser	pre-generated
+video2	demo1p_5000_25	2	1	{1.6}	(5,"{2,2}","\\\\x00000000cdcccc3dcdcc4c3e4c3ecdcc")	demouser	pre-generated
+video3	demo1p_5000_25	1	1	{1.8}	(5,"{2,1}","\\\\xcdcccc3dcdcccc")	demouser	pre-generated
+video3	demo1p_5000_25	5	32	{7.9,2.9,0.01}	(5,"{1,1}","\\\\x00000000")	demouser	pre-generated
+video3	demo1p_5000_25	7	15	{2.9,0.07,1.5}	(5,"{3,1}","\\\\x00000000cdcccc3dcdcc4c3e")	demouser	pre-generated
 \.
 
 \copy demo2out (seqname, process, t1, t2, event_name, event_arg, userid, notes) FROM stdin ;

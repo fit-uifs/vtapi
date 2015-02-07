@@ -525,10 +525,7 @@ bool PGQueryBuilder::keyStringA(const string& key, string* values, const int siz
 
         if (!param) createParam();
 
-        PGarray arr;
-        arr.ndims = 0; // one dimensional arrays do not require setting dimension info
-        // FIXME: this is a potential bug
-        // arr.lbound[0] = 1;
+        PGarray arr = {0};
         arr.param = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
 
         // put the array elements
@@ -562,10 +559,7 @@ bool PGQueryBuilder::keyIntA(const string& key, int* values, const int size, con
 
         if (!param) createParam();
 
-        PGarray arr;
-        arr.ndims = 0; // one dimensional arrays do not require setting dimension info
-        // FIXME: this is a potential bug
-        // arr.lbound[0] = 1;
+        PGarray arr = {0};
         arr.param = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
 
         // put the array elements
@@ -599,10 +593,7 @@ bool PGQueryBuilder::keyFloatA(const string& key, float* values, const int size,
 
         if (!param) createParam();
 
-        PGarray arr;
-        arr.ndims = 0; // one dimensional arrays do not require setting dimension info
-        // FIXME: this is a potential bug
-        // arr.lbound[0] = 1;
+        PGarray arr = {0};
         arr.param = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
 
         // put the array elements
@@ -619,11 +610,10 @@ bool PGQueryBuilder::keySeqtype(const string& key, const string& value, const st
     if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
     else {
         TKey k("seqtype", key, 1, from);
-        if (value.empty()) return VT_FAIL;
         keys_main.push_back(k);
         keys_main_order.push_back(keysCnt++);
         if (!param) createParam();
-        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%seqtype", value.c_str());
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%public.seqtype", value.c_str());
         return VT_OK;
     }
 }
@@ -632,11 +622,10 @@ bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const 
     if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
     else {
         TKey k("inouttype", key, 1, from);
-        if (value.empty()) return VT_FAIL;
         keys_main.push_back(k);
         keys_main_order.push_back(keysCnt++);
         if (!param) createParam();
-        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%inouttype", value.c_str());
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%public.inouttype", value.c_str());
         return VT_OK;
     }
 }
@@ -648,7 +637,7 @@ bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const 
 //        keys_main.push_back(k);
 //        keys_main_order.push_back(keysCnt++);
 //        if (!param) createParam();
-//        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%permissions", value.c_str());
+//        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%public.permissions", value.c_str());
 //        return VT_OK;
 //    }
 //}
@@ -678,6 +667,44 @@ bool PGQueryBuilder::keyTimestamp(const string& key, const time_t& value, const 
         return VT_OK;
     }
 }
+
+#if HAVE_OPENCV
+bool PGQueryBuilder::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) {
+    if (key.empty()) return VT_FAIL;
+    else {
+        TKey k("cvmat", key, 1, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
+        if (!param) createParam();
+        
+        // cvmat arguments
+        int mat_type        = value.type();
+        PGarray mat_dims    = {0};
+        PGbytea mat_data    = {(int)(value.dataend-value.datastart), (char*)value.data};
+
+        // create dimensions array
+        mat_dims.param = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
+        for (int i = 0; i < value.dims; i++) {
+            CALL_PQT(fmap, PQputf, mat_dims.param, "%int4", value.size[i]);
+        }
+        
+        // create cvmat composite
+        PGparam *cvmat = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
+        CALL_PQT(fmap, PQputf, cvmat, 
+            "%int4 %int4[] %bytea*",
+            mat_type, &mat_dims, &mat_data);
+        CALL_PQT(fmap, PQparamClear, mat_dims.param);
+        
+        // put cvmat composite
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%public.cvmat", cvmat);
+        CALL_PQT(fmap, PQparamClear, cvmat);
+        
+        return VT_OK;
+    }
+}
+#endif
+
+
 
 bool PGQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from) {
     if (key.empty() || value.empty()) return VT_FAIL;
@@ -788,8 +815,6 @@ bool PGQueryBuilder::whereTimestamp(const string& key, const time_t& value, cons
         return VT_OK;
     }
 }
-
-
 
 
 void PGQueryBuilder::reset() {
@@ -1215,158 +1240,48 @@ vector<float>* PGResultSet::getFloatV(const int col) {
 
 #if HAVE_OPENCV
 
-CvMat *PGResultSet::getCvMat(const int col) {
-    CvMat *mat = NULL;
-//    PGresult *mres;
-//    PGarray step_arr;
-//    int type, rows, cols, dims, step_size, data_len;
-//    char *data_loc;
-//    int *step;
-//    void *data;
-//
-//    // get CvMat header structure
-//    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
-//        warning(324, "Value is not a correct cvmat type");
-//        return NULL;
-//    }
-//    // parse CvMat header fields
-//    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
-//        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
-//        warning(325, "Incorrect cvmat type");
-//        PQclear(mres);
-//        return NULL;
-//    }
-//    // sometimes data type returns with apostrophes ('type')
-//    if (data_loc && data_loc[0] == '\'') {
-//        int len = strlen(data_loc);
-//        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
-//        data_loc++;
-//    }
-//    // construct step[] array
-//    step_size = PQntuples(step_arr.res);
-//    step = new int [step_size];
-//    for (int i = 0; i < step_size; i++) {
-//        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
-//            warning(310, "Unexpected value in int array");
-//            vt_destruct(step);
-//            PQclear(step_arr.res);
-//            PQclear(mres);
-//            return NULL;
-//        }
-//    }
-//    PQclear(step_arr.res);
-//
-//    // get matrix data from specified column
-//    int dataloc_col = PQfnumber(select->res, data_loc);
-//    int data_oid;
-//    if (dataloc_col < 0) {
-//        warning(325, "Invalid column for CvMat user data");
-//        data = NULL;
-//    }
-//    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
-//
-//    // could be char, short, int, float, double
-//    if (data_oid == typeManager->toOid("char")) {
-//        //TODO: maybe fix alignment (every row to 4B) ?
-//        data = getCharA(dataloc_col, data_len);
-//    }
-//    else if (data_oid == typeManager->toOid("float4") ||
-//            data_oid == typeManager->toOid("real")) {
-//        data = getFloatA(dataloc_col, data_len);
-//    }
-//    else {
-//        warning(326, "Unexpected type of CvMat data");
-//        data = NULL;
-//    }
-//    // create CvMat header and set user data
-//    if (dims > 0 && data && step) {
-//        mat = cvCreateMatHeader(rows, cols, type);
-//        cvSetData(mat, data, step[dims-1]);
-//    }
-//    vt_destruct(step);
-//    PQclear(mres);
+cv::Mat *PGResultSet::getCvMat(const int col) {
+    PGresult *pgres = (PGresult *) this->res;
+    PGresult *matres    = NULL;
+    cv::Mat *mat        = NULL;
+    int mat_type = 0, mat_dims = 0, *mat_dim_sizes = NULL;
+    PGarray mat_dims_arr   = {0};
+    PGbytea mat_data_bytea  = {0};
+    
+    do {
+        // get cvmat structure
+        if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%public.cvmat", col, &matres)) {
+            logger->warning(324, "Value is not a correct cvmat type", thisClass+"::getCvMat()");
+            break;
+        }
+        // get data from cvmat structure
+        if (! CALL_PQT(fmap, PQgetf, matres, 0, "%int4 %int4[] %bytea",
+            0, &mat_type, 1, &mat_dims_arr, 2, &mat_data_bytea)) {
+            logger->warning(324, "Cannot get cvmat header", thisClass+"::getCvMat()");
+            break;
+        }
+        
+        // create dimensions array
+        mat_dims = CALL_PQ(fmap, PQntuples, mat_dims_arr.res);
+        mat_dim_sizes = new int[mat_dims];
+        for (int i = 0; i < mat_dims; i++) {
+            CALL_PQT(fmap, PQgetf, mat_dims_arr.res, i, "%int4", 0, &mat_dim_sizes[i]);
+        }
+        
+        // create matrix
+        mat = new cv::Mat(mat_dims, mat_dim_sizes, mat_type);
+        if (!mat) {
+            logger->warning(324, "Failed to create cv::Mat", thisClass+"::getCvMat()");
+            break;
+        }
 
-    return mat;
-}
-
-CvMatND *PGResultSet::getCvMatND(const int col) {
-    CvMatND *mat = NULL;
-//    PGresult *mres;
-//    PGarray step_arr;
-//    int type, rows, cols, dims, step_size, data_len;
-//    char *data_loc;
-//    int *step, *sizes;
-//    void *data;
-//
-//    // get CvMat header structure
-//    if (! PQgetf(select->res, this->pos, "%cvmat", col, &mres)) {
-//        warning(324, "Value is not a correct cvmat type");
-//        return NULL;
-//    }
-//    // parse CvMat header fields
-//    if (! PQgetf(mres, 0, "%int4 %int4 %int4[] %int4 %int4 %name",
-//        0, &type, 1, &dims, 2, &step_arr, 3, &rows, 4, &cols, 5, &data_loc)) {
-//        warning(325, "Incorrect cvmat type");
-//        PQclear(mres);
-//        return NULL;
-//    }
-//    // sometimes data type returns with apostrophes ('type')
-//    if (data_loc && data_loc[0] == '\'') {
-//        int len = strlen(data_loc);
-//        if (data_loc[len-1] == '\'') data_loc[len-1] = '\0';
-//        data_loc++;
-//    }
-//    // construct step[] array
-//    step_size = PQntuples(step_arr.res);
-//    step = new int [step_size];
-//    sizes = new int [step_size];
-//    for (int i = 0; i < step_size; i++) {
-//        if (! PQgetf(step_arr.res, i, "%int4", 0, &step[i])) {
-//            warning(310, "Unexpected value in int array");
-//            vt_destruct(step);
-//            vt_destruct(sizes);
-//            PQclear(step_arr.res);
-//            PQclear(mres);
-//            return NULL;
-//        }
-//    }
-//    PQclear(step_arr.res);
-//
-//    // get matrix data from specified column
-//    int dataloc_col = PQfnumber(select->res, data_loc);
-//    int data_oid = -1;
-//    if (dataloc_col < 0) {
-//        warning(325, "Invalid column for CvMat user data");
-//        data = NULL;
-//    }
-//    else data_oid = typeManager->getElemOID(PQftype(select->res, dataloc_col));
-//
-//    // could be char, short, int, float, double
-//    if (data_oid == typeManager->toOid("char")) {
-//        //TODO: maybe fix alignment (every row to 4B) ?
-//        //TODO: not sure if sizes are counted correctly
-//        data = getCharA(dataloc_col, data_len);
-//        for (int i = 0; i < step_size; i++)
-//            sizes[i] = data_len / step[i];
-//    }
-//    else if (data_oid == typeManager->toOid("float4") ||
-//            data_oid == typeManager->toOid("real")) {
-//        //TODO: not sure if sizes are counted correctly
-//        data = getFloatA(dataloc_col, data_len);
-//        for (int i = 0; i < step_size; i++)
-//            sizes[i] = (data_len * sizeof(float)) / step[i];
-//    }
-//    else {
-//        warning(326, "Unexpected type of CvMat data");
-//        data = NULL;
-//    }
-//    // create CvMatND header and set user data
-//    if (dims > 0 && data && sizes && step) {
-//        mat = cvCreateMatNDHeader(dims, sizes, type);
-//        cvSetData(mat, data, step[dims-1]);
-//    }
-//    vt_destruct(step);
-//    PQclear(mres);
+        // copy matrix data
+        memcpy(mat->data, mat_data_bytea.data, mat_data_bytea.len);
+    } while(0);
+    
+    if (mat_dims_arr.res) CALL_PQ(fmap, PQclear, mat_dims_arr.res);
+    if (mat_dim_sizes) delete[] mat_dim_sizes;
+    if (matres) CALL_PQ(fmap, PQclear, matres);
 
     return mat;
 }
@@ -1549,9 +1464,11 @@ string PGResultSet::getValue(const int col, const int arrayLimit) {
 #if HAVE_OPENCV
             // OpenCV cvMat type
             if (!keytype.compare("cvmat")) {
-                CvMat *mat = getCvMat(col);
-                valss << cvGetElemType(mat);
-                cvReleaseMat(&mat);
+                cv::Mat *mat = getCvMat(col);
+                if (mat) {
+                    valss << mat->type();
+                    delete mat;
+                }
             }
 #endif
             } break;

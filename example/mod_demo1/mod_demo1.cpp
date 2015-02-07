@@ -50,9 +50,11 @@ void do_work(Process *process, Dataset *dataset) {
     Interval *output = process->getOutputData();
     output->next();
     
-    // vysledne pole floatu
+    // vysledne pole floatu a matice
     float vals[3] = {0};
-    
+    cv::Mat1f mat(3, 2);
+    float dummy_seed = 0.0;
+
     // projdeme vsechna videa datasetu
     Video *video = dataset->newVideo();
     while (video->next()) {
@@ -62,17 +64,30 @@ void do_work(Process *process, Dataset *dataset) {
         // anotace bude treba pro prvnich 10 framu
         output->add(video->getName(), 1, 10, "", "demouser", "random-generated");
         
-        // spocitame dummy vysledek a ulozime
+        // spocitame dummy vysledky a ulozime
+        
+        // takto napr. pole floatu
         vals[0] += param1 / 1000.0;
         vals[1] += param2 / 500.0 - vals[0];
         vals[2] = vals[0] / vals[1];
         output->addFloatA("vals", vals, 3);
+
+        // takto float cv::Mat
+        for (cv::Mat1f::iterator it = mat.begin(); it != mat.end(); it++) {
+            *it = dummy_seed;
+            dummy_seed += 0.1;
+        }
+        output->addCvMat("features", mat);
         
         // potvrdime insert
         output->addExecute();
         
-        printf("mod_demo1: video %s; {%.3f,%.3f,%.3f}\n",
-            video->getName().c_str(), vals[0], vals[1], vals[2]);
+        printf("mod_demo1: video %s\n"\
+            "  float array  {%.3f,%.3f,%.3f}\n"\
+            "  cv::Mat(%d,%d) {%.3f,%.3f,%.3f...}\n",
+            video->getName().c_str(),
+            vals[0], vals[1], vals[2],
+            mat.rows, mat.cols, mat(0,0), mat(1,0), mat(2,0));
     }
     delete video;
     

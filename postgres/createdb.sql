@@ -49,11 +49,8 @@ CREATE TYPE inouttype AS ENUM
 
 CREATE TYPE cvmat AS
    (type integer,
-    dims integer,
-    step_arr integer[],
-    rows integer,
-    cols integer,
-    data_loc character varying);
+    dims integer[],
+    data bytea);
 
 
 -- dataset list
