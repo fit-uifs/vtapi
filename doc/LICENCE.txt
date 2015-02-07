@@ -1,5 +1,5 @@
 /**
- * @example LICENCE.txt
+ * @page Licence
 
 BUT OPEN SOURCE LICENCE
 

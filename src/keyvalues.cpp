@@ -1,13 +1,11 @@
 /**
- * @file    commons.cpp
+ * @file    keyvalues.cpp
  * @author  VTApi Team, FIT BUT, CZ
  * @author  Petr Chmelar, chmelarp@fit.vutbr.cz
  * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
  * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * @section DESCRIPTION
- *
- * Methods of KeyValues class
+ * @brief   Methods of KeyValues class
  */
 
 

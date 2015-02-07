@@ -5,9 +5,7 @@
  * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
  * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * @section DESCRIPTION
- *
- * Methods of Interval and Image classes
+ * @brief   Methods of Interval and Image classes
  */
 
 #include <common/vtapi_global.h>

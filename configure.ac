@@ -436,7 +436,7 @@ AS_IF([test "x${enable_doc}" = "xyes"], [
     AC_MSG_WARN([could not find Doxygen. You may need to install doxygen to build the documentation.])
     DOC_SUMMARY="${DOC_SUMMARY} (Doxygen was not found)"
   else
-    AC_CONFIG_FILES([doc/Makefile doc/Doxyfile])
+    AC_CONFIG_FILES([doc/Makefile doc/Doxyfile doc/MAINPAGE.txt])
     DOC_SUMMARY="yes"
   fi
 ])

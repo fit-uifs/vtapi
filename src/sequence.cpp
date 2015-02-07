@@ -5,9 +5,7 @@
  * @author  Vojtech Froml, xfroml00@stud.fit.vutbr.cz
  * @author  Tomas Volf, ivolf@fit.vutbr.cz
  *
- * @section DESCRIPTION
- *
- * Methods of Sequence, Video and VideoPlayer classes
+ * @brief   Methods of Sequence, Video and VideoPlayer classes
  */
 
 #include <common/vtapi_global.h>
