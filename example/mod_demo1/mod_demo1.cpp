@@ -52,7 +52,7 @@ void do_work(Process *process, Dataset *dataset) {
     
     // vysledne pole floatu a matice
     float vals[3] = {0};
-    cv::Mat1f mat(3, 1);
+    cv::Mat1f mat(3, 2);
     float dummy_seed = 0.0;
 
     // projdeme vsechna videa datasetu
@@ -87,7 +87,7 @@ void do_work(Process *process, Dataset *dataset) {
             "  cv::Mat(%d,%d) {%.3f,%.3f,%.3f...}\n",
             video->getName().c_str(),
             vals[0], vals[1], vals[2],
-            mat.rows, mat.cols, mat(1,1), mat(1,2), mat(1,3));
+            mat.rows, mat.cols, mat(0,0), mat(1,0), mat(2,0));
     }
     delete video;
     
