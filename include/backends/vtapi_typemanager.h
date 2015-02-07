@@ -72,6 +72,8 @@ public:
      * @param fmap function address book
      * @param connection database connection object
      * @param logger logger object
+     * @param schema 
+     * @todo Vojta: empty param Typemanager(.., schema)
      */
     TypeManager(fmap_t *fmap, Connection *connection, Logger *logger, std::string &schema) {
         this->logger        = logger;

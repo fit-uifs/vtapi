@@ -320,44 +320,44 @@ public:
      */
     std::vector<PGpoint>*  getPointV(const int col);
 #endif
-    
-//    /**
+
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get line segment specified by the column key
 //     * @param key column key
 //     * @return Line segment
 //     */
 //    PGlseg getLineSegment(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get line segment specified by the column index
 //     * @param col column index
 //     * @return Line segment
 //     */
 //    PGlseg getLineSegment(const int col);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get box specified by the column key
 //     * @param key column key
 //     * @return Box
 //     */
 //    PGbox getBox(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get box specified by the column index
 //     * @param col column index
 //     * @return Box
 //     */
 //    PGbox getBox(const int col);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get circle specified by the column key
 //     * @param key column key
 //     * @return Circle
 //     */
 //    PGcircle getCircle(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get circle specified by the column index
 //     * @param col column index
 //     * @return Circle
 //     */
 //    PGcircle getCircle(const int col);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get polygon specified by the column key
 //     * @note polygon.pts must be copied out if needed after clearing resultset
 //     *          copy_points(polygon.npts, polygon.pts, ...);
@@ -365,7 +365,7 @@ public:
 //     * @return Polygon
 //     */
 //    PGpolygon getPolygon(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get polygon specified by the column index
 //     * @note polygon.pts must be copied out if needed after clearing resultset
 //     *          copy_points(polygon.npts, polygon.pts, ...);
@@ -373,7 +373,7 @@ public:
 //     * @return Polygon
 //     */
 //    PGpolygon getPolygon(const int col);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get path specified by the column key
 //     * @note path.pts must be copied out if needed after clearing resultset
 //     *          copy_points(path.npts, path.pts, ...);
@@ -381,7 +381,7 @@ public:
 //     * @return Path
 //     */
 //    PGpath getPath(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get path specified by the column index
 //     * @note path.pts must be copied out if needed after clearing resultset
 //     *          copy_points(path.npts, path.pts, ...);
@@ -389,7 +389,7 @@ public:
 //     * @return Path
 //     */
 //    PGpath getPath(const int col);
-    
+
 #if HAVE_POSTGIS
     /**
      * Get GEOS geometry type by the column key

@@ -40,7 +40,6 @@ public:
     /**
      * Constructor for processes
      * @param orig pointer to the parrent KeyValues object
-     * @param process only for specific method
      * @param name specific name of process, which we can construct
      */
     Process(const KeyValues& orig, const std::string& name = "");
@@ -183,7 +182,7 @@ public:
      */
     bool prepareOutput(const std::string& method, const std::string& selection="intervals");
     /**
-     * Diff columns: <required method output columns> - <existing columns in output selection table>
+     * Diff columns: \<required method output columns\> - \<existing columns in output selection table\>
      * @param table   selection table for outputs
      * @param columns   all method attributes
      * @return   vector of columns to be added to the output selection table
