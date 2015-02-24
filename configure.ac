@@ -500,7 +500,7 @@ AC_SUBST(WIN32_EXTRA_LDFLAGS)
 ###############################################################################
 #####   PREPARE OUTPUT                                                    #####
 ###############################################################################
-AC_CONFIG_FILES([src/Makefile Makefile])
+AC_CONFIG_FILES([src/Makefile include/Makefile Makefile])
 #AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile])
 AC_OUTPUT
 
