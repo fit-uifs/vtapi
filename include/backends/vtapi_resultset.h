@@ -518,8 +518,8 @@ public:
      * @param get_widths whether column widths will be required
      * @param arrayLimit limits length of printed array
      * @return metadata for print, pair consisting of two vectors:
-     *  a) Tkeys - column types etc., b) ints - column widths
-     * @todo Tomas: check if return contains ordered list (by chars)
+     *  -# Tkeys - column types etc.
+     *  -# ints - column widths
      * @todo @b Vojta [param arrayLimit] který popisek je správný (tento nebo "desired column widths" z .cpp)?
      */
     virtual std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row, bool get_widths, const int arrayLimit) = 0;

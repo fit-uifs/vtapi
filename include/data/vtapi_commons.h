@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_commons.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of Common class and definition of format_t
  *
- * Created on May 7, 2013, 1:03 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_COMMONS_H
@@ -17,16 +23,18 @@
 
 namespace vtapi {
 
-    
+/**
+ * Output data format
+ */
 typedef enum {
-    STANDARD = 0,
-    CSV,
-    HTML
+    STANDARD = 0,   /**< plain text */
+    CSV,            /**< comma-separated values format */
+    HTML            /**< HTML format */
 }  format_t;
 
 
 /**
- * @brief This is common predecessor to each object in the VTApi - manages connection, logging and error handling.
+ * @brief This is common predecessor to each object in the %VTApi - manages connection, logging and error handling.
  *
  * This class is inherited by many and many other classes, but it manages just single resources,
  * thus there may bee a doom if someone destroys the original ones. Well, destructor should only happen
@@ -35,10 +43,18 @@ typedef enum {
  * @see Basic information on page @ref KEYVALUES
  *
  * @note Error codes 15*
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  *//***************************************************************************/
 class Commons {
 protected:
-    std::string thisClass; /**< This should be filled in each constructor of a derived class */
+    std::string thisClass;   /**< This should be filled in each constructor of a derived class */
 
     Connection      *connection;        /**< Connection object */
     TypeManager     *typeManager;       /**< Datatypes management object */
@@ -74,80 +90,79 @@ public:
     /**
      * Full copy constructor from existing Commons class
      * @note The default constructor Commons() should never exist
-     * @param orig previously created Commons class
+     * @param orig   previously created Commons class
      */
     Commons(const Commons& orig);
     /**
      * Recommended constructor. All arguments are loaded from gengetopt structure.
      * @note The default constructor Commons() should never exist
-     * @param args_info gengetopt structure of command line/configuration file arguments
+     * @param args_info   gengetopt structure of command line/configuration file arguments
      */
     Commons(const gengetopt_args_info& args_info);
     /**
      * Destructor
      */
     ~Commons();
+    
     /**
-     *
-     * @param format
      * @unimplemented
      */
     void read(const std::string& format="");
 
     // some functions that may be useful
     /**
-     * Get current connector
+     * Gets current connector
      * @return connector
      */
     Connection* getConnection();
     /**
-     * Get current logger
+     * Gets current logger
      * @return logger
      */
     Logger* getLogger();
 
     /**
-     * Get name of current dataset
+     * Gets name of current dataset
      * @return dataset name
      */
     std::string getDataset();
     /**
-     * Get name of current sequence
+     * Gets name of current sequence
      * @return sequence name
      */
     std::string getSequence();
     /**
-     * Get name of current selection
+     * Gets name of current selection
      * @return selection name
      */
     std::string getSelection();
     /**
-     * Get name of current process
+     * Gets name of current process
      * @return process name
      */
     std::string getProcess();
     /**
-     * Get base location path
+     * Gets base location path
      * @return base location
      */
     std::string getBaseLocation();
     /**
-     * Get dataset location path
+     * Gets dataset location path
      * @return dataset location
      */
     std::string getDatasetLocation();
     /**
-     * Get sequence location path
+     * Gets sequence location path
      * @return sequence location
      */
     std::string getSequenceLocation();
     /**
-     * Get data location path
+     * Gets data location path
      * @return data location
      */
     std::string getDataLocation();
     /**
-     * Get user name
+     * Gets user name
      * @return user name
      */
     std::string getUser();
@@ -168,7 +183,7 @@ private:
 
     /**
      * Maps string to format_t
-     * @param format string format
+     * @param format   string format
      * @return format_t value
      */
     format_t mapFormat(const std::string& format);

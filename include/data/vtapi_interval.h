@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_interval.h
- * Author: vojca
+ow/**
+ * @file
+ * @brief   Declaration of Interval and Image classes
  *
- * Created on May 7, 2013, 12:57 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_INTERVAL_H
@@ -21,18 +27,26 @@ class Sequence;
  * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 33*
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Interval : public KeyValues {
 public:
     
     /**
      * Constructor for intervals
-     * @param orig pointer to the parrent KeyValues object
-     * @param selection specific name of a selection table
+     * @param orig        pointer to the parrent KeyValues object
+     * @param selection   specific name of a selection table
      */
     Interval(const KeyValues& orig, const std::string& selection = "intervals");
 
-    /**
+    /*
      * Unnecessary
      * @return success
      * @note Overloading next() from KeyValues
@@ -40,71 +54,72 @@ public:
     //bool next();
 
     /**
-     * Get sequence name of parent sequence
+     * Gets sequence name of parent sequence
      * @return sequence string
      */
     std::string getSequenceName();
 
     /**
-     * Get sequence object of parent sequence
+     * Gets sequence object of parent sequence
      * @return sequence object
      */
     Sequence* getParentSequence();
 
     /**
-     * Get a start time of the current interval
+     * Gets a start time of the current interval
      * @return start time
      */
     int getStartTime();
     /**
-     * Get an end time of the current interval
+     * Gets an end time of the current interval
      * @return end time
      */
     int getEndTime();
 
     /**
-     * Add new interval to the table - minimal insert
-     * @param sequence interval name
-     * @param t1 start time
-     * @param t2 end time
-     * @param location location of the image
+     * Adds new interval to the table - minimal insert
+     * @param sequence   interval name
+     * @param t1         start time
+     * @param t2         end time
+     * @param location   location of an image
      * @return success
      */
     bool add(const std::string& sequence, const int t1, const int t2 = -1, const std::string& location = "");
     /**
-     * Add new interval to the table - full insert
-     * @param sequence interval name
-     * @param t1 start time
-     * @param t2 end time
-     * @param location location of the image
-     * @param userid name of the owner
-     * @param notes optional description
+     * Adds new interval to the table - full insert
+     * @param sequence   interval name
+     * @param t1         start time
+     * @param t2         end time
+     * @param location   location of an image
+     * @param userid     name of an owner
+     * @param notes      optional description
      * @return success
      */
     bool add(const std::string& sequence, const int t1, const int t2, const std::string& location,
     const std::string& userid, const std::string& notes);
+
     /**
-     * This is used to support updates
-     * @return success (in derived classes)
-     */
-    /**
-     * Execute SQL INSERT command for interval
+     * Executes SQL INSERT command for interval
      * @return success
      * @note Overloading addExecute from KeyValues
      */
     bool addExecute();
     /**
-     * Reset interval to initial state
+     * Resets interval to the initial state
      * @return success
      */
     bool preSet();
 
     /**
-     * Represent intervals only for selected sequence
-     * @param seqname sequence name
+     * Represents intervals only for selected sequence
+     * @param seqname   sequence name
      */
     void filterBySequence(const std::string& seqname);
 };
+
+
+
+
 
 /**
  * @brief This represents images
@@ -112,20 +127,28 @@ public:
  * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 339*
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Image : public Interval {
 public:
 
     /**
      * Constructor for Images
-     * @param orig pointer to the parrent KeyValues object
-     * @param selection specific name of a selection table
+     * @param orig        pointer to the parrent KeyValues object
+     * @param selection   specific name of a selection table
      */
     Image(const KeyValues& orig, const std::string& selection = "intervals");
 
     /**
-     * Get a sequence (order) number of the current image (interval)
-     * @return number or 0
+     * Gets a sequence (order) number of the current image (interval)
+     * @return sequence number or 0
      */
     int getTime();
 
@@ -137,16 +160,19 @@ public:
     std::string getDataLocation();
     /**
      * Simply adds an image (interval) to the sequence table (no checking)
-     * @param sequence interval name
-     * @param t time (start time is the same as the end time)
-     * @param location location of the image
+     * @param sequence   interval name
+     * @param t          time (start time is the same as the end time)
+     * @param location   location of the image
      * @return success
      */
     bool add(const std::string& sequence, const int t, const std::string& location);
 
 #if HAVE_OPENCV  
-    cv::Mat image;
-    
+    cv::Mat image;   /**< Image file data */
+    /**
+     * Loads an image from a file (given by imgLocation of %VTApi)
+     * @return image file data
+     */
     cv::Mat getData();
 #endif
     

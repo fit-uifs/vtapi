@@ -1,17 +1,14 @@
 /**
  * @file
- * @brief Main classes which provide a basic functionality of %VTApi.
+ * @brief   Declaration of main %VTApi class which provides a basic functionality of %VTApi.
  *
- * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
- *
- * VTApi is distributed under BUT OPEN SOURCE LICENCE (Version 1).
- * This licence agreement provides in essentials the same extent of rights as the terms of GNU GPL version 2 and Software fulfils the requirements of the Open Source software.
- *
- * @authors
- * Petr Chmelar, chmelarp (at) fit.vutbr.cz
- * Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
- * Tomas Volf, ivolf (at) fit.vutbr.cz
- *
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_H
@@ -20,15 +17,17 @@
 #include "common/vtapi_config.h"
 #include "data/vtapi_dataset.h"
 
-namespace vtapi {
 
+/**
+ * @brief Own namespace of %VTApi library
+ */
+namespace vtapi {
 
 /**
  * @brief VTApi class manages Commons and processes args[]
  * This is how to begin
  *
- * TODO: include http://www.gnu.org/s/gengetopt/gengetopt.html
- *       special interest to the configuration files is needed
+ * @TODO: include http://www.gnu.org/s/gengetopt/gengetopt.html (special interest to the configuration files is needed)
  *
  * @note Error codes 60*
  */ // ********************************************************************** //
@@ -41,17 +40,15 @@ public:
 
     /**
      * Constructor recomended by any program
-     * @param argc
-     * @param argv
-     * @todo @b doc: "(in the future) je stále aktuální?
-     * @todo @b doc: další konstruktory
+     * @param argc   argument count (as in usual program)
+     * @param argv   argument vector (as in usual program)
      */
     VTApi(int argc, char** argv);
 
     /**
      * Constructor
      * @deprecated
-     * @param configFile location
+     * @param configFile   location of configuration file
      */
     VTApi(const std::string& configFile = std::string("./vtapi.conf"));
 
@@ -86,30 +83,35 @@ public:
     /**
      * This might be a HOW-TO function for learning and testing purposes
      * @see documentation -> examples -> vtapi.conf, SAMPLES.txt
+     * @todo is this on given location?
      */
     void test();
 
 
     /**
      * This is how to continue after creating the API class...
-     * @param name specific dataset name
-     * @return new dataset
+     * @param name   specific dataset name
+     * @return new Dataset
      */
     Dataset* newDataset(const std::string& name = "");
 
     /**
      * Methodology shortcuts
-     * @param name
-     * @return
+     * @param name   specific method name
+     * @return new Method
      */
     Method* newMethod(const std::string& name = "");
+    /**
+     * @unimeplemented
+     */
     Method* addMethod(const Method& method);
     
     /**
-     * Initialize app as vtapi process instance
-     * @return process instance object
+     * Initializes app as vtapi Process instance
+     * @return Process instance object
      */
     Process *initProcess();
+
     
 private:
 
@@ -122,7 +124,7 @@ private:
     void testMethod(Dataset *);
     void testProcess(Dataset *);
 
-    void testPerformance ();
+    void testPerformance();
 
 };
 

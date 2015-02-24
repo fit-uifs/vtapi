@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_process.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of Process class
  *
- * Created on May 7, 2013, 12:58 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_PROCESS_H
@@ -17,20 +23,31 @@ namespace vtapi {
 
 /**
  * @brief A class which represents processes and gets information about them
- *
+ * 
  * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 36*
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Process : public KeyValues {
 public:
+    /**
+     * Process state
+     */
     typedef enum _STATE_T
     {
-        STATE_INIT,
-        STATE_STARTED,
-        STATE_RUNNING,
-        STATE_DONE,
-        STATE_ERROR
+        STATE_INIT,      /**< process was initialized */
+        STATE_STARTED,   /**< process was started */
+        STATE_RUNNING,   /**< process is already running */
+        STATE_DONE,      /**< process was sucessfuly done */
+        STATE_ERROR      /**< process was terminated with an error */
     } STATE_T;
     
     typedef void (*fCallback)(STATE_T state, Process *process, void *context);
@@ -39,8 +56,8 @@ public:
 
     /**
      * Constructor for processes
-     * @param orig pointer to the parrent KeyValues object
-     * @param name specific name of process, which we can construct
+     * @param orig   pointer to the parrent KeyValues object
+     * @param name   specific name of process, which we can construct
      */
     Process(const KeyValues& orig, const std::string& name = "");
 
@@ -55,144 +72,145 @@ public:
 
 
     /**
-     * Get a process name
-     * @return string value with a process name
+     * Gets a process name
+     * @return string value with the name of the process
      */
     std::string getName();
     /**
-     * Get current process state
+     * Gets current process state
      * @return state
      */
     STATE_T getState();
     /**
-     * Get process name for input data for this process
-     * @return string value with an input data table name
+     * Gets a process name which outputs are inputs for this process
+     * @return string value with the input data table name
+     * @todo @b doc: Check if it is correct
      */
     std::string getInputs();
     /**
-     * Get a name of a table where output data are stored
-     * @return string value with an output data table name
+     * Gets a name of a table where output data for this process are stored
+     * @return string value with the output data table name
      */
     std::string getOutputs();
     /**
-     * Get process which output are input for this process
+     * Gets a process which outputs are inputs for this process
      * @return process object
      */
     Process *getInputProcess();
     /**
-     * Get input intervals of this process
+     * Gets input intervals of this process
      * @return input intervals
      */
     Interval *getInputData();
     /**
-     * Get output intervals of this process
+     * Gets output intervals of this process
      * @return output intervals
      */
     Interval *getOutputData();
     /**
-     * Get numeric process param
-     * @param key param name
-     * @return param value
+     * Gets a numeric parameter of this process
+     * @param key   name of parameter
+     * @return value of parameter
      */
     int getParamInt(const std::string& key);
     /**
-     * Get floating point numeric process param
-     * @param key param name
-     * @return param value
+     * Gets a floating point numeric parameter of this process
+     * @param key   name of parameter
+     * @return value of parameter
      */
     double getParamDouble(const std::string& key);
     /**
-     * Get string process param
-     * @param key param name
-     * @return param value
+     * Gets a string parameter of this process
+     * @param key   name of parameter
+     * @return value of parameter
      */
     std::string getParamString(const std::string& key);
 
     /**
      * Sets output data from another process as inputs for this one
-     * @param processName input process name
+     * @param processName   input process name
      */
     void setInputs(const std::string& processName);
     /**
      * Sets output table for this process
-     * @param table input process name
+     * @param table   output table name
      */
     void setOutputs(const std::string& table);
     /**
-     * Sets integer argument
-     * @param key arg name
-     * @param value arg value
+     * Sets an integer parameter of this process
+     * @param key     name of parameter
+     * @param value   value of parameter
      */
     void setParamInt(const std::string& key, int value);
     /**
-     * Sets floating number argument
-     * @param key arg name
-     * @param value arg value
+     * Sets a floating point numeric parameter of this process
+     * @param key     name of parameter
+     * @param value   value of parameter
      */
     void setParamDouble(const std::string& key, double value);
     /**
-     * Sets string process argument
-     * @param key arg name
-     * @param value arg value
+     * Sets a string parameter of this process
+     * @param key     name of parameter
+     * @param value   value of parameter
      */
     void setParamString(const std::string& key, const std::string& value);
     /**
-     * Sets process status update callback
-     * @param callback callback function
-     * @param pContext context supplied to callbacks
+     * Sets a process status update callback
+     * @param callback   callback function
+     * @param pContext   context supplied to callbacks
      */
     void setCallback(fCallback callback, void *pContext);
     
     /**
-     * Represent processes only with specific input process. Use this before calling next()
-     * @param processName input process name
+     * Represents processes with specific input process only. Use this before calling next()
+     * @param processName   input process name
      */
     void filterByInputs(const std::string& processName);
     
     virtual bool preSet();
 
     /**
-     * Add new process instance into database, use Method->addProcess() instead
-     * @param outputs output table
-     * @return
+     * Adds a new process instance into database, use Method->addProcess() instead
+     * @param outputs   output table
+     * @return success
      */
     bool add(const std::string& outputs="");
 
     /**
-     * Create new interval for process
-     * @param t1 currently unused
-     * @param t2 currently unused
+     * Creates a new interval for process
+     * @param t1   currently unused
+     * @param t2   currently unused
      * @return new interval
-     * @todo @b code: Nepoužívané parametry t1, t2
+     * @todo @b code: parameters t1 and t2 are unused!
      */
     Interval* newInterval(const int t1 = -1, const int t2 = -1);
     /**
-     * Create new sequence for process
-     * @param name specific sequence name
+     * Creates a new sequence for process
+     * @param name   specific sequence name
      * @return new sequence
-     * @todo @b code: neimplementováno (zkontrolovat pak i doc)
+     * @unimplemented
      */
     Sequence* newSequence(const std::string& name = "");
     
     /**
-     * Prepare output selection table (checks if exist required attributes and if necessary they would be added to the table)
-     * @param method   input method which is a core of the process
+     * Prepares an output selection table (checks if exist required attributes and if is necessary they would be added to the table)
+     * @param method      input method which is a core of the process
      * @param selection   selection table for outputs
      * @return success
      */
     bool prepareOutput(const std::string& method, const std::string& selection="intervals");
     /**
-     * Diff columns: \<required method output columns\> - \<existing columns in output selection table\>
-     * @param table   selection table for outputs
+     * Performs a diff of columns: \<required method output columns\> - \<existing columns in output selection table\>
+     * @param table     selection table for outputs
      * @param columns   all method attributes
-     * @return   vector of columns to be added to the output selection table
+     * @return vector of columns to be added to the output selection table
      */
     std::map<std::string,std::string> diffColumns(const std::string& table, const TKeys& columns);
     /**
-     * Ensure an addition of required columns to the output selection table
-     * @param table   selection table for outputs
+     * Ensures an addition of required columns to an output selection table
+     * @param table     selection table for outputs
      * @param columns   vector of columns to be added
-     * @return   success
+     * @return success
      */
     bool addColumns(const std::string& table, const std::map<std::string,std::string>& columns);
 
@@ -204,15 +222,30 @@ public:
     bool run();
 
 protected:
-    std::string inputs;
-    TKeyValues params;
+    std::string inputs;   /**< A process name which outputs are inputs for this process */
+    TKeyValues params;    /**< Vector of process parameters */
     
-    fCallback callback;
-    void *pCallbackContext;
+    fCallback callback;       /**< @todo @b doc: put together a few letters.. */
+    void *pCallbackContext;   /**< @todo @b doc: put together a few letters.. */
     
 protected:
+    /**
+     * Constructs a process name (composed of method name and input parameters)
+     * @return process name
+     * @todo @b doc: Check if it is correct & exhaustive
+     */
     std::string constructName();
+    /**
+     * Performs a serialization of parameters
+     * @return serialized parameters
+     * @todo @b doc: Check if it is correct & exhaustive
+     */
     std::string serializeParams();
+    /**
+     * Performs a deserialization of parameters
+     * @param serialized parameters
+     * @todo @b doc: Check if it is correct & exhaustive
+     */
     void deserializeParams(std::string paramString);
 
 };

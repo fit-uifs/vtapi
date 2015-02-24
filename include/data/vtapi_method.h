@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_method.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of Method class
  *
- * Created on May 7, 2013, 12:57 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_METHOD_H
@@ -21,6 +27,14 @@ class Process;
  * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 35*
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Method : public KeyValues {
 public:
@@ -31,20 +45,20 @@ public:
     
     /**
      * Constructor for methods
-     * @param orig pointer to the parrent KeyValues object
-     * @param name specific name of method, which we can construct
+     * @param orig   pointer to the parrent KeyValues object
+     * @param name   specific name of method, which we can construct
      */
     Method(const KeyValues& orig, const std::string& name = "");
 
     /**
-     * Move to a next method and set a method name and its methodkeys variables
+     * Moves to a next method and set a method name and its methodkeys variables
      * @return success
      * @note Overloading next() from KeyValues
      */
     bool next();
 
     /**
-     * Get a name of the current method
+     * Gets a name of the current method
      * @return string value with the name of the method
      */
     std::string getName();
@@ -55,35 +69,51 @@ public:
     TKeys getMethodKeys();
 
     /**
-     * Create process object for access to existing processes
+     * Creates process object for access to existing processes
      * @return pointer to new process object
      */
     Process* newProcess(const std::string& name = "");
     /**
-     * Create process object for starting new process
-     * @param callback process status update callback
-     * @param pContext supplied callback context
+     * Creates process object for starting new process
+     * @param callback   process status update callback
+     * @param pContext   supplied callback context
      * @return 
      */
     Process* addProcess(Process::fCallback callback = NULL, void *pContext = NULL);  
 
+    /**
+     * @unimplemented
+     */
     Method* add(const std::string& name);
     
+    /**
+     * @unimplemented
+     */
     Method* loadCode();    
 
+    /**
+     * @unimplemented
+     */
     Method* saveCode();    
     
+    /**
+     * @unimplemented
+     */
     void init();
+    /**
+     * @unimplemented
+     */
     void exit();
     
+    /**
+     * @unimplemented
+     */
     std::string getLastError() { return std::string(""); }
     
 private:
 
     /**
-     *
-     * @param inout
-     * @todo code: neimplementováno (pak doplnit i doc)
+     * @unimplemented
      */
     void printData(const std::string& inout);
 
