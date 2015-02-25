@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_select.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of Select class
  *
- * Created on May 7, 2013, 12:59 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_SELECT_H
@@ -16,8 +22,18 @@ namespace vtapi {
     
 /**
  * @brief Class for constructing and executing SELECT queries
+ * 
  * @see Basic information on page @ref KEYVALUES
+ * 
  * @note Error codes 21*
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Select : public Query {
 protected:
@@ -32,127 +48,126 @@ public:
 
     /**
      * Constructor of a SELECT query object
-     * @param commons configuration object of Commons class
-     * @param initString initialization string (query)
+     * @param commons      configuration object of Commons class
+     * @param initString   initialization string (query)
      */
     Select(const Commons& commons, const std::string& initString = "");
     /**
-     * Get SELECT query string
+     * Gets SELECT query string
      * @return query string
      */
     std::string getQuery();
     /**
-     * Execute SELECT query and fetch result
+     * Executes SELECT query and fetches result
      * @return success
      */
     bool execute();
     /**
-     * Shift offset, execute SELECT query and fetch result
+     * Shifts offset, executes SELECT query and fetches result
      * @return success
      */
     bool executeNext();
     /**
      * This is used to specify a function in the (column) list
-     * It may be called more times.
-     * @param funtext
-     * @return success
-     * @todo @b code: neimplementováno (pak doplnit do doc)
+     * @note It may be called more times.
+     * @unimplemented
      */
     bool function(const std::string& funtext);
     /**
-     * This is used to join tables if they can be performed automatically.
+     * This is used to join tables if they can be performed automatically. 
      * If not, returns false (no quarantee before version 2).
      * @warning no quarantee before version 2 !!
      * @return success
-     * @todo @b code: neimplementováno (potom doplnit i doc)
+     * @unimplemented
      */
     bool join();
     /**
-     * Get LIMIT argument
-     * @return limit
+     * Gets number of rows to be fetched by LIMIT section of query
+     * @return number of rows specified in LIMIT section
      */
     int getLimit() { return this->limit; };
     /**
-     * Set LIMIT argument
-     * @param limit limit
+     * Sets number of rows to be fetched by LIMIT section of query
+     * @param limit   number of rows to be fetched
      */
     void setLimit(const int limit) { this->limit = limit; };
     /**
-     * This is used to specify the table for FROM statement and the column list for SELECT statement
-     * It may be called more times.
-     * @param table table to select
-     * @param column column for select
+     * This is used to specify a table for FROM statement and a column list for SELECT statement
+     * @param table    table to select
+     * @param column   column for select
      * @return success
+     * @note It may be called more times.
      */
     bool from(const std::string& table, const std::string& column);
     /**
-     * This is a WHERE statement construction function
-     * It can be called several times.
-     * @param key key to compare with the value
-     * @param value requested value for key
-     * @param oper comparision operator between key and value
-     * @param from table where the key is situated
+     * This is a WHERE statement construction function for strings
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
      * @return success
+     * @note It may be called several times.
      */
     bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for integers
-     * It can be called several times.
-     * @param key key to compare with the value
-     * @param value requested value for key
-     * @param oper comparision operator between key and value
-     * @param from table where the key is situated
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
      * @return success
+     * @note It may be called several times.
      */
     bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for floats
-     * It can be called several times.
-     * @param key key to compare with the value
-     * @param value requested value for key
-     * @param oper comparision operator between key and value
-     * @param from table where the key is situated
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
      * @return success
+     * @note It may be called several times.
      */
     bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for seqtype
-     * It can be called several times.
-     * @param key key to compare with the value
-     * @param value requested value for key
-     * @param oper comparision operator between key and value
-     * @param from table where the key is situated
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
      * @return success
+     * @note It may be called several times.
      */
      bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for inouttype
-     * It can be called several times.
-     * @param key key to compare with the value
-     * @param value requested value for key
-     * @param oper comparision operator between key and value
-     * @param from table where the key is situated
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
      * @return success
+     * @note It may be called several times.
      */
      bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
-    /**
+    /* * //TODO: delete a space between stars after wherePermissions will be actual
      * This is a WHERE statement construction function for permissions
-     * It can be called several times.
-     * @param key key to compare with the value
-     * @param value requested value for key
-     * @param oper comparision operator between key and value
-     * @param from table where the key is situated
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
      * @return success
+     * @note It may be called several times.
      */
+//TODO: delete a space between stars in the upper doxygen comment after wherePermissions will be actual
 //     bool wherePermissions(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for timestamp
-     * It can be called several times.
-     * @param key key to compare with the value
-     * @param value requested value for key
-     * @param oper comparision operator between key and value
-     * @param from table where the key is situated
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
      * @return success
+     * @note It may be called several times.
      */
      bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
 };
