@@ -452,6 +452,8 @@ bool KeyValues::printRowOnly(const int row, const vector<int>* widths) {
     if (format == HTML) output << "</tr>";
     output << endl;
     cout << output.str();
+    
+    return retval;
 }
 
 
