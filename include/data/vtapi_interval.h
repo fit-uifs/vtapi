@@ -1,4 +1,4 @@
-ow/**
+/**
  * @file
  * @brief   Declaration of Interval and Image classes
  *
