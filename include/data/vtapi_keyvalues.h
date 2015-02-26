@@ -479,6 +479,7 @@ public:
      * @param key     column key to update
      * @param value   new integer value (in string representation) of the key
      * @return success
+     * @unimplemented
      */
     bool setInt(const std::string& key, const std::string& value);
     /**
@@ -512,6 +513,7 @@ public:
      * @param key     column key to update
      * @param value   new float value (in string representation) of the key
      * @return success
+     * @unimplemented
      */
     bool setFloat(const std::string& key, const std::string& value);
     /**

@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_data.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Header shortcut for including dataset, interval, method, process and sequence headers
  *
- * Created on May 7, 2013, 1:22 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_DATA_H
