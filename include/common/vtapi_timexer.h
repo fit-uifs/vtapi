@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_timexer.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of TimExer class
  *
- * Created on May 7, 2013, 5:00 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_TIMEXER_H
@@ -18,6 +24,14 @@ namespace vtapi {
  * - Plus you can use meantime.
  * - PlusPlus, you can get the PID, virtual and resident memory.
  * - Well, some may use process information /proc/$pid/status instead of libproc_dev.
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class TimExer {
 private:
@@ -41,22 +55,28 @@ public:
     void restart();
 
     /**
-     * @return time [s] passed accordgin to the theory of relativity
+     * Getx time in seconds based on current time
+     * @return time [s]
      */
     double getTime();
 
     /**
+     * Gets meantime in seconds based on current time
      * @return meantime [s] from the beginning or the last time or meantime (mezicas)
+     * @todo Not so good keyword for method name, because in czech it means "průměrný čas" 
      */
     double getMeanTime();
 
     /**
+     * Gets time in seconds based on program time (user time + system time)
      * @return time [s] used by the program so far (user time + system time)
      */
     double getClock();
 
     /**
+     * Gets meantime in seconds based on program time (user time + system time)
      * @return meantime [s] from the beginning or the last time or meantime (mezicas)
+     * @todo Not so good keyword for method name, because in czech it means "průměrný čas" 
      */
     double getMeanClock();
 
@@ -64,16 +84,19 @@ public:
 #if HAVE_READPROC
 
     /**
+     * Gets PID of process 
      * @return PID
      */
     int getPID();
 
     /**
+     * Gets total used virtual memory [in MB]
      * @return total [MB] of virtual memory
      */
     double getVirtMemory();
 
     /**
+     * Gets total user (resident) memory [in MB]
      * @return total [MB] of (resident) memory
      */
     double getMemory();

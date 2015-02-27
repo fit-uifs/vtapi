@@ -239,6 +239,7 @@ TAB_SIZE               = 8
 # newlines.
 
 ALIASES                = "bold{1}=<b>\1</b>" \
+                         "licence=\par Lincece:\n" \
                          "unimplemented=\xrefitem unimplemented \"Unimplemented\" \"Unimplemented\""
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).

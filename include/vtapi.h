@@ -27,7 +27,7 @@ namespace vtapi {
  * @brief VTApi class manages Commons and processes args[]
  * This is how to begin
  *
- * @TODO: include http://www.gnu.org/s/gengetopt/gengetopt.html (special interest to the configuration files is needed)
+ * @todo: include http://www.gnu.org/s/gengetopt/gengetopt.html (special interest to the configuration files is needed)
  *
  * @note Error codes 60*
  */ // ********************************************************************** //
@@ -102,7 +102,7 @@ public:
      */
     Method* newMethod(const std::string& name = "");
     /**
-     * @unimeplemented
+     * @unimplemented
      */
     Method* addMethod(const Method& method);
     

@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_tkeyvalue.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of TKeyValue class
  *
- * Created on May 7, 2013, 1:06 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_TKEYVALUE_H
@@ -13,6 +19,9 @@
 
 namespace vtapi {
 
+/**
+ * TKeyValues is an abbreviation for a vector of TKey pointers
+ */
 typedef std::vector<TKey *>     TKeyValues;
 
 
@@ -29,6 +38,14 @@ typedef std::vector<TKey *>     TKeyValues;
  * @see http://www.cplusplus.com/doc/tutorial/templates/
  * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
  * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 template <typename T>
 class TKeyValue : public TKey {
@@ -45,10 +62,10 @@ public:
 
     /**
      * Full constructor with single value
-     * @param type key data type
-     * @param key key name (column name)
-     * @param value single value
-     * @param from additional key specification (eg. table)
+     * @param type    key data type
+     * @param key     key name (column name)
+     * @param value   single value
+     * @param from    additional key specification (eg. table)
      */
     TKeyValue(const std::string& type, const std::string& key, T value, const std::string& from = "")
             : TKey(type, key, 1, from) {
@@ -58,11 +75,11 @@ public:
     }
     /**
      * Full constructor with multiple values
-     * @param type key data type
-     * @param key key name (column name)
-     * @param values array of values
-     * @param size values array size
-     * @param from additional key specification (eg. table)
+     * @param type     key data type
+     * @param key      key name (column name)
+     * @param values   array of values
+     * @param size     size of array of values
+     * @param from     additional key specification (eg. table)
      */
     TKeyValue (const std::string& type, const std::string& key, T* values, const int size, const std::string& from = "")
             : TKey(type, key, size, from) {
@@ -84,7 +101,7 @@ public:
     }
 
     /**
-     * Print values from TKey members
+     * Prints values from TKey members
      * @return string which contains a dump of TKey members
      */
     std::string print();
@@ -96,7 +113,7 @@ public:
     std::string getValue();
     /**
      * Gets string representation of first limit values
-     * @param limit how many values, less than 0 = unlimited
+     * @param limit   how many values, 0 (or less) = unlimited
      * @return representation of value(s)
      */
     std::string getValues(const int limit = 0);
@@ -106,6 +123,7 @@ public:
 /**
  * Prints string representation of Key-Value(s) pair
  * @return Key-Value string
+ * @todo @b doc: not consistent with declaration in header
  */
 template <class T>
 std::string TKeyValue<T>::print() {
@@ -119,6 +137,7 @@ std::string TKeyValue<T>::print() {
 /**
  * Gets string representation of single value
  * @return value string
+ * @todo @b doc: not consistent with declaration in header
  */
 template <class T>
 std::string TKeyValue<T>::getValue() {

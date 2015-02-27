@@ -49,7 +49,10 @@ public:
         STATE_DONE,      /**< process was sucessfuly done */
         STATE_ERROR      /**< process was terminated with an error */
     } STATE_T;
-    
+
+    /**
+     * @todo @b doc: put together a few letters..
+     */
     typedef void (*fCallback)(STATE_T state, Process *process, void *context);
 
 public:
@@ -243,7 +246,7 @@ protected:
     std::string serializeParams();
     /**
      * Performs a deserialization of parameters
-     * @param serialized parameters
+     * @param paramString serialized parameters
      * @todo @b doc: Check if it is correct & exhaustive
      */
     void deserializeParams(std::string paramString);
