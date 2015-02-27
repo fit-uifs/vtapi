@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_serialize.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Definition of serialization and deserialization functions
  *
- * Created on May 10, 2013, 11:51 AM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_SERIALIZE_H
@@ -13,8 +19,8 @@ namespace vtapi {
 /**
  * A generic function to convert any numeric type to string
  * (any numeric type, e.g. int, float, double, etc.)
- * @param value
- * @return string
+ * @param value   numeric value
+ * @return string containing the numeric value
  */
 template <class T>
 inline std::string toString(const T& value) {
@@ -25,7 +31,7 @@ inline std::string toString(const T& value) {
 
 /**
  * Converts timestamp to string (yyyy-mm-dd hh:mm:ss)
- * @param value time value
+ * @param value   time value
  * @return time string
  */
 template <>
@@ -37,7 +43,7 @@ inline std::string toString <time_t>(const time_t& value) {
 
 /**
  * Converts time string (yyyy-mm-dd hh:mm:ss) to timestamp
- * @param value time string
+ * @param value   time string
  * @return timestamp
  */
 inline time_t toTimestamp(const std::string& value) {
@@ -49,9 +55,9 @@ inline time_t toTimestamp(const std::string& value) {
 
 /**
  * Generic conversion from string to array representation
- * @param buffer input string
- * @param size output - array size
- * @return values array
+ * @param buffer   input string
+ * @param size     output value only: array size
+ * @return array of values
  */
 template<class T>
 inline T* deserializeA(char *buffer, int& size) {
@@ -88,8 +94,8 @@ inline T* deserializeA(char *buffer, int& size) {
 
 /**
  * Generic conversion from string to vector representation
- * @param buffer input string
- * @return values vector
+ * @param buffer   input string
+ * @return vector of values
  */
 template<class T>
 inline std::vector<T>* deserializeV(char *buffer) {

@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief   Declaration of TKeyValue class
+ * @brief   Declaration and also defition of TKeyValue class
  *
  * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz

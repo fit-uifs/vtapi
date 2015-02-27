@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_logger.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of Logger class
  *
- * Created on May 7, 2013, 1:05 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_LOGGER_H
@@ -21,7 +27,18 @@ namespace vtapi {
  * 2011-09-30 19:34:20: Testing the logging first.
  *
  * Programmers may use also write (just it) and a conditional debug log.
+ *
  * @note Error codes 10*
+ * 
+ * @todo @b doc: lack of clarity sentence: "Programmers may use also write (just it) and a conditional debug log." - what the autor wanted to say?
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  *
  *//***************************************************************************/
 class Logger {
@@ -35,7 +52,7 @@ public:
 
     /**
      * Constructor
-     * @param filename Name of the file for storing logs
+     * @param filename   name of the file for storing logs
      * @param verbose verbosity
      */
     Logger(const std::string& filename = "", bool verbose = false);
@@ -45,52 +62,52 @@ public:
     ~Logger();
 
     /**
-     * Log function puts a timestamp with the message into the logstream
-     * @param message logged message
+     * Log function puts a timestamp with a message into a logstream
+     * @param message   log level message
      */
     void log(const std::string& message);
     /**
-     * Debug function flushes a timestamp with the message immediately into the logstream
-     * @param message logged message
+     * Debug function flushes a timestamp with a message immediately into a logstream
+     * @param message   debug level message
      */
     void debug(const std::string& message);
 
     /**
      * This is to write to the standard error log
-     * @param message logged message
+     * @param message   logged message
      */
     void write(const std::string& message);
     /**
-     * Get a timestamp for logging
+     * Gets a timestamp for logging
      * @return string value with timestamp
      * @note Timestamp format is "YYYY-MM-DD HH:NN:SS", where NN represents minutes
      */
     std::string timestamp();
-        /**
+    /**
      * This causes a serious death
-     * @param errnum number of the error
-     * @param logline error message to display
-     * @param thisMethod method in which error occurred
+     * @param errnum       number of the error (error code)
+     * @param logline      error message to display
+     * @param thisMethod   method in which error occurred
      */
     void error(int errnum, const std::string& logline, const std::string& thisMethod);
     /**
      * This causes a serious death
-     * @param message error message to display
-     * @param thisMethod method in which error occurred
+     * @param message      error message to display
+     * @param thisMethod   method in which error occurred
      */
     void error(const std::string& message, const std::string& thisMethod);
 
     /**
      * This is just a warning
-     * @param errnum number of the warning
-     * @param logline warning message to display
-     * @param thisMethod method in which warning occurred
+     * @param errnum       number of the warning (warning code)
+     * @param logline      warning message to display
+     * @param thisMethod   method in which warning occurred
      */
     void warning(int errnum, const std::string& logline, const std::string& thisMethod);
     /**
      * This is just a warning
-     * @param message warning message to display
-     * @param thisMethod method in which warning occurred
+     * @param message      warning message to display
+     * @param thisMethod   method in which warning occurred
      */
     void warning(const std::string& message, const std::string& thisMethod);
 

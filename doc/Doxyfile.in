@@ -818,14 +818,14 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = ../include/common/vtapi_settings.h \
-                         ../include/common/vtapi_misc.h \
-                         ../src/vtapi_settings.cpp \
-                         ../include/vtcli.h \
+EXCLUDE                = ../include/common/vtapi_misc.h \
+                         ../include/common/vtapi_settings.h \
+                         ../include/postgis \
                          ../include/vtapi_libpq.h \
-                         ../include/vtapi_settings.h \
-                         ../src/vtapi_misc.c \
-                         ../include/postgis
+                         ../include/vtcli.h \
+                         ../src/vtapi_misc.cpp \
+                         ../src/vtapi_settings.cpp
+
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

@@ -1,18 +1,14 @@
 /**
  * @file
- * @brief Optional %VTApi configuration for includes. Comment \#includes to make
- * %VTApi more lightweight..
+ * @brief   %VTApi configuration header for includes based on vtapi_autoconfig.h header.
  *
- * @copyright Brno University of Technology &copy; 2011 &ndash; 2012
- *
- * VTApi is distributed under BUT OPEN SOURCE LICENCE (Version 1).
- * This licence agreement provides in essentials the same extent of rights as the terms of GNU GPL version 2 and Software fulfils the requirements of the Open Source software.
- *
- * @authors
- * Petr Chmelar, chmelarp (at) fit.vutbr.cz
- * Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
- * Tomas Volf, ivolf (at) fit.vutbr.cz
- *
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_CONFIG_H
@@ -34,7 +30,13 @@
 #include <time.h>
 #include <typeinfo>
 
-// comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
+/**
+ * @brief TODO
+ * 
+ * @todo @b doc: put together a few letters..
+ * 
+ * @note comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
+ */
 #define COPYRDBUF
 
 // platform independent library loading
