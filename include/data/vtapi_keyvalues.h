@@ -6,7 +6,7 @@
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
- * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
@@ -27,7 +27,7 @@ namespace vtapi {
 /**
  * @brief KeyValues storage class
  *
- * @see Basic definition on page @ref LOGICAL
+ * @see Basic definition on page @ref BASICDEFS
  *
  * @note Error codes 30*
  *
@@ -35,7 +35,7 @@ namespace vtapi {
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
- * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
