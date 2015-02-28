@@ -34,6 +34,10 @@ Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(o
 
 }
 
+int Interval::getId() {
+    return this->getInt("id");
+}
+
 string Interval::getSequenceName() {
     // TODO: possibly empty... possible warning 332
     return this->sequence;

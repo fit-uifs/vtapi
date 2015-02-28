@@ -54,6 +54,12 @@ public:
     //bool next();
 
     /**
+     * Gets interval ID
+     * @return interval ID
+     */
+    int getId();
+    
+    /**
      * Gets sequence name of parent sequence
      * @return sequence string
      */
