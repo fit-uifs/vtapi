@@ -200,9 +200,10 @@ bool PGTypeManager::registerTypes () {
     // OpenCV special types
 #if HAVE_OPENCV
     PGregisterType typescv_comp[] = {
-        {"public.cvmat", NULL, NULL}
+        {"public.cvmat", NULL, NULL},
+        {"public.vtevent", NULL, NULL},
     };
-    retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_COMPOSITE, typescv_comp, 1, 0);
+    retreg = CALL_PQT(fmap, PQregisterTypes, (PGconn *)connection->getConnectionObject(), PQT_COMPOSITE, typescv_comp, 2, 0);
     if (!retreg) {
         logger->warning(666, CALL_PQT(fmap, PQgeterror), thisClass+"::registerTypes()");
         retval = VT_FAIL;
@@ -704,6 +705,29 @@ bool PGQueryBuilder::keyCvMat(const std::string& key, const cv::Mat& value, cons
 }
 #endif
 
+bool PGQueryBuilder::keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from) {
+    if (key.empty()) return VT_FAIL;
+    else {
+        TKey k("vtevent", key, 1, from);
+        keys_main.push_back(k);
+        keys_main_order.push_back(keysCnt++);
+        if (!param) createParam();
+        
+        PGbytea data = {value.user_data_size, (char*)value.user_data};
+        
+        // create cvmat composite
+        PGparam *event = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
+        CALL_PQT(fmap, PQputf, event, 
+            "%int4 %int4[] %bool %box %float8 %bytea*",
+            &value.group_id, &value.class_id, &value.is_root, (PGbox *)&value.region, &value.score, &data);
+        
+        // put cvmat composite
+        CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%public.vtevent", event);
+        CALL_PQT(fmap, PQparamClear, event);
+        
+        return VT_OK;
+    }
+}
 
 
 bool PGQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from) {
@@ -1377,6 +1401,50 @@ int PGResultSet::getIntOid(const int col) {
 
     CALL_PQT(fmap, PQgetf, pgres, this->pos, "%oid", col, &value);
     return (int) value;
+}
+
+IntervalEvent *PGResultSet::getIntervalEvent(const int col) {
+    PGresult *pgres     = (PGresult *) this->res;
+    PGresult *evres     = NULL;
+    IntervalEvent *event= NULL;
+    int ev_group_id = 0, ev_class_id = 0;
+    bool ev_is_root = false;
+    PGbox ev_region = {0};
+    double ev_score = 0.0;
+    PGbytea ev_data = {0};
+    
+    do {
+        // get event structure
+        if (! CALL_PQT(fmap, PQgetf, pgres, this->pos, "%public.vtevent", col, &evres)) {
+            logger->warning(324, "Value is not a correct vtevent type", thisClass+"::getIntervalEvent()");
+            break;
+        }
+        // get data from event structure
+        if (! CALL_PQT(fmap, PQgetf, evres, 0, "%int4 %int4 %bool %box %float8 %bytea",
+            0, &ev_group_id, 1, &ev_class_id, 2, &ev_is_root, 3, &ev_region, 4, &ev_score, 5, &ev_data)) {
+            logger->warning(324, "Cannot get vtevent header", thisClass+"::getIntervalEvent()");
+            break;
+        }
+       
+        // create event
+        event = new IntervalEvent();
+        if (!event) {
+            logger->warning(324, "Failed to create IntervalEvent", thisClass+"::getIntervalEvent()");
+            break;
+        }
+
+        event->group_id = ev_group_id;
+        event->class_id = ev_class_id;
+        event->is_root = ev_is_root;
+        memcpy(&event->region, &ev_region, sizeof(ev_region));
+        event->score = ev_score;
+        event->user_data_size = ev_data.len;
+        event->SetUserData(ev_data.data, ev_data.len);
+    } while(0);
+
+    if (evres) CALL_PQ(fmap, PQclear, evres);
+    
+    return event;
 }
 
 string PGResultSet::getValue(const int col, const int arrayLimit) {

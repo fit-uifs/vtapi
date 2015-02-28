@@ -315,6 +315,14 @@ GEOSGeometry *KeyValues::getLineString(const int col) {
 }
 #endif
 
+IntervalEvent *KeyValues::getIntervalEvent(const std::string& key) {
+    return select->resultSet->getIntervalEvent(key);
+}
+
+IntervalEvent *KeyValues::getIntervalEvent(const int col) {
+    return select->resultSet->getIntervalEvent(col);
+}
+    
 // =============== GETTERS - OTHER =============================================
 int KeyValues::getIntOid(const string& key) {
     return select->resultSet->getIntOid(key);
@@ -532,6 +540,10 @@ bool KeyValues::addCvMat(const std::string& key, cv::Mat& value) {
 }
 #endif
     
+bool KeyValues::addIntervalEvent(const std::string& key, IntervalEvent& value) {
+    return this->insert ? this->insert->keyIntervalEvent(key, value) : VT_FAIL;
+}
+
 bool KeyValues::addExecute() {
     if (this->insert) return this->insert->execute();
     else return VT_FAIL;

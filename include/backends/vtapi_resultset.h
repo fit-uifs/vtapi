@@ -11,6 +11,7 @@
 #include "vtapi_backendlibs.h"
 #include "../common/vtapi_logger.h"
 #include "../common/vtapi_tkeyvalue.h"
+#include "../data/vtapi_intervalevent.h"
 
 namespace vtapi {
 
@@ -493,6 +494,22 @@ public:
     virtual GEOSGeometry* getLineString(const int col) = 0;
 #endif
 
+    // =============== GETTERS - INTERVAL EVENT ================================
+    /**
+     * Get interval event by column key
+     * @param key column key
+     * @return interval event class
+     */
+    IntervalEvent *getIntervalEvent(const std::string& key) {
+        return this->getIntervalEvent(this->getKeyIndex(key));
+    }
+    /**
+     * Get interval event by column index
+     * @param col column index
+     * @return interval event class
+     */
+    virtual IntervalEvent *getIntervalEvent(const int col) = 0;
+    
     // =============== GETTERS - OTHER =========================================
     /**
      * Get an integer with an OID value specified by a column key
@@ -572,6 +589,7 @@ public:
     std::vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
+    IntervalEvent *getIntervalEvent(const int col);
 #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     std::vector<PGpoint>*  getPointV(const int col);
@@ -627,6 +645,7 @@ public:
     std::vector<float>* getFloatV(const int col);
     time_t getTimestamp(const int col);
     int getIntOid(const int col);
+    IntervalEvent *getIntervalEvent(const int col);
 #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     std::vector<PGpoint>*  getPointV(const int col);

@@ -28,6 +28,7 @@
         <itemPath>../include/data/vtapi_commons.h</itemPath>
         <itemPath>../include/data/vtapi_dataset.h</itemPath>
         <itemPath>../include/data/vtapi_interval.h</itemPath>
+        <itemPath>../include/data/vtapi_intervalevent.h</itemPath>
         <itemPath>../include/data/vtapi_keyvalues.h</itemPath>
         <itemPath>../include/data/vtapi_method.h</itemPath>
         <itemPath>../include/data/vtapi_process.h</itemPath>
@@ -62,6 +63,7 @@
       <itemPath>commons.cpp</itemPath>
       <itemPath>dataset.cpp</itemPath>
       <itemPath>interval.cpp</itemPath>
+      <itemPath>intervalevent.cpp</itemPath>
       <itemPath>keyvalues.cpp</itemPath>
       <itemPath>logger.cpp</itemPath>
       <itemPath>method.cpp</itemPath>
@@ -216,6 +218,11 @@
       </item>
       <item path="../include/data/vtapi_interval.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/data/vtapi_intervalevent.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
@@ -249,6 +256,8 @@
       <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="interval.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="intervalevent.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="keyvalues.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -366,6 +375,11 @@
       </item>
       <item path="../include/data/vtapi_interval.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/data/vtapi_intervalevent.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
@@ -399,6 +413,8 @@
       <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="interval.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="intervalevent.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="keyvalues.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -549,6 +565,11 @@
       </item>
       <item path="../include/data/vtapi_interval.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/data/vtapi_intervalevent.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
@@ -582,6 +603,8 @@
       <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="interval.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="intervalevent.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="keyvalues.cpp" ex="false" tool="1" flavor2="0">
       </item>

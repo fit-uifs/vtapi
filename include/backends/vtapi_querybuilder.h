@@ -11,6 +11,7 @@
 #include "vtapi_backendlibs.h"
 #include "../common/vtapi_logger.h"
 #include "../common/vtapi_tkeyvalue.h"
+#include "../data/vtapi_intervalevent.h"
 
 namespace vtapi {
 
@@ -236,6 +237,16 @@ public:
     virtual bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "") = 0;
 #endif
     
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+    virtual bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = "") = 0;
+    
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
@@ -385,6 +396,7 @@ public:
 #if HAVE_OPENCV
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
 #endif
+    bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = "");
     
     bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");
@@ -438,6 +450,7 @@ public:
 #if HAVE_OPENCV
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
 #endif
+    bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = "");
     
     bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");

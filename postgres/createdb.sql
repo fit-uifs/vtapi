@@ -52,6 +52,13 @@ CREATE TYPE cvmat AS
     dims integer[],
     data bytea);
 
+CREATE TYPE vtevent AS
+   (group_id integer,
+    class_id integer,
+    is_root boolean,
+    box region,
+    score double precision,
+    data bytea);
 
 -- dataset list
 CREATE TABLE datasets (

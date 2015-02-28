@@ -9,6 +9,7 @@
 #define	VTAPI_KEYVALUES_H
 
 #include "vtapi_commons.h"
+#include "vtapi_intervalevent.h"
 #include "../queries/vtapi_select.h"
 #include "../queries/vtapi_insert.h"
 #include "../queries/vtapi_update.h"
@@ -405,6 +406,20 @@ public:
     GEOSGeometry* getLineString(const int col);
 #endif
 
+    // =============== GETTERS - INTERVAL EVENT ================================
+    /**
+     * Get interval event by column key
+     * @param key column key
+     * @return interval event class
+     */
+    IntervalEvent *getIntervalEvent(const std::string& key);
+    /**
+     * Get interval event by column index
+     * @param col column index
+     * @return interval event class
+     */
+    IntervalEvent *getIntervalEvent(const int col);
+    
     // =============== GETTERS - OTHER =========================================
     /**
      * Get an integer with an OID value specified by a column key
@@ -524,6 +539,8 @@ public:
 #if HAVE_OPENCV
     bool addCvMat(const std::string& key, cv::Mat& value);
 #endif
+    
+    bool addIntervalEvent(const std::string& key, IntervalEvent& value);
     
     /**
      * Execute SQL INSERT command

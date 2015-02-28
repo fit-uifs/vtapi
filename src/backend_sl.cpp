@@ -482,6 +482,15 @@ bool SLQueryBuilder::keyCvMat(const std::string& key, const cv::Mat& value, cons
 }
 #endif 
 
+bool SLQueryBuilder::keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from) {
+    if (key.empty()) return VT_FAIL;
+    else {
+        TKeyValue<IntervalEvent> *tk = new TKeyValue<IntervalEvent>("vtevent", key, value, from);
+        key_values_main.push_back(tk);
+        return VT_OK;
+    }
+}
+
 bool SLQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from) {
     if (key.empty() || value.empty()) return VT_FAIL;
     else {
@@ -881,6 +890,10 @@ int SLResultSet::getIntOid(const int col) {
         stringstream(sl_res->res[sl_res_i]) >> ret;
         return ret;
     }
+}
+
+IntervalEvent *SLResultSet::getIntervalEvent(const int col) {
+    return NULL;
 }
 
 string SLResultSet::getValue(const int col, const int arrayLimit) {

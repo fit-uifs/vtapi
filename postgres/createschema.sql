@@ -74,19 +74,28 @@ ALTER TABLE ONLY processes
 CREATE INDEX processes_mtname_idx ON processes(mtname);
 CREATE INDEX processes_inputs_idx ON processes(inputs);
 
+-- interval number
+CREATE SEQUENCE interval_sequence
+  INCREMENT 1
+  MINVALUE 1
+  MAXVALUE 9223372036854775807
+  START 1
+  CACHE 1;
+
 -- create table for intervals (images/frames)
--- replace column "result" with 0-N columns with result data
+-- replace column "event" with 0-N columns with result data or leave as is
 CREATE TABLE intervals (
+    id integer NOT NULL DEFAULT nextval('interval_sequence'::regclass),
     seqname character varying NOT NULL,
     process character varying,
     t1 integer NOT NULL,
     t2 integer NOT NULL,
     imglocation character varying,
-    result integer,
+    event public.vtevent,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
-    CONSTRAINT intervals_pk PRIMARY KEY (seqname, t1, t2),
+    CONSTRAINT intervals_pk PRIMARY KEY (id),
     CONSTRAINT seqname_fk FOREIGN KEY (seqname)
       REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT,
     CONSTRAINT process_fk FOREIGN KEY (process)

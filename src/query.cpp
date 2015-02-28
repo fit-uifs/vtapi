@@ -229,6 +229,11 @@ bool Insert::keyCvMat(const std::string& key, const cv::Mat& value, const std::s
 }
 #endif
 
+bool Insert::keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from) {
+    executed = false;
+    this->queryBuilder->keyIntervalEvent(key, value, from);
+}
+
 //================================= UPDATE =====================================
 
 

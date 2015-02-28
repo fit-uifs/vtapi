@@ -143,6 +143,16 @@ public:
      */
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
 #endif
+    
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+    bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = "");
 };
 
 } // namespace vtapi

@@ -8,6 +8,8 @@
 #ifndef VTAPI_SERIALIZE_H
 #define	VTAPI_SERIALIZE_H
 
+#include "../data/vtapi_intervalevent.h"
+
 namespace vtapi {
 
 /**
@@ -45,6 +47,11 @@ inline time_t toTimestamp(const std::string& value) {
     sscanf(value.c_str(), "%d-%d-%d %d:%d:%d", &ts.tm_year, &ts.tm_mon, &ts.tm_mday, &ts.tm_hour, &ts.tm_min, &ts.tm_sec);
     ts.tm_year -= 1900;
     return mktime(&ts);
+};
+
+template <>
+inline std::string toString <IntervalEvent>(const IntervalEvent& value) {
+    return std::string("");
 };
 
 /**
