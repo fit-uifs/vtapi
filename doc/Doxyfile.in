@@ -239,6 +239,7 @@ TAB_SIZE               = 8
 # newlines.
 
 ALIASES                = "bold{1}=<b>\1</b>" \
+                         "licence=\par Lincece:\n" \
                          "unimplemented=\xrefitem unimplemented \"Unimplemented\" \"Unimplemented\""
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
@@ -320,7 +321,7 @@ AUTOLINK_SUPPORT       = YES
 # diagrams that involve STL classes more complete and accurate.
 # The default value is: NO.
 
-BUILTIN_STL_SUPPORT    = NO
+BUILTIN_STL_SUPPORT    = YES
 
 # If you use Microsoft's C++/CLI language, you should set this option to YES to
 # enable parsing support.
@@ -817,14 +818,14 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = ../include/common/vtapi_settings.h \
-                         ../include/common/vtapi_misc.h \
-                         ../src/vtapi_settings.cpp \
-                         ../include/vtcli.h \
+EXCLUDE                = ../include/common/vtapi_misc.h \
+                         ../include/common/vtapi_settings.h \
+                         ../include/postgis \
                          ../include/vtapi_libpq.h \
-                         ../include/vtapi_settings.h \
-                         ../src/vtapi_misc.c \
-                         ../include/postgis
+                         ../include/vtcli.h \
+                         ../src/vtapi_misc.cpp \
+                         ../src/vtapi_settings.cpp
+
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

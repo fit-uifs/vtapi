@@ -377,43 +377,43 @@ public:
     virtual std::vector<PGpoint>*  getPointV(const int col) = 0;
 #endif
 
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get line segment specified by the column key
 //     * @param key column key
 //     * @return Line segment
 //     */
 //    PGlseg getLineSegment(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get line segment specified by the column index
 //     * @param col column index
 //     * @return Line segment
 //     */
 //    PGlseg getLineSegment(const int col);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get box specified by the column key
 //     * @param key column key
 //     * @return Box
 //     */
 //    PGbox getBox(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get box specified by the column index
 //     * @param col column index
 //     * @return Box
 //     */
 //    PGbox getBox(const int col);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get circle specified by the column key
 //     * @param key column key
 //     * @return Circle
 //     */
 //    PGcircle getCircle(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get circle specified by the column index
 //     * @param col column index
 //     * @return Circle
 //     */
 //    PGcircle getCircle(const int col);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get polygon specified by the column key
 //     * @note polygon.pts must be copied out if needed after clearing resultset
 //     *          copy_points(polygon.npts, polygon.pts, ...);
@@ -421,7 +421,7 @@ public:
 //     * @return Polygon
 //     */
 //    PGpolygon getPolygon(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get polygon specified by the column index
 //     * @note polygon.pts must be copied out if needed after clearing resultset
 //     *          copy_points(polygon.npts, polygon.pts, ...);
@@ -429,7 +429,7 @@ public:
 //     * @return Polygon
 //     */
 //    PGpolygon getPolygon(const int col);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get path specified by the column key
 //     * @note path.pts must be copied out if needed after clearing resultset
 //     *          copy_points(path.npts, path.pts, ...);
@@ -437,7 +437,7 @@ public:
 //     * @return Path
 //     */
 //    PGpath getPath(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get path specified by the column index
 //     * @note path.pts must be copied out if needed after clearing resultset
 //     *          copy_points(path.npts, path.pts, ...);
@@ -446,7 +446,7 @@ public:
 //     */
 //    PGpath getPath(const int col);
 //
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get cube specified by the column index
 //     * @note Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
 //     * @note Points may have 1-100(CUBE_MAX_DIM) dimensions
@@ -454,7 +454,7 @@ public:
 //     * @return Cube
 //     */
 //    PGcube getCube(const std::string& key);
-//    /**
+//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
 //     * Get cube specified by the column key
 //     * @note Cube is defined by 1 (= point) or 2 (= opposite corners of cube) points
 //     * @note Points may have 1-100(CUBE_MAX_DIM) dimensions
@@ -462,7 +462,8 @@ public:
 //     * @return Cube
 //     */
 //    PGcube getCube(const int col);
-    
+
+
 #if HAVE_POSTGIS
     /**
      * Get GEOS geometry type by the column key
@@ -531,10 +532,12 @@ public:
      * This goes through resultset and retrieves metadata necessary for print.
      * @note It needs to be done before every print.
      * @param row if not set to -1, this indicates single row print
-     * @param get_widths whether column widths will be required @todo @b doc[VF]: který popisek je správný (tento nebo "desired column widths" z .cpp)?
+     * @param get_widths whether column widths will be required
      * @param arrayLimit limits length of printed array
      * @return metadata for print, pair consisting of two vectors:
-     *  a) Tkeys - column types etc., b) ints - column widths
+     *  -# Tkeys - column types etc.
+     *  -# ints - column widths
+     * @todo @b Vojta [param arrayLimit] který popisek je správný (tento nebo "desired column widths" z .cpp)?
      */
     virtual std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row, bool get_widths, const int arrayLimit) = 0;
 

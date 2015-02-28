@@ -53,6 +53,7 @@ public:
      * Constructor
      * @param fmap library functions address book
      * @param connection connection object
+     * @param typeManager typeManager object
      * @param logger logger object for output messaging
      * @param initString initialization string (query/table or empty)
      */

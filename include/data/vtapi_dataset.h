@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_dataset.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of Dataset class
  *
- * Created on May 7, 2013, 12:51 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_DATASET_H
@@ -21,6 +27,14 @@ namespace vtapi {
  * @see Basic definition on page @ref LOGICAL
  *
  * @note Error codes 31*
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Dataset : public KeyValues {
 public:
@@ -32,56 +46,56 @@ public:
      *    -# Don't know the name -> use next
      *    -# The dataset is in your vtapi.conf
      *
-     * @param orig pointer to the parent KeyValues object
-     * @param name specific dataset name
-     * @todo @b doc: nejsem si jist, zda i zde je parametr "const KeyValues& orig" nadřazený prvek
+     * @param orig   pointer to the parent KeyValues object (in this case usually Commons object)
+     * @param name   specific dataset name
+     * @note Use rather "vtapi->newDataset()"
      */
     Dataset(const KeyValues& orig, const std::string& name = "");
 
     /**
-     * Move to a next dataset and set dataset name and location varibles
+     * Moves to a next dataset and sets dataset name and location varibles
      * @return success
      * @note Overloading next() from KeyValues
      */
     bool next();
 
     /**
-     * Get name of the current dataset
-     * @return name name of the current dataset
+     * Gets name of the current dataset
+     * @return name of the current dataset
      */
     std::string getName();
 
     /**
-     * Get location of the current dataset
+     * Gets location of the current dataset
      * @return location of the current dataset
      */
     std::string getLocation();
 
     /**
-     * Create new sequence object for the current dataset
-     * @param name sequence name (no name = represent all sequences)
-     * @return pointer to the new sequence object
+     * Creates new Sequence object for the current dataset
+     * @param name   sequence name (no name = all sequences)
+     * @return pointer to the new Sequence object
      */
     Sequence* newSequence(const std::string& name = "");
 
     /**
-     * Create new video (sequence) object for the current dataset
-     * @param name video (sequence) name (no name = represent all sequences)
-     * @return pointer to the new video object
+     * Creates new Video (Sequence) object for the current dataset
+     * @param name   video (sequence) name (no name = all sequences)
+     * @return pointer to the new Video object
      */
     Video* newVideo(const std::string& name = "");
 
     /**
-     * Create new method object for the current dataset
-     * @param name method name (no name = represent all methods)
-     * @return pointer to the new method object
+     * Creates new Method object for the current dataset
+     * @param name   method name (no name = all methods)
+     * @return pointer to the new Method object
      */
     Method* newMethod(const std::string& name = "");
 
     /**
-     * Create new process object for the current dataset
-     * @param name process name (no name = represent all processes)
-     * @return pointer to the new process object
+     * Creates new Process object for the current dataset
+     * @param name   process name (no name = all processes)
+     * @return pointer to the new Process object
      */
     Process* newProcess(const std::string& name = "");
 

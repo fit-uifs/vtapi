@@ -1,8 +1,14 @@
-/* 
- * File:   vtapi_query.h
- * Author: vojca
+/**
+ * @file
+ * @brief   Declaration of Query class which is general class for SQL queries/commands.
  *
- * Created on May 7, 2013, 12:59 PM
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
 #ifndef VTAPI_QUERY_H
@@ -17,9 +23,17 @@ namespace vtapi {
 /**
  * @brief Base query class
  *
- * TODO: It will be used for delayed queries (store())
+ * @todo: It will be used for delayed queries (store())
  *
  * @note Error codes 20*
+ *
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Query : public Commons {
 public:
@@ -31,9 +45,9 @@ public:
 public:
 
     /**
-     * Construct a query object
-     * @param commons pointer of the existing commons object
-     * @param initString initial query string
+     * Constructs a query object
+     * @param commons      pointer of the existing Commons object
+     * @param initString   initial query string
      */
     Query(const Commons& commons, const std::string& initString = "");
     /**

@@ -34,6 +34,27 @@ CPPFLAGS="${CPPFLAGS} ${VTAPI_CPPFLAGS}"
 LDFLAGS="${LDFLAGS} ${VTAPI_LDFLAGS}"
 
 
+###############################################################################
+#####   Additions to autoheader (vtapi_autoconfig.h.in) file              #####
+###############################################################################
+AH_TOP([/**
+ * @file
+ * @brief   Variable configuration header depending on the parameters when the ./configure script is started
+ *
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
+ */
+
+#ifndef VTAPI_AUTOCONFIG_H
+#define VTAPI_AUTOCONFIG_H 1
+])
+AH_BOTTOM([#endif /* VTAPI_AUTOCONFIG_H */])
+
 
 ###############################################################################
 #####   Register configure arguments and variables                        #####
@@ -500,7 +521,7 @@ AC_SUBST(WIN32_EXTRA_LDFLAGS)
 ###############################################################################
 #####   PREPARE OUTPUT                                                    #####
 ###############################################################################
-AC_CONFIG_FILES([src/Makefile Makefile])
+AC_CONFIG_FILES([src/Makefile include/Makefile Makefile])
 #AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile])
 AC_OUTPUT
 
