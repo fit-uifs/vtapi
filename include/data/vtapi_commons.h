@@ -24,7 +24,7 @@
 namespace vtapi {
 
 /**
- * Output data format
+ * @brief Output data format
  */
 typedef enum {
     STANDARD = 0,   /**< plain text */

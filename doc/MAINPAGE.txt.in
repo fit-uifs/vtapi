@@ -64,7 +64,7 @@
  * Most classes inherit from KeyValues object that provides the basic
  * operations needed to manage key-value pairs (associative array), on which
  * the %VTApi model is based. KeyValues class is the crucial to ensure
- * the functionality and generality of the API by the main function <tt><b>next()</b></tt>, 
+ * the functionality and generality of the API by the main method <tt><b>next()</b></tt>, 
  * which includes not only navigation over data structures, but also executes database queries,
  * commits changes made by setter methods and commits new data added by adder methods.
  * Moreover, it uses the lazy approach, hiding the functionality necessary, doing
@@ -80,7 +80,7 @@
  *
  * There are several other important classes. Some of them are nested in the class KeyValues
  * (as its attrubutes as is shown in above figure):
- * - @b Commons class provides a very basic functions such as loading
+ * - @b Commons class provides a very basic methods such as loading
  *         configuration file and command line parameters (using GNU Gengetopt).
  *         It provides a connection to the database (PostgreSQL), a data storage
  *         (remote file system) also and it uniformly manages error reports and other statements (log).
@@ -95,7 +95,7 @@
  *         <tt><b>addExecute()</b></tt> or batch (implicitly) by calling method
  *         <tt><b>next()</b></tt>.
  * - @b Update class similarly allows the modification of the current element using
- *         the typed family of functions <tt><b>setX(k,v)</b></tt>. There are also 
+ *         the typed family of methods <tt><b>setX(k,v)</b></tt>. There are also 
  *         2 possible ways of updating -- immediate by calling method
  *         <tt><b>setExecute()</b></tt> or batch (implicitly) by calling method
  *         <tt><b>next()</b></tt>.
