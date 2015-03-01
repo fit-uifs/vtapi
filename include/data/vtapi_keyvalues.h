@@ -442,14 +442,14 @@ public:
 
     // =============== GETTERS - INTERVAL EVENT ================================
     /**
-     * Get interval event by column key
-     * @param key column key
+     * Gets interval event by a column key
+     * @param key   column key
      * @return interval event class
      */
     IntervalEvent *getIntervalEvent(const std::string& key);
     /**
-     * Get interval event by column index
-     * @param col column index
+     * Gets interval event by an index of a column
+     * @param col   index of the column
      * @return interval event class
      */
     IntervalEvent *getIntervalEvent(const int col);
@@ -615,6 +615,12 @@ public:
     bool addCvMat(const std::string& key, cv::Mat& value);
 #endif
     
+    /**
+     * Adds a new IntervalEvent value to a specied key
+     * @param key     column key to insert
+     * @param value   new IntervalEvent value of the key
+     * @return success
+     */
     bool addIntervalEvent(const std::string& key, IntervalEvent& value);
     
     /**

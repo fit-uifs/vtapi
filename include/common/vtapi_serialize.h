@@ -55,6 +55,11 @@ inline time_t toTimestamp(const std::string& value) {
     return mktime(&ts);
 };
 
+/**
+ * @todo@b code: returning empty string
+ * @param value
+ * @return 
+ */
 template <>
 inline std::string toString <IntervalEvent>(const IntervalEvent& value) {
     return std::string("");

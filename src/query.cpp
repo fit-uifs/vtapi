@@ -223,18 +223,18 @@ bool Insert::keyInouttype(const string& key, const string& value, const string& 
 //}
 bool Insert::keyTimestamp(const string& key, const time_t& value, const string& from){
     executed = false;
-    this->queryBuilder->keyTimestamp(key, value, from);
+    return this->queryBuilder->keyTimestamp(key, value, from);
 }
 #ifdef HAVE_OPENCV
 bool Insert::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) {
     executed = false;
-    this->queryBuilder->keyCvMat(key, value, from);
+    return this->queryBuilder->keyCvMat(key, value, from);
 }
 #endif
 
 bool Insert::keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from) {
     executed = false;
-    this->queryBuilder->keyIntervalEvent(key, value, from);
+    return this->queryBuilder->keyIntervalEvent(key, value, from);
 }
 
 //================================= UPDATE =====================================
