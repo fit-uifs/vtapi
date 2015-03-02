@@ -111,6 +111,10 @@ public:
      */
     Interval *getOutputData();
     /**
+     * Deletes output data for this process
+     */
+    void deleteOutputData();
+    /**
      * Gets a numeric parameter of this process
      * @param key   name of parameter
      * @return value of parameter

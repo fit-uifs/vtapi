@@ -115,6 +115,11 @@ Interval *Process::getOutputData() {
     return new Interval(*this, this->getOutputs());
 }
 
+void Process::deleteOutputData() {
+    Query q(*this, "DELETE FROM " + this->getOutputs + " WHERE prsname = '" + this->getName() + "';");
+    q.execute();
+}
+
 int Process::getParamInt(const std::string& key) {
     for (size_t i = 0; i < this->params.size(); i++) {
         if (this->params[i]->key.compare(key) == 0) {

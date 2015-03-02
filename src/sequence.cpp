@@ -150,6 +150,8 @@ Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name) {
 bool Video::add(string name, string location) {
     bool retval = VT_OK;
     string filename = "";
+    size_t cnt_frames = 0;
+    double fps = 0.0;
 
 #if HAVE_OPENCV
     // TODO: P3k check something else???
@@ -158,7 +160,18 @@ bool Video::add(string name, string location) {
         logger->warning(3210, "Cannot open file " + filename, thisClass+"::add()");
         retval = VT_FAIL;
     }
+    
     // TODO: check the lenght and so on...
+    retval = openVideo(filename);
+    if (retval) {
+        cnt_frames = (size_t)this->capture.get(CV_CAP_PROP_FRAME_COUNT);
+        fps = this->capture.get(CV_CAP_PROP_FPS);
+        if (cnt_frames == 0) || (fps == 0.0) {
+            logger->warning(3211, "Cannot get length and FPS of " + filename, thisClass+"::add()");
+            retval = VT_FAIL;
+        }
+    }
+    
 #endif
     
     if (retval) {
@@ -167,7 +180,12 @@ bool Video::add(string name, string location) {
         retval &= insert->keyString("seqname", name);
         retval &= insert->keyString("seqlocation", location);
         retval &= insert->keySeqtype("seqtyp", "video");
+#if HAVE_OPENCV
+        retval &= insert->keyInt("vid_length", cnt_frames);
+        retval &= insert->keyFloat("vid_fps", fps);
+#endif
     }
+
     return retval;
 }
 
@@ -175,11 +193,13 @@ bool Video::add(string name, string location) {
 #if HAVE_OPENCV
 
 bool Video::openVideo() {
-    if (this->capture.isOpened()) this->capture.release();
-    
+    closeVideo();
     this->capture = cv::VideoCapture(this->getDataLocation());
-    
     return this->capture.isOpened();
+}
+
+bool Video::closeVideo() {
+    if (this->capture.isOpened()) this->capture.release();
 }
 
 cv::Mat Video::getData() {
@@ -190,6 +210,11 @@ cv::Mat Video::getData() {
     }
     return this->frame;
 }
+
+size_t Video::getLength() {
+    
+}
+
 
 VideoPlayer::VideoPlayer(Commons& orig) : Commons(orig) {
     thisClass = "VideoPlayer(Commons&)";

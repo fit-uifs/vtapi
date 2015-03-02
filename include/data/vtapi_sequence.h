@@ -189,12 +189,24 @@ public:
      * @return success
      */
     bool openVideo();
+    
+    /**
+     * Closes a video capture (not necessary to call directly)
+     * @return 
+     */
+    void closeVideo();
 
     /**
      * Gets next frame from current capture
      * @return frame of the video
      */
     cv::Mat getData();
+    
+    /**
+     * Gets video length in frames
+     * @return 
+     */
+    size_t getLength();
 #endif
 
 };

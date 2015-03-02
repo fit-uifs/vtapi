@@ -46,6 +46,8 @@ CREATE TABLE sequences (
     seqnum integer DEFAULT nextval('seqnum_sequence'::regclass),
     seqlocation character varying,
     seqtyp public.seqtype DEFAULT 'data',
+    vid_length integer,
+    vid_fps float,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
