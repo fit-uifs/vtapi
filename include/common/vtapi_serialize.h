@@ -6,7 +6,7 @@
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
- * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
@@ -19,7 +19,7 @@
 namespace vtapi {
 
 /**
- * A generic function to convert any numeric type to string
+ * @brief A generic function to convert any numeric type to string
  * (any numeric type, e.g. int, float, double, etc.)
  * @param value   numeric value
  * @return string containing the numeric value
@@ -32,7 +32,7 @@ inline std::string toString(const T& value) {
 };
 
 /**
- * Converts timestamp to string (yyyy-mm-dd hh:mm:ss)
+ * @brief Converts timestamp to string (yyyy-mm-dd hh:mm:ss)
  * @param value   time value
  * @return time string
  */
@@ -44,7 +44,7 @@ inline std::string toString <time_t>(const time_t& value) {
 };
 
 /**
- * Converts time string (yyyy-mm-dd hh:mm:ss) to timestamp
+ * @brief Converts time string (yyyy-mm-dd hh:mm:ss) to timestamp
  * @param value   time string
  * @return timestamp
  */
@@ -55,13 +55,17 @@ inline time_t toTimestamp(const std::string& value) {
     return mktime(&ts);
 };
 
+/**
+ * @todo @b code: returning empty string
+ * @todo @b doc: put together a few letters (after code completion)
+ */
 template <>
 inline std::string toString <IntervalEvent>(const IntervalEvent& value) {
     return std::string("");
 };
 
 /**
- * Generic conversion from string to array representation
+ * @brief Generic conversion from string to array representation
  * @param buffer   input string
  * @param size     output value only: array size
  * @return array of values
@@ -100,7 +104,7 @@ inline T* deserializeA(char *buffer, int& size) {
 }
 
 /**
- * Generic conversion from string to vector representation
+ * @brief Generic conversion from string to vector representation
  * @param buffer   input string
  * @return vector of values
  */

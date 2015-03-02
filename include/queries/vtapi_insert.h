@@ -6,7 +6,7 @@
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
- * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
@@ -30,7 +30,7 @@ namespace vtapi {
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
- * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
@@ -161,12 +161,12 @@ public:
 #endif
     
     /**
-     * This is a persistent function to add keys (columns) and values
-     * It may be called several times.
-     * @param key key
-     * @param value value
-     * @param from selection (table; this is optional)
+     * This is a persistent function to add IntervalEvent value to a key
+     * @param key     key holding value to be inserted
+     * @param value   IntervalEvent value to be inserted
+     * @param from    selection table (optional)
      * @return success
+     * @note It may be called several times.
      */
     bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = "");
 };

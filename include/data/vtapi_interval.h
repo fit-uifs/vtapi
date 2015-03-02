@@ -6,7 +6,7 @@
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
- * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
@@ -24,7 +24,7 @@ class Sequence;
 /**
  * @brief Interval is equivalent to an interval of images
  *
- * @see Basic definition on page @ref LOGICAL
+ * @see Basic definition on page @ref BASICDEFS
  *
  * @note Error codes 33*
  * 
@@ -32,7 +32,7 @@ class Sequence;
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
- * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
@@ -130,7 +130,7 @@ public:
 /**
  * @brief This represents images
  *
- * @see Basic definition on page @ref LOGICAL
+ * @see Basic definition on page @ref BASICDEFS
  *
  * @note Error codes 339*
  * 
@@ -138,7 +138,7 @@ public:
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
- * @licence   @ref Licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
