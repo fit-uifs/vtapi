@@ -56,7 +56,7 @@ CREATE TYPE vtevent AS
    (group_id integer,
     class_id integer,
     is_root boolean,
-    box region,
+    region box,
     score double precision,
     data bytea);
 
