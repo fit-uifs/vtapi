@@ -192,7 +192,6 @@ public:
     
     /**
      * Closes a video capture (not necessary to call directly)
-     * @return 
      */
     void closeVideo();
 
@@ -204,7 +203,8 @@ public:
     
     /**
      * Gets video length in frames
-     * @return 
+     * @return video length in frames
+     * @unimplemented
      */
     size_t getLength();
 #endif
