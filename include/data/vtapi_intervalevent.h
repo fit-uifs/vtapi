@@ -60,6 +60,6 @@ public:
 
 };
 
-#endif	/* INTERVALEVENT_H */
-
 } // namespace vtapi
+
+#endif	/* INTERVALEVENT_H */
