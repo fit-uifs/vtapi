@@ -14,6 +14,8 @@
 #ifndef INTERVALEVENT_H
 #define	INTERVALEVENT_H
 
+namespace vtapi {
+    
 /**
  * @brief
  * 
@@ -60,3 +62,4 @@ public:
 
 #endif	/* INTERVALEVENT_H */
 
+} // namespace vtapi
