@@ -22,7 +22,11 @@
 <!--    <tab type="examples" visible="no" title="" />-->
     <tab type="user" url="@ref deprecated" visible="yes" title="Deprecated" intro="" />
 <!--    <tab type="user" url="@ref examples" visible="yes" title="Examples" intro="" /> -->
-    <tab type="user" url="" visible="yes" title="Examples - UNDER CONSTRUCTION" intro="" />
+    <tab type="usergroup" visible="yes" title="Examples">
+      <tab type="user" url="@ref example_basic" visible="yes" title="Basic examples" intro="" />
+      <tab type="user" url="@ref example_configfile" visible="yes" title="default.conf" intro="" />
+      <tab type="user" url="@ref example_advanced_modules_launcher" visible="yes" title="Advanced examples: modules &amp; launcher" intro="" />
+    </tab>
     <tab type="user" url="@ref licence" visible="yes" title="Licence" intro=""/>
     <tab type="usergroup" visible="yes" title="For developers" intro="">
       <tab type="user" url="@ref todo" visible="yes" title="TODO list" intro=""/>

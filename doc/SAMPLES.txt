@@ -1,6 +1,5 @@
 /**
- * @example SAMPLES.txt
- * @brief This file shows basic use of %VTApi.
+ * @page example_basic BASIC examples of VTApi usage
  * 
  * @section CODE_SAPLES Some sample codes
  * @note To obtain first row of the resultset, you must use the method "next()"
@@ -15,7 +14,7 @@
  *      cout << dataset->getName() << endl;
  *    }
  * @endcode
- * @note If you would like to add new dataset, contact Petr Chmelar.
+ * @note If you would like to add new dataset, contact Vojtech Froml or Tomas Volf.
  *
  * @subsection CODE_GET_IMAGES_SEQUENCES Browse images by sequences
  * @code
@@ -92,6 +91,22 @@
  * @warning It's necessary to consult this request.
  *
  * @subsection CODE_ADD_DATASET_OR_METHOD Add new dataset, method
- * @warning Only Petr Chmelar executes this request.
+ * @warning Only Vojtech Froml or Tomas Volf executes this request.
  * 
+ */
+
+/**
+ * @page example_configfile Default (example) configuration file of VTApi
+ * @include "../default.conf"
+ */
+
+/**
+ * @page example_advanced_modules_launcher ADVANCED example of VTApi usage: two demo modules and their launcher
+ * @note All this examples and other support files for this example (as Makefiles, SQL scripts and so on) can be found in "example" subdirectory of VTApi.
+ * @section example_moddemo1 DEMO MODULE 1 (mod_demo1.cpp)
+ * @include "../example/mod_demo1/mod_demo1.cpp"
+ * @section example_moddemo2 DEMO MODULE 2 (mod_demo2.cpp)
+ * @include "../example/mod_demo2/mod_demo2.cpp"
+ * @section example_moddemo1 DEMO LAUNCHER (launcher.cpp)
+ * @include "../example/launcher.cpp"
  */
