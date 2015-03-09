@@ -22,8 +22,8 @@
  *
  * @subsection BASICDEFS Fundamental concepts
  * @image html minimal_logical_data_model_small.png "Simplified class diagram of VTApi"
- * @image latex minimal_logical_data_model_small.png "Simplified class diagram of VTApi"
- * @image rtf minimal_logical_data_model_small.png "Simplified class diagram of VTApi"
+ * @image latex minimal_logical_data_model_small.png "Simplified class diagram of VTApi" width=\textwidth
+ * @image rtf minimal_logical_data_model_small.png "Simplified class diagram of VTApi" width=\textwidth
  *
  * - @b Dataset is a named set of (multimedia) data along with metadata
  *         (descriptive data). Datasets can be organized hierarchically, i.e., one

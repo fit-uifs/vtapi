@@ -624,7 +624,7 @@ public:
     bool addIntervalEvent(const std::string& key, IntervalEvent& value);
     
     /**
-     * Execute SQL INSERT command
+     * Executes SQL INSERT command
      * @return success
      */
     bool addExecute();
