@@ -2,6 +2,8 @@
 #include <common/vtapi_global.h>
 #include <data/vtapi_intervalevent.h>
 
+using namespace vtapi;
+
 IntervalEvent::IntervalEvent() :
 group_id(-1),class_id(-1),is_root(false),score(-1.0),
 user_data_size(0),user_data(NULL)

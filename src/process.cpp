@@ -116,7 +116,7 @@ Interval *Process::getOutputData() {
 }
 
 void Process::deleteOutputData() {
-    Query q(*this, "DELETE FROM " + this->getOutputs + " WHERE prsname = '" + this->getName() + "';");
+    Query q(*this, "DELETE FROM " + this->getOutputs() + " WHERE prsname = '" + this->getName() + "';");
     q.execute();
 }
 

@@ -162,11 +162,11 @@ bool Video::add(string name, string location) {
     }
     
     // TODO: check the lenght and so on...
-    retval = openVideo(filename);
+    retval = openVideo();
     if (retval) {
         cnt_frames = (size_t)this->capture.get(CV_CAP_PROP_FRAME_COUNT);
         fps = this->capture.get(CV_CAP_PROP_FPS);
-        if (cnt_frames == 0) || (fps == 0.0) {
+        if ((cnt_frames == 0) || (fps == 0.0)) {
             logger->warning(3211, "Cannot get length and FPS of " + filename, thisClass+"::add()");
             retval = VT_FAIL;
         }
@@ -198,7 +198,7 @@ bool Video::openVideo() {
     return this->capture.isOpened();
 }
 
-bool Video::closeVideo() {
+void Video::closeVideo() {
     if (this->capture.isOpened()) this->capture.release();
 }
 
