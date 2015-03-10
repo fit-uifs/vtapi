@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f2"
+                   displayName="DB Scripts"
+                   projectFiles="true"
+                   kind="ROOT">
+      <itemPath>sql/demo-schema.sql</itemPath>
+      <itemPath>sql/reset-schema.sh</itemPath>
+    </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
@@ -27,7 +34,6 @@
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>./Makefile</itemPath>
-      <itemPath>../configure.ac</itemPath>
       <itemPath>make_all.sh</itemPath>
     </logicalFolder>
   </logicalFolder>
@@ -63,6 +69,10 @@
       </item>
       <item path="launcher.cpp" ex="false" tool="1" flavor2="0">
       </item>
+      <item path="sql/demo-schema.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql/reset-schema.sh" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="vtapi.conf" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
@@ -89,6 +99,10 @@
       <item path="README" ex="false" tool="3" flavor2="0">
       </item>
       <item path="launcher.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="sql/demo-schema.sql" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="sql/reset-schema.sh" ex="false" tool="3" flavor2="0">
       </item>
       <item path="vtapi.conf" ex="false" tool="3" flavor2="0">
       </item>

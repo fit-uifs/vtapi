@@ -1,19 +1,11 @@
+-- Create schema test - always modify this appropriately for new dataset
+-- For example see example/sql/demo-schema.sql
 --
--- Create schema test
---
-
--- for example see example/sql/demo-schema.sql
-
 -- replace all instances of "test" with the schema_name!
 -- specify your own intervals table
 -- specify the dataset location within your datasets (last line)
-
--- work as the database user created by createdb
-
 --
--- PostgreSQL database schema test
---
-
+-- authors: ifroml[at]fit.vutbr.cz; ivolf[at]fit.vutbr.cz
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -22,91 +14,89 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET default_with_oids = false;
-
-SET search_path = test, public, pg_catalog;
+SET search_path = test, pg_catalog;
       
 
--- create custom schema "test"
+-------------------------------------
+-- DROP and CREATE test schema
+-------------------------------------
+
+DROP SCHEMA IF EXISTS test CASCADE;
 CREATE schema test;
+GRANT ALL ON SCHEMA test TO postgres;
 
-GRANT ALL ON SCHEMA public TO vidte;
-GRANT ALL ON SCHEMA public TO postgres;
+-------------------------------------
+-- CREATE common tables, don't change
+-------------------------------------
 
--- sequence number
-CREATE SEQUENCE seqnum_sequence
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
-
--- create table for sequences (video/imagefolders)
+-- table for sequences (video/imagefolders)
 CREATE TABLE sequences (
+    id serial NOT NULL,
     seqname name NOT NULL,
-    seqnum integer DEFAULT nextval('seqnum_sequence'::regclass),
     seqlocation character varying,
-    seqtyp public.seqtype DEFAULT 'data',
-    vid_length integer,
-    vid_fps float,
+    seqtyp public.seqtype,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
-    CONSTRAINT sequences_pk PRIMARY KEY (seqname),
-    CONSTRAINT seqnum_unq UNIQUE (seqnum)
+    CONSTRAINT sequences_pk PRIMARY KEY (id),
+    CONSTRAINT seqnum_unq UNIQUE (seqname)
 );
 CREATE INDEX sequences_seqtyp_idx ON sequences(seqtyp);
 
--- create table for processes
+-- table for processes
 CREATE TABLE processes (
-    mtname name,
+    id serial NOT NULL,
+    mtid integer NOT NULL,
     prsname name NOT NULL,
+    prsid_inputs integer,
     outputs regclass,
-    inputs character varying,
     params character varying,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
-    CONSTRAINT processes_pk PRIMARY KEY (prsname),
-    CONSTRAINT mtname_fk FOREIGN KEY (mtname)
-      REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE RESTRICT
+    CONSTRAINT processes_pk PRIMARY KEY (id),
+    CONSTRAINT mtid_fk FOREIGN KEY (mtid)
+        REFERENCES public.methods(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT prsname_unq UNIQUE (prsname)
 );
 ALTER TABLE ONLY processes
-    ADD CONSTRAINT inputs_fk FOREIGN KEY (inputs)
-        REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX processes_mtname_idx ON processes(mtname);
-CREATE INDEX processes_inputs_idx ON processes(inputs);
+    ADD CONSTRAINT inputs_fk FOREIGN KEY (prsid_inputs)
+        REFERENCES processes(id) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX processes_mtid_idx ON processes(mtid);
+CREATE INDEX processes_prsid_inputs_idx ON processes(prsid_inputs);
 
--- interval number
-CREATE SEQUENCE interval_sequence
-  INCREMENT 1
-  MINVALUE 1
-  MAXVALUE 9223372036854775807
-  START 1
-  CACHE 1;
+-------------------------------------
+-- CREATE module-specific tables
+--  create one outputs table for every module according to specifications
+--  out_* columns are to be replaced here
+-------------------------------------
 
--- create table for intervals (images/frames)
--- replace column "event" with 0-N columns with result data or leave as is
-CREATE TABLE intervals (
-    id integer NOT NULL DEFAULT nextval('interval_sequence'::regclass),
-    seqname character varying NOT NULL,
-    process character varying,
+-- intervals table for demo1 results
+CREATE TABLE test1out (
+    id serial NOT NULL,
+    seqid integer NOT NULL,
+    prsid integer NOT NULL,
     t1 integer NOT NULL,
     t2 integer NOT NULL,
-    imglocation character varying,
-    event public.vtevent,
+    out_features_array real[],
+    out_features_mat public.cvmat,
+    out_event public.vtevent NOT NULL,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
-    CONSTRAINT intervals_pk PRIMARY KEY (id),
-    CONSTRAINT seqname_fk FOREIGN KEY (seqname)
-      REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT process_fk FOREIGN KEY (process)
-      REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
+    CONSTRAINT test1out_pk PRIMARY KEY (id),
+    CONSTRAINT seqid_fk FOREIGN KEY (seqid)
+      REFERENCES sequences(id) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT prsid_fk FOREIGN KEY (prsid)
+      REFERENCES processes(id) ON UPDATE CASCADE ON DELETE RESTRICT
 );
-CREATE INDEX intervals_seqname_idx ON intervals(seqname);
-CREATE INDEX intervals_process_idx ON intervals(process);
+CREATE INDEX test1out_seqid_idx ON test1out(seqid);
+CREATE INDEX test1out_prsid_idx ON test1out(prsid);
 
--- insert into dataset list
+-------------------------------------
+-- INSERT schema into dataset list
+-------------------------------------
+
 INSERT INTO public.datasets(dsname, dslocation, userid, groupid, notes)
     VALUES ('test', 'data/test/', 'testuser', 'testgroup', 'testovaci dataset');
 
