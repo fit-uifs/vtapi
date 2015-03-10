@@ -52,9 +52,14 @@ void do_work(Process *p, Dataset *ds) {
     // overime, ze zadane video je v datasetu
     Video *video = ds->newVideo(videoName);
     if (video->next()) {
-        // dummy nazev vysledne udalosti
-        std::string event_name = std::string("udalost_") + videoName;
-        int event_arg = 0;
+        srand(time(NULL));
+        
+        // objekt pro vyslednou udalost
+        IntervalEvent event;
+        event.class_id = rand() % 50;
+        event.group_id = rand() % 50;
+        event.region.high = IntervalEvent::point(11,11);
+        event.region.low = IntervalEvent::point(22,22);
         
         // iterujeme pres vstupni data, vyfiltrujeme si pouze nase video
         Interval *input = p->getInputData();
@@ -62,34 +67,33 @@ void do_work(Process *p, Dataset *ds) {
         while (input->next()) {
             // ziskame predvypocitany vektor floatu
             int size = 0;
-            float *vals = input->getFloatA("vals", size);
-            if (vals) {
+            float *features_array = input->getFloatA("features_array", size);
+            if (features_array) {
                 // provedeme dummy zpracovani
                 for (int i = 0; i < size; i++) {
-                    event_arg += (int)(vals[i] * 10);
+                    event.score += (int)(features_array[i] * 10);
                 }
-                delete[] vals;
+                delete[] features_array;
             }
             // ziskame predvypocitanou matici
-            cv::Mat1f *mat = (cv::Mat1f *)input->getCvMat("features");
-            if (mat) {
+            cv::Mat1f *features_mat = (cv::Mat1f *)input->getCvMat("features_mat");
+            if (features_mat) {
                 // provedeme dummy zpracovani
-                for (cv::Mat1f::iterator it = mat->begin(); it != mat->end(); it++) {
-                    event_arg += (int) (*it * 10.0);
+                for (cv::Mat1f::iterator it = features_mat->begin(); it != features_mat->end(); it++) {
+                    event.score += (int) (*it * 10.0);
                 }
-                delete mat;
+                delete features_mat;
             }
         }
         delete input;
         
         // ulozime vystupni udalost pro 1. frame s nejakym nazvem
         output->add(video->getName(), 1, 1, "", "demouser", "random-generated");
-        output->addString("event_name", event_name.c_str());
-        output->addInt("event_arg", event_arg);
+        output->addIntervalEvent("event", event);
         output->addExecute();
         
-        printf("mod_demo2: event %s, arg = %d\n",
-            event_name.c_str(), event_arg);
+        printf("mod_demo2: new event; class=%d,group=%d,score=%.2f\n",
+            event.class_id, event.group_id, event.score);
     }
     delete video;
     

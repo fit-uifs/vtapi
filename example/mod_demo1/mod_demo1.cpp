@@ -44,15 +44,15 @@ int main(int argc, char** argv) {
 void do_work(Process *process, Dataset *dataset) {
     // ziskame parametry naseho procesu
     int param1 = process->getParamInt("param1");
-    int param2 = process->getParamInt("param2");
+    double param2 = process->getParamDouble("param2");
     
     // vystupni data, do kterych budeme ukladat vysledky
     Interval *output = process->getOutputData();
     output->next();
     
     // vysledne pole floatu a matice
-    float vals[3] = {0};
-    cv::Mat1f mat(3, 2);
+    float features_array[3] = {0};
+    cv::Mat1f features_mat(3, 2);
     float dummy_seed = 0.0;
 
     // projdeme vsechna videa datasetu
@@ -67,27 +67,27 @@ void do_work(Process *process, Dataset *dataset) {
         // spocitame dummy vysledky a ulozime
         
         // takto napr. pole floatu
-        vals[0] += param1 / 1000.0;
-        vals[1] += param2 / 500.0 - vals[0];
-        vals[2] = vals[0] / vals[1];
-        output->addFloatA("vals", vals, 3);
+        features_array[0] += param1 / 1000.0;
+        features_array[1] += param2 / 500.0 - features_array[0];
+        features_array[2] = features_array[0] / features_array[1];
+        output->addFloatA("features_array", features_array, 3);
 
         // takto float cv::Mat
-        for (cv::Mat1f::iterator it = mat.begin(); it != mat.end(); it++) {
+        for (cv::Mat1f::iterator it = features_mat.begin(); it != features_mat.end(); it++) {
             *it = dummy_seed;
             dummy_seed += 0.1;
         }
-        output->addCvMat("features", mat);
+        output->addCvMat("features_mat", features_mat);
         
         // potvrdime insert
         output->addExecute();
         
         printf("mod_demo1: video %s\n"\
-            "  float array  {%.3f,%.3f,%.3f}\n"\
-            "  cv::Mat(%d,%d) {%.3f,%.3f,%.3f...}\n",
+            "  features array = {%.3f,%.3f,%.3f}\n"\
+            "  features mat(%d,%d) = {%.3f,%.3f,%.3f...}\n",
             video->getName().c_str(),
-            vals[0], vals[1], vals[2],
-            mat.rows, mat.cols, mat(0,0), mat(1,0), mat(2,0));
+            features_array[0], features_array[1], features_array[2],
+            features_mat.rows, features_mat.cols, features_mat(0,0), features_mat(1,0), features_mat(2,0));
     }
     delete video;
     

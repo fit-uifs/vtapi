@@ -31,16 +31,51 @@ namespace vtapi {
  */
 class IntervalEvent {
 public:
-    typedef struct
+    typedef struct _point
     {
         double x;
         double y;
+        
+        _point()
+        {
+            memset(this, 0, sizeof(point));
+        };
+        _point(_point &pt)
+        {
+            memcpy(this, &pt, sizeof(point));
+        };
+        _point(double x, double y)
+        {
+            this->x = x;
+            this->y = y;
+        };
     } point;
     
-    typedef struct
+    typedef struct _box
     {
         point high;
         point low;
+        
+        _box()
+        {
+            memset(this, 0, sizeof(box));
+        };
+        _box(_box &b)
+        {
+            memcpy(this, &b, sizeof(box));
+        };  
+        _box(point high, point low)
+        {
+            this->high = high;
+            this->low = low;
+        };
+        _box(double x_high, double y_high, double x_low, double y_low)
+        {
+            this->high.x = x_high;
+            this->high.y = y_high;
+            this->low.x = x_low;
+            this->low.y = y_low;
+        };
     } box;
 
 public:

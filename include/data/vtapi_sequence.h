@@ -89,6 +89,7 @@ public:
      * @return success
      */
     bool preSet();
+    
     /**
      * Gets a sequence name
      * @return string value with the name of the sequence
@@ -100,8 +101,6 @@ public:
      * @return string value with the location of the sequence
      */
     std::string getLocation();
-    
-    
     /**
      * Gets a sequence type
      * @return string value [video|images|data]

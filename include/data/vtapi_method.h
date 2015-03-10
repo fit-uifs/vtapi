@@ -58,6 +58,11 @@ public:
     bool next();
 
     /**
+     * Gets method ID
+     * @return method ID
+     */
+    int getId();
+    /**
      * Gets a name of the current method
      * @return string value with the name of the method
      */

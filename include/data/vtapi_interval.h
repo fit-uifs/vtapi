@@ -64,7 +64,11 @@ public:
      * @return sequence string
      */
     std::string getSequenceName();
-
+    /** Gets process name of associated process
+     * 
+     * @return process string
+     */
+    std::string getProcessName();
     /**
      * Gets sequence object of parent sequence
      * @return sequence object

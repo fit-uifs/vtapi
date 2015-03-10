@@ -41,6 +41,10 @@ bool Method::next() {
     return kv;
 }
 
+int Method::getId() {
+    return this->getInt("id");
+}
+
 string Method::getName() {
     return this->getString("mtname");
 }

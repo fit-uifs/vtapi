@@ -73,7 +73,6 @@ public:
      */
     bool next();
 
-
     /**
      * Gets a process name
      * @return string value with the name of the process
