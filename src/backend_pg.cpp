@@ -695,7 +695,7 @@ bool PGQueryBuilder::keyCvMat(const std::string& key, const cv::Mat& value, cons
         PGparam *cvmat = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
         CALL_PQT(fmap, PQputf, cvmat, 
             "%int4 %int4[] %bytea*",
-            mat_type, &mat_dims, &mat_data);
+            (PGint4)mat_type, &mat_dims, &mat_data);
         CALL_PQT(fmap, PQparamClear, mat_dims.param);
         
         // put cvmat composite
@@ -717,13 +717,13 @@ bool PGQueryBuilder::keyIntervalEvent(const std::string& key, const IntervalEven
         
         PGbytea data = {value.user_data_size, (char*)value.user_data};
         
-        // create cvmat composite
+        // create interval event composite
         PGparam *event = CALL_PQT(fmap, PQparamCreate, (PGconn *)connection->getConnectionObject());
         CALL_PQT(fmap, PQputf, event, 
-            "%int4 %int4[] %bool %box %float8 %bytea*",
-            &value.group_id, &value.class_id, &value.is_root, (PGbox *)&value.region, &value.score, &data);
+            "%int4 %int4 %bool %box %float8 %bytea*",
+            (PGint4)value.group_id, (PGint4)value.class_id, (PGbool)value.is_root, (PGbox *)&value.region, (PGfloat8)value.score, &data);
         
-        // put cvmat composite
+        // put interval event composite
         CALL_PQT(fmap, PQputf, ((pg_param_t *)param)->args, "%public.vtevent", event);
         CALL_PQT(fmap, PQparamClear, event);
         
@@ -1270,7 +1270,8 @@ cv::Mat *PGResultSet::getCvMat(const int col) {
     PGresult *pgres = (PGresult *) this->res;
     PGresult *matres    = NULL;
     cv::Mat *mat        = NULL;
-    int mat_type = 0, mat_dims = 0, *mat_dim_sizes = NULL;
+    PGint4 mat_type = 0;
+    int mat_dims = 0, *mat_dim_sizes = NULL;
     PGarray mat_dims_arr   = {0};
     PGbytea mat_data_bytea  = {0};
     
@@ -1409,10 +1410,10 @@ IntervalEvent *PGResultSet::getIntervalEvent(const int col) {
     PGresult *pgres     = (PGresult *) this->res;
     PGresult *evres     = NULL;
     IntervalEvent *event= NULL;
-    int ev_group_id = 0, ev_class_id = 0;
-    bool ev_is_root = false;
+    PGint4 ev_group_id = 0, ev_class_id = 0;
+    PGbool ev_is_root = false;
     PGbox ev_region = {0};
-    double ev_score = 0.0;
+    PGfloat8 ev_score = 0.0;
     PGbytea ev_data = {0};
     
     do {

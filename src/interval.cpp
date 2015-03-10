@@ -27,11 +27,14 @@ Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(o
 
     if (!selection.empty()) this->selection = selection;
 
-    select = new Select(orig);
-    select->from(this->selection, "*");
-    select->whereString("seqname", this->sequence);
-    select->whereString("process", this->process);
-
+    this->select = new Select(orig);
+    this->select->from(this->selection, "*");
+    if (!this->sequence.empty()) {
+        this->select->whereString("seqname", this->sequence);
+    }
+    if (!this->process.empty()) {
+        this->select->whereString("prsname", this->process);
+    }
 }
 
 int Interval::getId() {
@@ -39,8 +42,11 @@ int Interval::getId() {
 }
 
 string Interval::getSequenceName() {
-    // TODO: possibly empty... possible warning 332
-    return this->sequence;
+    return this->getString("seqname");
+}
+
+string Interval::getProcessName() {
+    return this->getString("prsname");
 }
 
 //TODO: pres query
@@ -70,7 +76,7 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
     vt_destruct(insert);
     insert = new Insert(*this, this->selection);
     retval &= insert->keyString("seqname", sequence);
-    retval &= insert->keyString("process", this->process);
+    retval &= insert->keyString("prsname", this->process);
     retval &= insert->keyInt("t1", t1);
     retval &= insert->keyInt("t2", te2);
     retval &= insert->keyString("imglocation", location);
@@ -111,7 +117,8 @@ bool Interval::preSet() {
 
     vt_destruct(update);
     update = new Update(*this, this->selection);
-    retval &= update->whereString("seqname", sequence);
+    retval &= update->whereString("seqname", this->sequence);
+    retval &= update->whereString("prsname", this->process);
     retval &= update->whereInt("t1", this->getInt("t1"));
     retval &= update->whereInt("t2", this->getInt("t2"));
 

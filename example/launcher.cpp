@@ -17,7 +17,7 @@
 
 // format process ID
 #define GET_PROCESS_ID(id,m,p1,p2) \
-    { std::stringstream ss; ss << m.getName() << "p_" << p1 << "_" << p2; id == ss.str(); }
+    { std::stringstream ss; ss << m.getName() << "p_" << p1 << "_" << p2; id = ss.str(); }
 
 
 ///////////////////////////////////////////////////////////
@@ -60,18 +60,18 @@ public:
     
     // Nejakou funkci SetParams() je treba implementovat vzdy, kdyz chceme modul
     // spoustet s nedefaultnimi parametry
-    void SetParams(int param1, int param2)
+    void SetParams(int param1, double param2)
     {
         // timto zpusobem se vytvari novy proces
         if (!m_process) m_process = this->addProcess(Demo1Callback, (void *)this);
 
         // k dispozici zatim setParamInt, setParamDouble, setParamString, setParamInputs
         m_process->setParamInt("param1", param1);
-        m_process->setParamInt("param2", param2);
+        m_process->setParamDouble("param2", param2);
     }
 
     // Kombinace SetParams() a Run(), pouze kosmeticky ucel
-    void Run(int param1, int param2)
+    void Run(int param1, double param2)
     {
         SetParams(param1, param2);
         Run();
@@ -168,9 +168,15 @@ public:
         printf("\nprocess %s new outputs:\n", m_process->getName().c_str());
         while(outputs->next())
         {
-            printf("event %s: %d\n",
-                outputs->getString("event_name").c_str(),
-                outputs->getInt("event_arg"));
+            IntervalEvent *event = outputs->getIntervalEvent("event");
+            if (event) {
+                printf("event: class=%d,group=%d,score=%.2f\n",
+                    event->class_id, event->group_id, event->score);
+                delete event;
+            }
+            else {
+                printf("failed to get event\n");
+            }
         }
         delete outputs;
     }
@@ -232,7 +238,7 @@ int main(int argc, char *argv[])
     // zvolime nejake parametry procesu
     srand(time(NULL));
     int param1 = rand() % 1000;
-    int param2 = rand() % 1000;
+    double param2 = 10;
     std::string video = "video3";
     
     // VTApi instance
@@ -286,10 +292,10 @@ int main(int argc, char *argv[])
         Process *p = demo1.newProcess(processID);
         p->next();
 
-        printf("\nprocess %s parameter values:\nparam1 = %d\nparam2 = %d\n",
+        printf("\nprocess %s parameter values:\nparam1 = %d\nparam2 = %.2f\n",
             p->getName().c_str(),
             p->getParamInt("param1"),
-            p->getParamInt("param2"));
+            p->getParamDouble("param2"));
         
     }
     catch(std::exception e)
@@ -305,12 +311,11 @@ int main(int argc, char *argv[])
         bool found = false;
         CDemo1Module demo1(vtapi);
         
-        // najdeme proces pro demo1 s parametry 11 a 50
+        // najdeme proces pro demo1 s 1. parametrem 11
         // iteracni pristup
         Process *p1 = demo1.newProcess();
         while(p1->next()) {
-            if (p1->getParamInt("param1") == param1 &&
-                p1->getParamInt("param2") == param2) {
+            if (p1->getParamInt("param1") == param1) {
                 found = true;
                 break;
             }
@@ -343,9 +348,15 @@ int main(int argc, char *argv[])
                 printf("\nprocess %s previously calculated outputs:\n", p2->getName().c_str());
                 while(outputs->next())
                 {
-                    printf("event %s: %d\n",
-                        outputs->getString("event_name").c_str(),
-                        outputs->getInt("event_arg"));
+                    IntervalEvent *event = outputs->getIntervalEvent("event");
+                    if (event) {
+                        printf("event: class=%d,group=%d,score=%.2f\n",
+                            event->class_id, event->group_id, event->score);
+                        delete event;
+                    }
+                    else {
+                        printf("failed to get event\n");
+                    }
                 }
                 delete outputs;
             }

@@ -87,24 +87,22 @@ CREATE TABLE datasets (
 
 -- method list
 CREATE TABLE methods (
-    id serial NOT NULL,
     mtname name NOT NULL,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
-    CONSTRAINT methods_pk PRIMARY KEY (id),
-    CONSTRAINT mtname_unq UNIQUE (mtname)
+    CONSTRAINT methods_pk PRIMARY KEY (mtname)
 );
 
 -- methods parameters definition
 CREATE TABLE methods_keys (
-    mtid integer NOT NULL,
+    mtname name NOT NULL,
     keyname name NOT NULL,
     typname regtype NOT NULL,
     inout inouttype NOT NULL,
-    default_num numeric[],
+    default_num double precision[],
     default_str varchar[],
-    CONSTRAINT methods_keys_pk PRIMARY KEY (mtid, keyname),
-    CONSTRAINT mtid_fk FOREIGN KEY (mtid)
-      REFERENCES methods(id) ON UPDATE CASCADE ON DELETE CASCADE
+    CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
+    CONSTRAINT mtname_fk FOREIGN KEY (mtname)
+      REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
 );

@@ -31,39 +31,35 @@ GRANT ALL ON SCHEMA test TO postgres;
 
 -- table for sequences (video/imagefolders)
 CREATE TABLE sequences (
-    id serial NOT NULL,
     seqname name NOT NULL,
     seqlocation character varying,
     seqtyp public.seqtype,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
-    CONSTRAINT sequences_pk PRIMARY KEY (id),
-    CONSTRAINT seqnum_unq UNIQUE (seqname)
+    CONSTRAINT sequences_pk PRIMARY KEY (seqname)
 );
 CREATE INDEX sequences_seqtyp_idx ON sequences(seqtyp);
 
 -- table for processes
 CREATE TABLE processes (
-    id serial NOT NULL,
-    mtid integer NOT NULL,
     prsname name NOT NULL,
-    prsid_inputs integer,
+    mtname name NOT NULL,
+    inputs name,
     outputs regclass,
     params character varying,
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
-    CONSTRAINT processes_pk PRIMARY KEY (id),
-    CONSTRAINT mtid_fk FOREIGN KEY (mtid)
-        REFERENCES public.methods(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT prsname_unq UNIQUE (prsname)
+    CONSTRAINT processes_pk PRIMARY KEY (prsname),
+    CONSTRAINT mtname_fk FOREIGN KEY (mtname)
+        REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 ALTER TABLE ONLY processes
-    ADD CONSTRAINT inputs_fk FOREIGN KEY (prsid_inputs)
-        REFERENCES processes(id) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX processes_mtid_idx ON processes(mtid);
-CREATE INDEX processes_prsid_inputs_idx ON processes(prsid_inputs);
+    ADD CONSTRAINT inputs_fk FOREIGN KEY (inputs)
+        REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT;
+CREATE INDEX processes_mtname_idx ON processes(mtname);
+CREATE INDEX processes_inputs_idx ON processes(inputs);
 
 -------------------------------------
 -- CREATE module-specific tables
@@ -74,10 +70,11 @@ CREATE INDEX processes_prsid_inputs_idx ON processes(prsid_inputs);
 -- intervals table for demo1 results
 CREATE TABLE test1out (
     id serial NOT NULL,
-    seqid integer NOT NULL,
-    prsid integer NOT NULL,
+    seqname name NOT NULL,
+    prsname name,
     t1 integer NOT NULL,
     t2 integer NOT NULL,
+    imglocation character varying,
     out_features_array real[],
     out_features_mat public.cvmat,
     out_event public.vtevent NOT NULL,
@@ -85,13 +82,13 @@ CREATE TABLE test1out (
     created timestamp without time zone DEFAULT now(),
     notes text,
     CONSTRAINT test1out_pk PRIMARY KEY (id),
-    CONSTRAINT seqid_fk FOREIGN KEY (seqid)
-      REFERENCES sequences(id) ON UPDATE CASCADE ON DELETE RESTRICT,
-    CONSTRAINT prsid_fk FOREIGN KEY (prsid)
-      REFERENCES processes(id) ON UPDATE CASCADE ON DELETE RESTRICT
+    CONSTRAINT seqname_fk FOREIGN KEY (seqname)
+      REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT,
+    CONSTRAINT prsname_fk FOREIGN KEY (prsname)
+      REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
 );
-CREATE INDEX test1out_seqid_idx ON test1out(seqid);
-CREATE INDEX test1out_prsid_idx ON test1out(prsid);
+CREATE INDEX test1out_seqname_idx ON test1out(seqname);
+CREATE INDEX test1out_prsname_idx ON test1out(prsname);
 
 -------------------------------------
 -- INSERT schema into dataset list

@@ -76,7 +76,6 @@ public:
             this->low.x = x_low;
             this->low.y = y_low;
         };
-
     } box;
 
 public:

@@ -44,7 +44,6 @@ bool Sequence::next() {
     return kv;
 }
 
-
 string Sequence::getName() {
     return this->getString("seqname");
 }

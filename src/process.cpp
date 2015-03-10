@@ -78,7 +78,6 @@ bool Process::next() {
     return kv;
 }
 
-
 string Process::getName() {
     return this->getString("prsname");
 }
@@ -121,12 +120,7 @@ void Process::deleteOutputData() {
 }
 
 int Process::getParamInt(const std::string& key) {
-    for (size_t i = 0; i < this->params.size(); i++) {
-        if (this->params[i]->key.compare(key) == 0) {
-            return ((TKeyValue<int> *)this->params[i])->values[0];
-        }
-    }
-    return -1;
+    return (int)getParamDouble(key);
 }
 
 double Process::getParamDouble(const std::string& key) {
@@ -158,7 +152,7 @@ void Process::setOutputs(const std::string& table) {
 }
 
 void Process::setParamInt(const std::string& key, int value) {
-    this->params.push_back(new TKeyValue<int>("int", key, value));
+    this->setParamDouble(key, (double)value);
 }
 void Process::setParamDouble(const std::string& key, double value) {
     this->params.push_back(new TKeyValue<double>("double", key, value));
@@ -331,14 +325,11 @@ std::string Process::serializeParams()
     
     for (size_t i = 0; i < this->params.size(); i++) {
         ss << params[i]->key << ":";
-        if (params[i]->type.compare("int") == 0) {
-            ss << ((TKeyValue<int> *)params[i])->values[0];
-        }
-        else if (params[i]->type.compare("double") == 0) {
+        if (params[i]->type.compare("double") == 0) {
             ss << ((TKeyValue<double> *)params[i])->values[0];
         }
         else if (params[i]->type.compare("string") == 0) {
-            ss << ((TKeyValue<std::string> *)params[i])->getValue();
+            ss << "\"" << ((TKeyValue<std::string> *)params[i])->getValue() << "\"";
         }
         else {
             ss << "0";
@@ -362,35 +353,36 @@ void Process::deserializeParams(std::string paramString)
     char *token = NULL;
     char *value = NULL;
     char *endptr;
-    int valInt;
     double valDouble;
-    TKey *key = NULL;
+    
     
     strcpy(str, paramString.c_str());
     
     token = strtok(str+1, ",");
     while(token) {
-        value = strchr(token, ':');
-        if (!value) break;
+        if (!(value = strchr(token, ':'))) break;
         *(value++) = '\0';
         
         size_t len = strlen(value);
         if (value[len-1] == '}') value[len-1] = '\0';
         
-        valInt = strtol(value, &endptr, 10);
-        if (endptr && !*endptr) {
-            key = new TKeyValue<int>("int", token, valInt);
+        TKey *key = NULL;
+        if (*value == '\"') {
+            char *end = strchr(++value, '\"');
+            if (end) {
+                *end = '\0';
+                key = new TKeyValue<std::string>("string", token, value);
+            }
         }
         else {
             valDouble = strtod(value, &endptr);
             if (endptr && !*endptr) {
                 key = new TKeyValue<double>("double", token, valDouble);
             }
-            else {
-                key = new TKeyValue<std::string>("string", token, value);
-            }
         }
-        this->params.push_back(key);
+        if (key) {
+            this->params.push_back(key);
+        }
         
         token = strtok(NULL, ",");
     }

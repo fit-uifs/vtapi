@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f2"
-                   displayName="DB Scripts"
-                   projectFiles="true"
-                   kind="ROOT">
+    <logicalFolder name="f2" displayName="DB Scripts" projectFiles="true">
       <itemPath>sql/demo-schema.sql</itemPath>
       <itemPath>sql/reset-schema.sh</itemPath>
     </logicalFolder>
@@ -12,10 +9,7 @@
                    displayName="Header Files"
                    projectFiles="true">
     </logicalFolder>
-    <logicalFolder name="f1"
-                   displayName="Resource Files"
-                   projectFiles="true"
-                   kind="ROOT">
+    <logicalFolder name="f1" displayName="Resource Files" projectFiles="true">
       <itemPath>README</itemPath>
       <itemPath>vtapi.conf</itemPath>
     </logicalFolder>
