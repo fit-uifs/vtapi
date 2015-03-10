@@ -1,5 +1,5 @@
 /**
- * @page licence
+ * @page licence Licence
  * @section LIC_NAME BUT OPEN SOURCE LICENCE
  *
  * @subsection LIC_VERSION Version 1.

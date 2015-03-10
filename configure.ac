@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script
 
-AC_INIT([VTApi (Video Terror API)], [2.0], [ivolf@fit.vutbr.cz], [vtapi], [http://vidte.fit.vutbr.cz])
+AC_INIT([VTApi], [2.0], [ivolf@fit.vutbr.cz], [vtapi], [http://vidte.fit.vutbr.cz])
 AM_INIT_AUTOMAKE
 
 AC_PREREQ([2.63]) # originally, there was autoconf ver. 2.68, but it seems that 2.63 is also OK ;)

@@ -111,16 +111,16 @@
  * So, then it is possible to access all the current dataset’s sequences identified
  * by getName() by calling the next() method.
  *
- * @see <a href="./examples.html">Examples</a> for more details on configuration and code samples.
+ * @see <a href="./usergroup0.html">Examples</a> for more details on configuration and code samples.
  *
  *
  * @subsection DOWNLOAD VTApi download and install, manual, ...
  *
- *  - Basic prerequisities, compilation and installation manual are at: https://gitorious.org/vtapi/pages/Install
+ *  - Basic prerequisities, compilation and installation manual are at: https://github.com/fit-uifs/vtapi/wiki/Install
  *
- *  - Source codes in various versions can be found at: https://gitorious.org/vtapi .
+ *  - Download the actual version at https://github.com/fit-uifs/vtapi .
  *
- *  - Download the actual version at https://gitorious.org/vtapi/vtapi/archive-tarball/master .
+ *  - Source codes in various versions can be found at: https://github.com/fit-uifs/vtapi/branches .
  *
  *  - Oficial website of VT project and VTApi, technical documentation (written in Czech language)
  *    recommended for beginners can be found at: http://vidte.fit.vutbr.cz/vtapi.html
@@ -134,8 +134,5 @@
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
- *
- * @example ../default.conf
- * This file shows an example configuration file for VTApi.
  */
  
