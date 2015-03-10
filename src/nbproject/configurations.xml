@@ -50,7 +50,6 @@
                    displayName="Resource Files"
                    projectFiles="true">
       <itemPath>../doc/LICENCE.txt</itemPath>
-      <itemPath>../README.txt</itemPath>
       <itemPath>../doc/SAMPLES.txt</itemPath>
       <itemPath>../vtapi.conf</itemPath>
       <itemPath>vtapi.ggo</itemPath>
@@ -87,6 +86,7 @@
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
+      <itemPath>Makefile.am</itemPath>
     </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
@@ -148,8 +148,6 @@
                             group="bin"/>
         </packFileList>
       </packaging>
-      <item path="../README.txt" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">
@@ -307,8 +305,6 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
-      <item path="../README.txt" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">
@@ -499,8 +495,6 @@
                             group="bin"/>
         </packFileList>
       </packaging>
-      <item path="../README.txt" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">

@@ -35,11 +35,13 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/backend_factory.o \
 	${OBJECTDIR}/backend_pg.o \
 	${OBJECTDIR}/backend_sl.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/dataset.o \
 	${OBJECTDIR}/interval.o \
+	${OBJECTDIR}/intervalevent.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/logger.o \
 	${OBJECTDIR}/method.o \
@@ -77,6 +79,11 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/src: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/src ${OBJECTFILES} ${LDLIBSOPTIONS}
 
+${OBJECTDIR}/backend_factory.o: backend_factory.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_factory.o backend_factory.cpp
+
 ${OBJECTDIR}/backend_pg.o: backend_pg.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
@@ -101,6 +108,11 @@ ${OBJECTDIR}/interval.o: interval.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/interval.o interval.cpp
+
+${OBJECTDIR}/intervalevent.o: intervalevent.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/intervalevent.o intervalevent.cpp
 
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}

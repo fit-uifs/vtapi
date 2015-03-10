@@ -37,11 +37,13 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/backend_factory.o \
 	${OBJECTDIR}/backend_pg.o \
 	${OBJECTDIR}/backend_sl.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/dataset.o \
 	${OBJECTDIR}/interval.o \
+	${OBJECTDIR}/intervalevent.o \
 	${OBJECTDIR}/keyvalues.o \
 	${OBJECTDIR}/logger.o \
 	${OBJECTDIR}/method.o \
@@ -79,85 +81,95 @@ LDLIBSOPTIONS=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_ml -lopen
 	${MKDIR} -p ../${CND_DISTDIR}
 	${LINK.cc} -o ../${CND_DISTDIR}/libvtapi.so ${OBJECTFILES} ${LDLIBSOPTIONS} -shared -fPIC
 
+${OBJECTDIR}/backend_factory.o: backend_factory.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_factory.o backend_factory.cpp
+
 ${OBJECTDIR}/backend_pg.o: backend_pg.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg.o backend_pg.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg.o backend_pg.cpp
 
 ${OBJECTDIR}/backend_sl.o: backend_sl.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl.o backend_sl.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl.o backend_sl.cpp
 
 ${OBJECTDIR}/commons.o: commons.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/commons.o commons.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/commons.o commons.cpp
 
 ${OBJECTDIR}/dataset.o: dataset.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/dataset.o dataset.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/dataset.o dataset.cpp
 
 ${OBJECTDIR}/interval.o: interval.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/interval.o interval.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/interval.o interval.cpp
+
+${OBJECTDIR}/intervalevent.o: intervalevent.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/intervalevent.o intervalevent.cpp
 
 ${OBJECTDIR}/keyvalues.o: keyvalues.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/keyvalues.o keyvalues.cpp
 
 ${OBJECTDIR}/logger.o: logger.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/logger.o logger.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/logger.o logger.cpp
 
 ${OBJECTDIR}/method.o: method.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/method.o method.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/method.o method.cpp
 
 ${OBJECTDIR}/process.o: process.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/process.o process.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/process.o process.cpp
 
 ${OBJECTDIR}/query.o: query.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/query.o query.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/query.o query.cpp
 
 ${OBJECTDIR}/sequence.o: sequence.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/sequence.o sequence.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/sequence.o sequence.cpp
 
 ${OBJECTDIR}/timexer.o: timexer.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/timexer.o timexer.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/timexer.o timexer.cpp
 
 ${OBJECTDIR}/tkey.o: tkey.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/tkey.o tkey.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/tkey.o tkey.cpp
 
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vtapi.o vtapi.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vtapi.o vtapi.cpp
 
 ${OBJECTDIR}/vtapi_misc.o: vtapi_misc.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vtapi_misc.o vtapi_misc.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vtapi_misc.o vtapi_misc.cpp
 
 ${OBJECTDIR}/vtapi_settings.o: vtapi_settings.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vtapi_settings.o vtapi_settings.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/vtapi_settings.o vtapi_settings.cpp
 
 # Subprojects
 .build-subprojects:
