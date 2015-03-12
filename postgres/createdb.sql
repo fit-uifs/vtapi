@@ -30,13 +30,13 @@ GRANT ALL ON SCHEMA public TO postgres;
 -------------------------------------
 -- DROP all VTApi objects
 -------------------------------------
-DROP TABLE IF EXISTS public.methods_keys;
-DROP TABLE IF EXISTS public.methods;
-DROP TABLE IF EXISTS public.datasets;
-DROP TYPE IF EXISTS public.seqtype;
-DROP TYPE IF EXISTS public.inouttype;
-DROP TYPE IF EXISTS public.cvmat;
-DROP TYPE IF EXISTS public.vtevent;
+DROP TABLE IF EXISTS public.methods_keys CASCADE;
+DROP TABLE IF EXISTS public.methods CASCADE;
+DROP TABLE IF EXISTS public.datasets CASCADE;
+DROP TYPE IF EXISTS public.seqtype CASCADE;
+DROP TYPE IF EXISTS public.inouttype CASCADE;
+DROP TYPE IF EXISTS public.cvmat CASCADE;
+DROP TYPE IF EXISTS public.vtevent CASCADE;
 
 -------------------------------------
 -- CREATE user-defined data types
