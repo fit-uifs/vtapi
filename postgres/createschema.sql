@@ -94,8 +94,8 @@ CREATE INDEX test1out_prsname_idx ON test1out(prsname);
 -- INSERT schema into dataset list
 -------------------------------------
 
-INSERT INTO public.datasets(dsname, dslocation, userid, groupid, notes)
-    VALUES ('test', 'data/test/', 'testuser', 'testgroup', 'testovaci dataset');
+INSERT INTO public.datasets(dsname, dslocation, userid, notes)
+    VALUES ('test', 'data/test/', 'testuser', 'testovaci dataset');
 
 
 
