@@ -8,22 +8,12 @@
 #ifndef VTAPI_RESULTSET_H
 #define	VTAPI_RESULTSET_H
 
-#include "vtapi_backendlibs.h"
-#include "../common/vtapi_logger.h"
+#include "vtapi_backendbase.h"
+#include "../common/vtapi_types.h"
 #include "../common/vtapi_tkeyvalue.h"
 #include "../data/vtapi_intervalevent.h"
 
 namespace vtapi {
-
-class TypeManager;
-
-#if HAVE_SQLITE
-typedef struct {
-    int     rows;
-    int     cols;
-    char    **res;
-} sl_res_t;
-#endif
 
 /**
  * @brief Class provides interface to the result set object
@@ -32,14 +22,10 @@ typedef struct {
  * by incrementing pos attribute via step() or setPosition() methods. Field values
  * can be obtained via various getX methods.
  */
-class ResultSet {
+class ResultSet
+{
 protected:
-
-    fmap_t          *fmap;          /**< function address book */
-    TypeManager     *typeManager;   /**< object for type manipulation */
-    Logger          *logger;        /**< logger object for output messaging */
-    std::string     thisClass;      /**< class name */
-
+    VTAPI_DBTYPES_MAP *dbtypes;     /**< map of database types definitions */
     int             pos;            /**< position within resultset */
     void            *res;           /**< result object */
 
@@ -47,14 +33,11 @@ public:
 
     /**
      * Constructor
-     * @param fmap function address book
-     * @param typeManager type manager object
-     * @param logger logger object
+     * @param base base object (backend interface, logging...)
+     * @param dbtypes preloaded map of database types
      */
-    ResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger) {
-        this->logger        = logger;
-        this->typeManager   = typeManager;
-        this->fmap          = fmap;
+    ResultSet(VTAPI_DBTYPES_MAP *dbtypes) {
+        this->dbtypes       = dbtypes;
         this->pos           = -1;
         this->res           = NULL;
     };
@@ -560,10 +543,11 @@ protected:
 
 
 #if HAVE_POSTGRESQL
-class PGResultSet : public ResultSet {
+class PGResultSet : public ResultSet, public PGBackendBase
+{
 public:
 
-    PGResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger);
+    PGResultSet(const PGBackendBase &base, VTAPI_DBTYPES_MAP *dbtypes);
     ~PGResultSet();
 
     void newResult(void *res);
@@ -616,10 +600,11 @@ protected:
 #endif
 
 #if HAVE_SQLITE
-class SLResultSet : public ResultSet {
+class SLResultSet : public ResultSet, public SLBackendBase
+{
 public:
 
-    SLResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger);
+    SLResultSet(const SLBackendBase &base);
     ~SLResultSet();
 
     void newResult(void *res);

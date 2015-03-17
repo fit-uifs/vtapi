@@ -44,12 +44,19 @@
 
 // libpqtypes + pq
 #if HAVE_POSTGRESQL
-  #include <libpqtypes.h> 
+    #include <libpqtypes.h> 
+
+    #define PG_FORMAT 1   // postgres data transfer format: 0=text, 1=binary
 #endif
 
 // sqlite
 #if HAVE_SQLITE
-  #include <sqlite3.h>
+    #include <sqlite3.h>
+
+    // sqlite database files
+    #define SL_DB_PREFIX "vtapi_"
+    #define SL_DB_SUFFIX ".db"
+    #define SL_DB_PUBLIC "public"
 #endif
 
 

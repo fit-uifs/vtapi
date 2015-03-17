@@ -18,8 +18,7 @@
 #include "../common/vtapi_settings.h"
 #include "../common/vtapi_logger.h"
 #include "../backends/vtapi_connection.h"
-#include "../backends/vtapi_typemanager.h"
-#include "../backends/vtapi_libloader.h"
+#include "../backends/vtapi_backendfactory.h"
 
 namespace vtapi {
 
@@ -56,14 +55,12 @@ class Commons {
 protected:
     std::string thisClass;   /**< This should be filled in each constructor of a derived class */
 
+    BackendFactory::BACKEND_T backend;  /**< Used backend type */
+    BackendBase     *backendBase;       /**< base backend object, will be copied across backend-specific objects */
     Connection      *connection;        /**< Connection object */
-    TypeManager     *typeManager;       /**< Datatypes management object */
-    LibLoader       *libLoader;         /**< Library loader object */
     Logger          *logger;            /**< Logger object */
-    fmap_t          *fmap;              /**< Map of library functions */
 
     std::string     configfile;         /**< VTApi config file */
-    std::string     backend;            /**< Used backend type */
     std::string     dbconn;             /**< Connection string / databases folder */
     format_t        format;             /**< Output format */
     std::string     input;              /**< A filename from which we read an input */

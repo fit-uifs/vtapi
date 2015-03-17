@@ -30,8 +30,8 @@ Query::Query(const Commons& commons, const string& initString)
 : Commons(commons) {
     thisClass       = "Query";
 
-    queryBuilder    = fmap ? BackendFactory::createQueryBuilder(fmap, connection, typeManager, logger, initString) : NULL;
-    resultSet       = fmap ? BackendFactory::createResultSet(fmap, typeManager, logger) : NULL;
+    queryBuilder    = BackendFactory::createQueryBuilder(backend, *backendBase, connection->getConnectionObject(), initString);
+    resultSet       = BackendFactory::createResultSet(backend, *backendBase, connection->getDBTypes());
     if (queryBuilder) {
         this->queryBuilder->setDataset(this->dataset);
         this->queryBuilder->setTable(this->selection);

@@ -24,16 +24,13 @@ using namespace vtapi;
 Commons::Commons(const Commons& orig) {
     thisClass       = "Commons(copy)";
 
-    
-    libLoader       = orig.libLoader;
-    logger          = orig.logger;
+    backendBase     = orig.backendBase;
     connection      = orig.connection;
-    dbconn          = orig.dbconn;
+    logger          = orig.logger;
+    
     configfile      = orig.configfile;
     backend         = orig.backend;
-    typeManager     = orig.typeManager;
-    fmap            = orig.fmap;
-
+    dbconn          = orig.dbconn;
     user            = orig.user;
     format          = orig.format;
     input           = orig.input;
@@ -57,27 +54,8 @@ Commons::Commons(const Commons& orig) {
 Commons::Commons(const gengetopt_args_info& args_info) {    
     thisClass       = "Commons(init)";
 
-    // initialize factory (backend_arg is required)
-    backend         = args_info.backend_arg;
-    BackendFactory::initialize(backend);
-    
-    // get connection string (postgres) or databases folder (sqlite)
-    switch (BackendFactory::backend) {
-        case BackendFactory::POSTGRES:
-            dbconn  = string(args_info.connection_arg);
-            break;
-        case BackendFactory::SQLITE:
-            dbconn  = string(args_info.dbfolder_arg);
-            break;
-        default:
-            dbconn  = string("");
-            break;
-    }
     // initialize logger (log_arg has default value)
     logger          = new Logger(string(args_info.log_arg), args_info.verbose_given);
-    // link libraries and load functions into fmap
-    libLoader       = BackendFactory::createLibLoader(logger);
-    fmap            = libLoader->loadLibs();
 
     // other args (see vtapi.conf)
     configfile      = args_info.config_arg;
@@ -96,9 +74,29 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     
     baseLocation    = args_info.location_given  ? string(args_info.location_arg)    : string("");
 
-    // initialize connection and type managing
-    connection      = fmap ? BackendFactory::createConnection(fmap, dbconn, logger) : NULL;
-    typeManager     = fmap ? BackendFactory::createTypeManager(fmap, connection, logger, dataset) : NULL;
+    // backend_arg is required
+    backend         = BackendFactory::type(args_info.backend_arg);
+    
+    // get connection string (postgres) or databases folder (sqlite)
+    switch (backend) {
+        case BackendFactory::BACKEND_POSTGRES:
+            dbconn = string(args_info.connection_arg);
+            break;
+        case BackendFactory::BACKEND_SQLITE:
+            dbconn = string(args_info.dbfolder_arg);
+            break;
+        default: break;
+    }
+    
+    // initialize backend objects specific common object
+    backendBase     = BackendFactory::createBackendBase(backend, logger);
+    if (backendBase && backendBase->base_init()) {
+        // initialize connection object and connect
+        connection = BackendFactory::createConnection(backend, *backendBase, dbconn);
+        if (connection) {
+            connection->connect();
+        }
+    }
     
     doom            = true;             // destruct it with fire
 
@@ -109,10 +107,8 @@ Commons::Commons(const gengetopt_args_info& args_info) {
 
 Commons::~Commons() {
     if (doom) {
-        vt_destruct(typeManager);
         vt_destruct(connection);
-        vt_destruct(fmap);
-        vt_destruct(libLoader);        
+        vt_destruct(backendBase);
         vt_destruct(logger);
         
 #if HAVE_POSTGIS
@@ -178,11 +174,9 @@ string Commons::getUser() {
 
 bool Commons::checkCommonsObject() {
     return !(
-         BackendFactory::backend == BackendFactory::UNKNOWN ||
-        !libLoader || !libLoader->isLoaded() || !fmap ||
-        !connection ||
-        !typeManager ||
-        dbconn.empty());
+         backend != BackendFactory::BACKEND_UNKNOWN ||
+        !backendBase || !backendBase->base_is_valid() ||
+        !connection || dbconn.empty());
 }
 
 

@@ -8,25 +8,12 @@
 #ifndef VTAPI_CONNECTION_H
 #define	VTAPI_CONNECTION_H
 
-#include "vtapi_backendlibs.h"
-#include "../common/vtapi_logger.h"
+#include "vtapi_backendbase.h"
+#include "../common/vtapi_types.h"
+#include "vtapi_resultset.h"
+
 
 namespace vtapi {
-
-class ResultSet;
-
-#if HAVE_SQLITE
-typedef struct {
-    std::string  database;
-} sl_param_t;
-#endif
-
-#if HAVE_POSTGRESQL
-typedef struct {
-    PGparam *args;
-} pg_param_t;
-#endif
-
 
 /**
  * @brief Class encapsulating all database connection functionality including
@@ -35,27 +22,21 @@ typedef struct {
  * Object of this class should be passed to all entities as an attribute of
  * an instance of class @ref Commons.
  */
-class Connection {
+class Connection
+{
 protected:
-
-    fmap_t      *fmap;          /**< function address book */
     std::string connInfo;       /**< connection string to access the database */
-    Logger      *logger;        /**< logger object for output messaging */
-    std::string thisClass;      /**< class name */
-
     std::string errorMessage;   /**< error message string */
+    VTAPI_DBTYPES_MAP dbtypes;  /**< map of database types definitions */
 
 public:
     /**
      * Constructor
-     * @param fmap function address book
      * @param connectionInfo initial connection string @see vtapi.conf
-     * @param logger logger object
      */
-    Connection (fmap_t *fmap, const std::string& connectionInfo, Logger *logger) {
-        this->logger    = logger;
+    Connection(const std::string& connectionInfo)
+    {
         this->connInfo  = connectionInfo;
-        this->fmap      = fmap;
     };
     /**
      * Virtual destructor
@@ -63,11 +44,11 @@ public:
     virtual ~Connection() { };
 
     /**
-     * Performs connection to database
+     * Performs connection to database, may load dbtypes information
      * @param connectionInfo connection string @see vtapi.conf
      * @return success
      */
-    virtual bool connect (const std::string& connectionInfo) = 0;
+    virtual bool connect (const std::string& connectionInfo = "") = 0;
     /**
      * Reconnects to database
      * @param connectionInfo connection string @see vtapi.conf
@@ -105,6 +86,13 @@ public:
      * @return
      */
     virtual void* getConnectionObject() = 0;
+    
+    /**
+     * Gets map of preloaded database types
+     * @return reference to type map
+     */
+    VTAPI_DBTYPES_MAP *getDBTypes() { return &this->dbtypes; }
+    
     /**
      * Returns last error message
      * @return
@@ -114,14 +102,13 @@ public:
 };
 
 #if HAVE_POSTGRESQL
-class PGConnection : public Connection {
-private:
-
+class PGConnection : public Connection, public PGBackendBase
+{
+protected:
     PGconn *conn;     /**< handler of the current database connection */
-
+    
 public:
-
-    PGConnection(fmap_t *fmap, const std::string& connectionInfo, Logger* logger = NULL);
+    PGConnection(const PGBackendBase &base, const std::string& connectionInfo);
     ~PGConnection();
 
     bool connect (const std::string& connectionInfo);
@@ -134,18 +121,34 @@ public:
 
     void* getConnectionObject();
 
+protected:
+    bool loadDBTypes();
+    short typeCategoryCharToType(char c);
+
+
+    static PGConnection *glob;
+    static int enum_get(PGtypeArgs *args);
+    static int enum_put(PGtypeArgs *args);
+    int enum_get_helper(PGtypeArgs *args);
+    int enum_put_helper(PGtypeArgs *args);
+    
+#if HAVE_POSTGIS
+    static int geometry_get(PGtypeArgs *args);
+    static int geometry_put(PGtypeArgs *args);
+    int geometry_get_helper(PGtypeArgs *args);
+    int geometry_put_helper(PGtypeArgs *args);
+#endif
 };
 #endif
 
 #if HAVE_SQLITE
-class SLConnection : public Connection {
-private:
-
+class SLConnection : public Connection, public SLBackendBase
+{
+protected:
     sqlite3 *conn;          /**< handler of the current database connection */
 
 public:
-
-    SLConnection(fmap_t *fmap, const std::string& connectionInfo, Logger* logger = NULL);
+    SLConnection(const SLBackendBase &base, const std::string& connectionInfo);
     ~SLConnection();
 
     bool connect (const std::string& connectionInfo);

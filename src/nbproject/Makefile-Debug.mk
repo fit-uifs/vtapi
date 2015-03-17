@@ -38,8 +38,16 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/backend_factory.o \
-	${OBJECTDIR}/backend_pg.o \
-	${OBJECTDIR}/backend_sl.o \
+	${OBJECTDIR}/backend_pg/pgbackendbase.o \
+	${OBJECTDIR}/backend_pg/pgconnection.o \
+	${OBJECTDIR}/backend_pg/pgquerybuilder.o \
+	${OBJECTDIR}/backend_pg/pgresultset.o \
+	${OBJECTDIR}/backend_pg/pgtypemanager.o \
+	${OBJECTDIR}/backend_sl/slbackendbase.o \
+	${OBJECTDIR}/backend_sl/slconnection.o \
+	${OBJECTDIR}/backend_sl/slquerybuilder.o \
+	${OBJECTDIR}/backend_sl/slresultset.o \
+	${OBJECTDIR}/backend_sl/sltypemanager.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/dataset.o \
 	${OBJECTDIR}/interval.o \
@@ -86,15 +94,55 @@ ${OBJECTDIR}/backend_factory.o: backend_factory.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_factory.o backend_factory.cpp
 
-${OBJECTDIR}/backend_pg.o: backend_pg.cpp 
-	${MKDIR} -p ${OBJECTDIR}
+${OBJECTDIR}/backend_pg/pgbackendbase.o: backend_pg/pgbackendbase.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_pg
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg.o backend_pg.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg/pgbackendbase.o backend_pg/pgbackendbase.cpp
 
-${OBJECTDIR}/backend_sl.o: backend_sl.cpp 
-	${MKDIR} -p ${OBJECTDIR}
+${OBJECTDIR}/backend_pg/pgconnection.o: backend_pg/pgconnection.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_pg
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl.o backend_sl.cpp
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg/pgconnection.o backend_pg/pgconnection.cpp
+
+${OBJECTDIR}/backend_pg/pgquerybuilder.o: backend_pg/pgquerybuilder.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_pg
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg/pgquerybuilder.o backend_pg/pgquerybuilder.cpp
+
+${OBJECTDIR}/backend_pg/pgresultset.o: backend_pg/pgresultset.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_pg
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg/pgresultset.o backend_pg/pgresultset.cpp
+
+${OBJECTDIR}/backend_pg/pgtypemanager.o: backend_pg/pgtypemanager.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_pg
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg/pgtypemanager.o backend_pg/pgtypemanager.cpp
+
+${OBJECTDIR}/backend_sl/slbackendbase.o: backend_sl/slbackendbase.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_sl
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl/slbackendbase.o backend_sl/slbackendbase.cpp
+
+${OBJECTDIR}/backend_sl/slconnection.o: backend_sl/slconnection.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_sl
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl/slconnection.o backend_sl/slconnection.cpp
+
+${OBJECTDIR}/backend_sl/slquerybuilder.o: backend_sl/slquerybuilder.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_sl
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl/slquerybuilder.o backend_sl/slquerybuilder.cpp
+
+${OBJECTDIR}/backend_sl/slresultset.o: backend_sl/slresultset.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_sl
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl/slresultset.o backend_sl/slresultset.cpp
+
+${OBJECTDIR}/backend_sl/sltypemanager.o: backend_sl/sltypemanager.cpp 
+	${MKDIR} -p ${OBJECTDIR}/backend_sl
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl/sltypemanager.o backend_sl/sltypemanager.cpp
 
 ${OBJECTDIR}/commons.o: commons.cpp 
 	${MKDIR} -p ${OBJECTDIR}

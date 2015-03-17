@@ -1,11 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f1"
-                   displayName="DB Scripts"
-                   projectFiles="true"
-                   kind="ROOT">
-      <logicalFolder name="f1" displayName="example" projectFiles="true" kind="ROOT">
+    <logicalFolder name="f1" displayName="DB Scripts" projectFiles="true">
+      <logicalFolder name="f1" displayName="example" projectFiles="true">
         <itemPath>../example/sql/demo-schema.sql</itemPath>
         <itemPath>../example/sql/reset-schema.sh</itemPath>
       </logicalFolder>
@@ -16,12 +13,12 @@
                    displayName="Header Files"
                    projectFiles="true">
       <logicalFolder name="f1" displayName="backends" projectFiles="true">
+        <itemPath>../include/backends/vtapi_backendbase.h</itemPath>
         <itemPath>../include/backends/vtapi_backendfactory.h</itemPath>
+        <itemPath>../include/backends/vtapi_backendinterfaces.h</itemPath>
         <itemPath>../include/backends/vtapi_connection.h</itemPath>
-        <itemPath>../include/backends/vtapi_libloader.h</itemPath>
         <itemPath>../include/backends/vtapi_querybuilder.h</itemPath>
         <itemPath>../include/backends/vtapi_resultset.h</itemPath>
-        <itemPath>../include/backends/vtapi_typemanager.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f5" displayName="common" projectFiles="true">
         <itemPath>../include/common/vtapi_autoconfig.h</itemPath>
@@ -34,6 +31,7 @@
         <itemPath>../include/common/vtapi_timexer.h</itemPath>
         <itemPath>../include/common/vtapi_tkey.h</itemPath>
         <itemPath>../include/common/vtapi_tkeyvalue.h</itemPath>
+        <itemPath>../include/common/vtapi_types.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f3" displayName="data" projectFiles="true">
         <itemPath>../include/data/vtapi_commons.h</itemPath>
@@ -70,9 +68,21 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <logicalFolder name="f1" displayName="backend_pg" projectFiles="true">
+        <itemPath>backend_pg/pgbackendbase.cpp</itemPath>
+        <itemPath>backend_pg/pgconnection.cpp</itemPath>
+        <itemPath>backend_pg/pgquerybuilder.cpp</itemPath>
+        <itemPath>backend_pg/pgresultset.cpp</itemPath>
+        <itemPath>backend_pg/pgtypemanager.cpp</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2" displayName="backend_sl" projectFiles="true">
+        <itemPath>backend_sl/slbackendbase.cpp</itemPath>
+        <itemPath>backend_sl/slconnection.cpp</itemPath>
+        <itemPath>backend_sl/slquerybuilder.cpp</itemPath>
+        <itemPath>backend_sl/slresultset.cpp</itemPath>
+        <itemPath>backend_sl/sltypemanager.cpp</itemPath>
+      </logicalFolder>
       <itemPath>backend_factory.cpp</itemPath>
-      <itemPath>backend_pg.cpp</itemPath>
-      <itemPath>backend_sl.cpp</itemPath>
       <itemPath>commons.cpp</itemPath>
       <itemPath>dataset.cpp</itemPath>
       <itemPath>interval.cpp</itemPath>
@@ -170,17 +180,22 @@
       </item>
       <item path="../example/sql/reset-schema.sh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/backends/vtapi_backendbase.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/backends/vtapi_backendfactory.h"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../include/backends/vtapi_connection.h"
+      <item path="../include/backends/vtapi_backendinterfaces.h"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../include/backends/vtapi_libloader.h"
+      <item path="../include/backends/vtapi_connection.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -191,11 +206,6 @@
             flavor2="0">
       </item>
       <item path="../include/backends/vtapi_resultset.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../include/backends/vtapi_typemanager.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -228,6 +238,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_types.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_commons.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -272,9 +284,25 @@
       </item>
       <item path="backend_factory.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_pg.cpp" ex="false" tool="1" flavor2="0">
+      <item path="backend_pg/pgbackendbase.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_sl.cpp" ex="false" tool="1" flavor2="0">
+      <item path="backend_pg/pgconnection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgquerybuilder.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgresultset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgtypemanager.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slbackendbase.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slconnection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slquerybuilder.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/sltypemanager.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -339,17 +367,22 @@
       </item>
       <item path="../example/sql/reset-schema.sh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/backends/vtapi_backendbase.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/backends/vtapi_backendfactory.h"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../include/backends/vtapi_connection.h"
+      <item path="../include/backends/vtapi_backendinterfaces.h"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../include/backends/vtapi_libloader.h"
+      <item path="../include/backends/vtapi_connection.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -360,11 +393,6 @@
             flavor2="0">
       </item>
       <item path="../include/backends/vtapi_resultset.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../include/backends/vtapi_typemanager.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -397,6 +425,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_types.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_commons.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -441,9 +471,25 @@
       </item>
       <item path="backend_factory.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_pg.cpp" ex="false" tool="1" flavor2="0">
+      <item path="backend_pg/pgbackendbase.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_sl.cpp" ex="false" tool="1" flavor2="0">
+      <item path="backend_pg/pgconnection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgquerybuilder.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgresultset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgtypemanager.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slbackendbase.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slconnection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slquerybuilder.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/sltypemanager.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -541,17 +587,22 @@
       </item>
       <item path="../example/sql/reset-schema.sh" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/backends/vtapi_backendbase.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/backends/vtapi_backendfactory.h"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../include/backends/vtapi_connection.h"
+      <item path="../include/backends/vtapi_backendinterfaces.h"
             ex="false"
             tool="3"
             flavor2="0">
       </item>
-      <item path="../include/backends/vtapi_libloader.h"
+      <item path="../include/backends/vtapi_connection.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -562,11 +613,6 @@
             flavor2="0">
       </item>
       <item path="../include/backends/vtapi_resultset.h"
-            ex="false"
-            tool="3"
-            flavor2="0">
-      </item>
-      <item path="../include/backends/vtapi_typemanager.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -599,6 +645,8 @@
             ex="false"
             tool="3"
             flavor2="0">
+      </item>
+      <item path="../include/common/vtapi_types.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_commons.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -643,9 +691,25 @@
       </item>
       <item path="backend_factory.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_pg.cpp" ex="false" tool="1" flavor2="0">
+      <item path="backend_pg/pgbackendbase.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_sl.cpp" ex="false" tool="1" flavor2="0">
+      <item path="backend_pg/pgconnection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgquerybuilder.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgresultset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_pg/pgtypemanager.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slbackendbase.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slconnection.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slquerybuilder.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="backend_sl/sltypemanager.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
       </item>

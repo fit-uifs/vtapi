@@ -8,15 +8,11 @@
 #ifndef VTAPI_QUERYBUILDER_H
 #define	VTAPI_QUERYBUILDER_H
 
-#include "vtapi_backendlibs.h"
-#include "../common/vtapi_logger.h"
+#include "vtapi_backendbase.h"
 #include "../common/vtapi_tkeyvalue.h"
 #include "../data/vtapi_intervalevent.h"
 
 namespace vtapi {
-
-class Connection;
-class TypeManager;
 
 /**
  * @brief Class provides functionality to build various SQL queries
@@ -34,35 +30,21 @@ class TypeManager;
  */
 class QueryBuilder {
 protected:
-
-    fmap_t              *fmap;          /**< library functions address book */
-    Connection          *connection;    /**< connection object */
-    TypeManager         *typeManager;   /**< type manager object */
-    Logger              *logger;        /**< logger object for output messaging */
-    std::string         thisClass;      /**< class name */
-
-    std::vector<std::string> opers;     /**< operators */
-    void                *param;         /**< object for parametrized queries */
-
+    void                *connection;    /**< connection object */
     std::string         initString;     /**< init query string (whole query or table) */
+    void                *param;         /**< object for parametrized queries */
     std::string         table;          /**< default table for queries */
     std::string         dataset;        /**< active dataset */
 
 public:
     /**
      * Constructor
-     * @param fmap library functions address book
      * @param connection connection object
-     * @param typeManager typeManager object
-     * @param logger logger object for output messaging
      * @param initString initialization string (query/table or empty)
      */
-    QueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger, const std::string& initString = "") {
+    QueryBuilder(void *connection, const std::string& initString) {
         this->initString    = initString;
-        this->typeManager   = typeManager;
-        this->logger        = logger;
         this->connection    = connection;
-        this->fmap          = fmap;
         this->param         = NULL;
     };
     /**
@@ -363,19 +345,21 @@ protected:
 };
 
 #if HAVE_POSTGRESQL
-class PGQueryBuilder : public QueryBuilder {
+class PGQueryBuilder : public QueryBuilder, public PGBackendBase
+{
 private:
 
     TKeys                   keys_main;          /**< table keys storage for SELECT FROM, INSERT INTO and UPDATE SET clauses */
     TKeys                   keys_where;         /**< table keys storage for WHERE clause */
+    std::vector<std::string> opers;             /**< operators */
 
     int                     keysCnt;            /**< keys counter */
-    std::vector<int>             keys_main_order;    /**< Indexes of keys_main */
-    std::vector<int>             keys_where_order;   /**< Indexes of keys_where */
+    std::vector<int>        keys_main_order;    /**< Indexes of keys_main */
+    std::vector<int>        keys_where_order;   /**< Indexes of keys_where */
 
 public:
 
-    PGQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger = NULL, const std::string& initString = "");
+    PGQueryBuilder(const PGBackendBase &base, void *connection, const std::string& initString = "");
     ~PGQueryBuilder();
 
     std::string getGenericQuery();
@@ -421,15 +405,17 @@ protected:
 #endif
 
 #if HAVE_SQLITE
-class SLQueryBuilder : public QueryBuilder {
+class SLQueryBuilder : public QueryBuilder, public SLBackendBase
+{
 private:
 
     TKeyValues      key_values_main;    /**< table key/values storage for SELECT FROM, INSERT INTO and UPDATE SET clauses */
     TKeyValues      key_values_where;   /**< table key/values storage for SELECT FROM, INSERT INTO and UPDATE SET clauses */
+    std::vector     <std::string> opers; /**< operators */
 
 public:
 
-    SLQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger = NULL, const std::string& initString = "");
+    SLQueryBuilder(const SLBackendBase &base, void *connection, const std::string& initString = "");
     ~SLQueryBuilder();
 
     std::string getGenericQuery();

@@ -15,42 +15,55 @@
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_backendfactory.h>
 
-
 using std::string;
 
 using namespace vtapi;
     
-    
-BackendFactory::backend_t BackendFactory::backend = UNKNOWN;
 
-
-bool BackendFactory::initialize(const string& backendType) {
+BackendFactory::BACKEND_T BackendFactory::type(const string& backendType) {
    if (backendType.compare("sqlite") == 0) {
-       backend = SQLITE;
-       return VT_OK;
+       return BACKEND_SQLITE;
    }
    else if (backendType.compare("postgres") == 0) {
-       backend = POSTGRES;
-       return VT_OK;
+       return BACKEND_POSTGRES;
    }
    else {
-       backend = UNKNOWN;
-       return VT_FAIL;
+       return BACKEND_UNKNOWN;
    }
 };
 
-
-Connection* BackendFactory::createConnection(fmap_t *fmap, const string& connectionInfo, Logger *logger) {
-    Connection *connection = NULL;
+BackendBase* BackendFactory::createBackendBase(BackendFactory::BACKEND_T backend, Logger *logger)
+{
+    BackendBase *base = NULL;
     switch (backend) {
-        case POSTGRES:
+        case BACKEND_POSTGRES:
 #if HAVE_POSTGRESQL
-            connection = new PGConnection(fmap, connectionInfo, logger);
+            base = new PGBackendBase(logger);
 #endif
             break;
-        case SQLITE:
+        case BACKEND_SQLITE:
 #if HAVE_SQLITE
-       connection = new SLConnection(fmap, connectionInfo, logger);
+            base = new SLBackendBase(logger);
+#endif
+            break;
+        default:
+            break;
+    }
+    return base;
+}
+
+Connection* BackendFactory::createConnection(BackendFactory::BACKEND_T backend, const BackendBase &base, const string& connectionInfo) {
+    Connection *connection = NULL;
+    switch (backend)
+    {
+        case BACKEND_POSTGRES:
+#if HAVE_POSTGRESQL
+            connection = new PGConnection((PGBackendBase &)base, connectionInfo);
+#endif
+            break;
+        case BACKEND_SQLITE:
+#if HAVE_SQLITE
+            connection = new SLConnection((SLBackendBase &) base, connectionInfo);
 #endif
             break;
         default:
@@ -59,36 +72,17 @@ Connection* BackendFactory::createConnection(fmap_t *fmap, const string& connect
     return connection;
 };
 
-TypeManager* BackendFactory::createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger, std::string &schema) {
-    TypeManager *typeManager = NULL;
-    switch (backend) {
-        case POSTGRES:
-#if HAVE_POSTGRESQL
-       typeManager = new PGTypeManager(fmap, connection, logger, schema);
- #endif
-           break;
-        case SQLITE:
-#if HAVE_SQLITE
-        typeManager = new SLTypeManager(fmap, connection, logger, schema);
-#endif
-            break;
-        default:
-            break;
-    }
-    return typeManager;
-};
-
-QueryBuilder* BackendFactory::createQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger, const string& initString) {
+QueryBuilder* BackendFactory::createQueryBuilder(BackendFactory::BACKEND_T backend, const BackendBase &base, void *connection, const string& initString) {
     QueryBuilder *queryBuilder = NULL;
     switch (backend) {
-        case POSTGRES:
+        case BACKEND_POSTGRES:
 #if HAVE_POSTGRESQL
-       queryBuilder = new PGQueryBuilder(fmap, connection, typeManager, logger, initString);
+            queryBuilder = new PGQueryBuilder((PGBackendBase &) base, connection, initString);
 #endif
           break;
-        case SQLITE:
+        case BACKEND_SQLITE:
 #if HAVE_SQLITE
-            queryBuilder = new SLQueryBuilder(fmap, connection, typeManager, logger, initString);
+            queryBuilder = new SLQueryBuilder((SLBackendBase &) base, connection, initString);
 #endif
             break;
         default:
@@ -97,40 +91,21 @@ QueryBuilder* BackendFactory::createQueryBuilder(fmap_t *fmap, Connection *conne
     return queryBuilder;
 };
 
-ResultSet* BackendFactory::createResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger) {
+ResultSet* BackendFactory::createResultSet(BACKEND_T backend, const BackendBase &base, VTAPI_DBTYPES_MAP *dbtypes) {
     ResultSet *resultSet = NULL;
     switch (backend) {
-        case POSTGRES:
+        case BACKEND_POSTGRES:
 #if HAVE_POSTGRESQL
-     resultSet = new PGResultSet(fmap, typeManager, logger);
+            resultSet = new PGResultSet((PGBackendBase &) base, dbtypes);
 #endif
          break;
-        case SQLITE:
+        case BACKEND_SQLITE:
 #if HAVE_SQLITE
-            resultSet = new SLResultSet(fmap, typeManager, logger);
+            resultSet = new SLResultSet((SLBackendBase &) base);
 #endif
             break;
         default:
             break;
     }
     return resultSet;
-};
-
-LibLoader* BackendFactory::createLibLoader(Logger *logger) {
-    LibLoader *libLoader = NULL;
-    switch (backend) {
-        case POSTGRES:
-#if HAVE_POSTGRESQL
-      libLoader = new PGLibLoader(logger);
- #endif
-           break;
-        case SQLITE:
-#if HAVE_SQLITE
-            libLoader = new SLLibLoader(logger);
-#endif
-            break;
-        default:
-            break;
-    }
-    return libLoader;
 };

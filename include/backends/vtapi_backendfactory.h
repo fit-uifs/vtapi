@@ -8,11 +8,10 @@
 #ifndef VTAPI_BACKENDFACTORY_H
 #define	VTAPI_BACKENDFACTORY_H
 
-#include "vtapi_libloader.h"
+#include "vtapi_backendbase.h"
 #include "vtapi_connection.h"
 #include "vtapi_querybuilder.h"
 #include "vtapi_resultset.h"
-#include "vtapi_typemanager.h"
 
 namespace vtapi {
 
@@ -20,13 +19,11 @@ namespace vtapi {
  * @brief Factory for creating objects of backend-specific polymorphic classes
  *
  * Class needs to be initialized with initialize() function before using it.
- * It creates objects of these five classes:
+ * It creates objects of these four classes:
+ * - @ref BackendBase
+ *      base class of other classes, handles logging/library loading
  * - @ref Connection
  *      communication with backend
- * - @ref TypeManager
- *      registering and managing data types
- * - @ref QueryBuilder
- *      building SQL queries
  * - @ref ResultSet
  *      accessing retrieved values
  * - @ref LibLoader
@@ -37,67 +34,55 @@ public:
     
 // backend type
 typedef enum {
-    UNKNOWN = 0,
-    SQLITE,
-    POSTGRES
-} backend_t;
+    BACKEND_UNKNOWN = 0,
+    BACKEND_SQLITE,
+    BACKEND_POSTGRES
+} BACKEND_T;
 
 public:
 
-    static backend_t backend;        /**< backend type */
+    /**
+     * Converts string to backend type
+     * @param backendType backend type string
+     * @return backend type enum
+     */
+    static BACKEND_T type(const std::string& backendType);
 
     /**
-     * Initializes factory with given backend type
-     * @param backendType backend type
-     * @return success
+     * Creates object of class @ref BackendBase
+     * @param backend backend type
+     * @param logger message logging object
+     * @return pointer to new backend base object
      */
-    static bool initialize(const std::string& backendType = "");
+    static BackendBase* createBackendBase(BACKEND_T backend, Logger *logger);
 
     /**
      * Creates object of class @ref Connection
-     * @param fmap library functions address book
-     * @param connectionInfo connection string or database folder
-     * @param logger message logging object
-     * @return NULL if factory is uninitialized, connection object otherwise
+     * @param backend backend type
+     * @param base previously created backend base
+     * @param connectionInfo connection string
+     * @return pointer to new connection object
      */
-    static Connection* createConnection(fmap_t *fmap, const std::string& connectionInfo, Logger *logger);
-
-    /**
-     * Creates object of class @ref TypeManager
-     * @param fmap library functions address book
-     * @param connection connection object
-     * @param logger message logging object
-     * @param schema database schema for types
-     * @return NULL if factory is uninitialized, data type managing object otherwise
-     */
-    static TypeManager* createTypeManager(fmap_t *fmap, Connection *connection, Logger *logger, std::string &schema);
-
+    static Connection* createConnection(BackendFactory::BACKEND_T backend, const BackendBase &base, const std::string& connectionInfo);
+    
     /**
      * Creates object of class @ref QueryBuilder
-     * @param fmap library functions address book
+     * @param backend backend type
+     * @param base previously created backend base
      * @param connection connection object
-     * @param typeManager type manager object
-     * @param logger message logging object
      * @param initString initializing string (query or table)
      * @see Query
-     * @return NULL if factory is uninitialized, query building object otherwise
+     * @return pointer to new query building object
      */
-    static QueryBuilder* createQueryBuilder(fmap_t *fmap, Connection *connection, TypeManager *typeManager, Logger *logger, const std::string& initString);
+    static QueryBuilder* createQueryBuilder(BACKEND_T backend, const BackendBase &base, void *connection, const std::string& initString = "");
 
     /**
-     * Creates object of class @ref ResultSet
-     * @param fmap library functions address book
-     * @param typeManager data type managing object
-     * @param logger message logging object
-     * @return NULL if factory is uninitialized, result set object otherwise
+     * @param backend backend type
+     * @param base previously created backend base
+     * @param dbtypes pre-filled map of database types definitions
+     * @return pointer to new result set object
      */
-    static ResultSet* createResultSet(fmap_t *fmap, TypeManager *typeManager, Logger *logger);
-
-    /**
-     * Creates object of class @ref LibLoader
-     * @return NULL if factory is uninitialized, library loading object otherwise
-     */
-    static LibLoader* createLibLoader(Logger *logger);
+    static ResultSet* createResultSet(BACKEND_T backend, const BackendBase &base, VTAPI_DBTYPES_MAP *dbtypes = NULL);
 };
 
 } // namespace vtapi
