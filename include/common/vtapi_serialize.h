@@ -18,6 +18,9 @@
 
 namespace vtapi {
 
+std::string base64_encode(const void *data, size_t data_size);
+std::vector<unsigned char> base64_decode(const std::string& encoded);
+    
 /**
  * @brief A generic function to convert any numeric type to string
  * (any numeric type, e.g. int, float, double, etc.)
@@ -28,8 +31,158 @@ template <class T>
 inline std::string toString(const T& value) {
     std::ostringstream ostr;
     ostr << value;
+    
     return ostr.str();
 };
+
+/**
+ * @brief A generic function to convert any array of numeric types to string
+ * (any numeric type, e.g. int, float, double, etc.)
+ * @param values   array of numeric values
+ * @param size input array size
+ * @param limit limit of array elements to print
+ * @return string containing the numeric value
+ */
+template <class T>
+inline std::string toString(const T* values, const int size, const int limit = 0)
+{
+    std::string str;
+    int lim = (limit && limit < size) ? limit : size;
+    str += '[';
+    for (int i = 0; i < lim; i++) {
+        str += toString(values[i]);
+        if (i < lim - 1)  str += ',';
+    }
+    str += ']';
+    
+    return str;
+}
+
+template <>
+inline std::string toString <void>(const void* data, const int data_size, const int limit)
+{
+    return base64_encode(data, data_size);
+}
+
+template <>
+inline std::string toString <std::string>(const std::string& value)
+{
+    return value;
+};
+
+#if HAVE_POSTGRESQL
+template <>
+inline std::string toString <PGpoint>(const PGpoint& value)
+{
+    std::ostringstream ostr;
+    ostr << '(' << value.x << ',' << value.y << ')';
+    
+    return ostr.str();
+};
+#endif
+
+template <>
+inline std::string toString <IntervalEvent::point>(const IntervalEvent::point& value)
+{
+    std::ostringstream ostr;
+    ostr << '(' << value.x << ',' << value.y << ')';
+
+    return ostr.str();
+};
+
+template <>
+inline std::string toString <IntervalEvent::box>(const IntervalEvent::box& value)
+{
+    std::string str;
+    str = '(' + toString(value.high) + ',' + toString(value.low) + ')';
+
+    return str;
+}
+
+template <>
+inline std::string toString <IntervalEvent>(const IntervalEvent& value)
+{
+    std::ostringstream ostr;
+    ostr << '(' << value.group_id << ',' << value.class_id << ',' << value.is_root << ','
+        << toString(value.region) << ',' << value.score << ','
+        << toString(value.user_data, value.user_data_size, 0) << ')';
+    
+    return ostr.str();
+};
+
+#if HAVE_OPENCV
+template <typename T>
+inline std::string toStringCvMat(const cv::Mat_<T>& value)
+{
+    std::ostringstream ostr;
+    
+    int *dims = new int[value.dims];
+    if (dims) {
+        memset(dims, 0, value.dims * sizeof(int));
+        
+        ostr << '[';
+        int cur = 0;
+        for (cv::MatConstIterator_<T> it = value.begin(); it != value.end(); it++) {
+            while (cur < value.dims - 1) {
+                cur++;
+                ostr << '[';
+            }
+
+            ostr << (*it);
+            
+            while (++(dims[cur]) == value.size[cur]) {
+                dims[cur--] = 0;
+                if (cur < 0) break;
+                ostr << ']';
+            }
+            if (cur < 0) break;
+            ostr << ',';
+        }
+        ostr << ']';
+        
+        delete[] dims;
+    }
+    
+    return ostr.str();
+}
+
+template <>
+inline std::string toString <cv::Mat>(const cv::Mat& value)
+{
+    switch(value.type())
+    {
+        case CV_8U:
+        case CV_8S:
+        {
+            return toStringCvMat((const cv::Mat_<uchar> &)value);
+        }
+        case CV_16U:
+        {
+            return toStringCvMat((const cv::Mat_<unsigned short> &)value);
+        }
+        case CV_16S:
+        {
+            return toStringCvMat((const cv::Mat_<short> &)value);
+        }
+        case CV_32S:
+        {
+            return toStringCvMat((const cv::Mat_<int> &)value);
+        }
+        case CV_32F:
+        {
+            return toStringCvMat((const cv::Mat_<float> &)value);
+        }
+        case CV_64F:
+        {
+            return toStringCvMat((const cv::Mat_<double> &)value);
+        }
+    default:
+        {
+            return "";
+        }
+    }
+};
+#endif
 
 /**
  * @brief Converts timestamp to string (yyyy-mm-dd hh:mm:ss)
@@ -37,10 +190,12 @@ inline std::string toString(const T& value) {
  * @return time string
  */
 template <>
-inline std::string toString <time_t>(const time_t& value) {
+inline std::string toString <time_t>(const time_t& value)
+{
     char buff[20];
     strftime(buff, 20, "%Y-%m-%d %H:%M:%S", gmtime(&value));
-    return std::string(buff);
+    
+    return buff;
 };
 
 /**
@@ -48,20 +203,13 @@ inline std::string toString <time_t>(const time_t& value) {
  * @param value   time string
  * @return timestamp
  */
-inline time_t toTimestamp(const std::string& value) {
+inline time_t toTimestamp(const std::string& value)
+{
     struct tm ts = {0};
     sscanf(value.c_str(), "%d-%d-%d %d:%d:%d", &ts.tm_year, &ts.tm_mon, &ts.tm_mday, &ts.tm_hour, &ts.tm_min, &ts.tm_sec);
     ts.tm_year -= 1900;
+    
     return mktime(&ts);
-};
-
-/**
- * @todo @b code: returning empty string
- * @todo @b doc: put together a few letters (after code completion)
- */
-template <>
-inline std::string toString <IntervalEvent>(const IntervalEvent& value) {
-    return std::string("");
 };
 
 /**

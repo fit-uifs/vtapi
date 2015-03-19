@@ -1,80 +1,82 @@
 
 #include <common/vtapi_global.h>
-#include <common/vtapi_misc.h>
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_resultset.h>
 
 #if HAVE_POSTGRESQL
 
-// postgres data transfer format: 0=text, 1=binary
-#define PG_FORMAT           1
-
 using std::string;
-using std::stringstream;
+using std::ostringstream;
 using std::vector;
 using std::pair;
 
 using namespace vtapi;
 
-/***********************************************************************************************************************************/
+#define PGRES ((PGresult *)this->res)
 
-PGResultSet::PGResultSet(const PGBackendBase &base, VTAPI_DBTYPES_MAP *dbtypes) :
+
+PGResultSet::PGResultSet(const PGBackendBase &base, DBTYPES_MAP *dbtypes) :
     ResultSet(dbtypes),
     PGBackendBase(base)
 {
     thisClass = "PGResultSet";
 }
 
-PGResultSet::~PGResultSet() {
+PGResultSet::~PGResultSet()
+{
     clear();
 }
 
-void PGResultSet::newResult(void *res) {
+void PGResultSet::newResult(void *res)
+{
     clear();
     this->res = res;
 }
 
-int PGResultSet::countRows() {
-    return pg.PQntuples((PGresult *) this->res);
+int PGResultSet::countRows()
+{
+    return PGRES ? pg.PQntuples(PGRES) : -1;
 }
-int PGResultSet::countCols() {
-    return pg.PQnfields((PGresult *) this->res);
+int PGResultSet::countCols()
+{
+    return PGRES ? pg.PQnfields(PGRES) : -1;
 }
-bool PGResultSet::isOk() {
-    return (this->res) ? VT_OK : VT_FAIL;
+bool PGResultSet::isOk()
+{
+    return PGRES ? VT_OK : VT_FAIL;
 }
-void PGResultSet::clear() {
-    if (this->res) {
-        pg.PQclear((PGresult *) this->res);
+void PGResultSet::clear()
+{
+    if (PGRES) {
+        pg.PQclear(PGRES);
         this->res = NULL;
     }
 }
 
-
-TKey PGResultSet::getKey(int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    string name = pg.PQfname(pgres, col);
+TKey PGResultSet::getKey(int col)
+{
+    string name = pg.PQfname(PGRES, col);
     string type = getKeyType(col);
 
     return TKey(type, name, 0);
 }
 
-TKeys* PGResultSet::getKeys() {
-    PGresult *pgres = (PGresult *) this->res;
+TKeys* PGResultSet::getKeys()
+{
     TKeys* keys     = new TKeys;
 
-    int cols = pg.PQnfields(pgres);
+    int cols = pg.PQnfields(PGRES);
     for (int col = 0; col < cols; col++) {
         keys->push_back(getKey(col));
     }
     return keys;
 }
 
-string PGResultSet::getKeyType(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
+string PGResultSet::getKeyType(const int col)
+{
     string type;
     if (this->dbtypes) {
-        VTAPI_DBTYPES_MAP::iterator it = this->dbtypes->find(pg.PQftype(pgres, col));
+        DBTYPES_MAP::iterator it = this->dbtypes->find(pg.PQftype(PGRES, col));
         if (it != this->dbtypes->end()) {
             type = (*it).second.name;
         }
@@ -83,317 +85,553 @@ string PGResultSet::getKeyType(const int col) {
     return type;
 }
 
-int PGResultSet::getKeyIndex(const string& key) {
-    return pg.PQfnumber((PGresult *) this->res, key.c_str());
-}
-
-// =============== GETTERS FOR CHAR, CHAR ARRAYS AND STRINGS ===================
-char PGResultSet::getChar(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGchar value    = '\0';
-    int ret         = pqt.PQgetf(pgres, this->pos, "%char", col, &value);
-    if (ret == 0) {
-        logger->warning(304, "Value is not an char", thisClass+"::getChar()");
-        return '\0';
-    }
-    else return value;
-}
-
-char *PGResultSet::getCharA(const int col, int& size) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGarray tmp;
-    if (! pqt.PQgetf(pgres, this->pos, "%char[]", col, &tmp)) {
-        logger->warning(304, "Value is not an array of chars", thisClass+"::getCharA()");
-        size = -1;
-        return NULL;
-    }
-
-    size = pg.PQntuples(tmp.res);
-    char* values = new char [size];
-    for (int i = 0; i < size; i++) {
-        if (! pqt.PQgetf(tmp.res, i, "%char", 0, &values[i])) {
-            logger->warning(304, "Unexpected value in char array", thisClass+"::getCharA()");
-            size = -1;
-            pg.PQclear(tmp.res);
-            vt_destruct(values);
-            return NULL;
+short PGResultSet::getKeyTypeLength(const int col, const short def)
+{
+    short length = def;
+    if (this->dbtypes) {
+        DBTYPES_MAP_IT it = this->dbtypes->find(pg.PQftype(PGRES, col));
+        if (it != this->dbtypes->end()) {
+            length = DBTYPE_GETLENGTH((*it).second.type);
         }
     }
-    pg.PQclear(tmp.res);
+    
+    return length;
+}
+
+int PGResultSet::getKeyIndex(const string& key)
+{
+    return PGRES ? pg.PQfnumber(PGRES, key.c_str()) : -1;
+}
+
+// =============== SINGLE VALUES / ARRAYS / VECTORS TEMPLATES ===================
+    template<typename TDB, typename TOUT>
+TOUT PGResultSet::getSingleValue(const int col, const char *def)
+{
+    TDB value = {0};
+    if (!pqt.PQgetf(PGRES, this->pos, def, col, &value)) {
+        logger->warning(304, string("Value is not a ") + def, thisClass + "::getSingleValue()");
+    }
+
+    return (TOUT)value;
+}
+
+template<typename TDB, typename TOUT>
+TOUT *PGResultSet::getArray(const int col, int& size, const char *def)
+{
+    TOUT *values = NULL;
+    PGarray tmp = {0};
+
+    do {
+        char defArr[128];
+        sprintf(defArr, "%s[]", def);
+        if (!pqt.PQgetf(PGRES, this->pos, defArr, col, &tmp)) {
+            logger->warning(304, string("Value is not an array of ") + def, thisClass + "::getArray()");
+            break;
+        }
+
+        size = pg.PQntuples(tmp.res);
+        if (size == 0) break;
+        
+        values = new TOUT [size];
+        if (!values) break;
+
+        for (int i = 0; i < size; i++) {
+            TDB value = {0};
+            if (!pqt.PQgetf(tmp.res, i, def, 0, &value)) {
+                logger->warning(304, string("Unexpected value in array of ") + def, thisClass + "::getArray()");
+                vt_destructall(values);
+                break;
+            }
+            else {
+                values[i] = (TOUT)value;
+            }
+        }
+    } while(0);
+
+    if (!values) size = 0;
+    if (tmp.res) pg.PQclear(tmp.res);
 
     return values;
 }
 
-string PGResultSet::getString(const int col) {
-    PGresult *pgres             = (PGresult *) this->res;
-    int oid                     = pg.PQftype(pgres, col);
-    VTAPI_DBTYPE dbtype        = (*this->dbtypes)[oid].type;
-    char category = VTAPI_DBTYPE_GETCATEGORY(dbtype);
-    string value;
+template<typename TDB, typename TOUT>
+vector<TOUT> *PGResultSet::getVector(const int col, const char *def)
+{
+    vector<TOUT> *values = NULL;
+    PGarray tmp = {0};
 
-    // reference types (regtype, regclass..)
-    if (category == TYPE_STRING || category == TYPE_ENUM) {
-        value = pg.PQgetvalue(pgres, this->pos, col);
-    }
-    // reference types (regtype, regclass..)
-    // TODO: dodelat v typemanager
-    else if(category == TYPE_REFTYPE) {
-        
-    }
-    
-    return value;
+    do {
+        char defArr[128];
+        sprintf(defArr, "%s[]", def);
+        if (!pqt.PQgetf(PGRES, this->pos, defArr, col, &tmp)) {
+            logger->warning(304, string("Value is not an array of ") + def, thisClass + "::getVector()");
+            break;
+        }
+
+        int size = pg.PQntuples(tmp.res);
+        if (size == 0) break;
+
+        values = new vector<TOUT>;
+        if (!values) break;
+
+        for (int i = 0; i < size; i++) {
+            TDB value = {0};
+            if (!pqt.PQgetf(tmp.res, i, def, 0, &value)) {
+                logger->warning(304, string("Unexpected value in array of ") + def, thisClass + "::getVector()");
+                vt_destruct(values);
+                break;
+            } else {
+                values->push_back((TOUT)value);
+            }
+        }
+    } while (0);
+
+    if (tmp.res) pg.PQclear(tmp.res);
+
+    return values;
+}
+
+// =============== GETTERS FOR CHAR, CHAR ARRAYS AND STRINGS ===================
+char PGResultSet::getChar(const int col)
+{
+    return getSingleValue<PGchar,char>(col, "%char");
+}
+
+string PGResultSet::getString(const int col)
+{
+    // no conversions with libpqtypes, just get the value
+    char *value = pg.PQgetvalue(PGRES, this->pos, col);
+    return value ? value : "";
 }
 
 // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
 
-int PGResultSet::getInt(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    int oid = pg.PQftype(pgres, col);
-    VTAPI_DBTYPE dbtype = (*this->dbtypes)[oid].type;
-    short length = VTAPI_DBTYPE_GETLENGTH(dbtype);
-    int value = 0;
+bool PGResultSet::getBool(const int col)
+{
+    return getSingleValue<PGbool,bool>(col, "%bool");
+}
+
+int PGResultSet::getInt(const int col)
+{
+    return (int)getInt8(col);
+}
+
+long long PGResultSet::getInt8(const int col)
+{
+    long long value = 0;
+
+    switch(getKeyTypeLength(col, 4))
+    {
+        case -1:    // numeric
+        {
+            PGnumeric val = getSingleValue<PGnumeric,PGnumeric>(col, "%numeric");
+            if (val) value = atoi(val);
+            break;
+        }
+        case 2:
+        {
+            value = getSingleValue<PGint2, long long>(col, "%int2");
+            break;
+        }
+        case 4:
+        {
+            value = getSingleValue<PGint4, long long>(col, "%int4");
+            break;
+        }
+        case 8:
+        {
+            value = getSingleValue<PGint8, long long>(col, "%int8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getInt()");
+            break;
+        }
+    }
     
-    // this circumvents libpqtypes and handles all int types (int, oid...)
-    if (length < 0) { // conversion if length == -1
-        stringstream iss (pg.PQgetvalue(pgres, this->pos, col));
-        iss >> value;
-    }
-     // short 2-byte int
-    else if (length == 2) {
-//        pqt.PQgetf(pgres, this->pos, "%int2", col, &value);
-        endian_swap2(&value, pg.PQgetvalue(pgres, this->pos, col));
-    }
-    // 4-byte int
-    else if (length == 4) {
-//        pqt.PQgetf(pgres, this->pos, "%int4", col, &value);
-        endian_swap4(&value, pg.PQgetvalue(pgres, this->pos, col));
-    }
-    else {
-        if (length == 8) {
-            logger->warning(306, "Use getInt8(...) to retrieve int8 values", thisClass+"::getInt()");
-        }
-        else {
-            logger->warning(306, "Integer value of length "+toString(length)+" is not supported", thisClass+"::getInt()");
-        } 
-    }
     return value;
 }
 
-long PGResultSet::getInt8(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    int oid = pg.PQftype(pgres, col);
-    VTAPI_DBTYPE dbtype = (*this->dbtypes)[oid].type;
-    short length = VTAPI_DBTYPE_GETLENGTH(dbtype);
-    long value = 0;
-
-    // extract long or call getInt if value is integer
-    if (length == 8) {
-//        pqt.PQgetf(pgres, this->pos, "%int8", col, &value);
-        endian_swap8(&value, pg.PQgetvalue(pgres, this->pos, col));
-    }
-    else if (length < 8) {
-        value = (long) getInt(col);
-    }
-    else {
-        logger->warning(306, "Integer value of length "+toString(length)+" is not supported", thisClass+"::getInt8()");
-    }
-    return value;
-}
-
-int* PGResultSet::getIntA(const int col, int& size) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGarray tmp;
-    if (! pqt.PQgetf(pgres, this->pos, "%int4[]", col, &tmp)) {
-        logger->warning(307, "Value is not an array of integer", thisClass+"::getIntA()");
-        size = -1;
-        return NULL;
-    }
-
-    size = pg.PQntuples(tmp.res);
-    int* values = new int [size];
-    for (int i = 0; i < size; i++) {
-        if (! pqt.PQgetf(tmp.res, i, "%int4", 0, &values[i])) {
-            logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntA()");
-            size = -1;
-            pg.PQclear(tmp.res);
-            vt_destruct(values);
-            return NULL;
-        }
-    }
-    pg.PQclear(tmp.res);
-
-    return values;
-}
-
-vector<int>* PGResultSet::getIntV(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGarray tmp;
-    if (! pqt.PQgetf(pgres, this->pos, "%int4[]", col, &tmp)) {
-        logger->warning(307, "Value is not an array of integer", thisClass+"::getIntV()");
-        return NULL;
-    }
-
-    PGint4 value;
-    vector<int>* values = new vector<int>;
-
-    int ntuples = pg.PQntuples(tmp.res);
-    for (int i = 0; i < ntuples; i++) {
-        if (! pqt.PQgetf(tmp.res, i, "%int4", 0, &value)) {
-            logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntV()");
-            pg.PQclear(tmp.res);
-            vt_destruct(values);
-            return NULL;
-        }
-        values->push_back(value);
-    }
-    pg.PQclear(tmp.res);
-
-    return values;
-}
-
-vector< vector<int>* >* PGResultSet::getIntVV(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGarray tmp;
-    if (! pqt.PQgetf(pgres, this->pos, "%int4[]", col, &tmp)) {
-        logger->warning(307, "Value is not an array of integer arrays", thisClass+"::getIntVV()");
-        return NULL;
-    }
-    if (tmp.ndims != 2) {
-        logger->warning(308, "Array must have exactly 2 dimensions", thisClass+"::getIntVV()");
-        return NULL;
-    }
-
-    PGint4 value;
-    vector< vector<int>* >* arrays = new vector< vector<int>* >;
-    vector<int>* arr;
-
-    // array rows
-    for (int i = 0; i < tmp.dims[0]; i++) {
-        arr = new vector<int>;
-        // array columns
-        for (int j = 0; j < tmp.dims[1]; j++) {
-            if (! pqt.PQgetf(tmp.res, i*tmp.dims[1]+j, "%int4", 0, &value)) {
-                logger->warning(308, "Unexpected value in integer array", thisClass+"::getIntVV()");
-                pg.PQclear(tmp.res);
-                for (int x = 0; x < (*arrays).size(); x++) vt_destruct((*arrays)[x]);
-                vt_destruct(arrays);
-                return NULL;
+int* PGResultSet::getIntA(const int col, int& size)
+{
+    int *values = NULL;
+    
+    switch(getKeyTypeLength(col, 4))
+    {
+        case -1:    // numeric
+        {
+            PGnumeric *vals = getArray<PGnumeric,PGnumeric>(col, size, "%numeric");
+            if (vals) {
+                if (!(values = new int[size])) break;
+                for (int i = 0; i < size; i++) {
+                    values[i] = atoi(vals[i]);
+                }
+                vt_destructall(vals);
             }
-            arr->push_back(value);
+            break;
         }
-        arrays->push_back(arr);
+        case 2:
+        {
+            values = getArray<PGint2,int>(col, size, "%int2");
+            break;
+        }
+        case 4:
+        {
+            values = getArray<PGint4,int>(col, size, "%int4");
+            break;
+        }
+        case 8:
+        {
+            values = getArray<PGint8, int>(col, size, "%int8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getIntA()");
+            break;
+        }
     }
-    return arrays;
+    
+    return values;
+}
+
+vector<int>* PGResultSet::getIntV(const int col)
+{
+    vector<int> *values = NULL;
+    
+    switch(getKeyTypeLength(col, 4))
+    {
+        case -1:    // numeric
+        {
+            int size = 0;
+            PGnumeric *vals = getArray<PGnumeric,PGnumeric>(col, size, "%numeric");
+            if (vals) {
+                if (!(values = new vector<int>)) break;
+                for (int i = 0; i < size; i++) {
+                    values->push_back(atoi(vals[i]));
+                }
+                vt_destructall(vals);
+            }
+            break;
+        }
+        case 2:
+        {
+            values = getVector<PGint2,int>(col, "%int2");
+            break;
+        }
+        case 4:
+        {
+            values = getVector<PGint4,int>(col, "%int4");
+            break;
+        }
+        case 8:
+        {
+            values = getVector<PGint8, int>(col, "%int8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getIntV()");
+            break;
+        }
+    }
+    
+    return values;
+}
+
+long long* PGResultSet::getInt8A(const int col, int& size) {
+    long long *values = NULL;
+
+    switch (getKeyTypeLength(col, 4)) {
+        case -1: // numeric
+        {
+            PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
+            if (vals) {
+                if (!(values = new long long[size])) break;
+                for (int i = 0; i < size; i++) {
+                    values[i] = atoll(vals[i]);
+                }
+                vt_destructall(vals);
+            }
+            break;
+        }
+        case 2:
+        {
+            values = getArray<PGint2, long long>(col, size, "%int2");
+            break;
+        }
+        case 4:
+        {
+            values = getArray<PGint4, long long>(col, size, "%int4");
+            break;
+        }
+        case 8:
+        {
+            values = getArray<PGint8, long long>(col, size, "%int8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getInt8A()");
+            break;
+        }
+    }
+
+    return values;
+}
+
+vector<long long>* PGResultSet::getInt8V(const int col) {
+    vector<long long> *values = NULL;
+
+    switch (getKeyTypeLength(col, 4)) {
+        case -1: // numeric
+        {
+            int size = 0;
+            PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
+            if (vals) {
+                if (!(values = new vector<long long>)) break;
+                for (int i = 0; i < size; i++) {
+                    values->push_back(atoll(vals[i]));
+                }
+                vt_destructall(vals);
+            }
+            break;
+        }
+        case 2:
+        {
+            values = getVector<PGint2, long long>(col, "%int2");
+            break;
+        }
+        case 4:
+        {
+            values = getVector<PGint4, long long>(col, "%int4");
+            break;
+        }
+        case 8:
+        {
+            values = getVector<PGint8, long long>(col, "%int8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getInt8V()");
+            break;
+        }
+    }
+
+    return values;
 }
 
 // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
-float PGResultSet::getFloat(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    int oid = pg.PQftype(pgres, col);
-    VTAPI_DBTYPE dbtype = (*this->dbtypes)[oid].type;
-    short length = VTAPI_DBTYPE_GETLENGTH(dbtype);
-    float value = 0;
-    
-    if (length < 0) { // conversion if length == -1
-        stringstream iss (pg.PQgetvalue(pgres, this->pos, col));
-        iss >> value;
-    }
-    else if (length == 4) {
-//        pqt.PQgetf(pgres, this->pos, "%float4", col, &value);
-        endian_swap4(&value, pg.PQgetvalue(pgres, this->pos, col));
-    }
-    else {
-        logger->warning(306, "Float value of length "+toString(length)+" is not supported", thisClass+"::getFloat()");
-    }
-    return value;
+float PGResultSet::getFloat(const int col)
+{
+    return (float)getFloat8(col);
 }
 
-double PGResultSet::getFloat8(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    int oid = pg.PQftype(pgres, col);
-    VTAPI_DBTYPE dbtype = (*this->dbtypes)[oid].type;
-    short length = VTAPI_DBTYPE_GETLENGTH(dbtype);
-    double value = 0;
+double PGResultSet::getFloat8(const int col)
+{
+    double value = 0.0;
 
-    if (length < 8) {
-        value = (double) getFloat(col);
-    }
-    else  if (length == 8) {
-        pqt.PQgetf(pgres, this->pos, "%float8", col, &value);
-    }
-    else {
-        logger->warning(306, "Float value of length "+toString(length)+" is not supported", thisClass+"::getFloat8()");
-    }
-    return value;
-}
-
-float* PGResultSet::getFloatA(const int col, int& size) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGarray tmp;
-    if (! pqt.PQgetf(pgres, this->pos, "%float4[]", col, &tmp)) {
-        logger->warning(311, "Value is not an array of float", thisClass+"::getFloatA()");
-        size = -1;
-        return NULL;
-    }
-
-    size = pg.PQntuples(tmp.res);
-    float* values = new float [size];
-    for (int i = 0; i < size; i++) {
-        if (! pqt.PQgetf(tmp.res, i, "%float4", 0, &values[i])) {
-            logger->warning(312, "Unexpected value in float array", thisClass+"::getFloatA()");
-            size = -1;
-            pg.PQclear(tmp.res);
-            vt_destruct(values);
-            return NULL;
+    switch (getKeyTypeLength(col, 4))
+    {
+        case -1: // numeric
+        {
+            PGnumeric val = getSingleValue<PGnumeric, PGnumeric>(col, "%numeric");
+            if (val) value = atof(val);
+            break;
+        }
+        case 4:
+        {
+            value = getSingleValue<PGfloat4, double>(col, "%float4");
+            break;
+        }
+        case 8:
+        {
+            value = getSingleValue<PGfloat8, double>(col, "%float8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getFloat8()");
+            break;
         }
     }
-    pg.PQclear(tmp.res);
 
+    return value;
+}
+
+float* PGResultSet::getFloatA(const int col, int& size)
+{
+    float *values = NULL;
+    
+    switch(getKeyTypeLength(col, 4))
+    {
+        case -1:    // numeric
+        {
+            PGnumeric *vals = getArray<PGnumeric,PGnumeric>(col, size, "%numeric");
+            if (vals) {
+                if (!(values = new float[size])) break;
+                for (int i = 0; i < size; i++) {
+                    values[i] = (float)atof(vals[i]);
+                }
+                vt_destructall(vals);
+            }
+            break;
+        }
+        case 4:
+        {
+            values = getArray<PGfloat4,float>(col, size, "%float4");
+            break;
+        }
+        case 8:
+        {
+            values = getArray<PGfloat8, float>(col, size, "%float8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getFloatA()");
+            break;
+        }
+    }
+    
     return values;
 }
 
-vector<float>* PGResultSet::getFloatV(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGarray tmp;
-    if (! pqt.PQgetf(pgres, this->pos, "%float4[]", col, &tmp)) {
-        logger->warning(311, "Value is not an array of float", thisClass+"::getFloatV()");
-        return NULL;
-    }
-
-    PGfloat4 value;
-    vector<float>* values = new vector<float>;
-    for (int i = 0; i < pg.PQntuples(tmp.res); i++) {
-        if (! pqt.PQgetf(tmp.res, i, "%float4", 0, &value)) {
-            logger->warning(312, "Unexpected value in float array", thisClass+"::getFloatV()");
-            pg.PQclear(tmp.res);
-            vt_destruct(values);
-            return NULL;
+vector<float>* PGResultSet::getFloatV(const int col)
+{
+    vector<float> *values = NULL;
+    
+    switch(getKeyTypeLength(col, 4))
+    {
+        case -1:    // numeric
+        {
+            int size = 0;
+            PGnumeric *vals = getArray<PGnumeric,PGnumeric>(col, size, "%numeric");
+            if (vals) {
+                if (!(values = new vector<float>)) break;
+                for (int i = 0; i < size; i++) {
+                    values->push_back((float) atof(vals[i]));
+                }
+                vt_destructall(vals);
+            }
+            break;
         }
-        values->push_back(value);
+        case 4:
+        {
+            values = getVector<PGfloat4,float>(col, "%float4");
+            break;
+        }
+        case 8:
+        {
+            values = getVector<PGfloat8, float>(col, "%float8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getFloatV()");
+            break;
+        }
     }
-    pg.PQclear(tmp.res);
+    
+    return values;
+}
 
+double* PGResultSet::getFloat8A(const int col, int& size)
+{
+    double *values = NULL;
+    
+    switch(getKeyTypeLength(col, 4))
+    {
+        case -1:    // numeric
+        {
+            PGnumeric *vals = getArray<PGnumeric,PGnumeric>(col, size, "%numeric");
+            if (vals) {
+                if (!(values = new double[size])) break;
+                for (int i = 0; i < size; i++) {
+                    values[i] = atof(vals[i]);
+                }
+                vt_destructall(vals);
+            }
+            break;
+        }
+        case 4:
+        {
+            values = getArray<PGfloat4, double>(col, size, "%float4");
+            break;
+        }
+        case 8:
+        {
+            values = getArray<PGfloat8, double>(col, size, "%float8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getFloat8A()");
+            break;
+        }
+    }
+    
+    return values;
+}
+
+vector<double>* PGResultSet::getFloat8V(const int col)
+{
+    vector<double> *values = NULL;
+    
+    switch(getKeyTypeLength(col, 4))
+    {
+        case -1:    // numeric
+        {
+            int size = 0;
+            PGnumeric *vals = getArray<PGnumeric,PGnumeric>(col, size, "%numeric");
+            if (vals) {
+                if (!(values = new vector<double>)) break;
+                for (int i = 0; i < size; i++) {
+                    values->push_back(atof(vals[i]));
+                }
+                vt_destructall(vals);
+            }
+            break;
+        }
+        case 4:
+        {
+            values = getVector<PGfloat4, double>(col, "%float4");
+            break;
+        }
+        case 8:
+        {
+            values = getVector<PGfloat8, double>(col, "%float8");
+            break;
+        }
+        default:
+        {
+            logger->warning(306, "Value has unknown length", thisClass + "::getFloat8V()");
+            break;
+        }
+    }
+    
     return values;
 }
 
 #if HAVE_OPENCV
 
-cv::Mat *PGResultSet::getCvMat(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
+cv::Mat *PGResultSet::getCvMat(const int col)
+{
     PGresult *matres    = NULL;
     cv::Mat *mat        = NULL;
-    PGint4 mat_type = 0;
-    int mat_dims = 0, *mat_dim_sizes = NULL;
-    PGarray mat_dims_arr   = {0};
-    PGbytea mat_data_bytea  = {0};
+    PGarray mat_dims_arr = {0};
+    int *mat_dim_sizes  = NULL;
     
     do {
         // get cvmat structure
-        if (! pqt.PQgetf(pgres, this->pos, "%public.cvmat", col, &matres)) {
-            logger->warning(324, "Value is not a correct cvmat type", thisClass+"::getCvMat()");
-            break;
-        }
-        // get data from cvmat structure
+        matres = getSingleValue<PGresult*,PGresult*>(col, "%public.cvmat");
+        if (!matres) break;
+        
+        // get cvmat members
+        PGint4 mat_type = 0;
+        PGbytea mat_data_bytea = {0};
         if (! pqt.PQgetf(matres, 0, "%int4 %int4[] %bytea",
             0, &mat_type, 1, &mat_dims_arr, 2, &mat_data_bytea)) {
             logger->warning(324, "Cannot get cvmat header", thisClass+"::getCvMat()");
@@ -401,8 +639,12 @@ cv::Mat *PGResultSet::getCvMat(const int col) {
         }
         
         // create dimensions array
-        mat_dims = pg.PQntuples(mat_dims_arr.res);
+        int mat_dims = pg.PQntuples(mat_dims_arr.res);
+        if (!mat_dims) break;
+        
         mat_dim_sizes = new int[mat_dims];
+        if (!mat_dim_sizes) break;
+        
         for (int i = 0; i < mat_dims; i++) {
             pqt.PQgetf(mat_dims_arr.res, i, "%int4", 0, &mat_dim_sizes[i]);
         }
@@ -419,7 +661,7 @@ cv::Mat *PGResultSet::getCvMat(const int col) {
     } while(0);
     
     if (mat_dims_arr.res) pg.PQclear(mat_dims_arr.res);
-    if (mat_dim_sizes) delete[] mat_dim_sizes;
+    vt_destructall(mat_dim_sizes);
     if (matres) pg.PQclear(matres);
 
     return mat;
@@ -428,45 +670,26 @@ cv::Mat *PGResultSet::getCvMat(const int col) {
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
 #if HAVE_POSTGRESQL
-PGpoint PGResultSet::getPoint(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGpoint point = {0.0, 0.0};
-    if (! pqt.PQgetf(pgres, this->pos, "%point", col, &point)) {
-        logger->warning(314, "Value is not a point", thisClass+"::getPoint()");
-    }
-    return point;
+PGpoint PGResultSet::getPoint(const int col)
+{
+    return getSingleValue<PGpoint, PGpoint>(col, "%point");
 }
-vector<PGpoint>*  PGResultSet::getPointV(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGarray tmp;
-    if (! pqt.PQgetf(pgres, this->pos, "%point[]", col, &tmp)) {
-        logger->warning(324, "Value is not an array of points", thisClass+"::getPointV()");
-        return NULL;
-    }
 
-    PGpoint value;
-    vector<PGpoint>* values = new vector<PGpoint>;
+PGpoint* PGResultSet::getPointA(const int col, int& size)
+{
+    return getArray<PGpoint,PGpoint>(col, size, "%point");
+}
 
-    for (int i = 0; i < PQntuples(tmp.res); i++) {
-        if (! pqt.PQgetf(tmp.res, i, "%point", 0, &value)) {
-            logger->warning(325, "Unexpected value in point array", thisClass+"::getPointV()");
-            pg.PQclear(tmp.res);
-            vt_destruct(values);
-            return NULL;
-        }
-        values->push_back(value);
-    }
-    pg.PQclear(tmp.res);
-
-    return values;
+vector<PGpoint>*  PGResultSet::getPointV(const int col)
+{
+    return getVector<PGpoint,PGpoint>(col, "%point");
 }
 #endif
 
 #if HAVE_POSTGIS
 GEOSGeometry* PGResultSet::getGeometry(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
     GEOSGeometry *geo = NULL;
-    if (! pqt.PQgetf(pgres, this->pos, "%geometry", col, &geo)) {
+    if (! pqt.PQgetf(PGRES, this->pos, "%geometry", col, &geo)) {
         logger->warning(325, "Value is not a geometry type", thisClass+"::getGeometry()");
     }
     return geo;
@@ -482,59 +705,37 @@ GEOSGeometry* PGResultSet::getLineString(const int col) {
 
 // =============== GETTERS - TIMESTAMP =========================================
 
-time_t PGResultSet::getTimestamp(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    struct tm ts = {0};
-    string dtype = getKey(col).type;
+time_t PGResultSet::getTimestamp(const int col)
+{
+    PGtimestamp pgts = getSingleValue<PGtimestamp,PGtimestamp>(col, "%timestamp");
 
-    if (!dtype.compare("time")) {
-        PGtime timestamp;
-        pqt.PQgetf(pgres, this->pos, "%time", col, &timestamp);
-        ts.tm_hour  = timestamp.hour;
-        ts.tm_min   = timestamp.min;
-        ts.tm_sec   = timestamp.sec;
-    }
-    else if (!dtype.compare("timestamp")) {
-        PGtimestamp timestamp;
-        pqt.PQgetf(pgres, this->pos, "%timestamp", col, &timestamp);
-        ts.tm_year  = timestamp.date.year;
-        ts.tm_mon   = timestamp.date.mon;
-        ts.tm_mday  = timestamp.date.mday;
-        ts.tm_hour  = timestamp.time.hour;
-        ts.tm_min   = timestamp.time.min;
-        ts.tm_sec   = timestamp.time.sec;
-    }
-    else {
-        logger->warning(313, "Data type "+dtype+" not yet supported", thisClass+"::getTimestamp()");
-    }
+    struct tm ts = {0};
+    ts.tm_year  = pgts.date.year;
+    ts.tm_mon   = pgts.date.mon;
+    ts.tm_mday  = pgts.date.mday;
+    ts.tm_hour  = pgts.time.hour;
+    ts.tm_min   = pgts.time.min;
+    ts.tm_sec   = pgts.time.sec;
+    
     return mktime(&ts);
 }
 
-int PGResultSet::getIntOid(const int col) {
-    PGresult *pgres = (PGresult *) this->res;
-    PGint4 value;
-
-    pqt.PQgetf(pgres, this->pos, "%oid", col, &value);
-    return (int) value;
-}
-
-IntervalEvent *PGResultSet::getIntervalEvent(const int col) {
-    PGresult *pgres     = (PGresult *) this->res;
+IntervalEvent *PGResultSet::getIntervalEvent(const int col)
+{
     PGresult *evres     = NULL;
     IntervalEvent *event= NULL;
-    PGint4 ev_group_id = 0, ev_class_id = 0;
-    PGbool ev_is_root = false;
-    PGbox ev_region = {0};
-    PGfloat8 ev_score = 0.0;
-    PGbytea ev_data = {0};
     
     do {
         // get event structure
-        if (! pqt.PQgetf(pgres, this->pos, "%public.vtevent", col, &evres)) {
-            logger->warning(324, "Value is not a correct vtevent type", thisClass+"::getIntervalEvent()");
-            break;
-        }
-        // get data from event structure
+        evres = getSingleValue<PGresult*, PGresult*>(col, "%public.vtevent");
+        if (!evres) break;
+        
+        // get event members
+        PGint4 ev_group_id = 0, ev_class_id = 0;
+        PGbool ev_is_root = false;
+        PGbox ev_region = {0};
+        PGfloat8 ev_score = 0.0;
+        PGbytea ev_data = {0};
         if (! pqt.PQgetf(evres, 0, "%int4 %int4 %bool %box %float8 %bytea",
             0, &ev_group_id, 1, &ev_class_id, 2, &ev_is_root, 3, &ev_region, 4, &ev_score, 5, &ev_data)) {
             logger->warning(324, "Cannot get vtevent header", thisClass+"::getIntervalEvent()");
@@ -562,252 +763,210 @@ IntervalEvent *PGResultSet::getIntervalEvent(const int col) {
     return event;
 }
 
-string PGResultSet::getValue(const int col, const int arrayLimit) {
-    stringstream valss;                         //return stringstream
-    PGresult *pgres = (PGresult *) this->res;
+// ========================= GETTERS - OTHER ==================================
 
 
-    do {
-        if (!this->dbtypes || !pgres || pg.PQgetisnull(pgres, this->pos, col)) break;
+void *PGResultSet::getBlob(const int col, int &size)
+{
+    PGbytea value = getSingleValue<PGbytea, PGbytea>(col, "%bytea");
+    size = value.len;
+    
+    return (void *)value.data;
+}
 
-        int oid = pg.PQftype(pgres, col);
-        VTAPI_DBTYPE_DEFINITION_T &def = (*this->dbtypes)[oid];
-        short length = VTAPI_DBTYPE_GETLENGTH(def.type);
-        
-        if (VTAPI_DBTYPE_HASFLAG(def.type, TYPE_FLAG_ARRAY)) {
-            //TODO: arrays of other types
-            if (def.name.find("int") != string::npos) {
-                // array of 4-byte ints
-                if (length == 4) {
-                    vector<int>* arr = this->getIntV(col);
-                    if (arr) for (int i = 0; i < (*arr).size(); i++) {
-                            valss << (*arr)[i];
-                            if (arrayLimit && i == arrayLimit) {
-                                valss << "...";
-                                break;
-                            }
-                            if (i < (*arr).size() - 1) valss << ",";
-                        }
-                    vt_destruct(arr);
-                }
-            }
-            else if (def.name.find("float") != string::npos) {
-                // array of 4-byte floats
-                if (length == 4) {
-                    vector<float>* arr = this->getFloatV(col);
-                    if (arr) for (int i = 0; i < (*arr).size(); i++) {
-                            valss << (*arr)[i];
-                            if (arrayLimit && i == arrayLimit) {
-                                valss << "...";
-                                break;
-                            }
-                            if (i < (*arr).size() - 1) valss << ",";
-                        }
-                    vt_destruct(arr);
-                }
-            }
-            else if (def.name.find("char") != string::npos) {
-                // array of 1-byte chars
-                if (length == 1) {
-                    int arr_size;
-                    char *arr = this->getCharA(col, arr_size);
-                    for (int i = 0; i < arr_size; i++) valss << arr[i];
-                    vt_destruct(arr);
-                }
-            }
-                // array of PGpoint
-            else if (def.name.find("point") != string::npos) {
-                vector<PGpoint>* arr = this->getPointV(col);
-                if (arr) for (int i = 0; i < (*arr).size(); i++) {
-                        valss << "(" << (*arr)[i].x << "," << (*arr)[i].y << ")";
-                        if (arrayLimit && i == arrayLimit) {
-                            valss << "...";
-                            break;
-                        }
-                        if (i < (*arr).size() - 1) valss << ",";
-                    }
-                vt_destruct(arr);
-            }
+// =======================UNIVERSAL GETTER=====================================
+
+
+#define GET_AND_SERIALIZE_VALUE(FUNC) \
+{\
+    ret = toString(FUNC(col));\
+}
+#define GET_AND_SERIALIZE_VALUE_ALLOC(TYPE,FUNC) \
+{\
+    TYPE *value = FUNC(col);\
+    if (value) {\
+        ret = toString(*value);\
+        delete value;\
+    }\
+}
+#define GET_AND_SERIALIZE_PTR(TYPE, FUNC) \
+{\
+    int size = 0;\
+    TYPE *value = FUNC(col, size);\
+    if (value) {\
+        ret = toString(value, size, arrayLimit);\
+    }\
+}
+#define GET_AND_SERIALIZE_ARRAY(TYPE, FUNC) \
+{\
+    int size = 0;\
+    TYPE *values = FUNC(col, size);\
+    if (values) {\
+        ret = toString(values, size, arrayLimit);\
+        vt_destructall(values);\
+    }\
+}
+#define GET_AND_SERIALIZE_VALUE_AND_ARRAY(TYPE, FUNC) \
+{\
+    if (DBTYPE_HASFLAG(dbtype, DBTYPE_FLAG_ARRAY)) {\
+        GET_AND_SERIALIZE_ARRAY(TYPE, FUNC ## A);\
+    }\
+    else {\
+        GET_AND_SERIALIZE_VALUE(FUNC);\
+    }\
+}
+
+string PGResultSet::getValue(const int col, const int arrayLimit)
+{
+    string ret;
+    
+    DBTYPE dbtype = 0;
+    if (this->dbtypes) {
+        DBTYPES_MAP_IT it = this->dbtypes->find(pg.PQftype(PGRES, col));
+        if (it != this->dbtypes->end()) {
+            dbtype = (*it).second.type;
         }
-        else {
-            switch(VTAPI_DBTYPE_GETCATEGORY(def.type))
-            {
-                case TYPE_BOOLEAN:
-                { // NOT IMPLEMENTED
-                }
-                break;
-
-                case TYPE_COMPOSITE:
-                {
-#if HAVE_OPENCV
-                    // OpenCV cvMat type
-                    if (!def.name.compare("cvmat")) {
-                        cv::Mat *mat = getCvMat(col);
-                        if (mat) {
-                            valss << mat->type();
-                            delete mat;
-                        }
-                    }
+    }
+        
+    switch(DBTYPE_GETCATEGORY(dbtype))
+    {
+        case DBTYPE_STRING:
+        {
+            GET_AND_SERIALIZE_VALUE(getString);
+            break;
+        }
+        case DBTYPE_INT:
+        {
+            GET_AND_SERIALIZE_VALUE_AND_ARRAY(long long, getInt8);
+            break;
+        }
+        case DBTYPE_FLOAT:
+        {
+            GET_AND_SERIALIZE_VALUE_AND_ARRAY(double, getFloat8);
+            break;
+        }
+        case DBTYPE_BOOLEAN:
+        {
+            GET_AND_SERIALIZE_VALUE(getBool);
+            break;
+        }
+        case DBTYPE_BLOB:
+        {
+            GET_AND_SERIALIZE_PTR(void, getBlob);
+            break;
+        }
+        case DBTYPE_TIMESTAMP:
+        {
+            GET_AND_SERIALIZE_VALUE(getTimestamp);
+            break;
+        }
+        case DBTYPE_GEO_POINT:
+        {
+#if HAVE_POSTGRESQL
+            GET_AND_SERIALIZE_VALUE_AND_ARRAY(PGpoint, getPoint);
 #endif
-                }
-                break;
-
-                case TYPE_DATE:
-                {
-                    time_t ts = getTimestamp(col);
-                    valss << toString(ts);
-                    //            valss << std::right << std::setfill('0');
-                    //            if (ts.tm_year > 0)
-                    //                valss << std::setw(4) << ts.tm_year << '-' << std::setw(2) << ts.tm_mon <<
-                    //                  '-' << std::setw(2) << ts.tm_mday << ' ' << std::setw(2) << ts.tm_hour <<
-                    //                  ':' << std::setw(2) << ts.tm_min  << ':' << std::setw(2) << ts.tm_sec;
-                }
-                break;
-
-                case TYPE_ENUM:
-                {
-                    valss << getString(col);
-                }
-                break;
-
-                case TYPE_GEOMETRIC:
-                {
-                    //            // PostGIS point type
-                    //            if (!keytype.compare("point")) {
-                    //                PGpoint point = getPoint(col);
-                    //                valss << point.x << " , " << point.y;
-                    //            }
-                    //            // PostGIS box type
-                    //            else if (!keytype.compare("box")) {
-                    //                PGbox box = getBox(col);
-                    //                valss << '(' << box.low.x << " , " << box.low.y << ") , ";
-                    //                valss << '(' << box.high.x << " , " << box.high.y << ')';
-                    //            }
-                    //            // PostGIS line-segment type
-                    //            else if (!keytype.compare("lseg")) {
-                    //                PGlseg lseg = getLineSegment(col);
-                    //                valss << '(' << lseg.pts[0].x << " , " << lseg.pts[0].y << ") ";
-                    //                valss << '(' << lseg.pts[1].x << " , " << lseg.pts[1].y << ')';
-                    //            }
-                    //            // PostGIS circle type
-                    //            else if (!keytype.compare("circle")) {
-                    //                PGcircle circle = getCircle(col);
-                    //                valss << '(' << circle.center.x << " , " << circle.center.y;
-                    //                valss << ") , " << circle.radius;
-                    //            }
-                    //            // PostGIS path type
-                    //            else if (!keytype.compare("path")) {
-                    //                PGpath path = getPath(col);
-                    //                for (int i = 0; i < path.npts; i++) {
-                    //                    valss << '(' << path.pts[i].x << " , " << path.pts[i].y << ')';
-                    //                    if (arrayLimit && i == arrayLimit) {
-                    //                        valss << "...";
-                    //                        break;
-                    //                    }
-                    //                    if (i < path.npts-1) valss << " , ";
-                    //                }
-                    //            }
-                    //            // PostGIS polygon type
-                    //            else if (!keytype.compare("polygon")) {
-                    //                PGpolygon polygon = getPolygon(col);
-                    //                for (int i = 0; i < polygon.npts; i++) {
-                    //                    valss << '(' << polygon.pts[i].x << " , " << polygon.pts[i].y << ')';
-                    //                    if (arrayLimit && i == arrayLimit) {
-                    //                        valss << "...";
-                    //                        break;
-                    //                    }
-                    //                    if (i < polygon.npts-1) valss << " , ";
-                    //                }
-                    //            }
-                }
-                break;
-
-                case TYPE_NUMERIC:
-                {
-                    // recognize 4 or 8-bytes integers and floats
-                    if (!def.name.substr(0, 5).compare("float")) {
-                        length < 8 ? valss << getFloat(col) : valss << getFloat8(col);
-                    }
-                    else {
-                        length < 8 ? valss << getInt(col) : valss << getInt8(col);
-                    }
-                }
-                break;
-
-                case TYPE_STRING:
-                {
-                    if (length == 1) valss << getChar(col); // char has length 1
-                    else return getString(col);
-                }
-                break;
-                case TYPE_UD_SEQTYPE:
-                {
-                }
-                break;
-                case TYPE_UD_INOUTTYPE:
-                {
-                }
-                break;
-                case TYPE_UD_EVENT:
-                {
-                }
-                break;
-                case TYPE_UD_CVMAT:
-                {
-#if HAVE_OPENCV
-                    
-#endif
-                }
-                break;
+            break;
+        }
+        case DBTYPE_GEO_LSEG:
+        {
+            break;
+        }
+        case DBTYPE_GEO_PATH:
+        {
+            break;
+        }
+        case DBTYPE_GEO_BOX:
+        {
+            break;
+        }
+        case DBTYPE_GEO_POLYGON:
+        {
+            break;
+        }
+        case DBTYPE_GEO_LINE:
+        {
+            break;
+        }
+        case DBTYPE_GEO_CIRCLE:
+        {
+            break;
+        }
+        case DBTYPE_GEO_GEOMETRY:
+        {
 #if HAVE_POSTGIS
-                    // PostGIS generic geometry type
-                    if (!keytype.compare("geometry")) {
-                        GEOSGeometry *geo;
-                        GEOSWKTWriter *geo_writer;
-                        char * geo_string;
-
-                        if (!(geo = getGeometry(col))) break;
-                        if (!(geo_writer = GEOSWKTWriter_create())) {
-                            GEOSGeom_destroy(geo);
-                            break;
-                        }
-
-                        //TODO: GEOS 2.2 conflict, if resolved uncomment int precision
-                        //GEOSWKTWriter_setRoundingPrecision(geo_writer, precision);
-                        geo_string = GEOSWKTWriter_write(geo_writer, geo);
-                        valss << geo_string;
-
-                        GEOSFree(geo_string);
-                        GEOSGeom_destroy(geo);
-                    }
 #endif
-                case TYPE_REFTYPE:
-                {
-                    // TODO: Petr if (keytype.equals("regclass") == 0) // pg_namespace.oid > 99 (pg_catalog, pg_toast)
-                }
-                break;
-
-                default:
-                {
-                    valss << "???";
-                }
-                break;
-            }
+            break;
         }
-        
-    } while(0);
+        case DBTYPE_UD_SEQTYPE:
+        {
+            GET_AND_SERIALIZE_VALUE(getString);
+            break;
+        }
+        case DBTYPE_UD_INOUTTYPE:
+        {
+            GET_AND_SERIALIZE_VALUE(getString);
+            break;
+        }
+        case DBTYPE_UD_CVMAT:
+        {
+#if HAVE_OPENCV
+            GET_AND_SERIALIZE_VALUE_ALLOC(cv::Mat, getCvMat);
+#endif
+            break;
+        }
+        case DBTYPE_UD_EVENT:
+        {
+            GET_AND_SERIALIZE_VALUE_ALLOC(IntervalEvent, getIntervalEvent);
+            break;
+        }
+        case DBTYPE_REF_TYPE:
+        {
+            break;
+        }
+        case DBTYPE_REF_CLASS:
+        {
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+    
+    return ret;
+    
+//#if HAVE_POSTGIS
+//                    // PostGIS generic geometry type
+//                    if (!keytype.compare("geometry")) {
+//                        GEOSGeometry *geo;
+//                        GEOSWKTWriter *geo_writer;
+//                        char * geo_string;
+//
+//                        if (!(geo = getGeometry(col))) break;
+//                        if (!(geo_writer = GEOSWKTWriter_create())) {
+//                            GEOSGeom_destroy(geo);
+//                            break;
+//                        }
+//
+//                        //TODO: GEOS 2.2 conflict, if resolved uncomment int precision
+//                        //GEOSWKTWriter_setRoundingPrecision(geo_writer, precision);
+//                        geo_string = GEOSWKTWriter_write(geo_writer, geo);
+//                        valss << geo_string;
+//
+//                        GEOSFree(geo_string);
+//                        GEOSGeom_destroy(geo);
+//                    }
+//#endif        
 
-    return valss.str();
 }
 
 
 
 pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_widths, const int arrayLimit) {
-    PGresult *pgres     = (PGresult *) this->res;
     vector<int> *widths = get_widths ? new vector<int>() : NULL;
     TKeys *keys         = getKeys();
-    int rows            = pg.PQntuples(pgres);
-    int cols            = pg.PQnfields(pgres);
+    int rows            = pg.PQntuples(PGRES);
+    int cols            = pg.PQnfields(PGRES);
     int plen, flen, tlen, width;
 
     if (!get_widths && keys) return std::make_pair(keys, widths);

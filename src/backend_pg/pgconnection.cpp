@@ -152,6 +152,8 @@ bool PGConnection::loadDBTypes()
     PGresult *pgres = NULL;
 
     do {
+        // register types for use by libpqtypes
+        
         // general types registered at all times
         PGregisterType types_userdef[] = {
 #if HAVE_POSTGIS
@@ -182,18 +184,20 @@ bool PGConnection::loadDBTypes()
             break;
         }
         
-        // now load types info
+        // now load types definitions
 
+        // select type info from catalog
         pgres = pqt.PQexecf(conn, "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type", PG_FORMAT);
         if (!pgres) {
             retval = VT_FAIL;
             break;
         }
         
+        // go through all types and fill dbtypes map
         std::map<int,int> oid_array;    // oid of array -> oid of elem
         int ntuples = pg.PQntuples(pgres);
         for (int i = 0; i < ntuples; i++) {
-            VTAPI_DBTYPE_DEFINITION_T def;
+            DBTYPE_DEFINITION_T def;
             PGint4 oid;
             PGtext name;
             PGchar cat;
@@ -206,25 +210,31 @@ bool PGConnection::loadDBTypes()
             def.name = name;
             def.type = 0;
             
-            short catFlags = typeCategoryCharToType(cat);
-            if (VTAPI_DBTYPE_HASFLAG(catFlags, TYPE_FLAG_ARRAY)) {
-                VTAPI_DBTYPE_SETFLAG(def.type, TYPE_FLAG_ARRAY);
-                oid_array.insert(std::pair<int,int>(oid, oid_elem));
+            // get type category and flags
+            short catFlags = getTypeCategoryFlags(cat, def.name);
+            if (catFlags) {
+                if (DBTYPE_HASFLAG(catFlags, DBTYPE_FLAG_ARRAY)) {
+                    DBTYPE_SETFLAG(def.type, DBTYPE_FLAG_ARRAY);
+                    oid_array.insert(std::pair<int,int>(oid, oid_elem));
+                }
+                else {
+                    DBTYPE_SETCATEGORYFLAGS(def.type, catFlags);
+                    DBTYPE_SETLENGTH(def.type, length);
+                }
+                dbtypes.insert(DBTYPES_PAIR(oid, def));
             }
-            else {
-                VTAPI_DBTYPE_SETCATEGORYFLAGS(def.type, catFlags);
-                VTAPI_DBTYPE_SETLENGTH(def.type, length);
-            }
-            dbtypes.insert(VTAPI_DBTYPES_PAIR(oid, def));
         }
 
+        // postprocess array types - set category/length of elements
         for (std::map<int, int>::iterator it = oid_array.begin(); it != oid_array.end(); it++) {
-            VTAPI_DBTYPE_DEFINITION_T &def_arr = dbtypes[(*it).first];
-            VTAPI_DBTYPE_DEFINITION_T &def_elem = dbtypes[(*it).second];
-            VTAPI_DBTYPE_SETCATEGORYFLAGS(def_arr.type, VTAPI_DBTYPE_GETCATEGORYFLAGS(def_elem.type));
-            VTAPI_DBTYPE_SETLENGTH(def_arr.type, VTAPI_DBTYPE_GETLENGTH(def_elem.type));
+            DBTYPES_MAP_IT itArr = dbtypes.find((*it).first);
+            DBTYPES_MAP_IT itElem = dbtypes.find((*it).second);
+            if (itArr != dbtypes.end() && itElem != dbtypes.end()) {
+                DBTYPE_SETCATEGORYFLAGS((*itArr).second.type, DBTYPE_GETCATEGORYFLAGS((*itElem).second.type));
+                DBTYPE_SETLENGTH((*itArr).second.type, DBTYPE_GETLENGTH((*itElem).second.type));
+            }
         }
-        // TODO: load reference types?
+
     } while (0);
 
     if (pgres) pg.PQclear(pgres);
@@ -232,24 +242,118 @@ bool PGConnection::loadDBTypes()
     return retval;
 }
 
-short PGConnection::typeCategoryCharToType(char c)
+short PGConnection::getTypeCategoryFlags(char c, const std::string &name)
 {
     short ret = 0;
             
     switch (c) {
-        case 'A': VTAPI_DBTYPE_SETFLAG(ret, TYPE_FLAG_ARRAY); break;
-        case 'B': VTAPI_DBTYPE_SETCATEGORY(ret,TYPE_BOOLEAN); break;
-        case 'C': VTAPI_DBTYPE_SETCATEGORY(ret,TYPE_COMPOSITE); break;
-        case 'D': VTAPI_DBTYPE_SETCATEGORY(ret,TYPE_DATE); break;
-        case 'E': VTAPI_DBTYPE_SETCATEGORY(ret,TYPE_ENUM); break;
-        case 'G': VTAPI_DBTYPE_SETCATEGORY(ret,TYPE_GEOMETRIC); break;
-        case 'N': VTAPI_DBTYPE_SETCATEGORY(ret,TYPE_NUMERIC); break;
-        case 'S': VTAPI_DBTYPE_SETCATEGORY(ret,TYPE_STRING); break;
-        case 'U': {
-            VTAPI_DBTYPE_SETFLAG(ret, TYPE_FLAG_USERDEFINED);
+        case 'A':   // array
+        {
+            DBTYPE_SETFLAG(ret, DBTYPE_FLAG_ARRAY);
             break;
         }
-        default: VTAPI_DBTYPE_SETCATEGORY(ret,TYPE_UNDEFINED); break;
+        case 'B':   // boolean
+        {
+            if (name.compare("bool") == 0) {
+                DBTYPE_SETCATEGORY(ret,DBTYPE_BOOLEAN);
+            }
+            break;
+        }
+        case 'C':   // composite
+        {
+            if (name.compare("cvmat") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_CVMAT | DBTYPE_FLAG_USERDEFINED);
+            }
+            else if (name.compare("vtevent") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_EVENT | DBTYPE_FLAG_USERDEFINED);
+            }
+            break;
+        }
+        case 'D':   // date/time
+        {
+            if (name.compare("timestamp") == 0) {
+                DBTYPE_SETCATEGORY(ret, DBTYPE_TIMESTAMP);
+            }
+            break;
+        }
+        case 'E':   // enum
+        {
+            if (name.compare("seqtype") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_SEQTYPE | DBTYPE_FLAG_USERDEFINED);
+            } else if (name.compare("inouttype") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_INOUTTYPE | DBTYPE_FLAG_USERDEFINED);
+            }
+            break;
+        }
+        case 'G':   // geometric
+        {
+            if (name.compare("point") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_POINT | DBTYPE_FLAG_GEOMETRIC);
+            }
+            else if (name.compare("lseg") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_LSEG | DBTYPE_FLAG_GEOMETRIC);
+            }
+            else if (name.compare("path") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_PATH | DBTYPE_FLAG_GEOMETRIC);
+            }
+            else if (name.compare("box") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_BOX | DBTYPE_FLAG_GEOMETRIC);
+            }
+            else if (name.compare("polygon") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_POLYGON | DBTYPE_FLAG_GEOMETRIC);
+            }
+            else if (name.compare("line") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_LINE | DBTYPE_FLAG_GEOMETRIC);
+            }
+            else if (name.compare("circle") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_CIRCLE | DBTYPE_FLAG_GEOMETRIC);
+            }
+            break;
+        }
+        case 'N':   // numeric
+        {
+            if (strncmp(name.c_str(), "int", 3) == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_INT | DBTYPE_FLAG_NUMERIC);
+            }
+            else if (strncmp(name.c_str(), "float", 5) == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_FLOAT | DBTYPE_FLAG_NUMERIC);
+            }
+            else if (name.compare("numeric") == 0) {
+                DBTYPE_SETFLAG(ret, DBTYPE_FLAG_NUMERIC);
+            }
+            else if (name.compare("regtype") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_REF_TYPE | DBTYPE_FLAG_REFTYPE);
+            }
+            else if (name.compare("regclass") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_REF_CLASS | DBTYPE_FLAG_REFTYPE);
+            }
+            break;
+        }
+        case 'S':   // string
+        {
+            if (name.compare("char") == 0 ||
+                name.compare("varchar") == 0 ||
+                name.compare("name") == 0 || 
+                name.compare("text") == 0)
+            {
+                DBTYPE_SETCATEGORY(ret,DBTYPE_STRING);
+            }
+            break;
+        }
+        case 'U':   // types with user-defined input/output
+        {
+            if (name.compare("bytea") == 0) {
+                DBTYPE_SETCATEGORY(ret, DBTYPE_BLOB);
+            }
+            else if (name.compare("geometry") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_GEOMETRY | DBTYPE_FLAG_GEOMETRIC);
+            }
+            break;
+        }
+        default:    // unknown
+        {
+            break;
+        }
     }  
     
     return ret;

@@ -110,8 +110,8 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
         if (offset > 0) {
             queryString += "\n OFFSET " + toString(offset);
         }
-        queryString += ";";
     }
+    queryString += ";";
 
     //printf("%s\n", queryString.c_str());
     return (queryString);
@@ -143,10 +143,13 @@ string PGQueryBuilder::getInsertQuery() {
         dstTable = escapeColumn(dstTable, this->dataset);
     }
     else {
-        dstTable = escapeIdent(dstTable);
+        dstTable = escapeColumn(dstTable, "");
     }
+    
     // construct query
     queryString = "INSERT INTO " + dstTable + " (" + intoStr + ")\n VALUES (" + valuesStr + ");";
+    
+    //printf("%s\n", queryString.c_str());
     return queryString;
 }
 
@@ -558,40 +561,36 @@ void PGQueryBuilder::destroyParam() {
     }
 }
 
-string PGQueryBuilder::escapeColumn(const string& key, const string& table) {
-
-    int keyLength = key.length();
-    string rest = "";
-
-    // FIXME: in a case, there may be a buffer overflow - do not expose column names!
-    // FIXME: in a case, this may reorder somethings' meaning!
-    if (key.find(':') != string::npos) {
-        keyLength = key.find(':');
-        rest += key.substr(key.find(':'));
-    } else if (key.find('[') != string::npos) {
-        keyLength = key.find('[');
-        rest += key.substr(key.find('['));
-    } else if (key.find('(') != string::npos) {
-        keyLength = key.find('(');
-        rest += key.substr(key.find('('));
-    } // else { // nothing to do
-
-
-//    string ret = "";
-//    char* c = pg.PQescapeIdentifier((PGconn *)connection, key.c_str(), keyLength);
-//
-//    if (!table.empty()) {
-//        char* t = pg.PQescapeIdentifier((PGconn *)connection, table.c_str(), table.length());
-//        ret += string(t) + ".";
-//        pg.PQfreemem(t);
-//    }
-//
-//    ret += string(c) + rest;
-//    pg.PQfreemem(c);
-//
-//    return ret;
-    return (!table.empty() ? (escapeIdent(table) + ".") : "") + escapeIdent(key.substr(0, keyLength)) + rest;
-
+string PGQueryBuilder::escapeColumn(const string& key, const string& table)
+{
+    string ret;
+    
+    size_t charPos = key.find_first_of(":[(");
+    size_t dotPos = key.find('.');
+    
+    // escape everything
+    if (dotPos != string::npos) {
+        ret = escapeIdent(key.substr(0, dotPos)) + '.';
+        if (charPos != string::npos) {
+            ret += escapeIdent(key.substr(dotPos+1, charPos-dotPos-1)) + key.substr(charPos);
+        }
+        else {
+            ret += escapeIdent(key.substr(dotPos+1));
+        }
+    }
+    else {
+        if (!table.empty()) {
+            ret = escapeIdent(table) + '.';
+        }
+        if (charPos != string::npos) {
+            ret += escapeIdent(key.substr(0, charPos)) + key.substr(charPos);
+        }
+        else {
+            ret += escapeIdent(key);
+        }
+    }
+    
+    return ret;
 }
 
 string PGQueryBuilder::escapeAlias(const string& key) {

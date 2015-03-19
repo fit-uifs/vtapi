@@ -40,12 +40,10 @@ OBJECTFILES= \
 	${OBJECTDIR}/backend_pg/pgconnection.o \
 	${OBJECTDIR}/backend_pg/pgquerybuilder.o \
 	${OBJECTDIR}/backend_pg/pgresultset.o \
-	${OBJECTDIR}/backend_pg/pgtypemanager.o \
 	${OBJECTDIR}/backend_sl/slbackendbase.o \
 	${OBJECTDIR}/backend_sl/slconnection.o \
 	${OBJECTDIR}/backend_sl/slquerybuilder.o \
 	${OBJECTDIR}/backend_sl/slresultset.o \
-	${OBJECTDIR}/backend_sl/sltypemanager.o \
 	${OBJECTDIR}/commons.o \
 	${OBJECTDIR}/dataset.o \
 	${OBJECTDIR}/interval.o \
@@ -112,11 +110,6 @@ ${OBJECTDIR}/backend_pg/pgresultset.o: backend_pg/pgresultset.cpp
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg/pgresultset.o backend_pg/pgresultset.cpp
 
-${OBJECTDIR}/backend_pg/pgtypemanager.o: backend_pg/pgtypemanager.cpp 
-	${MKDIR} -p ${OBJECTDIR}/backend_pg
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_pg/pgtypemanager.o backend_pg/pgtypemanager.cpp
-
 ${OBJECTDIR}/backend_sl/slbackendbase.o: backend_sl/slbackendbase.cpp 
 	${MKDIR} -p ${OBJECTDIR}/backend_sl
 	${RM} "$@.d"
@@ -136,11 +129,6 @@ ${OBJECTDIR}/backend_sl/slresultset.o: backend_sl/slresultset.cpp
 	${MKDIR} -p ${OBJECTDIR}/backend_sl
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl/slresultset.o backend_sl/slresultset.cpp
-
-${OBJECTDIR}/backend_sl/sltypemanager.o: backend_sl/sltypemanager.cpp 
-	${MKDIR} -p ${OBJECTDIR}/backend_sl
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/backend_sl/sltypemanager.o backend_sl/sltypemanager.cpp
 
 ${OBJECTDIR}/commons.o: commons.cpp 
 	${MKDIR} -p ${OBJECTDIR}

@@ -70,24 +70,25 @@ void do_work(Process *process, Dataset *dataset) {
         features_array[0] += param1 / 1000.0;
         features_array[1] += param2 / 500.0 - features_array[0];
         features_array[2] = features_array[0] / features_array[1];
-        output->addFloatA("features_array", features_array, 3);
+        output->addFloatA("features_array", features_array, sizeof(features_array)/sizeof(float));
 
         // takto float cv::Mat
         for (cv::Mat1f::iterator it = features_mat.begin(); it != features_mat.end(); it++) {
             *it = dummy_seed;
             dummy_seed += 0.1;
         }
+        
         output->addCvMat("features_mat", features_mat);
         
         // potvrdime insert
         output->addExecute();
         
         printf("mod_demo1: video %s\n"\
-            "  features array = {%.3f,%.3f,%.3f}\n"\
-            "  features mat(%d,%d) = {%.3f,%.3f,%.3f...}\n",
+            "  features array = %s\n"\
+            "  features mat(%d,%d) = %s\n",
             video->getName().c_str(),
-            features_array[0], features_array[1], features_array[2],
-            features_mat.rows, features_mat.cols, features_mat(0,0), features_mat(1,0), features_mat(2,0));
+            toString(features_array, sizeof (features_array) / sizeof (float), 0).c_str(),
+            features_mat.rows, features_mat.cols, toStringCvMat(features_mat).c_str());
     }
     delete video;
     

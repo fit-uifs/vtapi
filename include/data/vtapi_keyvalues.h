@@ -119,23 +119,7 @@ public:
      * @param pos   index of the column
      * @return character
      */
-    char getChar(const int pos);
-    
-    /**
-     * Gets a character array specified by a column key
-     * @param key    column key
-     * @param size   size of the array of char values
-     * @return character array
-     */
-    char *getCharA(const std::string& key, int& size);
-    /**
-     * Gets a character array specified by an index of a column
-     * @param pos    index of the column
-     * @param size   size of the array of char values
-     * @return character array
-     */
-    char *getCharA(const int pos, int& size);
-    
+    char getChar(const int pos);   
     /**
      * Gets a character array specified by a column key
      * @param key   column key
@@ -151,6 +135,18 @@ public:
 
     
     // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==============
+    /**
+     * Gets a boolean value specified by a column key
+     * @param key   column key
+     * @return integer value
+     */
+    bool getBool(const std::string& key);
+    /**
+     * Gets a boolean value specified by an indef of a column
+     * @param key   column key
+     * @return integer value
+     */
+    bool getBool(const int col);
     /**
      * Gets an integer value specified by a column key
      * @param key   column key
@@ -169,13 +165,13 @@ public:
      * @param key   column key
      * @return long integer value
      */
-    long getInt8(const std::string& key);
+    long long getInt8(const std::string& key);
     /**
      * Gets a long integer value specified by an index of a column
      * @param col   index of the column
      * @return long integer value
      */
-    long getInt8(const int col);
+    long long getInt8(const int col);
     
     /**
      * Gets an array of integer values specified by a column key
@@ -204,20 +200,34 @@ public:
      * @return vector of integer values
      */
     std::vector<int>* getIntV(const int col);
+    
+    /**
+     * Gets an array of long integer values specified by a column key
+     * @param key    column key
+     * @param size   size of the array of integer values
+     * @return array of integer values
+     */
+    long long* getInt8A(const std::string& key, int& size);
+    /**
+     * Gets an array of long integer values specified by an index of a column
+     * @param col    index of the column
+     * @param size   size of the array of integer values
+     * @return array of integer values
+     */
+    long long* getInt8A(const int col, int& size);
 
     /**
-     * Gets a vector of integer vectors specified by a column key
-     * @param key column key
-     * @return vector of vectors of integer values
+     * Gets a vector of long integer values specified by a column key
+     * @param key   column key
+     * @return vector of integer values
      */
-    std::vector< std::vector<int>* >* getIntVV(const std::string& key);
+    std::vector<long long>* getInt8V(const std::string& key);
     /**
-     * Gets a vector of integer vectors specified by an index of a column
+     * Gets a vector of long integer values specified by an index of a column
      * @param col   index of the column
-     * @return vector of vectors of integer values
+     * @return vector of integer values
      */
-    std::vector< std::vector<int>* >* getIntVV(const int col);
-
+    std::vector<long long>* getInt8V(const int col);
     
     // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
     /**
@@ -268,15 +278,39 @@ public:
      */
     std::vector<float>* getFloatV(const std::string& key);
     /**
-     * Gets a vector of integer values specified by a column key
+     * Gets a vector of float values specified by a column key
      * @param col   index of the column
      * @return vector of integer values
      */
     std::vector<float>* getFloatV(const int col);
+    /**
+     * Gets an array of double values specified by a column key
+     * @param key    column key
+     * @param size   size of the array of float values
+     * @return array of float values
+     */
+    double* getFloat8A(const std::string& key, int& size);
+    /**
+     * Gets an array of double values specified by an index of a column
+     * @param col    index of the column
+     * @param size   size of the array of float values
+     * @return array of float values
+     */
+    double* getFloat8A(const int col, int& size);
 
-    //TODO: is getFloatVV needed?
+    /**
+     * Gets a vector of double values specified by an index of a column
+     * @param key   column key
+     * @return vector of float values
+     */
+    std::vector<double>* getFloat8V(const std::string& key);
+    /**
+     * Gets a vector of double values specified by a column key
+     * @param col   index of the column
+     * @return vector of integer values
+     */
+    std::vector<double>* getFloat8V(const int col);
 
-    
     // =============== GETTERS - TIMESTAMP =====================================
     /**
      * Gets a timestamp specified by a column key
@@ -324,19 +358,31 @@ public:
      * @return 2D Point
      */
     PGpoint getPoint(const int col);
-    
+
     /**
      * Gets an array of 2D points specified by a column key
      * @param key   column key
      * @return vector of 2D Points
      */
-    std::vector<PGpoint>*  getPointV(const std::string& key);
+    PGpoint *getPointA(const std::string& key, int& size);
     /**
      * Gets an array of 2D points specified by an index of a column
      * @param col   index of the column
      * @return vector of 2D Points
      */
-    std::vector<PGpoint>*  getPointV(const int col);
+    PGpoint *getPointA(const int col, int& size);
+    /**
+     * Gets a vector of 2D points specified by a column key
+     * @param key   column key
+     * @return vector of 2D Points
+     */
+    std::vector<PGpoint>* getPointV(const std::string& key);
+    /**
+     * Gets a vector of 2D points specified by an index of a column
+     * @param col   index of the column
+     * @return vector of 2D Points
+     */
+    std::vector<PGpoint>* getPointV(const int col);
 #endif
 
 //    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
@@ -456,19 +502,19 @@ public:
     
     // =============== GETTERS - OTHER =========================================
     /**
-     * Gets an integer with an OID value specified by a column key
+     * Gets binary data by a column key
      * @param key   column key
-     * @return integer with the OID value
+     * @param size size of output data
+     * @return allocated data
      */
-    int getIntOid(const std::string& key);
+    void *getBlob(const std::string& key, int &size);
     /**
-     * Gets an integer with an OID value specified by an index of a column
-     * @param col   index of the column
-     * @return integer with the OID value
+     * Gets binary data by a column index
+     * @param col   column index
+     * @param size size of output data
+     * @return allocated data
      */
-    int getIntOid(const int col);
-
-    
+    void *getBlob(const int col, int &size);
 
     // =============== SETTERS (Update) ========================================
     /**

@@ -60,6 +60,7 @@ void do_work(Process *p, Dataset *ds) {
         event.group_id = rand() % 50;
         event.region.high = IntervalEvent::point(11,11);
         event.region.low = IntervalEvent::point(22,22);
+        event.SetUserData("user_data", 9);
         
         // iterujeme pres vstupni data, vyfiltrujeme si pouze nase video
         Interval *input = p->getInputData();
@@ -71,7 +72,7 @@ void do_work(Process *p, Dataset *ds) {
             if (features_array) {
                 // provedeme dummy zpracovani
                 for (int i = 0; i < size; i++) {
-                    event.score += (int)(features_array[i] * 10);
+                    event.score += (features_array[i] * 10);
                 }
                 delete[] features_array;
             }
@@ -80,7 +81,7 @@ void do_work(Process *p, Dataset *ds) {
             if (features_mat) {
                 // provedeme dummy zpracovani
                 for (cv::Mat1f::iterator it = features_mat->begin(); it != features_mat->end(); it++) {
-                    event.score += (int) (*it * 10.0);
+                    event.score += (*it * 10.0);
                 }
                 delete features_mat;
             }
@@ -92,8 +93,7 @@ void do_work(Process *p, Dataset *ds) {
         output->addIntervalEvent("event", event);
         output->addExecute();
         
-        printf("mod_demo2: new event; class=%d,group=%d,score=%.2f\n",
-            event.class_id, event.group_id, event.score);
+        printf("mod_demo2: new event %s\n", toString(event).c_str());
     }
     delete video;
     

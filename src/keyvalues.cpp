@@ -133,12 +133,6 @@ char KeyValues::getChar(const string& key) {
 char KeyValues::getChar(const int col) {
     return select->resultSet->getChar(col);
 }
-char *KeyValues::getCharA(const string& key, int& size) {
-    return select->resultSet->getCharA(key, size);
-}
-char *KeyValues::getCharA(const int col, int& size) {
-    return select->resultSet->getCharA(col, size);
-}
 string KeyValues::getString(const string& key) {
     return select->resultSet->getString(key);
 }
@@ -147,16 +141,22 @@ string KeyValues::getString(const int col) {
 }
 
 // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
+bool KeyValues::getBool(const string& key) {
+    return select->resultSet->getBool(key);
+}
+bool KeyValues::getBool(const int col) {
+    return select->resultSet->getBool(col);
+}
 int KeyValues::getInt(const string& key) {
     return select->resultSet->getInt(key);
 }
 int KeyValues::getInt(const int col) {
     return select->resultSet->getInt(col);
 }
-long KeyValues::getInt8(const string& key) {
+long long KeyValues::getInt8(const string& key) {
     return select->resultSet->getInt8(key);
 }
-long KeyValues::getInt8(const int col) {
+long long KeyValues::getInt8(const int col) {
     return select->resultSet->getInt8(col);
 }
 int* KeyValues::getIntA(const string& key, int& size) {
@@ -171,11 +171,17 @@ vector<int>* KeyValues::getIntV(const string& key) {
 vector<int>* KeyValues::getIntV(const int col) {
     return select->resultSet->getIntV(col);
 }
-vector< vector<int>* >* KeyValues::getIntVV(const int col) {
-    return select->resultSet->getIntVV(col);
+long long* KeyValues::getInt8A(const string& key, int& size) {
+    return select->resultSet->getInt8A(key, size);
 }
-vector< vector<int>* >* KeyValues::getIntVV(const string& key) {
-    return select->resultSet->getIntVV(key);
+long long* KeyValues::getInt8A(const int col, int& size) {
+    return select->resultSet->getInt8A(col, size);
+}
+vector<long long>* KeyValues::getInt8V(const string& key) {
+    return select->resultSet->getInt8V(key);
+}
+vector<long long>* KeyValues::getInt8V(const int col) {
+    return select->resultSet->getInt8V(col);
 }
 
 // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
@@ -202,6 +208,21 @@ vector<float>* KeyValues::getFloatV(const string& key) {
 }
 vector<float>* KeyValues::getFloatV(const int col) {
     return select->resultSet->getFloatV(col);
+}
+double* KeyValues::getFloat8A(const string& key, int& size) {
+    return select->resultSet->getFloat8A(key, size);
+}
+
+double* KeyValues::getFloat8A(const int col, int& size) {
+    return select->resultSet->getFloat8A(col, size);
+}
+
+vector<double>* KeyValues::getFloat8V(const string& key) {
+    return select->resultSet->getFloat8V(key);
+}
+
+vector<double>* KeyValues::getFloat8V(const int col) {
+    return select->resultSet->getFloat8V(col);
 }
 
 // =============== GETTERS - OpenCV MATRICES ===============================
@@ -231,12 +252,19 @@ PGpoint KeyValues::getPoint(const string& key) {
 PGpoint KeyValues::getPoint(const int col) {
     return select->resultSet->getPoint(col);
 }
+PGpoint *KeyValues::getPointA(const std::string& key, int& size) {
+    return select->resultSet->getPointA(key, size);
+}
+PGpoint *KeyValues::getPointA(const int col, int& size) {
+    return select->resultSet->getPointA(col, size);
+}
 vector<PGpoint>*  KeyValues::getPointV(const string& key) {
     return select->resultSet->getPointV(key);
 }
 vector<PGpoint>*  KeyValues::getPointV(const int col) {
     return select->resultSet->getPointV(col);
 }
+
 #endif
 
 //PGlseg KeyValues::getLineSegment(const string& key) {
@@ -326,11 +354,12 @@ IntervalEvent *KeyValues::getIntervalEvent(const int col) {
 }
     
 // =============== GETTERS - OTHER =============================================
-int KeyValues::getIntOid(const string& key) {
-    return select->resultSet->getIntOid(key);
+
+void *KeyValues::getBlob(const std::string& key, int &size) {
+    return select->resultSet->getBlob(key, size);
 }
-int KeyValues::getIntOid(const int col) {
-    return select->resultSet->getIntOid(col);
+void *KeyValues::getBlob(const int col, int &size) {
+    return select->resultSet->getBlob(col, size);
 }
 
 // =============== PRINT methods =======================================

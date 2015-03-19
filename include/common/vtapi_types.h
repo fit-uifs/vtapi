@@ -5,53 +5,68 @@
 namespace vtapi {
 
 // type definition:
-typedef unsigned int VTAPI_DBTYPE;
+typedef unsigned int DBTYPE;
 //////////////////////////////////////////////////////////////////////
 // |       2B         |        1B         |           1B             |
-// |  type length[B]  |VTAPI_DB_TYPE_FLAGs| VTAPI_DB_TYPE_CATEGORY_T |
+// |  type length[B]  |   DB_TYPE_FLAGs   |     DBTYPE_CATEGORY_T    |
 //////////////////////////////////////////////////////////////////////
 
+// category indicates how should type value be retrieved
 typedef enum
 {
-    TYPE_UNDEFINED      = 0x00,
-    TYPE_BOOLEAN        = 0x01,
-    TYPE_COMPOSITE      = 0x02,
-    TYPE_DATE           = 0x03,
-    TYPE_ENUM           = 0x04,
-    TYPE_GEOMETRIC      = 0x05,
-    TYPE_NUMERIC        = 0x06,
-    TYPE_STRING         = 0x07,
-    TYPE_REFTYPE        = 0x08,
-    TYPE_UD_SEQTYPE     = 0xF0,
-    TYPE_UD_INOUTTYPE   = 0xF1,
-    TYPE_UD_CVMAT       = 0xF2,
-    TYPE_UD_EVENT       = 0xF3
-} VTAPI_DBTYPE_CATEGORY_T;
+    DBTYPE_UNDEFINED = 0,
+    DBTYPE_STRING,          // name, text, varchar ...
+    DBTYPE_INT,             // 4/8 bytes ints
+    DBTYPE_FLOAT,           // 4/8 bytes floats
+    DBTYPE_BOOLEAN,         // booleans
+    DBTYPE_BLOB,            // binary data
+    DBTYPE_TIMESTAMP,       // without time zone
+    DBTYPE_GEO_POINT,       // geometric - point
+    DBTYPE_GEO_LSEG,        // geometric - line segment
+    DBTYPE_GEO_PATH,        // geometric - path
+    DBTYPE_GEO_BOX,         // geometric - bounding box
+    DBTYPE_GEO_POLYGON,     // geometric - polygon
+    DBTYPE_GEO_LINE,        // geometric - line
+    DBTYPE_GEO_CIRCLE,      // geometric - circle
+    DBTYPE_GEO_GEOMETRY,    // geometric - generic PostGIS geometry type
+    DBTYPE_UD_SEQTYPE,      // user defined - sequence type
+    DBTYPE_UD_INOUTTYPE,    // user defined - in/out enum typ
+    DBTYPE_UD_CVMAT,        // user defined - OpenCV matrix
+    DBTYPE_UD_EVENT,        // user defined - VT event
+    DBTYPE_REF_TYPE,        // database type
+    DBTYPE_REF_CLASS        // database class (column ...)
+} DBTYPE_CATEGORY;
 
+// additional flags for type categories
 typedef enum
 {
-    TYPE_FLAG_USERDEFINED    = 0x01,
-    TYPE_FLAG_ARRAY          = 0x02
-} VTAPI_DBTYPE_FLAG_T;
+    DBTYPE_FLAG_NONE        = (0),
+    DBTYPE_FLAG_ARRAY       = (1),      // type is actually array of other type
+    DBTYPE_FLAG_NUMERIC     = (1 << 1), // type is numeric
+    DBTYPE_FLAG_GEOMETRIC   = (1 << 2), // type is geometric
+    DBTYPE_FLAG_USERDEFINED = (1 << 3), // type was created by vtapi
+    DBTYPE_FLAG_REFTYPE     = (1 << 4)  // type is database meta-type
+} DBTYPE_FLAG;
 
-#define VTAPI_DBTYPE_GETCATEGORY(x)     (x & 0xFF)
-#define VTAPI_DBTYPE_SETCATEGORY(x,c)   (x = x | (c & 0xFF))
-#define VTAPI_DBTYPE_HASFLAG(x,f)       (((x & 0xFF00) >> 8) & (f) != 0)
-#define VTAPI_DBTYPE_SETFLAG(x,f)       (x = x | ((f & 0xFF) << 8))
-#define VTAPI_DBTYPE_GETCATEGORYFLAGS(x)(x & 0xFFFF)
-#define VTAPI_DBTYPE_SETCATEGORYFLAGS(x,f) (x = x | (f & 0xFFFF))
-#define VTAPI_DBTYPE_GETLENGTH(x)       ((x >> 16) & 0xFFFF)
-#define VTAPI_DBTYPE_SETLENGTH(x,l)     (x = ((x & (VTAPI_DBTYPE)0xFFFF) | ((l & 0xFFFF) << 16)))
+#define DBTYPE_GETCATEGORY(x)       (DBTYPE_CATEGORY)(x & 0xFF)
+#define DBTYPE_SETCATEGORY(x,c)     (x = (x | (c & 0xFF)))
+#define DBTYPE_HASFLAG(x,f)         (bool)((((x & 0xFF00) >> 8) & f) != 0)
+#define DBTYPE_SETFLAG(x,f)         (x = (x | ((f & 0xFF) << 8)))
+#define DBTYPE_GETCATEGORYFLAGS(x)  (short)(x & 0xFFFF)
+#define DBTYPE_SETCATEGORYFLAGS(x,f) (x = (x | (f & 0xFFFF)))
+#define DBTYPE_GETLENGTH(x)         (short)((x >> 16) & 0xFFFF)
+#define DBTYPE_SETLENGTH(x,l)       (x = ((x & (DBTYPE)0xFFFF) | ((l & 0xFFFF) << 16)))
 
 // type definition and map
-typedef struct _VTAPI_DBTYPE_DEFINITION_T
+typedef struct _DBTYPE_DEFINITION_T
 {
-    VTAPI_DBTYPE type;
+    DBTYPE type;
     std::string name;
-} VTAPI_DBTYPE_DEFINITION_T;
+} DBTYPE_DEFINITION_T;
 
-typedef std::map<int,VTAPI_DBTYPE_DEFINITION_T> VTAPI_DBTYPES_MAP;
-typedef std::pair<int, VTAPI_DBTYPE_DEFINITION_T> VTAPI_DBTYPES_PAIR;
+typedef std::map<int,DBTYPE_DEFINITION_T> DBTYPES_MAP;
+typedef std::map<int,DBTYPE_DEFINITION_T>::iterator DBTYPES_MAP_IT;
+typedef std::pair<int, DBTYPE_DEFINITION_T> DBTYPES_PAIR;
 
 
 } // namespace

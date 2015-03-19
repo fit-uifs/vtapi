@@ -40,11 +40,11 @@ public:
         {
             memset(this, 0, sizeof(point));
         };
-        _point(_point &pt)
+        _point(const _point &pt)
         {
             memcpy(this, &pt, sizeof(point));
         };
-        _point(double x, double y)
+        _point(const double x, const double y)
         {
             this->x = x;
             this->y = y;
@@ -60,16 +60,16 @@ public:
         {
             memset(this, 0, sizeof(box));
         };
-        _box(_box &b)
+        _box(const _box &b)
         {
             memcpy(this, &b, sizeof(box));
         };  
-        _box(point high, point low)
+        _box(const point high, const point low)
         {
             this->high = high;
             this->low = low;
         };
-        _box(double x_high, double y_high, double x_low, double y_low)
+        _box(const double x_high, const double y_high, const double x_low, const double y_low)
         {
             this->high.x = x_high;
             this->high.y = y_high;
@@ -83,7 +83,7 @@ public:
     IntervalEvent(const IntervalEvent& orig);
     virtual ~IntervalEvent();
     
-    void SetUserData(void *data, size_t size);
+    void SetUserData(const void *data, size_t size);
     
     int group_id;
     int class_id;

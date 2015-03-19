@@ -82,7 +82,7 @@ public:
      * @param dbtypes pre-filled map of database types definitions
      * @return pointer to new result set object
      */
-    static ResultSet* createResultSet(BACKEND_T backend, const BackendBase &base, VTAPI_DBTYPES_MAP *dbtypes = NULL);
+    static ResultSet* createResultSet(BACKEND_T backend, const BackendBase &base, DBTYPES_MAP *dbtypes = NULL);
 };
 
 } // namespace vtapi

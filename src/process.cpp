@@ -27,19 +27,16 @@ Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig) {
     callback    = NULL;
     pCallbackContext = NULL;
 
-    string query;
-
-    //TODO: for SQLite
-//    if (backend == POSTGRES) {
-    query = "SELECT P.*, PA.relname AS outputs_str\n"
-            "  FROM " + this->getDataset() + ".processes P\n"
-            "  LEFT JOIN pg_catalog.pg_class PA ON P.outputs::regclass = PA.relfilenode";
-//    }
-//    else {
-//        query = "\nSELECT * from public.processes";
-//    }
-
-    this->select = new Select(orig, query.c_str());
+    // like this because outputs is regtype which has to be converted on server
+    this->select = new Select(orig);
+    this->select->from("processes", "prsname");
+    this->select->from("processes", "mtname");
+    this->select->from("processes", "inputs");
+    this->select->from("processes", "outputs::text");
+    this->select->from("processes", "params");
+    this->select->from("processes", "userid");
+    this->select->from("processes", "created");
+    this->select->from("processes", "notes");
 
     if (!name.empty()) {
         this->process = name;
@@ -91,7 +88,7 @@ string Process::getInputs() {
 }
 
 string Process::getOutputs() {
-    return this->getString("outputs_str");
+    return this->getString("outputs");
 }
 
 Process *Process::getInputProcess() {

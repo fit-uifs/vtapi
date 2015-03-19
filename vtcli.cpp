@@ -158,7 +158,7 @@ void VTCli::selectCommand(string& line) {
     else if (!input.compare("process")) {
         Process* pr = new Process(*(this->vtapi->commons));
         pr->select->whereString("prsname", params["name"]);
-        pr->select->whereString("mtname", params["method"]);
+        pr->select->whereString("mtname", params["mtname"]);
         pr->select->whereString("inputs", params["inputs"]);
         pr->select->whereString("outputs", params["outputs"]);
         pr->next();
@@ -173,6 +173,14 @@ void VTCli::selectCommand(string& line) {
         me->next();
         me->printAll();
         delete me;
+    }
+    // select method keys
+    else if (!input.compare("methodkeys")) {
+        
+    }
+    // select events
+    else if (!input.compare("event")) {
+        
     }
 }
 

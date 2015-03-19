@@ -25,7 +25,7 @@ namespace vtapi {
 class ResultSet
 {
 protected:
-    VTAPI_DBTYPES_MAP *dbtypes;     /**< map of database types definitions */
+    DBTYPES_MAP *dbtypes;     /**< map of database types definitions */
     int             pos;            /**< position within resultset */
     void            *res;           /**< result object */
 
@@ -36,7 +36,7 @@ public:
      * @param base base object (backend interface, logging...)
      * @param dbtypes preloaded map of database types
      */
-    ResultSet(VTAPI_DBTYPES_MAP *dbtypes) {
+    ResultSet(DBTYPES_MAP *dbtypes) {
         this->dbtypes       = dbtypes;
         this->pos           = -1;
         this->res           = NULL;
@@ -125,22 +125,6 @@ public:
      */
     virtual char getChar(const int col) = 0;
     /**
-     * Get character array specified by column key
-     * @param key column key
-     * @param size size of the array of char values
-     * @return character array
-     */
-    char *getCharA(const std::string& key, int& size) {
-        return this->getCharA(this->getKeyIndex(key), size);
-    };
-    /**
-     * Get character array specified by column index
-     * @param pos column index
-     * @param size size of the array of char values
-     * @return character array
-     */
-    virtual char *getCharA(const int pos, int& size) = 0;
-    /**
      * Get a character array specified by a column key
      * @param key column key
      * @return character array
@@ -156,6 +140,20 @@ public:
     virtual std::string getString(const int col) = 0;
 
     // =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==============
+    /**
+     * Get a boolean value specified by a column key
+     * @param key column key
+     * @return integer value
+     */
+    bool getBool(const std::string& key) {
+        return this->getBool(this->getKeyIndex(key));
+    };
+    /**
+     * Get a boolean value specified by an index of a column
+     * @param col index of column
+     * @return integer value
+     */
+    virtual bool getBool(const int col) = 0;
     /**
      * Get an integer value specified by a column key
      * @param key column key
@@ -175,7 +173,7 @@ public:
      * @param key column key
      * @return long integer value
      */
-    long getInt8(const std::string& key) {
+    long long getInt8(const std::string& key) {
         return this->getInt8(this->getKeyIndex(key));
     };
     /**
@@ -183,7 +181,7 @@ public:
      * @param col index of column
      * @return long integer value
      */
-    virtual long getInt8(const int col) = 0;
+    virtual long long getInt8(const int col) = 0;
     /**
      * Get an array of integer values specified by a column key
      * @param key column key
@@ -215,20 +213,35 @@ public:
      */
     virtual std::vector<int> *getIntV(const int col) = 0;
     /**
-     * Get a vector of integer vectors specified by a column key
+     * Get an array of long integer values specified by a column key
      * @param key column key
-     * @return  vector of vectors of integer values
+     * @param size size of the array of integer values
+     * @return array of integer values
      */
-    std::vector< std::vector<int>* > *getIntVV(const std::string& key) {
-        return this->getIntVV(this->getKeyIndex(key));
+    long long *getInt8A(const std::string& key, int& size) {
+        return this->getInt8A(this->getKeyIndex(key), size);
     };
     /**
-     * Get a vector of integer vectors specified by an index of a column
+     * Get an array of long integer values specified by an index of a column
      * @param col index of column
-     * @return  vector of vectors of integer values
+     * @param size size of the array of integer values
+     * @return array of integer values
      */
-    virtual std::vector< std::vector<int>* > *getIntVV(const int col) = 0;
-    
+    virtual long long *getInt8A(const int col, int& size) = 0;
+    /**
+     * Get a vector of long integer values specified by a column key
+     * @param key column key
+     * @return vector of integer values
+     */
+    std::vector<long long> *getInt8V(const std::string& key) {
+        return this->getInt8V(this->getKeyIndex(key));
+    };
+    /**
+     * Get a vector of long integer values specified by an index of a column
+     * @param col index of column
+     * @return vector of integer values
+     */
+    virtual std::vector<long long> *getInt8V(const int col) = 0;
 
     // =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ==================
     /**
@@ -284,12 +297,45 @@ public:
         return this->getFloatV(this->getKeyIndex(key));
     };
     /**
-     * Get a vector of integer values specified by column key
+     * Get a vector of float values specified by column key
      * @param col index of column
      * @return vector of integer values
      */
     virtual std::vector<float> *getFloatV(const int col) = 0;
-    
+
+    /**
+     * Get an array of double values specified by a column key
+     * @param key column key
+     * @param size size of the array of float values
+     * @return array of float values
+     */
+    double* getFloat8A(const std::string& key, int& size)
+    {
+        return this->getFloat8A(this->getKeyIndex(key), size);
+    };
+    /**
+     * Get array of double values specified by index of column
+     * @param col index of column
+     * @param size size of the array of float values
+     * @return array of float values
+     */
+    virtual double *getFloat8A(const int col, int& size) = 0;
+
+    /**
+     * Get a vector of double values specified by the column index
+     * @param key column key
+     * @return vector of float values
+     */
+    std::vector<double> *getFloat8V(const std::string& key)
+    {
+        return this->getFloat8V(this->getKeyIndex(key));
+    };
+    /**
+     * Get a vector of double values specified by column key
+     * @param col index of column
+     * @return vector of integer values
+     */
+    virtual std::vector<double> *getFloat8V(const int col) = 0;
 
     //TODO: is it needed a vector of float vectors as in case of integers?
 
@@ -349,11 +395,25 @@ public:
      * @param key column index
      * @return vector of 2D Points
      */
+    PGpoint *getPointA(const std::string& key, int& size) {
+        return this->getPointA(this->getKeyIndex(key), size);
+    };
+    /**
+     * Get array of 2D points specified by the column key
+     * @param col column key
+     * @return vector of 2D Points
+     */
+    virtual PGpoint *getPointA(const int col, int& size) = 0;
+    /**
+     * Get vector of 2D points specified by the column index
+     * @param key column index
+     * @return vector of 2D Points
+     */
     std::vector<PGpoint>*  getPointV(const std::string& key) {
         return this->getPointV(this->getKeyIndex(key));
     };
     /**
-     * Get array of 2D points specified by the column key
+     * Get vector of 2D points specified by the column key
      * @param col column key
      * @return vector of 2D Points
      */
@@ -495,20 +555,23 @@ public:
     virtual IntervalEvent *getIntervalEvent(const int col) = 0;
     
     // =============== GETTERS - OTHER =========================================
+
     /**
-     * Get an integer with an OID value specified by a column key
-     * @param key column key
-     * @return integer with the OID value
+     * Gets binary data by a column key
+     * @param key   column key
+     * @param size size of output data
+     * @return allocated data
      */
-    int getIntOid(const std::string& key) {
-        return this->getIntOid(this->getKeyIndex(key));
-    };
+    void *getBlob(const std::string& key, int &size) {
+        return this->getBlob(this->getKeyIndex(key), size);
+    }
     /**
-     * Get an integer with an OID value specified by a column index
-     * @param col column index
-     * @return integer with the OID value
+     * Gets binary data by a column index
+     * @param col   column index
+     * @param size size of output data
+     * @return allocated data
      */
-    virtual int getIntOid(const int col) = 0;
+    virtual void *getBlob(const int col, int &size) = 0;
 
     ////////////// Print support methods
     /**
@@ -547,7 +610,7 @@ class PGResultSet : public ResultSet, public PGBackendBase
 {
 public:
 
-    PGResultSet(const PGBackendBase &base, VTAPI_DBTYPES_MAP *dbtypes);
+    PGResultSet(const PGBackendBase &base, DBTYPES_MAP *dbtypes);
     ~PGResultSet();
 
     void newResult(void *res);
@@ -563,22 +626,25 @@ public:
     std::string getValue(const int col, const int arrayLimit = 0);
 
     char getChar(const int pos);
-    char *getCharA(const int pos, int& size);
     std::string getString(const int col);
+    bool getBool(const int col);
     int getInt(const int col);
-    long getInt8(const int col);
+    long long getInt8(const int col);
     int* getIntA(const int col, int& size);
     std::vector<int>* getIntV(const int col);
-    std::vector< std::vector<int>* >* getIntVV(const int col);
+    long long* getInt8A(const int col, int& size);
+    std::vector<long long>* getInt8V(const int col);
     float getFloat(const int col);
     double getFloat8(const int col);
     float* getFloatA(const int col, int& size);
     std::vector<float>* getFloatV(const int col);
+    double* getFloat8A(const int col, int& size);
+    std::vector<double>* getFloat8V(const int col);
     time_t getTimestamp(const int col);
-    int getIntOid(const int col);
     IntervalEvent *getIntervalEvent(const int col);
 #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
+    PGpoint* getPointA(const int col, int& size);
     std::vector<PGpoint>*  getPointV(const int col);
 #endif
 #if HAVE_POSTGIS
@@ -588,14 +654,21 @@ public:
 #if HAVE_OPENCV
     cv::Mat *getCvMat(const int col);
 #endif
+    void *getBlob(const int col, int &size);
 
     std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 
 protected:
-
     std::string getKeyType(const int col);
+    short getKeyTypeLength(const int col, const short def);
     int getKeyIndex(const std::string& key);
 
+    template<typename TDB, typename TOUT>
+    TOUT getSingleValue(const int col, const char *def);
+    template<typename TDB, typename TOUT>
+    TOUT *getArray(const int col, int &size, const char *def);
+    template<typename TDB, typename TOUT>
+    std::vector<TOUT> *getVector(const int col, const char *def);
 };
 #endif
 
@@ -620,22 +693,26 @@ public:
     std::string getValue(const int col, const int arrayLimit = 0);
 
     char getChar(const int pos);
-    char *getCharA(const int pos, int& size);
     std::string getString(const int col);
+    bool getBool(const int col);
     int getInt(const int col);
-    long getInt8(const int col);
+    long long getInt8(const int col);
     int* getIntA(const int col, int& size);
     std::vector<int>* getIntV(const int col);
-    std::vector< std::vector<int>* >* getIntVV(const int col);
+    long long* getInt8A(const int col, int& size);
+    std::vector<long long>* getInt8V(const int col);
+    std::vector< std::vector<int>* >* get(const int col);
     float getFloat(const int col);
     double getFloat8(const int col);
     float* getFloatA(const int col, int& size);
     std::vector<float>* getFloatV(const int col);
+    double* getFloat8A(const int col, int& size);
+    std::vector<double>* getFloat8V(const int col);
     time_t getTimestamp(const int col);
-    int getIntOid(const int col);
     IntervalEvent *getIntervalEvent(const int col);
 #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
+    PGpoint* getPointA(const int col, int& size);
     std::vector<PGpoint>*  getPointV(const int col);
 #endif
 #if HAVE_POSTGIS
@@ -645,6 +722,8 @@ public:
 #if HAVE_OPENCV
     cv::Mat *getCvMat(const int col);
 #endif
+    void *getBlob(const int col, int &size);
+    
     std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
 
 protected:

@@ -86,13 +86,6 @@ char SLResultSet::getChar(const int col) {
     else return *(sl_res->res[sl_res_i]);
 }
 
-char *SLResultSet::getCharA(const int col, int& size) {
-    SLres    *sl_res     = (SLres *) this->res;
-    size_t      sl_res_i    = (sl_res->cols)*(this->pos+1)+col;
-    if (sl_res_i < 0 || sl_res_i > sl_res->cols*(sl_res->rows+1)) return NULL;
-    else return sl_res->res[sl_res_i];
-}
-
 string SLResultSet::getString(const int col) {
     SLres    *sl_res     = (SLres *) this->res;
     size_t      sl_res_i    = (sl_res->cols)*(this->pos+1)+col;
@@ -101,6 +94,10 @@ string SLResultSet::getString(const int col) {
 }
 
 //// =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
+
+bool SLResultSet::getBool(const int col) {
+    return getInt(col) > 0;
+}
 
 int SLResultSet::getInt(const int col) {
     SLres    *sl_res     = (SLres *) this->res;
@@ -113,7 +110,7 @@ int SLResultSet::getInt(const int col) {
     }
 }
 
-long SLResultSet::getInt8(const int col) {
+long long SLResultSet::getInt8(const int col) {
     SLres    *sl_res     = (SLres *) this->res;
     size_t      sl_res_i    = (sl_res->cols)*(this->pos+1)+col;
     long        ret         = 0;
@@ -142,16 +139,22 @@ vector<int>* SLResultSet::getIntV(const int col) {
     }
 }
 
-vector< vector<int>* >* SLResultSet::getIntVV(const int col) {
-    SLres    *sl_res     = (SLres *) this->res;
-    size_t      sl_res_i    = (sl_res->cols)*(this->pos+1)+col;
-    if (sl_res_i < 0 || sl_res_i > sl_res->cols*(sl_res->rows+1)) return NULL;
+long long* SLResultSet::getInt8A(const int col, int& size) {
+    SLres *sl_res = (SLres *) this->res;
+    size_t sl_res_i = (sl_res->cols)*(this->pos + 1) + col;
+    if (sl_res_i < 0 || sl_res_i > sl_res->cols * (sl_res->rows + 1)) return NULL;
     else {
-        vector< vector<int>* >* arrays = new vector< vector<int>* >;
-        arrays->push_back(deserializeV<int>(sl_res->res[sl_res_i]));
+        return deserializeA<long long>(sl_res->res[sl_res_i], size);
     }
+}
 
-
+vector<long long>* SLResultSet::getInt8V(const int col) {
+    SLres *sl_res = (SLres *) this->res;
+    size_t sl_res_i = (sl_res->cols)*(this->pos + 1) + col;
+    if (sl_res_i < 0 || sl_res_i > sl_res->cols * (sl_res->rows + 1)) return NULL;
+    else {
+        return deserializeV<long long>(sl_res->res[sl_res_i]);
+    }
 }
 
 //// =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
@@ -189,6 +192,24 @@ vector<float>* SLResultSet::getFloatV(const int col) {
     if (sl_res_i < 0 || sl_res_i > sl_res->cols*(sl_res->rows+1)) return NULL;
     else {
         return deserializeV<float>(sl_res->res[sl_res_i]);
+    }
+}
+
+double* SLResultSet::getFloat8A(const int col, int& size) {
+    SLres *sl_res = (SLres *) this->res;
+    size_t sl_res_i = (sl_res->cols)*(this->pos + 1) + col;
+    if (sl_res_i < 0 || sl_res_i > sl_res->cols * (sl_res->rows + 1)) return NULL;
+    else {
+        return deserializeA<double>(sl_res->res[sl_res_i], size);
+    }
+}
+
+vector<double>* SLResultSet::getFloat8V(const int col) {
+    SLres *sl_res = (SLres *) this->res;
+    size_t sl_res_i = (sl_res->cols)*(this->pos + 1) + col;
+    if (sl_res_i < 0 || sl_res_i > sl_res->cols * (sl_res->rows + 1)) return NULL;
+    else {
+        return deserializeV<double>(sl_res->res[sl_res_i]);
     }
 }
 
@@ -279,6 +300,10 @@ PGpoint SLResultSet::getPoint(const int col) {
 //    }
     return point;
 }
+
+PGpoint* SLResultSet::getPointA(const int col, int& size) {
+    return NULL;
+}
 vector<PGpoint>*  SLResultSet::getPointV(const int col) {
     return NULL;
 }
@@ -303,20 +328,19 @@ time_t SLResultSet::getTimestamp(const int col) {
     else return toTimestamp(sl_res->res[sl_res_i]);
 }
 
-int SLResultSet::getIntOid(const int col) {
-    SLres    *sl_res     = (SLres *) this->res;
-    size_t      sl_res_i    = (sl_res->cols)*(this->pos+1)+col;
-    int         ret         = 0;
-    if (sl_res_i < 0 || sl_res_i > sl_res->cols*(sl_res->rows+1)) return 0;
-    else {
-        stringstream(sl_res->res[sl_res_i]) >> ret;
-        return ret;
-    }
-}
-
 IntervalEvent *SLResultSet::getIntervalEvent(const int col) {
     return NULL;
 }
+
+
+// ========================= GETTERS - OTHER ==================================
+
+void *SLResultSet::getBlob(const int col, int &size) {
+    size = 0;
+    return NULL;
+}
+
+// =======================UNIVERSAL GETTER=====================================
 
 string SLResultSet::getValue(const int col, const int arrayLimit) {
     SLres    *sl_res = (SLres *) this->res;

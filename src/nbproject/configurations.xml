@@ -73,14 +73,12 @@
         <itemPath>backend_pg/pgconnection.cpp</itemPath>
         <itemPath>backend_pg/pgquerybuilder.cpp</itemPath>
         <itemPath>backend_pg/pgresultset.cpp</itemPath>
-        <itemPath>backend_pg/pgtypemanager.cpp</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="backend_sl" projectFiles="true">
         <itemPath>backend_sl/slbackendbase.cpp</itemPath>
         <itemPath>backend_sl/slconnection.cpp</itemPath>
         <itemPath>backend_sl/slquerybuilder.cpp</itemPath>
         <itemPath>backend_sl/slresultset.cpp</itemPath>
-        <itemPath>backend_sl/sltypemanager.cpp</itemPath>
       </logicalFolder>
       <itemPath>backend_factory.cpp</itemPath>
       <itemPath>commons.cpp</itemPath>
@@ -292,8 +290,6 @@
       </item>
       <item path="backend_pg/pgresultset.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_pg/pgtypemanager.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="backend_sl/slbackendbase.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="backend_sl/slconnection.cpp" ex="false" tool="1" flavor2="0">
@@ -301,8 +297,6 @@
       <item path="backend_sl/slquerybuilder.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="backend_sl/sltypemanager.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -479,8 +473,6 @@
       </item>
       <item path="backend_pg/pgresultset.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_pg/pgtypemanager.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="backend_sl/slbackendbase.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="backend_sl/slconnection.cpp" ex="false" tool="1" flavor2="0">
@@ -488,8 +480,6 @@
       <item path="backend_sl/slquerybuilder.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="backend_sl/sltypemanager.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -699,8 +689,6 @@
       </item>
       <item path="backend_pg/pgresultset.cpp" ex="false" tool="1" flavor2="0">
       </item>
-      <item path="backend_pg/pgtypemanager.cpp" ex="false" tool="1" flavor2="0">
-      </item>
       <item path="backend_sl/slbackendbase.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="backend_sl/slconnection.cpp" ex="false" tool="1" flavor2="0">
@@ -708,8 +696,6 @@
       <item path="backend_sl/slquerybuilder.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="backend_sl/sltypemanager.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
       </item>

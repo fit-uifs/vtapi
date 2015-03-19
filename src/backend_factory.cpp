@@ -91,7 +91,7 @@ QueryBuilder* BackendFactory::createQueryBuilder(BackendFactory::BACKEND_T backe
     return queryBuilder;
 };
 
-ResultSet* BackendFactory::createResultSet(BACKEND_T backend, const BackendBase &base, VTAPI_DBTYPES_MAP *dbtypes) {
+ResultSet* BackendFactory::createResultSet(BACKEND_T backend, const BackendBase &base, DBTYPES_MAP *dbtypes) {
     ResultSet *resultSet = NULL;
     switch (backend) {
         case BACKEND_POSTGRES:

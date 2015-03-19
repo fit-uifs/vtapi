@@ -41,31 +41,12 @@
 
 
 #include "vtapi_config.h"
-
+#include "vtapi_serialize.h"
     
     
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-/**
- * Endian swapper for 2-byte long types
- * @param out buffer
- * @param in buffer
- */
-void endian_swap2(void *out, void *in);
-/**
- * Endian swapper for 4-byte long types
- * @param out buffer
- * @param in buffer
- */
-void endian_swap4(void *out, void *in);
-/**
- * Endian swapper for 8-byte long types
- * @param out buffer
- * @param in buffer
- */
-void endian_swap8(void *out, void *in);
 
 #if HAVE_POSTGIS
 

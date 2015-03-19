@@ -27,7 +27,7 @@ class Connection
 protected:
     std::string connInfo;       /**< connection string to access the database */
     std::string errorMessage;   /**< error message string */
-    VTAPI_DBTYPES_MAP dbtypes;  /**< map of database types definitions */
+    DBTYPES_MAP dbtypes;  /**< map of database types definitions */
 
 public:
     /**
@@ -91,7 +91,7 @@ public:
      * Gets map of preloaded database types
      * @return reference to type map
      */
-    VTAPI_DBTYPES_MAP *getDBTypes() { return &this->dbtypes; }
+    DBTYPES_MAP *getDBTypes() { return &this->dbtypes; }
     
     /**
      * Returns last error message
@@ -123,8 +123,7 @@ public:
 
 protected:
     bool loadDBTypes();
-    short typeCategoryCharToType(char c);
-
+    short getTypeCategoryFlags(char c, const std::string &name);
 
     static PGConnection *glob;
     static int enum_get(PGtypeArgs *args);

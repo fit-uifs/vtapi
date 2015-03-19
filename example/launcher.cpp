@@ -170,8 +170,7 @@ public:
         {
             IntervalEvent *event = outputs->getIntervalEvent("event");
             if (event) {
-                printf("event: class=%d,group=%d,score=%.2f\n",
-                    event->class_id, event->group_id, event->score);
+                printf("event: %s\n", toString(*event).c_str());
                 delete event;
             }
             else {
@@ -350,8 +349,7 @@ int main(int argc, char *argv[])
                 {
                     IntervalEvent *event = outputs->getIntervalEvent("event");
                     if (event) {
-                        printf("event: class=%d,group=%d,score=%.2f\n",
-                            event->class_id, event->group_id, event->score);
+                        printf("event: %s\n", toString(*event).c_str());
                         delete event;
                     }
                     else {
