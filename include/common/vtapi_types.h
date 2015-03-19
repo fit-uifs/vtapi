@@ -11,6 +11,10 @@ typedef unsigned int DBTYPE;
 // |  type length[B]  |   DB_TYPE_FLAGs   |     DBTYPE_CATEGORY_T    |
 //////////////////////////////////////////////////////////////////////
 
+#define DBTYPE_CATEGORY_MASK    ((DBTYPE)(0xFF))
+#define DBTYPE_FLAG_MASK        ((DBTYPE)(0xFF00))
+#define DBTYPE_LENGTH_MASK      ((DBTYPE)(0xFFFF0000))
+
 // category indicates how should type value be retrieved
 typedef enum
 {
@@ -34,28 +38,29 @@ typedef enum
     DBTYPE_UD_CVMAT,        // user defined - OpenCV matrix
     DBTYPE_UD_EVENT,        // user defined - VT event
     DBTYPE_REF_TYPE,        // database type
-    DBTYPE_REF_CLASS        // database class (column ...)
+    DBTYPE_REF_CLASS,       // database class (column ...)
+    DBTYPE_MAX = 0xFF
 } DBTYPE_CATEGORY;
 
 // additional flags for type categories
 typedef enum
 {
     DBTYPE_FLAG_NONE        = (0),
-    DBTYPE_FLAG_ARRAY       = (1),      // type is actually array of other type
-    DBTYPE_FLAG_NUMERIC     = (1 << 1), // type is numeric
-    DBTYPE_FLAG_GEOMETRIC   = (1 << 2), // type is geometric
-    DBTYPE_FLAG_USERDEFINED = (1 << 3), // type was created by vtapi
-    DBTYPE_FLAG_REFTYPE     = (1 << 4)  // type is database meta-type
+    DBTYPE_FLAG_ARRAY       = (1 << 8),     // type is actually array of other type
+    DBTYPE_FLAG_NUMERIC     = (1 << 9),     // type is numeric
+    DBTYPE_FLAG_GEOMETRIC   = (1 << 10),    // type is geometric
+    DBTYPE_FLAG_USERDEFINED = (1 << 11),    // type was created by vtapi
+    DBTYPE_FLAG_REFTYPE     = (1 << 12)     // type is database meta-type
 } DBTYPE_FLAG;
 
-#define DBTYPE_GETCATEGORY(x)       (DBTYPE_CATEGORY)(x & 0xFF)
-#define DBTYPE_SETCATEGORY(x,c)     (x = (x | (c & 0xFF)))
-#define DBTYPE_HASFLAG(x,f)         (bool)((((x & 0xFF00) >> 8) & f) != 0)
-#define DBTYPE_SETFLAG(x,f)         (x = (x | ((f & 0xFF) << 8)))
-#define DBTYPE_GETCATEGORYFLAGS(x)  (short)(x & 0xFFFF)
-#define DBTYPE_SETCATEGORYFLAGS(x,f) (x = (x | (f & 0xFFFF)))
-#define DBTYPE_GETLENGTH(x)         (short)((x >> 16) & 0xFFFF)
-#define DBTYPE_SETLENGTH(x,l)       (x = ((x & (DBTYPE)0xFFFF) | ((l & 0xFFFF) << 16)))
+#define DBTYPE_GETCATEGORY(x)       (DBTYPE_CATEGORY)(x & DBTYPE_CATEGORY_MASK)
+#define DBTYPE_SETCATEGORY(x,c)     {x = (x & ~DBTYPE_CATEGORY_MASK) | (c & DBTYPE_CATEGORY_MASK);}
+#define DBTYPE_HASFLAG(x,f)         (bool)((x & f) != 0)
+#define DBTYPE_GETFLAGS(x)          (DBTYPE_FLAG)(DBTYPE_CATEGORY)(x & DBTYPE_FLAG_MASK)
+#define DBTYPE_SETFLAGS(x,f)        {x |= (f & DBTYPE_FLAG_MASK);}
+#define DBTYPE_SETCATEGORYFLAGS(x,cf) {DBTYPE_SETCATEGORY(x,cf);DBTYPE_SETFLAGS(x,cf);}
+#define DBTYPE_GETLENGTH(x)         (short)((x & DBTYPE_LENGTH_MASK) >> 16)
+#define DBTYPE_SETLENGTH(x,l)       {x = (x & ~DBTYPE_LENGTH_MASK) | (((DBTYPE)l << 16) & DBTYPE_LENGTH_MASK);}
 
 // type definition and map
 typedef struct _DBTYPE_DEFINITION_T

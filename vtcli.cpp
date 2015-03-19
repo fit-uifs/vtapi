@@ -145,14 +145,30 @@ void VTCli::selectCommand(string& line) {
     }
     // select interval
     else if (!input.compare("interval")) {
-        Interval* in = new Interval(*(this->vtapi->commons));
-        in->select->whereString("seqname", params["seqname"]);
-        if (params.count("t1") > 0) in->select->whereInt("t1", atoi(params["t1"].c_str()));
-        if (params.count("t2") > 0) in->select->whereInt("t2", atoi(params["t2"].c_str()));
-        in->select->whereString("imglocation", params["location"]);
-        in->next();
-        in->printAll();
-        delete in;
+        Interval* in = NULL;
+        if (params.count("process") > 0) {
+            Process *p = new Process(*(this->vtapi->commons), params["process"]);
+            if (p->next()) {
+                in = new Interval(*(this->vtapi->commons), p->getOutputs());
+            }
+            else {
+                cerr << "Select failed : process " << params["process"] << " doesn't exist" << endl;
+            }
+            delete p;
+        }
+        else {
+            in = new Interval(*(this->vtapi->commons));
+        }
+        if (in) {
+            in->select->whereString("seqname", params["seqname"]);
+            in->select->whereString("prsname", params["process"]);
+            if (params.count("t1") > 0) in->select->whereInt("t1", atoi(params["t1"].c_str()));
+            if (params.count("t2") > 0) in->select->whereInt("t2", atoi(params["t2"].c_str()));
+            in->select->whereString("imglocation", params["location"]);
+            in->next();
+            in->printAll();
+            delete in;
+        }
     }
     // select process
     else if (!input.compare("process")) {
@@ -176,10 +192,6 @@ void VTCli::selectCommand(string& line) {
     }
     // select method keys
     else if (!input.compare("methodkeys")) {
-        
-    }
-    // select events
-    else if (!input.compare("event")) {
         
     }
 }
@@ -669,7 +681,7 @@ void VTCli::printHelp(const string& what) {
     }
     else if (!what.compare("select")) {
         hss << endl <<
-            "select dataset|sequence|interval|process|method|selection [ARGS]" << endl << endl <<
+            "select dataset|sequence|interval|process|method|methodkeys [ARGS]" << endl << endl <<
             "Selects data and prints them in specified format (-f option)" << endl << endl <<
             "ARG format:      arg=value or arg=value1,value2,..." << endl << endl <<
             " Dataset ARGS:" << endl <<
@@ -681,18 +693,19 @@ void VTCli::printHelp(const string& what) {
             "       num       unique number of the sequence" << endl <<
             "      type       type of the sequence [images, video]" << endl << endl <<
             "Interval ARGS:" << endl <<
+            "  process        name of the process for which to get data" << endl <<
             "  seqname        name of the sequence containing this interval" << endl <<
             "        t1       begin time of the interval" << endl <<
             "        t2       end time of the interval" << endl <<
             "  location       location of the interval data file (file)" << endl << endl <<
-            "Method ARGS:" << endl <<
-            "      name       name of the method" << endl << endl <<
             "Process ARGS:" << endl <<
             "      name       name of the process" << endl <<
             "    method       name of the method the process is instance of" << endl <<
-            "    inputs       data type of inputs (database table)" << endl <<
+            "    inputs       name of the process supplying input data" << endl <<
             "   outputs       data type of outputs (database table)" << endl << endl <<
-            "Selection ARGS:" << endl <<
+            "Method ARGS:" << endl <<
+            "      name       name of the method" << endl << endl <<
+            "Methodkeys ARGS:" << endl <<
             "   (not implemented)" << endl;
     }
     else if (!what.compare("insert")) {

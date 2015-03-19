@@ -213,12 +213,12 @@ bool PGConnection::loadDBTypes()
             // get type category and flags
             short catFlags = getTypeCategoryFlags(cat, def.name);
             if (catFlags) {
+                DBTYPE_SETFLAGS(def.type, catFlags);
                 if (DBTYPE_HASFLAG(catFlags, DBTYPE_FLAG_ARRAY)) {
-                    DBTYPE_SETFLAG(def.type, DBTYPE_FLAG_ARRAY);
                     oid_array.insert(std::pair<int,int>(oid, oid_elem));
                 }
                 else {
-                    DBTYPE_SETCATEGORYFLAGS(def.type, catFlags);
+                    DBTYPE_SETCATEGORY(def.type, catFlags);
                     DBTYPE_SETLENGTH(def.type, length);
                 }
                 dbtypes.insert(DBTYPES_PAIR(oid, def));
@@ -230,7 +230,8 @@ bool PGConnection::loadDBTypes()
             DBTYPES_MAP_IT itArr = dbtypes.find((*it).first);
             DBTYPES_MAP_IT itElem = dbtypes.find((*it).second);
             if (itArr != dbtypes.end() && itElem != dbtypes.end()) {
-                DBTYPE_SETCATEGORYFLAGS((*itArr).second.type, DBTYPE_GETCATEGORYFLAGS((*itElem).second.type));
+                DBTYPE_SETCATEGORY((*itArr).second.type, (*itElem).second.type);
+                DBTYPE_SETFLAGS((*itArr).second.type, (*itElem).second.type);
                 DBTYPE_SETLENGTH((*itArr).second.type, DBTYPE_GETLENGTH((*itElem).second.type));
             }
         }
@@ -249,7 +250,7 @@ short PGConnection::getTypeCategoryFlags(char c, const std::string &name)
     switch (c) {
         case 'A':   // array
         {
-            DBTYPE_SETFLAG(ret, DBTYPE_FLAG_ARRAY);
+            DBTYPE_SETFLAGS(ret, DBTYPE_FLAG_ARRAY);
             break;
         }
         case 'B':   // boolean
@@ -319,7 +320,7 @@ short PGConnection::getTypeCategoryFlags(char c, const std::string &name)
                 DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_FLOAT | DBTYPE_FLAG_NUMERIC);
             }
             else if (name.compare("numeric") == 0) {
-                DBTYPE_SETFLAG(ret, DBTYPE_FLAG_NUMERIC);
+                DBTYPE_SETFLAGS(ret, DBTYPE_FLAG_NUMERIC);
             }
             else if (name.compare("regtype") == 0) {
                 DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_REF_TYPE | DBTYPE_FLAG_REFTYPE);

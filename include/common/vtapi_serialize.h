@@ -192,8 +192,11 @@ inline std::string toString <cv::Mat>(const cv::Mat& value)
 template <>
 inline std::string toString <time_t>(const time_t& value)
 {
+    struct tm *ts = gmtime(&value);
+    ts->tm_year -= 1900;
+    
     char buff[20];
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", gmtime(&value));
+    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", ts);
     
     return buff;
 };

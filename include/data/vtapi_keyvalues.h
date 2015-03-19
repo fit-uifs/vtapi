@@ -708,7 +708,7 @@ protected:
      *  -# ints - column widths
      * @return success
      */
-    bool printHeader(const std::pair< TKeys*,std::vector<int>* > fInfo);
+    bool printHeader(const std::pair< TKeys*,std::vector<int>* > &fInfo);
 
     /**
      * Prints one row of resultset

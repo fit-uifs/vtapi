@@ -47,10 +47,9 @@ public:
 
     /**
      * Constructor
-     * @deprecated
      * @param configFile   location of configuration file
      */
-    VTApi(const std::string& configFile = std::string("./vtapi.conf"));
+    VTApi(const std::string& configFile = "./vtapi.conf");
 
     /**
      * Constructor

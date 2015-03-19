@@ -373,49 +373,64 @@ bool KeyValues::print() {
         int origpos = select->resultSet->getPosition();
         int get_widths = (format == STANDARD);
         pair< TKeys*, vector<int>* > fInfo = select->resultSet->getKeysWidths(select->resultSet->getPosition(), get_widths, arrayLimit);
-        if (fInfo.first && (format != STANDARD || fInfo.second)) {
+        if (fInfo.first) {
             printHeader(fInfo);
             printRowOnly(select->resultSet->getPosition(), fInfo.second);
             printFooter(1);
         }
-        else cout << "(empty)" << endl;
-        vt_destruct(fInfo.first); vt_destruct(fInfo.second);
+        else {
+            cout << "(empty)" << endl;
+        }
+        vt_destruct(fInfo.first);
+        vt_destruct(fInfo.second);
+        
         select->resultSet->setPosition(origpos);
         return VT_OK;
     }
 }
 
 bool KeyValues::printAll() {
-    if (!select || !select->resultSet->isOk()) {
-        logger->warning(303, "There is nothing to print (see other messages)", thisClass+"::printAll()");
-        return VT_FAIL;
-    }
-    else {
-        int origpos = select->resultSet->getPosition();
-        int get_widths = (format == STANDARD);
-        pair< TKeys*, vector<int>* > fInfo = select->resultSet->getKeysWidths(-1, get_widths, arrayLimit);
-        if (fInfo.first && (format != STANDARD || fInfo.second)) {
-            printHeader(fInfo);
-            for (int r = 0; r < select->resultSet->countRows(); r++) printRowOnly(r, fInfo.second);
-            printFooter(select->resultSet->countRows());
+    bool retval = VT_OK;
+    int origpos = select->resultSet->getPosition();
+    pair< TKeys*, vector<int>* > fInfo(NULL, NULL);
+
+    do {
+        if (!select || !select->resultSet->isOk()) {
+            logger->warning(303, "There is nothing to print (see other messages)", thisClass + "::printAll()");
+            retval = VT_FAIL;
+            break;
+        } 
+
+        bool getWidths = (format == STANDARD);
+        fInfo = select->resultSet->getKeysWidths(-1, getWidths, arrayLimit);
+        if (!fInfo.first || (getWidths && !fInfo.second)) {
+            cout << "(empty)" << endl;
+            break;
         }
-        else cout << "(empty)" << endl;
-        vt_destruct(fInfo.first); vt_destruct(fInfo.second);
-        select->resultSet->setPosition(origpos);
-        return VT_OK;
-    }
+        
+        retval = printHeader(fInfo);
+        if (!retval) break;
+        
+        for (int r = 0; r < select->resultSet->countRows(); r++) {
+            printRowOnly(r, fInfo.second);
+        }
+        
+        printFooter(select->resultSet->countRows());
+        
+    } while(0);
+
+    vt_destruct(fInfo.first);
+    vt_destruct(fInfo.second);
+    select->resultSet->setPosition(origpos);
+    
+    return retval;
 }
 
 // =============== PRINT support methods =======================================
 
-bool KeyValues::printHeader(const pair< TKeys*, vector<int>* > fInfo) {
-    bool retval = VT_OK;
+bool KeyValues::printHeader(const pair< TKeys*, vector<int>* > &fInfo) {
     stringstream table, nameln, typeln, border;
     int cols = select->resultSet->countCols();
-
-    if (!fInfo.first || !fInfo.second || cols != fInfo.first->size() || cols != fInfo.second->size()) {
-        return VT_FAIL;
-    }
 
     if (format == HTML) {
         if (tableOpt.empty()) table << "<table>";
@@ -423,28 +438,38 @@ bool KeyValues::printHeader(const pair< TKeys*, vector<int>* > fInfo) {
         if (!caption.empty()) table << "<caption align=\"top\">" << caption << "</caption>";
         table << endl << "<tr align=\"center\">";
     }
+
     for (int c = 0; c < cols; c++) {
         if (format == STANDARD) {
             nameln << std::left << std::setw((*fInfo.second)[c]) << (*fInfo.first)[c].key;
             typeln << std::left << std::setw((*fInfo.second)[c]) << (*fInfo.first)[c].type;
             border << std::setfill('-') << std::setw((*fInfo.second)[c]) << "";
-            if (c < cols-1) {
-                nameln << '|'; typeln << '|'; border << '+';
+            if (c < cols - 1) {
+                nameln << '|';
+                typeln << '|';
+                border << '+';
             }
-        }
-        else if (format == CSV) {
+        } else if (format == CSV) {
             nameln << (*fInfo.first)[c].key;
-            if (c < cols-1) nameln << ',';
-        }
-        else if (format == HTML) {
+            if (c < cols - 1) nameln << ',';
+        } else if (format == HTML) {
             table << "<th>" << (*fInfo.first)[c].key << "<br/>";
             table << (*fInfo.first)[c].type << "</th>";
         }
     }
-    table << "</tr>" << endl; nameln << endl; typeln << endl; border << endl;
-    if (format == STANDARD) cout << nameln.str() << typeln.str() << border.str();
-    else if (format == CSV) cout << nameln.str();
-    else if (format == HTML) cout << table.str();
+    table << "</tr>" << endl;
+    nameln << endl;
+    typeln << endl;
+    border << endl;
+    if (format == STANDARD) {
+        cout << nameln.str() << typeln.str() << border.str();
+    }
+    else if (format == CSV) {
+        cout << nameln.str();
+    }
+    else if (format == HTML) {
+        cout << table.str();
+    }
 
     return VT_OK;
 }
