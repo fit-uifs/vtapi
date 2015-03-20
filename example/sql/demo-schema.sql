@@ -154,10 +154,10 @@ INSERT INTO demo1out (seqname, prsname, t1, t2, features_array, features_mat, us
 
 -- insert results for demo2 processes (processes 4,5,6)
 INSERT INTO demo2out (seqname, prsname, t1, t2, event, userid, notes) VALUES
-    ('video3', 'demo2p_video3_demo1p_5000_25', 1, 1, '(1,20,0,"((5,9),(16,36))",0.8,NULL)', 'demouser', 'pre-generated'),
-    ('video3', 'demo2p_video3_demo1p_5000_25', 2, 2, '(2,15,0,"((14,19),(22,63))",0.74,NULL)', 'demouser', 'pre-generated'),
-    ('video1', 'demo2p_video1_demo1p_11_50', 1, 15, '(1,55,0,"((5,63),(17,19))",0.23,NULL)', 'demouser', 'pre-generated'),
-    ('video1', 'demo2p_video1_demo1p_11_50', 16, 79, '(2,17,0,"((1,3),(12,86))",0.11,NULL)', 'demouser', 'pre-generated'),
+    ('video3', 'demo2p_video3_demo1p_5000_25', 1, 1, '(1,20,0,"((5,9),(16,36))",0.8,)', 'demouser', 'pre-generated'),
+    ('video3', 'demo2p_video3_demo1p_5000_25', 2, 2, '(2,15,0,"((14,19),(22,63))",0.74,)', 'demouser', 'pre-generated'),
+    ('video1', 'demo2p_video1_demo1p_11_50', 1, 15, '(1,55,0,"((5,63),(17,19))",0.23,)', 'demouser', 'pre-generated'),
+    ('video1', 'demo2p_video1_demo1p_11_50', 16, 79, '(2,17,0,"((1,3),(12,86))",0.11,)', 'demouser', 'pre-generated'),
     ('video3', 'demo2p_video3_demo1p_11_50', 1, 2, '(1,12,1,"((10,20),(10,20))",0.42,"\\x41484f4a")', 'demouser', 'pre-generated'),
-    ('video3', 'demo2p_video3_demo1p_11_50', 1, 1, '(1,12,0,"((10,20),(10,10))",0.63,NULL)', 'demouser', 'pre-generated'),
-    ('video3', 'demo2p_video3_demo1p_11_50', 2, 2, '(1,12,0,"((10,10),(10,20))",0.11,NULL)', 'demouser', 'pre-generated');
+    ('video3', 'demo2p_video3_demo1p_11_50', 1, 1, '(1,12,0,"((10,20),(10,10))",0.63,)', 'demouser', 'pre-generated'),
+    ('video3', 'demo2p_video3_demo1p_11_50', 2, 2, '(1,12,0,"((10,10),(10,20))",0.11,)', 'demouser', 'pre-generated');
