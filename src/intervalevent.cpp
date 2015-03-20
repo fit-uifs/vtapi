@@ -24,6 +24,7 @@ IntervalEvent::~IntervalEvent() {
 void IntervalEvent::SetUserData(const void *data, size_t size) {
     if (user_data) {
         free(user_data);
+        user_data = NULL;
         user_data_size = 0;
     }
     
