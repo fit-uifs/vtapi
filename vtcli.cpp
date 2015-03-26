@@ -183,16 +183,17 @@ void VTCli::selectCommand(string& line) {
     }
     // select method
     else if (!input.compare("method")) {
-        Method* me = new Method(*(this->vtapi->commons));
-        //TODO: methodkeys not implemented yet
-        me->select->whereString("mtname", params["name"]);
+        Method* me = new Method(*(this->vtapi->commons), params["name"]);
         me->next();
         me->printAll();
         delete me;
     }
     // select method keys
     else if (!input.compare("methodkeys")) {
-        
+        Method* me = new Method(*(this->vtapi->commons), params["method"]);
+        me->next();
+        me->printMethodKeys();
+        delete me;
     }
 }
 
@@ -706,7 +707,7 @@ void VTCli::printHelp(const string& what) {
             "Method ARGS:" << endl <<
             "      name       name of the method" << endl << endl <<
             "Methodkeys ARGS:" << endl <<
-            "   (not implemented)" << endl;
+            "    method       name of the method the process is instance of" << endl;
     }
     else if (!what.compare("insert")) {
         hss << endl <<

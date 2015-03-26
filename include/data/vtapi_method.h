@@ -72,7 +72,10 @@ public:
      * @return TKeys
      */
     TKeys getMethodKeys();
-
+    /**
+     * Prints method's keys
+     */
+    void printMethodKeys();
     /**
      * Creates process object for access to existing processes
      * @return pointer to new process object

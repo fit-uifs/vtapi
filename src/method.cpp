@@ -64,13 +64,12 @@ Process* Method::addProcess(Process::fCallback callback, void *pContext) {
 
 TKeys Method::getMethodKeys() {
     if (methodKeys.empty()) {
-        // TODO: pretypovani na TKeyValues
         TKeyValues* parameters = NULL;
         
         KeyValues* kv = new KeyValues(*this);
         kv->select = new Select(*this);
         kv->select->from("public.methods_keys", "keyname");
-        kv->select->from("public.methods_keys", "typname::text"); // TODO: Is this valid solution for SQLite3?
+        kv->select->from("public.methods_keys", "typname::text");
         kv->select->from("public.methods_keys", "inout");
         kv->select->whereString("mtname", this->method);
 
@@ -88,6 +87,23 @@ TKeys Method::getMethodKeys() {
     return methodKeys;
 }
 
+void Method::printMethodKeys()
+{
+    KeyValues* kv = new KeyValues(*this);
+    kv->select = new Select(*this);
+    kv->select->from("public.methods_keys", "keyname");
+    kv->select->from("public.methods_keys", "typname::text");
+    kv->select->from("public.methods_keys", "inout");
+    kv->select->from("public.methods_keys", "default_num");
+    kv->select->from("public.methods_keys", "default_str");
+    kv->select->whereString("mtname", this->method);
+
+    if (kv->next()) {
+        kv->printAll();
+    }
+
+    delete (kv);
+}
 
 
 
