@@ -49,13 +49,8 @@ string Interval::getProcessName() {
     return this->getString("prsname");
 }
 
-//TODO: pres query
 Sequence* Interval::getParentSequence() {
-    Sequence *seq = NULL;
-    if (!this->sequence.empty()) {
-        seq = new Sequence(*this, this->sequence);
-    }  
-    return seq;
+    return new Sequence(*this, this->getSequenceName());
 }
 
 
@@ -68,49 +63,62 @@ int Interval::getEndTime() {
     return this->getInt("t2");
 }
 
+bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
+{
+    bool bRet = false;
+    Sequence *seq = this->getParentSequence();
+    
+    if(seq) {
+        if (seq->next() && seq->getType().compare("video") == 0) {
+            time_t start = seq->getTimestamp("vid_time");
+            float fps = seq->getFloat("vid_fps");
+            
+            if (start && fps) {
+                *t1 = start + (time_t)(getStartTime() / fps);
+                *t2 = start + (time_t) (getEndTime() / fps);
+                bRet = true;
+            }
+        } 
+        delete seq;
+    }
+    
+    return bRet;
+}
 
-bool Interval::add(const string& sequence, const int t1, const int t2, const string& location) {
+
+void Interval::setStartEndTime(const int t1, const int t2)
+{
+    preSet();
+    update->setInt("t1", t1);
+    update->setInt("t2", t2);
+    update->execute();
+}
+
+
+
+bool Interval::add(const string& sequence, const int t1, const int t2, const string& location)
+{
+    return add(sequence, t1, t2, location, getUser(), "");
+}
+
+bool Interval::add(const string& sequence, const int t1, const int t2, const string& location,
+    const string& userid, const string& notes)
+{
     bool retval = VT_OK;
     int te2 = (t2 < 0) ? t1 : t2;
 
-    vt_destruct(insert);
+    if (insert) store.push_back(insert);
     insert = new Insert(*this, this->selection);
     retval &= insert->keyString("seqname", sequence);
     retval &= insert->keyString("prsname", this->process);
     retval &= insert->keyInt("t1", t1);
     retval &= insert->keyInt("t2", te2);
     retval &= insert->keyString("imglocation", location);
-
-    // TODO: image && storage checking??
-
-    return retval;
-}
-
-bool Interval::add(const string& sequence, const int t1, const int t2, const string& location,
-    const string& userid, const string& notes) {
-    bool retval = VT_OK;
-
-    retval &= this->add(sequence, t1, t2, location);
-    retval &= insert->keyString("userid", userid);
-    retval &= insert->keyString("notes", notes);
+    if (!userid.empty()) retval &= insert->keyString("userid", userid);
+    if (!notes.empty()) retval &= insert->keyString("notes", notes);
     
     return retval;
 }
-
-bool Interval::addExecute() {
-    bool retval = VT_OK;
-    time_t now = 0;
-
-    if (this->insert) {
-//        time(&now);
-//        retval &= insert->keyTimestamp("created", now);
-        if (retval) retval &= insert->execute();
-    }
-    else retval = VT_FAIL;
-
-    return retval;
-}
-
 
 bool Interval::preSet() {
     bool retval = VT_OK;

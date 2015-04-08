@@ -18,6 +18,7 @@
 using std::string;
 using std::stringstream;
 using std::vector;
+using std::list;
 using std::pair;
 using std::cout;
 using std::cerr;
@@ -40,13 +41,23 @@ KeyValues::KeyValues(const KeyValues& orig, const string& selection)
     this->selection = selection;
 }
 
-KeyValues::~KeyValues() {
+KeyValues::~KeyValues()
+{
+    bool executed = true;
+    
+    for (list<Insert *>::iterator it = store.begin(); it != store.end(); it++) {
+        executed &= (*it)->executed;
+        delete (*it);
+    }
+    
     // whether should be something inserted
     if (insert) {
-        if (!insert->executed) {
-            logger->warning(313, "There should be something inserted: \n" + insert->getQuery(), thisClass+"~KeyValues()");
-        }
+        executed &= insert->executed;
         vt_destruct(insert);
+    }
+
+    if (!executed) {
+        logger->warning(313, "INSERT operation was not executed:", thisClass + "~KeyValues()");
     }
 
     // whether should be something updated
@@ -592,6 +603,10 @@ bool KeyValues::addFloat(const std::string& key, float value) {
 bool KeyValues::addFloatA(const std::string& key, float* value, int size) {
     return this->insert ? this->insert->keyFloatA(key, value, size) : VT_FAIL;
 }
+bool KeyValues::addTimestamp(const std::string& key, const time_t& value)
+{
+    return this->insert ? this->insert->keyTimestamp(key, const time_t& value) : VT_FAIL;
+}
 #if HAVE_OPENCV
 bool KeyValues::addCvMat(const std::string& key, cv::Mat& value) {
     return this->insert ? this->insert->keyCvMat(key, value) : VT_FAIL;
@@ -602,9 +617,25 @@ bool KeyValues::addIntervalEvent(const std::string& key, IntervalEvent& value) {
     return this->insert ? this->insert->keyIntervalEvent(key, value) : VT_FAIL;
 }
 
-bool KeyValues::addExecute() {
-    if (this->insert) return this->insert->execute();
-    else return VT_FAIL;
+bool KeyValues::addExecute()
+{
+    bool retval = VT_OK;
+
+    for (list<Insert *>::iterator it = store.begin(); it != store.end(); it++) {
+        retval &= (*it)->execute();
+        delete (*it);
+    }
+    store.clear();
+
+    if (this->insert) {
+        if (retval) retval &= insert->execute();
+        vt_destruct(this->insert);
+    }
+    else {
+        retval = VT_FAIL;
+    }
+
+    return retval;
 }
 
 // =================== CHECKERS (Storage) ======================================

@@ -76,15 +76,29 @@ public:
     Sequence* getParentSequence();
 
     /**
-     * Gets a start time of the current interval
+     * Gets a start frame of the current interval
      * @return start time
      */
     int getStartTime();
     /**
-     * Gets an end time of the current interval
+     * Gets an end frame of the current interval
      * @return end time
      */
     int getEndTime();
+    /**
+     * Gets real start and end time of the current interval
+     * @param t1 start time
+     * @param t2 end time
+     * @return  sucess
+     */
+    bool getRealStartEndTime(time_t *t1, time_t *t2);
+    
+    /**
+     * Sets interval's start/end time
+     * @param t1 start time
+     * @param t2 end time
+     */
+    void setStartEndTime(const int t1, const int t2 = -1);
 
     /**
      * Adds new interval to the table - minimal insert
@@ -108,12 +122,6 @@ public:
     bool add(const std::string& sequence, const int t1, const int t2, const std::string& location,
     const std::string& userid, const std::string& notes);
 
-    /**
-     * Executes SQL INSERT command for interval
-     * @return success
-     * @note Overloading addExecute from KeyValues
-     */
-    bool addExecute();
     /**
      * Resets interval to the initial state
      * @return success

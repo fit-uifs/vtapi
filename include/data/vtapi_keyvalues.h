@@ -46,6 +46,8 @@ public:
     Insert* insert; /**< Insert to insert new data */
     Update* update; /**< Update to update new data */
 
+    std::list<Insert*> store;  /**< insert queries stored for transactional execute */
+
 public:
     /**
      * KeyValue contructor from Commons object
@@ -650,6 +652,13 @@ public:
      * @return success
      */
     bool addFloatA(const std::string& key, float* value, int size);
+    /**
+     * Adds a new timestamp to a specified key
+     * @param key       column key to insert
+     * @param value     new timestamp
+     * @return success
+     */
+    bool addTimestamp(const std::string& key, const time_t& value);
     
 #if HAVE_OPENCV
     /**

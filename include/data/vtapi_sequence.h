@@ -71,19 +71,12 @@ public:
      * @param location   location of the sequence
      * @param type       type of the sequence
      * @param userid     name of an owner
-     * @param groupid    name of an owner group
      * @param notes      optional description
      * @return success
      */
     bool add(const std::string& name, const std::string& location, const std::string& type,
-    const std::string& userid, const std::string& groupid, const std::string& notes);
+    const std::string& userid, const std::string& notes);
 
-    /**
-     * Executes SQL INSERT command for sequence
-     * @return success
-     * @note Overloading addExecute from KeyValues
-     */
-    bool addExecute();
     /**
      * Resets sequence to initial state
      * @return success
@@ -176,7 +169,7 @@ public:
      * @param location   location of the video
      * @return success
      */
-    bool add(std::string name, std::string location);
+    bool add(const std::string& name, const std::string& location, const time_t& starttime = 0);
 
 
 #if HAVE_OPENCV
@@ -206,6 +199,17 @@ public:
      * @unimplemented
      */
     size_t getLength();
+    /**
+     * Gets video FPS rate
+     * @return FPS
+     */
+    float getFPS();
+    /**
+     * Gets video real-world start time
+     * @return start time
+     */
+    time_t getRealStartTime();
+    
 #endif
 
 };

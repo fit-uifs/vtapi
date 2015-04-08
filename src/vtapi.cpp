@@ -12,6 +12,7 @@
  */
 
 #include <common/vtapi_global.h>
+#include <common/vtapi_settings.h>
 #include <common/vtapi_timexer.h>
 
 #include <vtapi.h>

@@ -32,11 +32,6 @@ class VTCli {
 public:
 
     /**
-     * VTCli constructor with arguments from a VTApi object
-     * @param api initialized VTApi object
-     */
-    VTCli(const VTApi& api);
-    /**
      * VTCli constructor with command line arguments
      * @param argc command line argument count
      * @param argv command line arguments
@@ -57,23 +52,15 @@ public:
      */
     int run();
     /**
-     * Prints basic help
+     * Prints help
      */
     void printHelp();
-    /**
-     * Prints command-specific help
-     * @param what command with which to help
-     */
-    void printHelp(const std::string& what);
 
 protected:
 
-    VTApi* vtapi;
-    bool interact;
-    std::string cmdline;
-    std::map<std::string,std::string> helpStrings;
-    std::set<std::string> videoSuffixes;
-    std::set<std::string> imageSuffixes;
+    VTApi* m_vtapi;
+    bool m_bInteract;
+    std::string m_cmdline;
     
     /**
      * Creates key/value std::pair from string in key=value format
@@ -82,43 +69,11 @@ protected:
      */
     std::pair<std::string,std::string> createKeyValue(const std::string& word);
     /**
-     * Creates sequence name (filename without suffix) from its full path
-     * @param filepath full file(dir)path
-     * @return sequence name
-     */
-    std::string createSeqnameFromPath(const std::string& filepath);
-    /**
-     * Creates sequence location (within dataset) from its full path
-     * @param filepath full file(dir)path
-     * @param baseLocation base data location
-     * @param datasetLocation dataset data location
-     * @return sequence location
-     */
-    std::string createLocationFromPath(const std::string& filepath, const std::string& baseLocation, const std::string& datasetLocation);
-    /**
      * Checks if string is valid parameter key=value
      * @param word checked string
      * @return bool value
      */
     bool isParam(const std::string& word);
-    /**
-     * Checks if filepath points to a video file
-     * @param filepath full filepath
-     * @return bool value
-     */
-    bool isVideoFile(const std::string& filepath);
-    /**
-     * Checks if filepath points to a image file
-     * @param filepath full filepath
-     * @return bool value
-     */
-    bool isImageFile(const std::string& filepath);
-    /**
-     * Checks if dirpath points to a directory with at least one image in it
-     * @param dirpath full path to directory
-     * @return bool value
-     */
-    bool isImageFolder(const std::string& dirpath);
     /**
      * Loads list of images within a folder
      * @param dirpath image folder
@@ -130,7 +85,7 @@ protected:
      * Loads directory recursively within dataset
      * @param dirpath path to dir
      */
-    void loadDirectory(Dataset *ds, const std::string& dirpath);
+    void loadDirectory(Dataset *ds, const std::string& basepath, const std::string& dirpath);
     /**
      * Inserts one sequence into db
      * @param ds dataset
@@ -138,27 +93,24 @@ protected:
      */
     void insertSequence(Dataset *ds, std::map<std::string,std::string> *params);
     /**
-     * Inserts one sequence (image folder) into db
-     * @param ds dataset
-     * @param dirpath path to image folder
-     */
-    void insertImageFolder(Dataset *ds, const std::string& dirpath);
-    /**
-     * Inserts one sequence (video file) into db
-     * @param ds dataset
-     * @param dirpath path to image folder
-     */
-    void insertVideoFile(Dataset *ds, const std::string& filepath);
-    /**
-     * Initialize sets holding image/video suffixes
-     */
-    void initSuffixes();
-    /**
      * Changes all slashes within a path to '/' and removes slashes at its end
      * @param path path to modify
      * @return success
      */
-    bool fixSlashes(std::string& path);
+    std::string fixPathSlashes(const std::string& path);
+    /**
+     * Gets file name without extension from path
+     * @param path
+     * @return name
+     */
+    std::string getFileNameNoExt(const std::string& path);
+    /**
+     * Create relative location
+     * @param filepath
+     * @param basepath
+     * @return 
+     */
+    std::string createLocationFromPath(const std::string& filepath, const std::string& basepath);
     /**
      * Cuts and returns the first word from the input command line
      * @param line input command line
@@ -183,12 +135,8 @@ protected:
      * 
      * @param line
      */
-    void queryCommand(std::string& line);
     void selectCommand(std::string& line);
     void insertCommand(std::string& line);
-    void updateCommand(std::string& line);
-    void deleteCommand(std::string& line);
-    void showCommand(std::string& line);
     void loadCommand(std::string& line);
 };
 

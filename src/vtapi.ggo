@@ -4,17 +4,16 @@
 
 # Program name, version and usage
 package "VTApi"
-version "1.5"
+version "2.0"
 usage "vtapi [OPTIONS] [COMMAND]"
 
 # Default gengetopt arguments
 args "--conf-parser --file-name=vtapi_settings --c-extension=cpp --no-handle-error -u"
 
-text "\nOPTIONS\n"
+text "\n------------------------ OPTIONS ------------------------\n"
+
 option "verbose" v "Verbose output mode - write used SQL commands etc."
     optional
-
-text "\n Config arguments"
 option "config" - "Config file location"
     string typestr="FILENAME" default="./vtapi.conf"
     optional
@@ -55,7 +54,7 @@ option "arraylimit" - "Limit amount of printed array elements"
     int
     optional
 
-text "\n Context specification (WHERE clause)"
+text "\nContext specification"
 option "dataset" D "Set dataset to use"
     string
     optional
@@ -72,33 +71,110 @@ option "selection" E "Set selection to use"
     string
     optional
 
-text "\nCOMMANDS\n\n"
-text "Enter one command via argument or sequence of them in interactive mode\n\n"
+text "\n------------------------ COMMANDS ------------------------\n"
 
-text "query SQLQUERY\n\n"
-text "    * executes custom SQLQUERY\n"
-text "    * ex.: list methods with active processes\n"
-text "                   query SELECT DISTINCT mtname FROM public.processes\n\n"
+text "
+select, insert, load, test, help, exit
 
-text "select dataset|sequence|interval|process|method|selection|help [ARGS]\n\n"
-text "    *  selects data and prints them in specified format (-f option)\n"
-text "    *  for detailed help about ARGS, use command \"select help\"\n"
-text "    *  ex.: pick processes of method 'm1'\n"
-text "                   select process method=m1\n\n"
+A. Interactive mode
+    * ./vtcli [ARGS]
 
-text "insert sequence|interval|process|help [ARGS]\n\n"
-text "    *  inserts data into database\n"
-text "    *  for detailed help about ARGS, use command \"insert help\"\n"
-text "    *  ex.: insert interval in sequence 'seq1'\n"
-text "                   insert interval t1=10 t2=20 sequence=seq1\n\n"
+or
 
-text "update *not implemented in CLI\n\n"
-text "delete *not implemented in CLI\n\n"
-text "show   *not implemented in CLI\n\n"
+B. One-command mode
+    * ./vtcli [ARGS] COMMAND
 
-text "test\n"
-text "    * Tests VTApi methods and prints details\n\n"
-text "help\n"
-text "    * prints this help\n\n"
-text "exit\n"
-text "    * exits interactive mode (or enter EOF)\n"
+
+1. SELECT COMMAND ----------------------------------
+select dataset|sequence|interval|process|method|methodkeys [ARGS]
+    *  selects data and prints them in specified format (-f option)
+    *  ex.: pick processes of method 'm1'
+                   select process method=m1
+
+2. INSERT COMMAND ----------------------------------
+insert sequence|interval|process [ARGS]
+    *  inserts data into database
+    *  ex.: insert interval in sequence 'seq1'
+                   insert interval t1=10 t2=20 sequence=seq1
+
+3. LOAD COMMAND ----------------------------------
+load
+    * loads videos into dataset
+    * path to data is specified by argument location(-l) and dataset(-D)
+
+4. TEST COMMAND ----------------------------------
+test
+    * Performs VTApi unit tests and prints details
+
+5. HELP COMMAND ----------------------------------
+help
+    * prints this help
+
+6. EXIT COMMAND ----------------------------------
+exit
+    * exits interactive mode (or enter EOF)
+"
+
+text "[query]"
+
+text "
+query [SQLSTRING]
+    * executes custom SQLQUERY
+    * ex.: list methods with active processes
+            query SELECT DISTINCT mtname FROM public.processes
+"
+
+text "\n------------------------ SELECT ------------------------\n"
+
+text "
+select dataset|sequence|interval|process|method|methodkeys [ARGS]
+    * selects data and prints them in specified format (-f option)
+
+ARG format:      arg=value or arg=value1,value2,...
+ Dataset ARGS:
+      name       name of the dataset
+  location       base location of the dataset data files (directory)
+ Sequence ARGS:
+      name       name of the sequence
+  location       location of the sequence data file(s) (file/directory)
+       num       unique number of the sequence
+      type       type of the sequence [images, video]
+Interval ARGS:
+  process        name of the process for which to get data
+  seqname        name of the sequence containing this interval
+        t1       begin time of the interval
+        t2       end time of the interval
+  location       location of the interval data file (file)
+Process ARGS:
+      name       name of the process
+    method       name of the method the process is instance of
+    inputs       name of the process supplying input data
+   outputs       data type of outputs (database table)
+Method ARGS:
+      name       name of the method
+Methodkeys ARGS:
+    method       name of the method the process is instance of
+"
+
+text "\n------------------------ INSERT ------------------------\n"
+
+text "
+insert sequence|interval|process [FULLPATH] [ARGS]
+Inserts data into database
+   [FULLPATH]:      full path to file/directory to insert
+[ARGS] format:      arg=value or arg=value1,value2,...
+ Sequence ARGS:
+      name       name of the sequence
+  location       location of the sequence data file(s) within dataset (don't combine with FULLPATH arg)
+      type       type of the sequence [images, video]
+Interval ARGS:
+   seqname       name of the sequence containing this interval *REQUIRED*
+        t1       begin time of the interval *REQUIRED*
+        t2       end time of the interval *REQUIRED*
+  location       location of the interval data file (file)
+Process ARGS:
+      name       name of the process *REQUIRED*
+    method       name of the method the process is instance of
+    inputs       data type of inputs (database table)
+   outputs       data type of outputs (database table)
+"

@@ -89,41 +89,24 @@ cv::Mat Sequence::getData() {
 }
 #endif
 
-bool Sequence::add(const string& name, const string& location, const string& type) {
+bool Sequence::add(const string& name, const string& location, const string& type)
+{
+    return add(name, location, type, getUser(), "");
+}
+
+bool Sequence::add(const string& name, const string& location, const string& type,
+    const string& userid, const string& notes)
+{
     bool retval = VT_OK;
 
-    vt_destruct(insert);
+    if (insert) store.push_back(insert);
     insert = new Insert(*this, "sequences");
     retval &= insert->keyString("seqname", name);
     retval &= insert->keyString("seqlocation", location);
     retval &= insert->keySeqtype("seqtyp", type);
+    if (!userid.empty()) retval &= insert->keyString("userid", userid);
+    if (!notes.empty()) retval &= insert->keyString("notes", notes);
 
-    return retval;
-}
-
-bool Sequence::add(const string& name, const string& location, const string& type,
-    const string& userid, const string& groupid, const string& notes) {
-    bool retval = VT_OK;
-
-    retval &= this->add(name, location, type);
-    retval &= insert->keyString("userid", userid);
-    retval &= insert->keyString("groupid", groupid);
-    retval &= insert->keyString("notes", notes);
-
-    return retval;
-}
-
-bool Sequence::addExecute() {
-    bool retval = VT_OK;
-    time_t now = 0;
-
-    if (this->insert) {
-//        time(&now);
-//        retval &= insert->keyTimestamp("created", now);
-        if (retval) retval &= insert->execute();
-    }
-    else retval = VT_FAIL;
-    
     return retval;
 }
 
@@ -146,21 +129,24 @@ Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name) {
     select->whereSeqtype("seqtyp", "video");
 }
 
-bool Video::add(string name, string location) {
+bool Video::add(const string& name, const string& location, const time_t& realtime)
+{
     bool retval = VT_OK;
-    string filename = "";
     size_t cnt_frames = 0;
     double fps = 0.0;
 
 #if HAVE_OPENCV
-    // TODO: P3k check something else???
-    filename = baseLocation + datasetLocation + location;
+    string filename = baseLocation + datasetLocation + location;
     if (!fileExists(filename)) {
         logger->warning(3210, "Cannot open file " + filename, thisClass+"::add()");
         retval = VT_FAIL;
     }
+
+    if (retval) {
+        this->sequence = name;
+        this->sequenceLocation = location;
+    }
     
-    // TODO: check the lenght and so on...
     retval = openVideo();
     if (retval) {
         cnt_frames = (size_t)this->capture.get(CV_CAP_PROP_FRAME_COUNT);
@@ -174,14 +160,11 @@ bool Video::add(string name, string location) {
 #endif
     
     if (retval) {
-        vt_destruct(insert);
-        insert = new Insert(*this, "sequences");
-        retval &= insert->keyString("seqname", name);
-        retval &= insert->keyString("seqlocation", location);
-        retval &= insert->keySeqtype("seqtyp", "video");
+        retval = Sequence::add(name, location, "video");
 #if HAVE_OPENCV
-        retval &= insert->keyInt("vid_length", cnt_frames);
-        retval &= insert->keyFloat("vid_fps", fps);
+        retval &= addInt("vid_length", cnt_frames);
+        retval &= addFloat("vid_fps", fps);
+        if (realtime > 0) retval &= addTimestamp("vid_time", realtime);
 #endif
     }
 
@@ -210,8 +193,19 @@ cv::Mat Video::getData() {
     return this->frame;
 }
 
-size_t Video::getLength() {
-    
+size_t Video::getLength()
+{
+    return getInt("vid_length");
+}
+
+float Video::getFPS()
+{
+    return getFloat("vid_fps");
+}
+
+time_t Video::getRealStartTime()
+{
+    return getTimestamp("vid_time");
 }
 
 

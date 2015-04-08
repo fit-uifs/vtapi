@@ -9,6 +9,7 @@
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true">
+      <itemPath>Makefile.am</itemPath>
       <itemPath>doc/VTCLI.txt</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
@@ -26,7 +27,6 @@
                    projectFiles="false"
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
-      <itemPath>Makefile.am</itemPath>
     </logicalFolder>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
@@ -54,6 +54,8 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="Makefile.am" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="doc/VTCLI.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/vtcli.h" ex="false" tool="3" flavor2="0">
@@ -81,6 +83,8 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="Makefile.am" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="doc/VTCLI.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/vtcli.h" ex="false" tool="3" flavor2="0">
@@ -114,6 +118,8 @@
           </linkerLibItems>
         </linkerTool>
       </compileType>
+      <item path="Makefile.am" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="doc/VTCLI.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="include/vtcli.h" ex="false" tool="3" flavor2="0">
