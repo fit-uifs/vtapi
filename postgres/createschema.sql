@@ -94,9 +94,9 @@ CREATE INDEX test1out_seqname_idx ON test1out(seqname);
 CREATE INDEX test1out_prsname_idx ON test1out(prsname);
 
 -------------------------------------
--- INSERT schema into dataset list
+-- DELETE and INSERT schema from/into dataset list
 -------------------------------------
-
+DELETE FROM public.datasets WHERE dsname = 'test';
 INSERT INTO public.datasets(dsname, dslocation, userid, notes)
     VALUES ('test', 'data/test/', 'testuser', 'testovaci dataset');
 
