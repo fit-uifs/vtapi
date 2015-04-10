@@ -52,20 +52,19 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-L../src/.libs -Wl,-rpath,../src/.libs -lvtapi
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/example
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk launcher
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/example: ${OBJECTFILES}
-	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/example ${OBJECTFILES} ${LDLIBSOPTIONS}
+launcher: ${OBJECTFILES}
+	${LINK.cc} -o launcher ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/launcher.o: launcher.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/launcher.o launcher.cpp
+	$(COMPILE.cc) -O2 -I../include -I/usr/include/postgresql -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/launcher.o launcher.cpp
 
 # Subprojects
 .build-subprojects:
@@ -73,7 +72,7 @@ ${OBJECTDIR}/launcher.o: launcher.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/example
+	${RM} launcher
 
 # Subprojects
 .clean-subprojects:

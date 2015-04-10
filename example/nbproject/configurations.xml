@@ -82,6 +82,10 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../include</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+          </incDir>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -89,6 +93,18 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <output>launcher</output>
+          <linkerAddLib>
+            <pElem>../src/.libs</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>../src/.libs</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerOptionItem>-lvtapi</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
       </compileType>
       <item path="README" ex="false" tool="3" flavor2="0">
       </item>

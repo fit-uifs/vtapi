@@ -52,20 +52,20 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-L../../src/.libs -Wl,-rpath,../src/.libs -lvtapi -lopencv_core -lopencv_highgui
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
-	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/mod_demo2
+	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ../modules/demo2
 
-${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/mod_demo2: ${OBJECTFILES}
-	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
-	${LINK.cc} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/mod_demo2 ${OBJECTFILES} ${LDLIBSOPTIONS}
+../modules/demo2: ${OBJECTFILES}
+	${MKDIR} -p ../modules
+	${LINK.cc} -o ../modules/demo2 ${OBJECTFILES} ${LDLIBSOPTIONS}
 
 ${OBJECTDIR}/mod_demo2.o: mod_demo2.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/mod_demo2.o mod_demo2.cpp
+	$(COMPILE.cc) -O2 -I../../include -I/usr/include/postgresql -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/mod_demo2.o mod_demo2.cpp
 
 # Subprojects
 .build-subprojects:
@@ -73,7 +73,7 @@ ${OBJECTDIR}/mod_demo2.o: mod_demo2.cpp
 # Clean Targets
 .clean-conf: ${CLEAN_SUBPROJECTS}
 	${RM} -r ${CND_BUILDDIR}/${CND_CONF}
-	${RM} ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/mod_demo2
+	${RM} ../modules/demo2
 
 # Subprojects
 .clean-subprojects:

@@ -16,9 +16,9 @@ CND_PACKAGE_NAME_Debug=example.tar
 CND_PACKAGE_PATH_Debug=dist/Debug/GNU-Linux-x86/package/example.tar
 # Release configuration
 CND_PLATFORM_Release=GNU-Linux-x86
-CND_ARTIFACT_DIR_Release=dist/Release/GNU-Linux-x86
-CND_ARTIFACT_NAME_Release=example
-CND_ARTIFACT_PATH_Release=dist/Release/GNU-Linux-x86/example
+CND_ARTIFACT_DIR_Release=
+CND_ARTIFACT_NAME_Release=launcher
+CND_ARTIFACT_PATH_Release=launcher
 CND_PACKAGE_DIR_Release=dist/Release/GNU-Linux-x86/package
 CND_PACKAGE_NAME_Release=example.tar
 CND_PACKAGE_PATH_Release=dist/Release/GNU-Linux-x86/package/example.tar

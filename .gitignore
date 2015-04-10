@@ -10,3 +10,5 @@
 *.o
 *~
 
+/example/mod_demo2/build/
+/example/mod_demo1/build/

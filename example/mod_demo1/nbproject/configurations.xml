@@ -67,6 +67,10 @@
         </cTool>
         <ccTool>
           <developmentMode>5</developmentMode>
+          <incDir>
+            <pElem>../../include</pElem>
+            <pElem>/usr/include/postgresql</pElem>
+          </incDir>
         </ccTool>
         <fortranCompilerTool>
           <developmentMode>5</developmentMode>
@@ -74,6 +78,20 @@
         <asmTool>
           <developmentMode>5</developmentMode>
         </asmTool>
+        <linkerTool>
+          <output>../modules/demo1</output>
+          <linkerAddLib>
+            <pElem>../../src/.libs</pElem>
+          </linkerAddLib>
+          <linkerDynSerch>
+            <pElem>../src/.libs</pElem>
+          </linkerDynSerch>
+          <linkerLibItems>
+            <linkerOptionItem>-lvtapi</linkerOptionItem>
+            <linkerOptionItem>-lopencv_core</linkerOptionItem>
+            <linkerOptionItem>-lopencv_highgui</linkerOptionItem>
+          </linkerLibItems>
+        </linkerTool>
       </compileType>
       <item path="mod_demo1.cpp" ex="false" tool="1" flavor2="0">
       </item>
