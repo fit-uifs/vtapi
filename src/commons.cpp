@@ -11,6 +11,9 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include <common/vtapi_global.h>
 #include <common/vtapi_misc.h>
 #include <backends/vtapi_backendfactory.h>
@@ -181,10 +184,17 @@ bool Commons::checkCommonsObject() {
 
 
 // static
-bool Commons::fileExists(const string& filename) {
-    ifstream ifile(filename.c_str());
-    return ifile.good();
-    // FIXME: tady to psalo <incomplete_type>
+bool Commons::fileExists(const string& filepath)
+{
+    struct stat info;
+    return (stat(filepath.c_str(), &info) == 0 && info.st_mode & S_IFREG);
+}
+
+// static
+bool Commons::dirExists(const string& dirpath)
+{
+    struct stat info;
+    return (stat(dirpath.c_str(), &info) == 0 && info.st_mode & S_IFDIR);
 }
 
 format_t Commons::mapFormat(const string& format) {

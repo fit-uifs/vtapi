@@ -27,7 +27,7 @@
 
 const char *gengetopt_args_info_purpose = "";
 
-const char *gengetopt_args_info_usage = "Usage: vtapi [OPTIONS] [COMMAND]";
+const char *gengetopt_args_info_usage = "Usage: VTApi [OPTIONS]... [FILES]...";
 
 const char *gengetopt_args_info_versiontext = "";
 
@@ -36,7 +36,6 @@ const char *gengetopt_args_info_description = "";
 const char *gengetopt_args_info_help[] = {
   "  -h, --help               Print help and exit",
   "  -V, --version            Print version and exit",
-  "\n------------------------ OPTIONS ------------------------\n",
   "  -v, --verbose            Verbose output mode - write used SQL commands etc.",
   "      --config=FILENAME    Config file location  (default=`./vtapi.conf')",
   "      --log=FILENAME       Log file location  (default=`./vtapi.log')",
@@ -57,7 +56,6 @@ const char *gengetopt_args_info_help[] = {
   "  -M, --method=STRING      Set method to use",
   "  -P, --process=STRING     Set process to use",
   "  -E, --selection=STRING   Set selection to use",
-  "\n------------------------ COMMANDS ------------------------\n\nselect, insert, load, test, help, exit\n\nA. Interactive mode\n    * ./vtcli [ARGS]\n\nor\n\nB. One-command mode\n    * ./vtcli [ARGS] COMMAND\n\n\n1. SELECT COMMAND ----------------------------------\nselect dataset|sequence|interval|process|method|methodkeys [ARGS]\n    *  selects data and prints them in specified format (-f option)\n    *  ex.: pick processes of method 'm1'\n                   select process method=m1\n\n2. INSERT COMMAND ----------------------------------\ninsert sequence|interval|process [ARGS]\n    *  inserts data into database\n    *  ex.: insert interval in sequence 'seq1'\n                   insert interval t1=10 t2=20 sequence=seq1\n\n3. LOAD COMMAND ----------------------------------\nload\n    * loads videos into dataset\n    * path to data is specified by argument location(-l) and dataset(-D)\n\n4. TEST COMMAND ----------------------------------\ntest\n    * Performs VTApi unit tests and prints details\n\n5. HELP COMMAND ----------------------------------\nhelp\n    * prints this help\n\n6. EXIT COMMAND ----------------------------------\nexit\n    * exits interactive mode (or enter EOF)\n[query]\nquery [SQLSTRING]\n    * executes custom SQLQUERY\n    * ex.: list methods with active processes\n            query SELECT DISTINCT mtname FROM public.processes\n\n------------------------ SELECT ------------------------\n\nselect dataset|sequence|interval|process|method|methodkeys [ARGS]\n    * selects data and prints them in specified format (-f option)\n\nARG format:      arg=value or arg=value1,value2,...\n Dataset ARGS:\n      name       name of the dataset\n  location       base location of the dataset data files (directory)\n Sequence ARGS:\n      name       name of the sequence\n  location       location of the sequence data file(s) (file/directory)\n       num       unique number of the sequence\n      type       type of the sequence [images, video]\nInterval ARGS:\n  process        name of the process for which to get data\n  seqname        name of the sequence containing this interval\n        t1       begin time of the interval\n        t2       end time of the interval\n  location       location of the interval data file (file)\nProcess ARGS:\n      name       name of the process\n    method       name of the method the process is instance of\n    inputs       name of the process supplying input data\n   outputs       data type of outputs (database table)\nMethod ARGS:\n      name       name of the method\nMethodkeys ARGS:\n    method       name of the method the process is instance of\n\n------------------------ INSERT ------------------------\n\ninsert sequence|interval|process [FULLPATH] [ARGS]\nInserts data into database\n   [FULLPATH]:      full path to file/directory to insert\n[ARGS] format:      arg=value or arg=value1,value2,...\n Sequence ARGS:\n      name       name of the sequence\n  location       location of the sequence data file(s) within dataset (don't\ncombine with FULLPATH arg)\n      type       type of the sequence [images, video]\nInterval ARGS:\n   seqname       name of the sequence containing this interval *REQUIRED*\n        t1       begin time of the interval *REQUIRED*\n        t2       end time of the interval *REQUIRED*\n  location       location of the interval data file (file)\nProcess ARGS:\n      name       name of the process *REQUIRED*\n    method       name of the method the process is instance of\n    inputs       data type of inputs (database table)\n   outputs       data type of outputs (database table)\n",
     0
 };
 
@@ -182,25 +180,25 @@ void init_args_info(struct gengetopt_args_info *args_info)
 
   args_info->help_help = gengetopt_args_info_help[0] ;
   args_info->version_help = gengetopt_args_info_help[1] ;
-  args_info->verbose_help = gengetopt_args_info_help[3] ;
-  args_info->config_help = gengetopt_args_info_help[4] ;
-  args_info->log_help = gengetopt_args_info_help[5] ;
-  args_info->location_help = gengetopt_args_info_help[6] ;
-  args_info->backend_help = gengetopt_args_info_help[7] ;
-  args_info->connection_help = gengetopt_args_info_help[8] ;
-  args_info->dbfolder_help = gengetopt_args_info_help[9] ;
-  args_info->user_help = gengetopt_args_info_help[10] ;
-  args_info->password_help = gengetopt_args_info_help[11] ;
-  args_info->format_help = gengetopt_args_info_help[12] ;
-  args_info->input_help = gengetopt_args_info_help[13] ;
-  args_info->output_help = gengetopt_args_info_help[14] ;
-  args_info->querylimit_help = gengetopt_args_info_help[15] ;
-  args_info->arraylimit_help = gengetopt_args_info_help[16] ;
-  args_info->dataset_help = gengetopt_args_info_help[18] ;
-  args_info->sequence_help = gengetopt_args_info_help[19] ;
-  args_info->method_help = gengetopt_args_info_help[20] ;
-  args_info->process_help = gengetopt_args_info_help[21] ;
-  args_info->selection_help = gengetopt_args_info_help[22] ;
+  args_info->verbose_help = gengetopt_args_info_help[2] ;
+  args_info->config_help = gengetopt_args_info_help[3] ;
+  args_info->log_help = gengetopt_args_info_help[4] ;
+  args_info->location_help = gengetopt_args_info_help[5] ;
+  args_info->backend_help = gengetopt_args_info_help[6] ;
+  args_info->connection_help = gengetopt_args_info_help[7] ;
+  args_info->dbfolder_help = gengetopt_args_info_help[8] ;
+  args_info->user_help = gengetopt_args_info_help[9] ;
+  args_info->password_help = gengetopt_args_info_help[10] ;
+  args_info->format_help = gengetopt_args_info_help[11] ;
+  args_info->input_help = gengetopt_args_info_help[12] ;
+  args_info->output_help = gengetopt_args_info_help[13] ;
+  args_info->querylimit_help = gengetopt_args_info_help[14] ;
+  args_info->arraylimit_help = gengetopt_args_info_help[15] ;
+  args_info->dataset_help = gengetopt_args_info_help[17] ;
+  args_info->sequence_help = gengetopt_args_info_help[18] ;
+  args_info->method_help = gengetopt_args_info_help[19] ;
+  args_info->process_help = gengetopt_args_info_help[20] ;
+  args_info->selection_help = gengetopt_args_info_help[21] ;
   
 }
 

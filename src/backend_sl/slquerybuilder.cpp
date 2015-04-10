@@ -191,6 +191,19 @@ string SLQueryBuilder::getGenericQuery() {
     return initString;
 }
 
+string SLQueryBuilder::getBeginQuery()
+{
+    return "BEGIN TRANSACTION;";
+}
+string SLQueryBuilder::getCommitQuery()
+{
+    return "COMMIT TRANSACTION;";
+}
+string SLQueryBuilder::getRollbackQuery()
+{
+    return "ROLLBACK TRANSACTION;";
+}
+
 bool SLQueryBuilder::keyFrom(const string& table, const string& column) {
     if (column.empty()) return VT_FAIL;
     else {

@@ -5,12 +5,9 @@
 # Program name, version and usage
 package "VTApi"
 version "2.0"
-usage "vtapi [OPTIONS] [COMMAND]"
 
 # Default gengetopt arguments
 args "--conf-parser --file-name=vtapi_settings --c-extension=cpp --no-handle-error -u"
-
-text "\n------------------------ OPTIONS ------------------------\n"
 
 option "verbose" v "Verbose output mode - write used SQL commands etc."
     optional
@@ -70,111 +67,3 @@ option "process" P "Set process to use"
 option "selection" E "Set selection to use"
     string
     optional
-
-text "\n------------------------ COMMANDS ------------------------\n"
-
-text "
-select, insert, load, test, help, exit
-
-A. Interactive mode
-    * ./vtcli [ARGS]
-
-or
-
-B. One-command mode
-    * ./vtcli [ARGS] COMMAND
-
-
-1. SELECT COMMAND ----------------------------------
-select dataset|sequence|interval|process|method|methodkeys [ARGS]
-    *  selects data and prints them in specified format (-f option)
-    *  ex.: pick processes of method 'm1'
-                   select process method=m1
-
-2. INSERT COMMAND ----------------------------------
-insert sequence|interval|process [ARGS]
-    *  inserts data into database
-    *  ex.: insert interval in sequence 'seq1'
-                   insert interval t1=10 t2=20 sequence=seq1
-
-3. LOAD COMMAND ----------------------------------
-load
-    * loads videos into dataset
-    * path to data is specified by argument location(-l) and dataset(-D)
-
-4. TEST COMMAND ----------------------------------
-test
-    * Performs VTApi unit tests and prints details
-
-5. HELP COMMAND ----------------------------------
-help
-    * prints this help
-
-6. EXIT COMMAND ----------------------------------
-exit
-    * exits interactive mode (or enter EOF)
-"
-
-text "[query]"
-
-text "
-query [SQLSTRING]
-    * executes custom SQLQUERY
-    * ex.: list methods with active processes
-            query SELECT DISTINCT mtname FROM public.processes
-"
-
-text "\n------------------------ SELECT ------------------------\n"
-
-text "
-select dataset|sequence|interval|process|method|methodkeys [ARGS]
-    * selects data and prints them in specified format (-f option)
-
-ARG format:      arg=value or arg=value1,value2,...
- Dataset ARGS:
-      name       name of the dataset
-  location       base location of the dataset data files (directory)
- Sequence ARGS:
-      name       name of the sequence
-  location       location of the sequence data file(s) (file/directory)
-       num       unique number of the sequence
-      type       type of the sequence [images, video]
-Interval ARGS:
-  process        name of the process for which to get data
-  seqname        name of the sequence containing this interval
-        t1       begin time of the interval
-        t2       end time of the interval
-  location       location of the interval data file (file)
-Process ARGS:
-      name       name of the process
-    method       name of the method the process is instance of
-    inputs       name of the process supplying input data
-   outputs       data type of outputs (database table)
-Method ARGS:
-      name       name of the method
-Methodkeys ARGS:
-    method       name of the method the process is instance of
-"
-
-text "\n------------------------ INSERT ------------------------\n"
-
-text "
-insert sequence|interval|process [FULLPATH] [ARGS]
-Inserts data into database
-   [FULLPATH]:      full path to file/directory to insert
-[ARGS] format:      arg=value or arg=value1,value2,...
- Sequence ARGS:
-      name       name of the sequence
-  location       location of the sequence data file(s) within dataset (don't combine with FULLPATH arg)
-      type       type of the sequence [images, video]
-Interval ARGS:
-   seqname       name of the sequence containing this interval *REQUIRED*
-        t1       begin time of the interval *REQUIRED*
-        t2       end time of the interval *REQUIRED*
-  location       location of the interval data file (file)
-Process ARGS:
-      name       name of the process *REQUIRED*
-    method       name of the method the process is instance of
-    inputs       data type of inputs (database table)
-   outputs       data type of outputs (database table)
-"

@@ -196,6 +196,21 @@ string PGQueryBuilder::getUpdateQuery() {
     return queryString;
 }
 
+string PGQueryBuilder::getBeginQuery()
+{
+    return "BEGIN;";
+}
+
+string PGQueryBuilder::getCommitQuery()
+{
+    return "COMMIT;";
+}
+
+string PGQueryBuilder::getRollbackQuery()
+{
+    return "ROLLBACK;";
+}
+
 bool PGQueryBuilder::keyFrom(const string& table, const string& column) {
     if (column.empty()) return VT_FAIL;
     else {

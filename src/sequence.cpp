@@ -119,6 +119,37 @@ bool Sequence::preSet() {
     return VT_OK;
 }
 
+//============================== IMAGE FOLDER ===================================
+
+ImageFolder::ImageFolder(const KeyValues& orig, const string& name) : Sequence(orig, name)
+{
+    thisClass = "ImageFolder";
+
+    select->whereSeqtype("seqtyp", "images");
+}
+
+bool ImageFolder::add(const string& name, const string& location)
+{
+    bool bRet = true;
+
+    do {
+        string fullpath = baseLocation + datasetLocation + location;
+
+        if (!dirExists(fullpath)) {
+            logger->warning(3210, "Cannot open folder " + fullpath, thisClass + "::add()");
+            bRet = false;
+            break;
+        }
+
+        this->sequence = name;
+        this->sequenceLocation = location;
+
+        bRet = Sequence::add(name, location, "images");
+
+    } while(0);
+
+    return bRet;
+}
 //================================= VIDEO ======================================
 
 
@@ -131,47 +162,48 @@ Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name) {
 
 bool Video::add(const string& name, const string& location, const time_t& realtime)
 {
-    bool retval = VT_OK;
-    size_t cnt_frames = 0;
-    double fps = 0.0;
+    bool bRet = true;
 
+    do {
 #if HAVE_OPENCV
-    string filename = baseLocation + datasetLocation + location;
-    if (!fileExists(filename)) {
-        logger->warning(3210, "Cannot open file " + filename, thisClass+"::add()");
-        retval = VT_FAIL;
-    }
+        string fullpath = baseLocation + datasetLocation + location;
+        
+        if (!fileExists(fullpath)) {
+            logger->warning(3210, "Cannot open file " + fullpath, thisClass + "::add()");
+            bRet = false;
+            break;
+        }
 
-    if (retval) {
         this->sequence = name;
         this->sequenceLocation = location;
-    }
-    
-    retval = openVideo();
-    if (retval) {
-        cnt_frames = (size_t)this->capture.get(CV_CAP_PROP_FRAME_COUNT);
-        fps = this->capture.get(CV_CAP_PROP_FPS);
-        if ((cnt_frames == 0) || (fps == 0.0)) {
-            logger->warning(3211, "Cannot get length and FPS of " + filename, thisClass+"::add()");
-            retval = VT_FAIL;
-        }
-    }
-    
-#endif
-    
-    if (retval) {
-        retval = Sequence::add(name, location, "video");
-#if HAVE_OPENCV
-        retval &= addInt("vid_length", cnt_frames);
-        retval &= addFloat("vid_fps", fps);
-        if (realtime > 0) retval &= addTimestamp("vid_time", realtime);
-#endif
-    }
 
-    return retval;
+        bRet = openVideo();
+        if (!bRet) {
+            logger->warning(3210, "Cannot open video " + location, thisClass + "::add()");
+            bRet = false;
+            break;
+        }
+        
+        size_t cnt_frames = (size_t)this->capture.get(CV_CAP_PROP_FRAME_COUNT);
+        double fps = this->capture.get(CV_CAP_PROP_FPS);
+        if ((cnt_frames == 0) || (fps == 0.0)) {
+            logger->warning(3211, "Cannot get length and FPS of " + location, thisClass + "::add()");
+            bRet = false;
+            break;
+        }
+
+#endif
+        bRet = Sequence::add(name, location, "video");
+#if HAVE_OPENCV
+        bRet &= addInt("vid_length", cnt_frames);
+        bRet &= addFloat("vid_fps", fps);
+        if (realtime > 0) bRet &= addTimestamp("vid_time", realtime);
+#endif
+    } while(0);
+
+    return bRet;
 }
 
-// TODO: nejak odlisit nestandardni veci
 #if HAVE_OPENCV
 
 bool Video::openVideo() {
@@ -206,6 +238,11 @@ float Video::getFPS()
 time_t Video::getRealStartTime()
 {
     return getTimestamp("vid_time");
+}
+
+bool Video::setRealStartTime(const time_t& starttime)
+{
+    return (setTimestamp("vid_time", starttime) && setExecute());
 }
 
 

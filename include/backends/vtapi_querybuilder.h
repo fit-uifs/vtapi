@@ -91,7 +91,22 @@ public:
      * @return UPDATE query string
      */
     virtual std::string getUpdateQuery() = 0;
-    
+    /**
+     * Builds BEGIN TRANSACTION query
+     * @return begin query string
+     */
+    virtual std::string getBeginQuery() = 0;
+    /**
+     * Builds COMMIT TRANSACTION query
+     * @return commit query string
+     */
+    virtual std::string getCommitQuery() = 0;
+    /**
+     * Builds ROLLBACK TRANSACTION query
+     * @return rollback string
+     */
+    virtual std::string getRollbackQuery() = 0;
+
     /**
      * Resets query builder to initial state
      */
@@ -366,7 +381,10 @@ public:
     std::string getSelectQuery(const std::string& groupby, const std::string& orderby, const int limit, const int offset);
     std::string getInsertQuery();
     std::string getUpdateQuery();
-
+    std::string getBeginQuery();
+    std::string getCommitQuery();
+    std::string getRollbackQuery();
+    
     bool keyFrom(const std::string& table, const std::string& column);
     bool keyString(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyStringA(const std::string& key, std::string* values, const int size, const std::string& from = "");
@@ -421,8 +439,11 @@ public:
     std::string getGenericQuery();
     std::string getSelectQuery(const std::string& groupby, const std::string& orderby, const int limit, const int offset);
     std::string getInsertQuery();
-    std::string getUpdateQuery();    
-
+    std::string getUpdateQuery();
+    std::string getBeginQuery();
+    std::string getCommitQuery();
+    std::string getRollbackQuery();
+    
     bool keyFrom(const std::string& table, const std::string& column);
     bool keyString(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyStringA(const std::string& key, std::string* values, const int size, const std::string& from = "");

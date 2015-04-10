@@ -602,7 +602,14 @@ public:
      * @unimplemented
      */
     bool setFloatV(const std::string& key, const std::vector<float> values);
-
+    /**
+     * Sets a new timestamp of a specified key
+     * @param key   column key to update
+     * @param value timestamp value
+     * @return  success
+     */
+    bool setTimestamp(const std::string& key, const time_t& value);
+    
     /**
      * Executes SQL UPDATE command
      * @return success

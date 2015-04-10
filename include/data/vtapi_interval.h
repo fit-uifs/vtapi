@@ -98,7 +98,7 @@ public:
      * @param t1 start time
      * @param t2 end time
      */
-    void setStartEndTime(const int t1, const int t2 = -1);
+    bool setStartEndTime(const int t1, const int t2 = -1);
 
     /**
      * Adds new interval to the table - minimal insert

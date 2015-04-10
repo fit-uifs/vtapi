@@ -67,6 +67,12 @@ Video* Dataset::newVideo(const string& name) {
     return (new Video(*this, name));
 }
 
+ImageFolder* Dataset::newImageFolder(const string& name)
+{
+    return (new ImageFolder(*this, name));
+}
+
+
 Method* Dataset::newMethod(const string& name) {
     return (new Method(*this, name));
 }

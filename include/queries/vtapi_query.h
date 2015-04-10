@@ -59,7 +59,22 @@ public:
      * @return string value with the query
      */
     std::string getQuery();
-
+    /**
+     * Begins transaction, executes will be stored
+     * @return success
+     */
+    bool beginTransaction();
+    /**
+     * Commits pending transaction
+     * @return success
+     */
+    bool commitTransaction();
+    /**
+     * Rolls back pending transaction
+     * @return success
+     */
+    bool rollbackTransaction();
+    
     /**
      * This will commit your query
      * @return success
@@ -75,7 +90,7 @@ public:
      * @return success
      */
     bool checkQueryObject();
-
+    
 };
 
 } // namespace vtapi

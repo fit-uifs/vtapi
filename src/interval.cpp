@@ -86,12 +86,9 @@ bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
 }
 
 
-void Interval::setStartEndTime(const int t1, const int t2)
+bool Interval::setStartEndTime(const int t1, const int t2)
 {
-    preSet();
-    update->setInt("t1", t1);
-    update->setInt("t2", t2);
-    update->execute();
+    return (setInt("t1", t1) && setInt("t2", t2) && setExecute());
 }
 
 

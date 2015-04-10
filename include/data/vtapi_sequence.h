@@ -130,6 +130,40 @@ public:
 
 };
 
+/**
+ * @brief ImageFolder class manages folders with static images
+ *
+ * @see Basic definition on page @ref BASICDEFS
+ *
+ * @note Error codes 321*
+ * 
+ * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
+ * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
+ */
+class ImageFolder : public Sequence
+{
+public:
+    /**
+     * Constructor for ImageFolder
+     * @param orig   pointer to the parent KeyValues object
+     * @param name   specific image folder name
+     */
+    ImageFolder(const KeyValues& orig, const std::string& name);
+
+    /**
+     * Adds a new image folder to the dataset
+     * @param name       name of the image folder
+     * @param location   location of the image folder
+     * @return success
+     */
+    bool add(const std::string& name, const std::string& location);
+
+};
 
 /**
  * @brief Video class manages videos
@@ -150,18 +184,10 @@ class Video : public Sequence {
 public:
     /**
      * Constructor for Video
-     * @param orig   pointer to the parrent KeyValues object
-     * @param name   specific sequence name
+     * @param orig   pointer to the parent KeyValues object
+     * @param name   specific video name
      */
     Video(const KeyValues& orig, const std::string& name);
-
-    /**
-     * Creates a new frame specified by a frame number
-     * @param frame   ordinal number of the image
-     * @return pointer to the new image
-     * @unimplemented
-     */
-    Image* newFrame(const int frame = 1);
 
     /**
      * Adds a new video to the dataset
@@ -169,7 +195,7 @@ public:
      * @param location   location of the video
      * @return success
      */
-    bool add(const std::string& name, const std::string& location, const time_t& starttime = 0);
+    bool add(const std::string& name, const std::string& location, const time_t& realtime = 0);
 
 
 #if HAVE_OPENCV
@@ -209,6 +235,12 @@ public:
      * @return start time
      */
     time_t getRealStartTime();
+    
+    /**
+     * Sets video real-world start time
+     * @return success
+     */
+    bool setRealStartTime(const time_t& starttime);
     
 #endif
 

@@ -84,7 +84,12 @@ public:
      * @return pointer to the new Video object
      */
     Video* newVideo(const std::string& name = "");
-
+    /**
+     * Creates new ImageFolder (Sequence) object for the current dataset
+     * @param name image folder name (no name = all image folders)
+     * @return pointer to the new ImageFolder object
+     */
+    ImageFolder* newImageFolder(const std::string& name = "");
     /**
      * Creates new Method object for the current dataset
      * @param name   method name (no name = all methods)

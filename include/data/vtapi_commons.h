@@ -171,11 +171,17 @@ public:
     bool checkCommonsObject();
     /**
      * This is to check whether a file exists or not
-     * @param filename
-     * @return success
+     * @param filepath file path
+     * @return success exists
      */
-    static bool fileExists(const std::string& filename);
-
+    static bool fileExists(const std::string& filepath);
+    /**
+     * This is to check whether a directory exists or not
+     * @param dirpath directory path
+     * @return success exists
+     */
+    static bool dirExists(const std::string& dirpath);
+    
 private:
 
     /**

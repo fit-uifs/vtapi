@@ -76,14 +76,12 @@ KeyValues* KeyValues::next() {
 
     // whether should be something inserted
     if (insert) {
-        if (!insert->executed) insert->execute();  // FIXME: here should be the store fun instead
-        vt_destruct(insert);
+        addExecute();
     }
 
     // whether should be something updated
     if (update) {
-        if (!update->executed) update->execute();  // FIXME: here should be the store fun instead
-        vt_destruct(update);
+        setExecute();
     }
 
     // check the Select, each subclass is responsible of
@@ -581,9 +579,23 @@ bool KeyValues::setFloatA(const string& key, float* values, int size){
     return update->setFloatA(key, values, size);
 }
 
-bool KeyValues::setExecute() {
-    if (update) return this->update->execute();
-    else return VT_FAIL;
+bool KeyValues::setTimestamp(const std::string& key, const time_t& value)
+{
+    if (!update) this->preSet();
+    return update->setTimestamp(key, value);
+}
+
+
+bool KeyValues::setExecute()
+{
+    bool bRet = false;
+    
+    if (update) {
+        bRet = update->execute();
+        vt_destruct(update);
+    }
+    
+    return bRet;
 }
 
 
@@ -605,7 +617,7 @@ bool KeyValues::addFloatA(const std::string& key, float* value, int size) {
 }
 bool KeyValues::addTimestamp(const std::string& key, const time_t& value)
 {
-    return this->insert ? this->insert->keyTimestamp(key, const time_t& value) : VT_FAIL;
+    return this->insert ? this->insert->keyTimestamp(key, value) : VT_FAIL;
 }
 #if HAVE_OPENCV
 bool KeyValues::addCvMat(const std::string& key, cv::Mat& value) {
@@ -620,16 +632,27 @@ bool KeyValues::addIntervalEvent(const std::string& key, IntervalEvent& value) {
 bool KeyValues::addExecute()
 {
     bool retval = VT_OK;
-
+    bool trans = !store.empty() && insert;
+    
+    if (trans) {
+        trans = insert->beginTransaction();
+    }
+    
     for (list<Insert *>::iterator it = store.begin(); it != store.end(); it++) {
         retval &= (*it)->execute();
         delete (*it);
     }
     store.clear();
 
-    if (this->insert) {
-        if (retval) retval &= insert->execute();
-        vt_destruct(this->insert);
+    if (insert) {
+        if (retval) {
+            retval &= insert->execute();
+            if (trans) insert->commitTransaction();
+        }
+        else {
+            if (trans) insert->rollbackTransaction();
+        }
+        vt_destruct(insert);
     }
     else {
         retval = VT_FAIL;

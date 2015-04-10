@@ -50,9 +50,19 @@ string Query::getQuery() {
     return queryBuilder->getGenericQuery();
 }
 
-void Query::reset() {
-    executed = false;
-    queryBuilder->reset();
+bool Query::beginTransaction()
+{
+    return connection->execute(this->queryBuilder->getBeginQuery(), NULL);
+}
+
+bool Query::commitTransaction()
+{
+    return connection->execute(this->queryBuilder->getCommitQuery(), NULL);
+}
+
+bool Query::rollbackTransaction()
+{
+    return connection->execute(this->queryBuilder->getRollbackQuery(), NULL);
 }
 
 bool Query::execute() {
@@ -71,6 +81,12 @@ bool Query::execute() {
     }
 
     return retval;
+}
+
+void Query::reset()
+{
+    executed = false;
+    queryBuilder->reset();
 }
 
 bool Query::checkQueryObject() {
