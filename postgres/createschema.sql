@@ -94,6 +94,7 @@ CREATE TABLE test1out (
       REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+CREATE INDEX test1out_id_idx ON test1out(id);
 CREATE INDEX test1out_seqname_idx ON test1out(seqname);
 CREATE INDEX test1out_prsname_idx ON test1out(prsname);
 CREATE INDEX test1out_sec_length_idx ON test1out(sec_length);
