@@ -33,10 +33,15 @@ GRANT ALL ON SCHEMA public TO postgres;
 DROP TABLE IF EXISTS public.methods_keys CASCADE;
 DROP TABLE IF EXISTS public.methods CASCADE;
 DROP TABLE IF EXISTS public.datasets CASCADE;
+
 DROP TYPE IF EXISTS public.seqtype CASCADE;
 DROP TYPE IF EXISTS public.inouttype CASCADE;
 DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
+
+DROP FUNCTION IF EXISTS public.tsrange(timestamp without time zone, real) CASCADE;
+DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
+
 
 -------------------------------------
 -- CREATE user-defined data types
@@ -70,6 +75,7 @@ CREATE TYPE vtevent AS
     region box,
     score double precision,
     data bytea);
+
 
 -------------------------------------
 -- CREATE tables
@@ -106,3 +112,38 @@ CREATE TABLE methods_keys (
     CONSTRAINT mtname_fk FOREIGN KEY (mtname)
       REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+
+-------------------------------------
+-- CREATE functions
+-------------------------------------
+CREATE OR REPLACE FUNCTION tsrange(IN rt_start timestamp without time zone, IN sec_length real)
+  RETURNS tsrange AS
+  $tsrange$
+    SELECT CASE rt_start
+      WHEN NULL THEN NULL
+      ELSE tsrange(rt_start, rt_start + sec_length * '1 second'::interval, '[]')
+    END
+  $tsrange$
+  LANGUAGE SQL;
+
+CREATE OR REPLACE FUNCTION trg_interval_provide_realtime()
+  RETURNS TRIGGER AS
+  $trg_interval_provide_realtime$
+    DECLARE
+      fps real;
+      rt_start timestamp without time zone;
+    BEGIN
+      IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2)) THEN
+        SELECT vid_fps / vid_speed, vid_time 
+          INTO fps, rt_start
+          FROM sequences
+          WHERE seqname = NEW.seqname;
+        NEW.sec_length := (NEW.t2 - NEW.t1) / fps;
+        NEW.rt_start := rt_start + (NEW.t1 / fps) * '1 second'::interval;
+      END IF;
+      RETURN NEW;
+    END;
+  $trg_interval_provide_realtime$
+  LANGUAGE PLPGSQL;
+

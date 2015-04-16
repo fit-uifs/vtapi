@@ -36,6 +36,7 @@ CREATE TABLE sequences (
     seqtyp public.seqtype,
     vid_length integer,
     vid_fps real,
+    vid_speed  real  DEFAULT 1,
     vid_time timestamp without time zone,
     userid name,
     created timestamp without time zone DEFAULT now(),
@@ -77,6 +78,8 @@ CREATE TABLE test1out (
     prsname name,
     t1 integer NOT NULL,
     t2 integer NOT NULL,
+    rt_start     timestamp without time zone   DEFAULT NULL, -- unnecessary to change (set up automatically)
+    sec_length   real,   -- unnecessary to change (set up automatically)
     imglocation character varying,
     out_features_array real[],
     out_features_mat public.cvmat,
@@ -90,8 +93,19 @@ CREATE TABLE test1out (
     CONSTRAINT prsname_fk FOREIGN KEY (prsname)
       REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
 );
+
 CREATE INDEX test1out_seqname_idx ON test1out(seqname);
 CREATE INDEX test1out_prsname_idx ON test1out(prsname);
+CREATE INDEX test1out_sec_length_idx ON test1out(sec_length);
+CREATE INDEX test1out_tsrange_idx ON test1out USING GIST ( public.tsrange(rt_start, sec_length) );
+CREATE INDEX test1out_event_region_idx ON test1out USING GIST (( (out_event).region ));
+
+CREATE TRIGGER interval_provide_realtime
+  BEFORE INSERT OR UPDATE
+  ON test1out
+  FOR EACH ROW
+  EXECUTE PROCEDURE public.trg_interval_provide_realtime();
+
 
 -------------------------------------
 -- DELETE and INSERT schema from/into dataset list
