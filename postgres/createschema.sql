@@ -101,7 +101,7 @@ CREATE INDEX test1out_sec_length_idx ON test1out(sec_length);
 CREATE INDEX test1out_tsrange_idx ON test1out USING GIST ( public.tsrange(rt_start, sec_length) );
 CREATE INDEX test1out_event_region_idx ON test1out USING GIST (( (out_event).region ));
 
-CREATE TRIGGER interval_provide_realtime
+CREATE TRIGGER test1out_provide_realtime
   BEFORE INSERT OR UPDATE
   ON test1out
   FOR EACH ROW
