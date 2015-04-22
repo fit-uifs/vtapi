@@ -127,18 +127,30 @@ CREATE OR REPLACE FUNCTION tsrange(IN rt_start timestamp without time zone, IN s
   $tsrange$
   LANGUAGE SQL;
 
+
 CREATE OR REPLACE FUNCTION trg_interval_provide_realtime()
   RETURNS TRIGGER AS
   $trg_interval_provide_realtime$
     DECLARE
-      fps real;
-      rt_start timestamp without time zone;
+      fps real := NULL;
+      speed real := NULL;
+      rt_start timestamp without time zone := NULL;
+      tabname name := NULL;
     BEGIN
-      IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2)) THEN
-        SELECT vid_fps / vid_speed, vid_time 
-          INTO fps, rt_start
-          FROM sequences
-          WHERE seqname = NEW.seqname;
+      IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2)) THEN  
+        tabname := quote_ident(TG_TABLE_SCHEMA) || '.sequences';
+        EXECUTE 'SELECT vid_fps, vid_speed, vid_time
+                   FROM '
+                   || tabname::regclass
+                   || ' WHERE seqname = $1.seqname;'
+          INTO fps, speed, rt_start
+          USING NEW;
+        IF fps = 0 OR speed = 0 THEN
+          fps = NULL;
+        ELSE
+          fps = fps / speed;
+        END IF;
+
         NEW.sec_length := (NEW.t2 - NEW.t1) / fps;
         NEW.rt_start := rt_start + (NEW.t1 / fps) * '1 second'::interval;
       END IF;
