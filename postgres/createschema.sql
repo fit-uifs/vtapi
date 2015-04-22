@@ -52,6 +52,7 @@ CREATE TABLE processes (
     inputs name,
     outputs regclass,
     params character varying,
+    state public.pstate DEFAULT '(init,0,,)',
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
@@ -64,6 +65,7 @@ ALTER TABLE ONLY processes
         REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX processes_mtname_idx ON processes(mtname);
 CREATE INDEX processes_inputs_idx ON processes(inputs);
+CREATE INDEX processes_status_idx ON processes(state.status);
 
 -------------------------------------
 -- CREATE module-specific tables
@@ -78,8 +80,8 @@ CREATE TABLE test1out (
     prsname name,
     t1 integer NOT NULL,
     t2 integer NOT NULL,
-    rt_start     timestamp without time zone   DEFAULT NULL, -- unnecessary to change (set up automatically)
-    sec_length   real,   -- unnecessary to change (set up automatically)
+    rt_start     timestamp without time zone   DEFAULT NULL, -- trigger supplied
+    sec_length   real,   -- trigger supplied
     imglocation character varying,
     out_features_array real[],
     out_features_mat public.cvmat,
@@ -93,8 +95,6 @@ CREATE TABLE test1out (
     CONSTRAINT prsname_fk FOREIGN KEY (prsname)
       REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
 );
-
-CREATE INDEX test1out_id_idx ON test1out(id);
 CREATE INDEX test1out_seqname_idx ON test1out(seqname);
 CREATE INDEX test1out_prsname_idx ON test1out(prsname);
 CREATE INDEX test1out_sec_length_idx ON test1out(sec_length);

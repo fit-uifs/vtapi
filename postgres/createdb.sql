@@ -48,34 +48,53 @@ DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
 -------------------------------------
 
 -- sequence type
-CREATE TYPE seqtype AS ENUM
-   ('video',
-    'images',
-    'data');
+CREATE TYPE seqtype AS ENUM (
+    'video',    -- sequence is video
+    'images',   -- sequence is image folder
+    'data'      -- unspecified
+);    
 
 -- method parameter type
-CREATE TYPE inouttype AS ENUM
-   ('in',
-    'out',
-    'in_param',
-    'out_param'
-    );
+CREATE TYPE inouttype AS ENUM (
+    'in',       -- name of the process which supplies input data
+    'out',      -- name of the table into which outputs are inserted
+    'in_param', -- input parameter (numeric/string)
+    'out_param' -- output parameter (numeric/string)
+);
+
+-- process state enum
+CREATE TYPE pstatus AS ENUM (
+    'init',     -- process has been created
+    'started',  -- process has been started in the past, hasn't finished and is not running
+    'running',  -- process is currently working
+    'done',     -- process has finished succesfully
+    'error'     -- process has finished with error
+);
 
 -- OpenCV matrix type
-CREATE TYPE cvmat AS
-   (type integer,
-    dims integer[],
-    data bytea);
+CREATE TYPE cvmat AS (
+    type integer,       -- type of elements (see OpenCV matrix types)
+    dims integer[],     -- dimensions sizes
+    data bytea          -- matrix data
+);
 
 -- VTApi event type
-CREATE TYPE vtevent AS
-   (group_id integer,
-    class_id integer,
-    is_root boolean,
-    region box,
-    score double precision,
-    data bytea);
+CREATE TYPE vtevent AS (
+    group_id integer,   -- groups associate events together
+    class_id integer,   -- event class (user-defined)
+    is_root boolean,    -- is this event a meta-event (eg. trajectory envelope)
+    region box,         -- event region in video
+    score double precision, -- event score (user-defined)
+    data bytea          -- additional custom user-defined data
+);
 
+-- process state type
+CREATE TYPE pstate AS (
+    status public.pstatus,  -- process status
+    progress real,          -- process progress (0-100)
+    current_item varchar,   -- currently processed item
+    error_msg varchar       -- error message
+);
 
 -------------------------------------
 -- CREATE tables

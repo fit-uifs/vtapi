@@ -34,6 +34,7 @@ CREATE TABLE sequences (
     seqtyp public.seqtype,
     vid_length integer,
     vid_fps real,
+    vid_speed  real  DEFAULT 1,
     vid_time timestamp without time zone,
     userid name,
     created timestamp without time zone DEFAULT now(),
@@ -49,6 +50,7 @@ CREATE TABLE processes (
     inputs name,
     outputs regclass,
     params character varying,
+    state public.pstate DEFAULT '(init,0,,)',
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
@@ -61,6 +63,7 @@ ALTER TABLE ONLY processes
         REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX processes_mtname_idx ON processes(mtname);
 CREATE INDEX processes_inputs_idx ON processes(inputs);
+CREATE INDEX processes_status_idx ON processes(state.status);
 
 -- intervals table for demo1 results
 CREATE TABLE demo1out (
@@ -69,6 +72,8 @@ CREATE TABLE demo1out (
     prsname name,
     t1 integer NOT NULL,
     t2 integer NOT NULL,
+    rt_start     timestamp without time zone   DEFAULT NULL, -- trigger supplied
+    sec_length   real, -- trigger supplied
     imglocation character varying,
     features_array real[],
     features_mat public.cvmat,
@@ -81,8 +86,17 @@ CREATE TABLE demo1out (
     CONSTRAINT prsname_fk FOREIGN KEY (prsname)
       REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
 );
-CREATE INDEX demo1out_seqanme_idx ON demo1out(seqname);
+CREATE INDEX demo1out_seqname_idx ON demo1out(seqname);
 CREATE INDEX demo1out_prsname_idx ON demo1out(prsname);
+CREATE INDEX demo1out_sec_length_idx ON demo1out(sec_length);
+CREATE INDEX demo1out_tsrange_idx ON demo1out USING GIST ( public.tsrange(rt_start, sec_length) );
+
+CREATE TRIGGER demo1out_provide_realtime
+  BEFORE INSERT OR UPDATE
+  ON demo1out
+  FOR EACH ROW
+  EXECUTE PROCEDURE public.trg_interval_provide_realtime();
+
 
 -- intervals table for demo2 results
 CREATE TABLE demo2out (
@@ -91,6 +105,8 @@ CREATE TABLE demo2out (
     prsname name,
     t1 integer NOT NULL,
     t2 integer NOT NULL,
+    rt_start     timestamp without time zone   DEFAULT NULL, -- trigger supplied
+    sec_length   real, -- trigger supplied
     imglocation character varying,
     event public.vtevent NOT NULL,
     userid name,
@@ -104,6 +120,15 @@ CREATE TABLE demo2out (
 );
 CREATE INDEX demo2out_seqname_idx ON demo2out(seqname);
 CREATE INDEX demo2out_prsname_idx ON demo2out(prsname);
+CREATE INDEX demo2out_sec_length_idx ON demo2out(sec_length);
+CREATE INDEX demo2out_tsrange_idx ON demo2out USING GIST ( public.tsrange(rt_start, sec_length) );
+CREATE INDEX demo2out_event_region_idx ON demo2out USING GIST (( (event).region ));
+
+CREATE TRIGGER demo2out_provide_realtime
+  BEFORE INSERT OR UPDATE
+  ON demo2out
+  FOR EACH ROW
+  EXECUTE PROCEDURE public.trg_interval_provide_realtime();
 
 -------------------------------------
 -- DROP and INSERT new schema metadata
@@ -133,34 +158,34 @@ INSERT INTO public.methods_keys (mtname, keyname, typname, inout, default_num, d
     ('demo2', 'event', 'public.vtevent', 'out', NULL, NULL);
 
 -- insert videos
-INSERT INTO sequences (seqname, seqlocation, seqtyp, userid, notes) VALUES
-    ('video1', 'video1.mpg', 'video', 'demouser', 'pre-generated'),
-    ('video2', 'video2.mpg', 'video', 'demouser', 'pre-generated'),
-    ('video3', 'video3.mpg', 'video', 'demouser', 'pre-generated');
+INSERT INTO sequences (seqname, seqlocation, seqtyp, vid_length, vid_fps, vid_speed, vid_time, userid, notes) VALUES
+    ('video1', 'video1.mpg', 'video', 5207, 29.97, 1, '2015-04-01 04:05:06', 'demouser', 'pre-generated'),
+    ('video2', 'video2.mpg', 'video', 6499, 29.97, 1, '2015-04-01 05:06:07', 'demouser', 'pre-generated'),
+    ('video3', 'video3.mpg', 'video', 1648, 25, 1, '2015-04-01 06:07:08', 'demouser', 'pre-generated');
 
 -- insert processes (3 processes for both modules)
-INSERT INTO processes (prsname, mtname, inputs, outputs, params, userid, notes) VALUES
-    ('demo1p_5000_25', 'demo1', NULL, 'demo1out', '{param1:5000,param2:25}', 'demouser', 'pre-generated'),
-    ('demo1p_0_10', 'demo1', NULL, 'demo1out', '{param1:0,param2:10}', 'demouser', 'pre-generated'),
-    ('demo1p_11_50', 'demo2', NULL, 'demo1out', '{param1:11,param2:50}', 'demouser', 'pre-generated'),
-    ('demo2p_video3_demo1p_5000_25', 'demo2', 'demo1p_5000_25', 'demo2out', '{video:video3}', 'demouser', 'pre-generated'),
-    ('demo2p_video1_demo1p_11_50', 'demo2', 'demo1p_11_50', 'demo2out', '{video:video1}', 'demouser', 'pre-generated'),
-    ('demo2p_video3_demo1p_11_50', 'demo2', 'demo1p_11_50', 'demo2out', '{video:video3}', 'demouser', 'pre-generated');
+INSERT INTO processes (prsname, mtname, inputs, outputs, state, params, userid, notes) VALUES
+    ('demo1p_5000_25', 'demo1', NULL, 'demo1out', '(done,100,,)', '{param1:5000,param2:25}', 'demouser', 'pre-generated'),
+    ('demo1p_0_10', 'demo1', NULL, 'demo1out', '(error,32,"video1","cannot process video")', '{param1:0,param2:10}', 'demouser', 'pre-generated'),
+    ('demo1p_11_50', 'demo2', NULL, 'demo1out', '(running,35,"video3",)','{param1:11,param2:50}', 'demouser', 'pre-generated'),
+    ('demo2p_video3_demo1p_5000_25', 'demo2', 'demo1p_5000_25', 'demo2out', '(done,100,,)','{video:video3}', 'demouser', 'pre-generated'),
+    ('demo2p_video1_demo1p_11_50', 'demo2', 'demo1p_11_50', 'demo2out', '(running,10,"video1",)','{video:video1}', 'demouser', 'pre-generated'),
+    ('demo2p_video3_demo1p_11_50', 'demo2', 'demo1p_11_50', 'demo2out', '(running,15,"video2",)','{video:video3}', 'demouser', 'pre-generated');
 
 -- insert results for demo1 processes (only process 1)
 INSERT INTO demo1out (seqname, prsname, t1, t2, features_array, features_mat, userid, notes) VALUES
     ('video1', 'demo1p_5000_25', 1, 1, '{1.8,2.3,2.5}', '(5,"{3,1}","\\x00000000cdcccc3dcdcc4c3e")', 'demouser', 'pre-generated'),
-    ('video2', 'demo1p_5000_25', 2, 1, '{1.6}', '(5,"{2,2}","\\x00000000cdcccc3dcdcc4c3e4c3ecdcc")', 'demouser', 'pre-generated'),
+    ('video2', 'demo1p_5000_25', 2, 2, '{1.6}', '(5,"{2,2}","\\x00000000cdcccc3dcdcc4c3e4c3ecdcc")', 'demouser', 'pre-generated'),
     ('video3', 'demo1p_5000_25', 1, 1, '{1.8}', '(5,"{2,1}","\\xcdcccc3dcdcccc")', 'demouser', 'pre-generated'),
     ('video3', 'demo1p_5000_25', 5, 32, '{7.9,2.9,0.01}', '(5,"{1,1}","\\x00000000")', 'demouser', 'pre-generated'),
     ('video3', 'demo1p_5000_25', 7, 15, '{2.9,0.07,1.5}', '(5,"{3,1}","\\x00000000cdcccc3dcdcc4c3e")', 'demouser', 'pre-generated');
 
 -- insert results for demo2 processes (processes 4,5,6)
 INSERT INTO demo2out (seqname, prsname, t1, t2, event, userid, notes) VALUES
-    ('video3', 'demo2p_video3_demo1p_5000_25', 1, 1, '(1,20,0,"((5,9),(16,36))",0.8,)', 'demouser', 'pre-generated'),
-    ('video3', 'demo2p_video3_demo1p_5000_25', 2, 2, '(2,15,0,"((14,19),(22,63))",0.74,)', 'demouser', 'pre-generated'),
-    ('video1', 'demo2p_video1_demo1p_11_50', 1, 15, '(1,55,0,"((5,63),(17,19))",0.23,)', 'demouser', 'pre-generated'),
-    ('video1', 'demo2p_video1_demo1p_11_50', 16, 79, '(2,17,0,"((1,3),(12,86))",0.11,)', 'demouser', 'pre-generated'),
-    ('video3', 'demo2p_video3_demo1p_11_50', 1, 2, '(1,12,1,"((10,20),(10,20))",0.42,"\\x41484f4a")', 'demouser', 'pre-generated'),
-    ('video3', 'demo2p_video3_demo1p_11_50', 1, 1, '(1,12,0,"((10,20),(10,10))",0.63,)', 'demouser', 'pre-generated'),
-    ('video3', 'demo2p_video3_demo1p_11_50', 2, 2, '(1,12,0,"((10,10),(10,20))",0.11,)', 'demouser', 'pre-generated');
+    ('video3', 'demo2p_video3_demo1p_5000_25', 1, 1, '(1,20,0,"((0.1,0.2),(0.4,0.75))",0.8,)', 'demouser', 'pre-generated'),
+    ('video3', 'demo2p_video3_demo1p_5000_25', 2, 2, '(2,15,0,"((0,0),(1,1))",0.74,)', 'demouser', 'pre-generated'),
+    ('video1', 'demo2p_video1_demo1p_11_50', 1, 15, '(1,55,0,"((0.2,0.5),(0.11,0.13))",0.23,)', 'demouser', 'pre-generated'),
+    ('video1', 'demo2p_video1_demo1p_11_50', 16, 79, '(2,17,0,"((0,0.7),(1,1))",0.11,)', 'demouser', 'pre-generated'),
+    ('video3', 'demo2p_video3_demo1p_11_50', 1, 2, '(1,12,1,"((0.7,0),(1,0.9))",0.42,"\\x41484f4a")', 'demouser', 'pre-generated'),
+    ('video3', 'demo2p_video3_demo1p_11_50', 1, 1, '(1,12,0,"((0.1,0.2),(0.5,0.5))",0.63,)', 'demouser', 'pre-generated'),
+    ('video3', 'demo2p_video3_demo1p_11_50', 2, 2, '(1,12,0,"((0.4,0.4),(0.6,0.6))",0.11,)', 'demouser', 'pre-generated');
