@@ -24,14 +24,15 @@ using namespace vtapi;
 //================================ SEQUENCE ====================================
 
 
-Sequence::Sequence(const KeyValues& orig, const string& name) : KeyValues(orig) {
+Sequence::Sequence(const KeyValues& orig, const string& name) : KeyValues(orig)
+{
     thisClass = "Sequence";
 
     if (!name.empty()) this->sequence = name;
 
     select = new Select(orig);
     select->from("sequences", "*");
-    select->whereString("seqname", this->sequence);
+    if (!this->sequence.empty()) select->whereString("seqname", this->sequence);
 }
 
 bool Sequence::next() {
@@ -56,13 +57,16 @@ string Sequence::getType() {
     return this->getString("seqtype");
 }
 
-Interval* Sequence::newInterval(const int t1, const int t2) {
+Interval* Sequence::newInterval(const int t1, const int t2)
+{
     return new Interval(*this);
 }
 
-Image* Sequence::newImage(const string& name) {
+Image* Sequence::newImage(const string& name)
+{
     Image* image = new Image(*this);
-    image->select->whereString("imglocation", name);
+    
+    if (!name.empty()) image->select->whereString("imglocation", name);
 
     return image;
 }
@@ -244,7 +248,6 @@ bool Video::setRealStartTime(const time_t& starttime)
 {
     return (setTimestamp("vid_time", starttime) && setExecute());
 }
-
 
 VideoPlayer::VideoPlayer(Commons& orig) : Commons(orig) {
     thisClass = "VideoPlayer(Commons&)";

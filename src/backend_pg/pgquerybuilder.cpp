@@ -8,7 +8,14 @@
 // postgres data transfer format: 0=text, 1=binary
 #define PG_FORMAT           1
 
+#define DEF_NO_SCHEMA   "!NO_SCHEMA!"
+#define DEF_NO_TABLE    "!NO_TABLE!"
+#define DEF_NO_COLUMN   "!NO_COLUMN!"
+#define DEF_NO_VALUES   "|NO_VALUES|"
+
 using std::string;
+using std::set;
+using std::ostringstream;
 
 using namespace vtapi;
 
@@ -16,183 +23,233 @@ PGQueryBuilder::PGQueryBuilder(const PGBackendBase &base, void *connection, cons
     QueryBuilder (connection, initString),
     PGBackendBase(base)
 {
-    thisClass   = "PGQueryBuilder";
-    keysCnt     = 1;
+    thisClass = "PGQueryBuilder";
+    reset();
 }
 
-PGQueryBuilder::~PGQueryBuilder() {
+PGQueryBuilder::~PGQueryBuilder()
+{
     destroyParam();    
 }
 
-string PGQueryBuilder::getGenericQuery() {
+string PGQueryBuilder::getGenericQuery()
+{
     return initString;
 }
 
-string PGQueryBuilder::getSelectQuery(const string& groupby, const string& orderby, const int limit, const int offset) {
+string PGQueryBuilder::getSelectQuery(const string& groupby, const string& orderby, const int limit, const int offset)
+{
     string queryString;
-    string columnsStr;
-    string tablesStr;
-    string whereStr;
 
-    // construct main part of the query
-    if (!this->keys_main.empty()) {
-        // go through keys
-        for (int i = 0; i < keys_main.size(); i++) {
-            string tmpTable     = !keys_main[i].from.empty() ? keys_main[i].from : this->table;
-            string tmpColumn    = keys_main[i].key;
-            size_t dotPos       = tmpTable.find(".");
-            bool addTable       = true;
-
-            // get escaped table
-            if (dotPos == string::npos) {
-                tmpTable = this->escapeIdent(this->dataset) + "." + this->escapeIdent(tmpTable);
-            }
-            else {
-                tmpTable = this->escapeIdent(tmpTable.substr(0,dotPos)) + "." + this->escapeIdent(tmpTable.substr(dotPos+1,string::npos));
-            }
-            // get and add escaped column
-            if (tmpColumn.empty() || tmpColumn.compare("*") == 0) {
-                columnsStr  += tmpTable + "." + "*" +", ";
-            }
-            else {
-                columnsStr  += tmpTable + "." + this->escapeColumn(tmpColumn, "");
-                columnsStr  += " AS " + this->escapeAlias(tmpColumn)  + ", ";
-            }
-            // check if table already exists
-            for (int j = 0; j < i; j++) {
-                if (keys_main[i].from.compare(keys_main[j].from) == 0 ||
-                   (keys_main[i].from.empty() && keys_main[j].from.empty())) {
-                    addTable = false;
-                    break;
-                }
-            }
-            // add table
-            if (addTable) {
-                tablesStr   += tmpTable + ", ";
-            }
-        }
-        // erase commas
-        if (!columnsStr.empty())    columnsStr.erase(columnsStr.length()-2);
-        if (!tablesStr.empty())     tablesStr.erase(tablesStr.length()-2);
-
-        // construct main part of the query
-        queryString = "SELECT " + columnsStr + "\n FROM " + tablesStr;
-        if (tablesStr.empty() || columnsStr.empty()) {
-            logger->error(201, queryString, thisClass+"::getSelectQuery()");
-        }
-    }
-    // keys are empty, use direct query
-    else {
-        queryString = this->initString;
-    }
-    
-    // construct WHERE and the rest of it all
-    if (!this->keys_where.empty()) {
-        for (int i = 0; i < keys_where.size(); i++) {
-            if (!whereStr.empty()) whereStr += " AND ";
-            whereStr += this->escapeColumn(keys_where[i].key, keys_where[i].from);
-            whereStr += opers[i];
-            whereStr += "$" + toString(keys_where_order[i]);
-        }
-        if (!whereStr.empty()) {
-            queryString += "\n WHERE " + whereStr;
-        }
+    // use initialization string if specified
+    if (!initString.empty()) {
+        queryString = initString;
         
-        if (!groupby.empty()) {
-            queryString += "\n GROUP BY " + groupby;
-        }
-        if (!orderby.empty()) {
-            queryString += "\n ORDER BY " + orderby;
-        }
-        if (limit > 0) {
-            queryString += "\n LIMIT " + toString(limit);
-        }
-        if (offset > 0) {
-            queryString += "\n OFFSET " + toString(offset);
+        // replace trailing ;
+        for (int i = queryString.length() - 1; i >= 0 && queryString[i] == ';'; i--) {
+            queryString[i] = ' ';
         }
     }
-    queryString += ";";
-
-    //printf("%s\n", queryString.c_str());
-    return (queryString);
-}
-
-string PGQueryBuilder::getInsertQuery() {
-    string queryString;
-    string dstTable;
-    string intoStr;
-    string valuesStr;
-
-    if (this->keys_main.empty()) return initString; // in case of a direct query
-
-    // in case we're lazy, we have the table specified in initString or selection
-    dstTable = (!initString.empty()) ? initString : this->table;
-
-    // go through keys
-    for (int i = 0; i < this->keys_main.size(); ++i) {
-        if (dstTable.empty()) dstTable = this->keys_main[i].from;
-        intoStr     += escapeIdent(this->keys_main[i].key) + ", ";
-        valuesStr   += "$" + toString(keys_main_order[i]) + ", ";
-    }
-    // this is to remove ending separators
-    intoStr.erase(intoStr.length()-2);
-    valuesStr.erase(valuesStr.length()-2);
-
-    // add the dataset selected and escape table
-    if (dstTable.find(".") == string::npos) {
-        dstTable = escapeColumn(dstTable, this->dataset);
-    }
+    // otherwise use keys to construct tables/columns part of the query
     else {
-        dstTable = escapeColumn(dstTable, "");
+        string tableStr;
+        string tablesStr;
+        string columnsStr;
+        set<string> setTables;
+        
+        // go through keys, construct tables/columns
+        for (MAIN_LIST_IT it = m_listMain.begin(); it != m_listMain.end(); it++) {
+            TKey &key = (*it).key;
+
+            // add column after SELECT
+            string col  = constructColumn(key.key, key.from);
+            if (!columnsStr.empty()) {
+                columnsStr += ',';
+            }
+            columnsStr += col;
+            if (key.key[0] != '*') {
+                columnsStr += " AS " + constructAlias(key.key);
+            }
+
+            // add table after FROM
+            string tab = constructTable(key.from);
+            if (setTables.count(tab) == 0) {
+                if (!tablesStr.empty()) tablesStr += ',';
+                tablesStr += tab;
+                setTables.insert(tab);
+            }
+        }
+
+        bool bError = columnsStr.empty() || tablesStr.empty();
+        if (columnsStr.empty()) columnsStr  = DEF_NO_COLUMN;
+        if (tablesStr.empty())  tablesStr   = DEF_NO_TABLE;
+        
+        queryString = "SELECT " + columnsStr + "\nFROM " + tablesStr;
+
+        if (bError) {
+            logger->error(201, "incomplete query: " + queryString, thisClass + "::getSelectQuery()");
+            return "";
+        }
     }
     
-    // construct query
-    queryString = "INSERT INTO " + dstTable + " (" + intoStr + ")\n VALUES (" + valuesStr + ");";
+    // construct WHERE clause
+    if (!m_listWhere.empty()) {
+        string whereStr;
+        
+        for (WHERE_LIST_IT it = m_listWhere.begin(); it != m_listWhere.end(); it++) {
+            TKey &key = (*it).key;
+
+            if (!whereStr.empty()) whereStr += "\nAND\n";
+
+            // bind key to PGparam value
+            if ((*it).idParam > 0) {
+                whereStr += constructColumn(key.key, key.from);
+                whereStr += ' ' + (*it).oper + ' ';
+                whereStr += '$' + toString((*it).idParam);
+            }
+            // use key as custom expression
+            else {
+                whereStr += (key.key);
+                whereStr += ' ' + (*it).oper + ' ';
+                whereStr += (*it).value;
+            }
+        }
+
+        if (!whereStr.empty()) {
+            queryString += "\nWHERE\n" + whereStr;
+        }
+    }
     
-    //printf("%s\n", queryString.c_str());
+    // construct rest of the query
+    if (!groupby.empty()) {
+        queryString += "\nGROUP BY " + groupby;
+    }
+    if (!orderby.empty()) {
+        queryString += "\nORDER BY " + orderby;
+    }
+    if (limit > 0) {
+        queryString += "\nLIMIT " + toString(limit);
+    }
+    if (offset > 0) {
+        queryString += "\nOFFSET " + toString(offset);
+    }
+    queryString += ';';
+
     return queryString;
 }
 
-string PGQueryBuilder::getUpdateQuery() {
-    string queryString;
-    string dstTable;
-    string setStr;
-    string whereStr;    
-
-    if (this->keys_main.empty()) return initString; // in case of a direct query
-
-    // in case we're lazy, we have the table specified in initString or selection
-    dstTable = (!initString.empty()) ? initString : this->table;
-
-    // go through keys
-    for (int i = 0; i < this->keys_main.size(); ++i) {
-        if (dstTable.empty()) dstTable = this->keys_main[i].from;
-        setStr  += escapeIdent(this->keys_main[i].key);
-        setStr  += "=$" + toString(keys_main_order[i]) + ", ";
-    }
-    // this is to remove ending separators
-    setStr.erase(setStr.length()-2);
-
-    // add the dataset selected and escape table
-    if (dstTable.find(".") == string::npos) {
-        dstTable = escapeColumn(dstTable, this->dataset);
+string PGQueryBuilder::getInsertQuery()
+{
+    if (!initString.empty()) {
+        return initString;
     }
     else {
-        dstTable = escapeIdent(dstTable);
+        string &tab = defaultTable;
+        string tableStr;
+        string intoStr;
+        string valuesStr;
+
+        // construct columns/values part of the query
+        for (MAIN_LIST_IT it = m_listMain.begin(); it != m_listMain.end(); it++) {
+            TKey &key = (*it).key;
+            
+            if (!key.from.empty()) tab = key.from;
+            
+            if (it != m_listMain.begin()) intoStr += ',';
+            intoStr     += escapeIdent(key.key);
+            
+            if (it != m_listMain.begin()) valuesStr += ',';
+            valuesStr   += '$' + toString((*it).idParam);
+        }
+
+        bool bError = tab.empty() || intoStr.empty() || valuesStr.empty();
+        if (intoStr.empty())    intoStr  = DEF_NO_COLUMN;
+        if (valuesStr.empty())  valuesStr= DEF_NO_VALUES;
+
+        tableStr = constructTable(tab);
+
+        // construct query
+        string queryString = "INSERT INTO " + tableStr + "(" + intoStr + ")\nVALUES(" + valuesStr + ");";
+
+        if (bError) {
+            logger->error(202, "incomplete query: " + queryString, thisClass + "::getInsertQuery()");
+            return "";
+        }
+
+        return queryString;
     }
-    //construct main part of the query
-    queryString = "UPDATE " + dstTable + "\n SET " + setStr;
+}
+
+string PGQueryBuilder::getUpdateQuery()
+{
+    string queryString;
+
+    // use initialization string if specified
+    if (!initString.empty()) {
+        queryString = initString;
+
+        // replace trailing ; with spaces
+        for (int i = queryString.length() - 1; i >= 0; i--) {
+            queryString[i] = ' ';
+        }
+    }
+    // otherwise use keys to construct tables/columns part of the query
+    else {
+        string &tab = defaultTable;
+        string tableStr;
+        string setStr;
+
+        // construct set part of the query
+        for (MAIN_LIST_IT it = m_listMain.begin(); it != m_listMain.end(); it++) {
+            TKey &key = (*it).key;
+
+            if (!key.from.empty()) tab = key.from;
+            
+            if (!setStr.empty()) setStr += ',';
+            setStr  += escapeIdent(key.key) + "=$" + toString((*it).idParam);
+        }
+
+        bool bError = tab.empty() || setStr.empty();
+        if (setStr.empty()) setStr = DEF_NO_COLUMN;
+
+        tableStr = constructTable(tab);
+        
+        queryString = "UPDATE " + tableStr + "\nSET " + setStr;
+
+        if (bError) {
+            logger->error(203, "incomplete query: " + queryString, thisClass + "::getUpdateQuery()");
+            return "";
+        }
+    }
+    
     // construct WHERE clause
-    for (int i = 0; i < keys_where.size(); i++) {
-        if (!whereStr.empty()) whereStr += " AND ";
-        whereStr += this->escapeColumn(keys_where[i].key, keys_where[i].from);
-        whereStr += opers[i];
-        whereStr += "$" + toString(keys_where_order[i]);
+    if (!m_listWhere.empty()) {
+        string whereStr;
+        
+        for (WHERE_LIST_IT it = m_listWhere.begin(); it != m_listWhere.end(); it++) {
+            TKey &key = (*it).key;
+
+            if (!whereStr.empty()) whereStr += " AND ";
+
+            if ((*it).idParam > 0) {
+                whereStr += constructColumn(key.key, key.from);
+                whereStr += ' ' + (*it).oper + ' ';
+                whereStr += "$" + toString((*it).idParam);
+            }
+            else {
+                whereStr += (key.key);
+                whereStr += ' ' + (*it).oper + ' ';
+                whereStr += (*it).value;
+            }
+        }
+
+        if (!whereStr.empty()) {
+            queryString += "\nWHERE\n" + whereStr;
+        }
     }
-    if (!whereStr.empty()) {
-        queryString += "\n WHERE " + whereStr;
-    }
+
     queryString += ";";
+
     return queryString;
 }
 
@@ -211,419 +268,455 @@ string PGQueryBuilder::getRollbackQuery()
     return "ROLLBACK;";
 }
 
-bool PGQueryBuilder::keyFrom(const string& table, const string& column) {
-    if (column.empty()) return VT_FAIL;
-    else {
-        TKey k("", column, 1, table);
-        keys_main.push_back(k);
-        return VT_OK;
-    }
+template<typename T>
+bool PGQueryBuilder::keySingleValue(const string& key, T value, const char *type, const string& from)
+{
+    uint idParam = 0;
+
+    do {
+        if (key.empty()) break;
+
+        idParam = addToParam(type, value);
+        if (!idParam) break;
+
+        m_listMain.push_back(MAIN_ITEM(key, from, idParam));
+    } while (0);
+
+    return (idParam > 0);
 }
 
-bool PGQueryBuilder::keyString(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty()) return VT_FAIL;
-    else {
-        TKey k("varchar", key, 1, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%varchar", value.c_str());
-        return VT_OK;
-    }
-}
+template<typename T>
+bool PGQueryBuilder::keyArray(const std::string& key, T* values, const int size, const char *type, const char* type_arr, const std::string& from)
+{
+    uint idParam = 0;
+    PGarray arr = { 0 };
 
-bool PGQueryBuilder::keyStringA(const string& key, string* values, const int size, const string& from) {
-    if (key.empty() || !values || size <= 0) return VT_FAIL;
-    else {
-        TKey k("varchar[]", key, size, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
+    do {
+        if (key.empty() || !values || size <= 0) break;
 
-        if (!param) createParam();
-
-        PGarray arr = {0};
-        arr.param = pqt.PQparamCreate((PGconn *)connection);
+        arr.param = pqt.PQparamCreate((PGconn *) connection);
+        if (!arr.param) break;
 
         // put the array elements
-        for(int i = 0; i < size; ++i) {
-            pqt.PQputf(arr.param, "%varchar", values[i].c_str());
+        for (int i = 0; i < size; ++i) {
+            pqt.PQputf(arr.param, type, values[i]);
         }
-        pqt.PQputf((PGparam *)param, "%varchar[]", &arr);
-        pqt.PQparamClear(arr.param);
+
+        idParam = addToParam(type_arr, &arr);
+        if (!idParam) break;
+
+        m_listMain.push_back(MAIN_ITEM(key, from, idParam));
+    } while (0);
+
+    if (arr.param) pqt.PQparamClear(arr.param);
+
+    return (idParam > 0);
+}
+
+bool PGQueryBuilder::keyFrom(const string& table, const string& column)
+{
+    if (column.empty()) {
+        return VT_FAIL;
+    }
+    else {
+        if (defaultTable.empty()) defaultTable = table;
+        m_listMain.push_back(MAIN_ITEM(column, table, 0));
         return VT_OK;
     }
 }
 
-bool PGQueryBuilder::keyInt(const string& key, int value, const string& from) {
-    if (key.empty()) return VT_FAIL;
-    else {
-        TKey k("int4", key, 1, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%int4", value);
-        return VT_OK;
-    }
+bool PGQueryBuilder::keyString(const string& key, const string& value, const string& from)
+{
+    return keySingleValue(key, value.c_str(), "%varchar", from);
 }
 
-bool PGQueryBuilder::keyIntA(const string& key, int* values, const int size, const string& from) {
-    if (key.empty() || !values || size <= 0) return VT_FAIL;
-    else {
-        TKey k("int4[]", key, size, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
+bool PGQueryBuilder::keyStringA(const string& key, string* values, const int size, const string& from)
+{
+    uint idParam = 0;
+    PGarray arr = { 0 };
 
-        if (!param) createParam();
+    do {
+        if (key.empty() || !values || size <= 0) break;
 
-        PGarray arr = {0};
-        arr.param = pqt.PQparamCreate((PGconn *)connection);
+        arr.param = pqt.PQparamCreate((PGconn *) connection);
+        if (!arr.param) break;
 
         // put the array elements
-        for(int i = 0; i < size; ++i) {
-            pqt.PQputf(arr.param, "%int4", values[i]);
+        for (int i = 0; i < size; ++i) {
+            pqt.PQputf(arr.param, "%varchar", (PGvarchar)values[i].c_str());
         }
-        pqt.PQputf((PGparam *)param, "%int4[]", &arr);
-        pqt.PQparamClear(arr.param);
-        return VT_OK;
-    }
+
+        idParam = addToParam("%varchar[]", &arr);
+        if (!idParam) break;
+
+        m_listMain.push_back(MAIN_ITEM(key, from, idParam));
+    } while (0);
+
+    if (arr.param) pqt.PQparamClear(arr.param);
+
+    return (idParam > 0);
 }
 
-bool PGQueryBuilder::keyFloat(const string& key, float value, const string& from) {
-    if (key.empty()) return VT_FAIL;
-    else {
-        TKey k("float4", key, 1, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%float4", value);
-        return VT_OK;
-    }
+bool PGQueryBuilder::keyInt(const string& key, int value, const string& from)
+{
+    return keySingleValue(key, value, "%int4", from);
 }
 
-bool PGQueryBuilder::keyFloatA(const string& key, float* values, const int size, const string& from) {
-    if (key.empty() || !values || size <= 0) return VT_FAIL;
-    else {
-        TKey k("float4[]", key, size, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-
-        if (!param) createParam();
-
-        PGarray arr = {0};
-        arr.param = pqt.PQparamCreate((PGconn *)connection);
-
-        // put the array elements
-        for(int i = 0; i < size; ++i) {
-            pqt.PQputf(arr.param, "%float4", values[i]);
-        }
-        pqt.PQputf((PGparam *)param, "%float4[]", &arr);
-        pqt.PQparamClear(arr.param);
-        return VT_OK;
-    }
+bool PGQueryBuilder::keyIntA(const string& key, int* values, const int size, const string& from)
+{
+    return keyArray(key, values, size, "%int4", "%int4[]", from);
 }
 
-bool PGQueryBuilder::keySeqtype(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
-    else {
-        TKey k("seqtype", key, 1, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%public.seqtype", value.c_str());
-        return VT_OK;
-    }
+bool PGQueryBuilder::keyFloat(const string& key, float value, const string& from)
+{
+    return keySingleValue(key, value, "%float4", from);
 }
 
-bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
-    else {
-        TKey k("inouttype", key, 1, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%public.inouttype", value.c_str());
-        return VT_OK;
-    }
+bool PGQueryBuilder::keyFloatA(const string& key, float* values, const int size, const string& from)
+{
+    return keyArray(key, values, size, "%float4", "%float4[]", from);
 }
 
-//bool PGQueryBuilder::keyPermissions(const string& key, const string& value, const string& from) {
-//    if (key.empty() || value.empty()) return VT_FAIL;
-//    else {
-//        TKey k("permissions", key, 1, from);
-//        keys_main.push_back(k);
-//        keys_main_order.push_back(keysCnt++);
-//        if (!param) createParam();
-//        pqt.PQputf((PGparam *)param, "%public.permissions", value.c_str());
-//        return VT_OK;
-//    }
-//}
+bool PGQueryBuilder::keySeqtype(const string& key, const string& value, const string& from)
+{
+    return checkSeqtype(value) && keySingleValue(key, value.c_str(), "%public.seqtype", from);
+}
 
-bool PGQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from) {
-    if (key.empty()) return VT_FAIL;
-    else {
-        PGtimestamp timestamp = {0};
-        struct tm* ts;
+bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const string& from)
+{
+    return checkInouttype(value) && keySingleValue(key, value.c_str(), "%public.inouttype", from);
+}
 
-        TKey k("timestamp", key, 1, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-        if (!param) createParam();
-
-        ts = gmtime(&value);
-        timestamp.date.isbc = 0;
-        timestamp.date.year = ts->tm_year + 1900;
-        timestamp.date.mon = ts->tm_mon;
-        timestamp.date.mday = ts->tm_mday;
-        timestamp.time.hour = ts->tm_hour;
-        timestamp.time.min = ts->tm_min;
-        timestamp.time.sec = ts->tm_sec;
-        timestamp.time.usec = 0;
-        pqt.PQputf((PGparam *)param, "%timestamp", &timestamp);
-
-        return VT_OK;
-    }
+bool PGQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from)
+{
+    PGtimestamp ts = UnixTimeToTimestamp(value);
+    return keySingleValue(key, &ts, "%timestamp", from);
 }
 
 #if HAVE_OPENCV
-bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const string& from) {
-    if (key.empty()) return VT_FAIL;
-    else {
-        TKey k("cvmat", key, 1, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-        if (!param) createParam();
-        
-        // cvmat arguments
-        int mat_type        = value.type();
-        PGarray mat_dims    = {0};
-        PGbytea mat_data    = {(int)(value.dataend-value.datastart), (char*)value.data};
+bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const string& from)
+{
+    bool ret = true;
+    PGparam *cvmat = NULL;
 
+    do {
         // create dimensions array
-        mat_dims.param = pqt.PQparamCreate((PGconn *)connection);
+        PGarray mat_dims    = { 0 };
+        mat_dims.param = pqt.PQparamCreate((PGconn *) connection);
+        if (!mat_dims.param) { ret = false; break; }
+        
         for (int i = 0; i < value.dims; i++) {
-            pqt.PQputf(mat_dims.param, "%int4", value.size[i]);
+            ret &= (0 != pqt.PQputf(mat_dims.param, "%int4", value.size[i]));
         }
+        pqt.PQparamClear(mat_dims.param);
+        if (!ret) break;
+
+        // matrix data
+        PGbytea mat_data = { (int) (value.dataend - value.datastart), (char*) value.data };
         
         // create cvmat composite
-        PGparam *cvmat = pqt.PQparamCreate((PGconn *)connection);
-        pqt.PQputf(cvmat, "%int4 %int4[] %bytea*",
-            (PGint4)mat_type, &mat_dims, &mat_data);
-        pqt.PQparamClear(mat_dims.param);
+        cvmat = pqt.PQparamCreate((PGconn *) connection);
+        if (!cvmat) { ret = false; break; }
         
-        // put cvmat composite
-        pqt.PQputf((PGparam *)param, "%public.cvmat", cvmat);
-        pqt.PQparamClear(cvmat);
-        
-        return VT_OK;
-    }
+        ret = (0 != pqt.PQputf(cvmat, "%int4 %int4[] %bytea*",
+            (PGint4) value.type(), &mat_dims, &mat_data));
+        if (!ret) break;
+
+        ret = keySingleValue(key, cvmat, "%public.cvmat", from);
+    } while(0);
+
+    if (cvmat) pqt.PQparamClear(cvmat);
+    
+    return ret;
 }
 #endif
 
-bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& value, const string& from) {
-    if (key.empty()) return VT_FAIL;
-    else {
-        TKey k("vtevent", key, 1, from);
-        keys_main.push_back(k);
-        keys_main_order.push_back(keysCnt++);
-        if (!param) createParam();
-        
-        PGbytea data = {value.user_data_size, (char*)value.user_data};
-        
+bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& value, const string& from)
+{
+    bool ret = true;
+    PGparam * event = NULL;
+    
+    do {
+        // user data
+        PGbytea data = { value.user_data_size, (char*) value.user_data };
+
         // create interval event composite
-        PGparam *event = pqt.PQparamCreate((PGconn *)connection);
-        pqt.PQputf(event, "%int4 %int4 %bool %box %float8 %bytea*",
-            (PGint4)value.group_id, (PGint4)value.class_id, (PGbool)value.is_root, (PGbox *)&value.region, (PGfloat8)value.score, &data);
+        event = pqt.PQparamCreate((PGconn *) connection);
+        if (!event) { ret = false; break; }
+
+        ret = (0 != pqt.PQputf(event, "%int4 %int4 %bool %box %float8 %bytea*",
+            (PGint4) value.group_id, (PGint4) value.class_id, (PGbool) value.is_root,
+            (PGbox *) & value.region, (PGfloat8) value.score, &data));
+        if (!ret) break;
         
-        // put interval event composite
-        pqt.PQputf((PGparam *)param, "%public.vtevent", event);
-        pqt.PQparamClear(event);
+        ret = keySingleValue(key, event, "%public.vtevent", from);
+    } while(0);
+
+    if (event) pqt.PQparamClear(event);
+
+    return ret;
+}
+
+
+
+template<typename T>
+bool PGQueryBuilder::whereSingleValue(const string& key, T value, const char *type, const string& oper, const string& from)
+{
+    uint idParam = 0;
+
+    do {
+        if (key.empty()) break;
+
+        idParam = addToParam(type, value);
+        if (!idParam) break;
+
+        m_listWhere.push_back(WHERE_ITEM(key, from, oper, idParam));
+    } while (0);
+
+    return (idParam > 0);
+}
+
+bool PGQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from)
+{
+    return whereSingleValue(key, value.c_str(), "%varchar", oper, from);
+}
+
+bool PGQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from)
+{
+    return whereSingleValue(key, value, "%int4", oper, from);
+}
+
+bool PGQueryBuilder::whereFloat(const string& key, const float value, const string& oper, const string& from)
+{
+    return whereSingleValue(key, value, "%float4", oper, from);
+}
+
+bool PGQueryBuilder::whereSeqtype(const string& key, const string& value, const string& oper, const string& from)
+{
+    return checkSeqtype(value) && whereSingleValue(key, value.c_str(), "%public.seqtype", oper, from);
+}
+
+bool PGQueryBuilder::whereInouttype(const string& key, const string& value, const string& oper, const string& from)
+{
+    return checkInouttype(value) && whereSingleValue(key, value.c_str(), "%public.inouttype", oper, from);
+}
+
+bool PGQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
+{
+    PGtimestamp ts = UnixTimeToTimestamp(value);
+    return whereSingleValue(key, &ts, "%timestamp", oper, from);
+}
+
+bool PGQueryBuilder::whereTimeRange(const string& key_start, const string& key_length, const time_t& value_start, const uint value_length, const string& oper, const string& from)
+{
+    bool bRet = true;
+
+    do {
+        if (key_start.empty() || key_length.empty()) { bRet = false; break; }
+
+        string exp = 
+            "'[" + UnixTimeToTimestampString(value_start) + "," +
+            UnixTimeToTimestampString(value_start + value_length) + "]'";
         
-        return VT_OK;
-    }
+        string value =
+            "public.tsrange(" + constructColumn(key_start, from) + "," +
+            constructColumn(key_length,from) + ')';
+        
+        m_listWhere.push_back(WHERE_ITEM(exp, oper, value));
+    } while (0);
+
+    return bRet;
 }
 
+bool PGQueryBuilder::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from)
+{
+    return whereSingleValue(key, &value, "%box", oper, from);
+}
 
-bool PGQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty()) return VT_FAIL;
+bool PGQueryBuilder::whereExpression(const string& expression, const std::string& value, const std::string& oper)
+{
+    if (!expression.empty() && !value.empty()) {
+        m_listWhere.push_back(WHERE_ITEM(expression, oper, value));
+        return true;
+    }
     else {
-        TKey k("varchar", key, 1, from);
-        string value_put;
-
-        if (value.empty()) return VT_FAIL;
-
-        keys_where.push_back(k);
-        keys_where_order.push_back(keysCnt++);
-        if (value.compare("NULL") == 0) {
-            value_put = "IS NULL";
-            opers.push_back("");
-        }
-        else if (value.compare("NOT NULL") == 0) {
-            value_put = "IS NOT NULL";
-            opers.push_back("");
-        }
-        else {
-            value_put = value;
-            opers.push_back(oper);
-        }
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%varchar", value_put.c_str());
-
-        return VT_OK;
+        return false;
     }
 }
 
-bool PGQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from) {
-    if (key.empty()) return VT_FAIL;
-    else {
-        TKey k("int4", key, 1, from);
-        keys_where.push_back(k);
-        keys_where_order.push_back(keysCnt++);
-        opers.push_back(oper);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%int4", value);
-        return VT_OK;
-    }
-}
-
-bool PGQueryBuilder::whereFloat(const string& key, const float value, const string& oper, const string& from) {
-    if (key.empty()) return VT_FAIL;
-    else {
-        TKey k("float4", key, 1, from);
-        keys_where.push_back(k);
-        keys_where_order.push_back(keysCnt++);
-        opers.push_back(oper);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%float4", value);
-        return VT_OK;
-    }
-}
-
-bool PGQueryBuilder::whereSeqtype(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
-    else {
-        TKey k("seqtype", key, 1, from);
-        if (value.empty()) return VT_FAIL;
-        keys_where.push_back(k);
-        keys_where_order.push_back(keysCnt++);
-        opers.push_back(oper);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%public.seqtype", value.c_str());
-        return VT_OK;
-    }
-}
-
-bool PGQueryBuilder::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
-    else {
-        TKey k("inouttype", key, 1, from);
-        if (value.empty()) return VT_FAIL;
-        keys_where.push_back(k);
-        keys_where_order.push_back(keysCnt++);
-        opers.push_back(oper);
-        if (!param) createParam();
-        pqt.PQputf((PGparam *)param, "%public.inouttype", value.c_str());
-        return VT_OK;
-    }
-}
-
-bool PGQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
-    if (key.empty()) return VT_FAIL;
-    else {
-        PGtimestamp timestamp = {0};
-        struct tm* ts;
-
-        TKey k("timestamp", key, 1, from);
-        keys_where.push_back(k);
-        keys_where_order.push_back(keysCnt++);
-        opers.push_back(oper);
-        if (!param) createParam();
-
-        ts = gmtime(&value);
-        timestamp.date.isbc = 0;
-        timestamp.date.year = ts->tm_year + 1900;
-        timestamp.date.mon = ts->tm_mon;
-        timestamp.date.mday = ts->tm_mday;
-        timestamp.time.hour = ts->tm_hour;
-        timestamp.time.min = ts->tm_min;
-        timestamp.time.sec = ts->tm_sec;
-        timestamp.time.usec = 0;
-        pqt.PQputf((PGparam *)param, "%timestamp", &timestamp);
-
-        return VT_OK;
-    }
-}
-
-
-void PGQueryBuilder::reset() {
-    keys_main.clear();
-    keys_where.clear();
-    keys_main_order.clear();
-    keys_where_order.clear();
-    keysCnt = 1;
-    opers.clear();
+void PGQueryBuilder::reset()
+{
+    m_listMain.clear();
+    m_listWhere.clear();
+    m_cntParam = 0;
     destroyParam();
 }
 
-void PGQueryBuilder::createParam() {
+bool PGQueryBuilder::createParam()
+{
     destroyParam();
     param = (void*)pqt.PQparamCreate((PGconn *)connection);
+    return (param != NULL);
 }
 
-void PGQueryBuilder::destroyParam() {
+void PGQueryBuilder::destroyParam()
+{
     if (param) {
         pqt.PQparamClear((PGparam *)param);
         param = NULL;
     }
 }
 
-string PGQueryBuilder::escapeColumn(const string& key, const string& table)
+template<typename T>
+unsigned int PGQueryBuilder::addToParam(const char* type, T value)
 {
-    string ret;
+    uint ret = 0;
     
-    size_t charPos = key.find_first_of(":[(");
-    size_t dotPos = key.find('.');
-    
-    // escape everything
-    if (dotPos != string::npos) {
-        ret = escapeIdent(key.substr(0, dotPos)) + '.';
-        if (charPos != string::npos) {
-            ret += escapeIdent(key.substr(dotPos+1, charPos-dotPos-1)) + key.substr(charPos);
+    do {
+        if (!param && !createParam()) break;
+
+        if (pqt.PQputf((PGparam *) param, type, value) == 0) {
+            ostringstream oss;
+            oss << "failed to add value to query: " << toString(value);
+            logger->warning(658, oss.str(), thisClass + "::addToParam()");
+            break;
         }
-        else {
-            ret += escapeIdent(key.substr(dotPos+1));
-        }
-    }
-    else {
-        if (!table.empty()) {
-            ret = escapeIdent(table) + '.';
-        }
-        if (charPos != string::npos) {
-            ret += escapeIdent(key.substr(0, charPos)) + key.substr(charPos);
-        }
-        else {
-            ret += escapeIdent(key);
-        }
-    }
+
+        ret = ++m_cntParam;
+    } while(0);
     
     return ret;
 }
 
-string PGQueryBuilder::escapeAlias(const string& key) {
-    return key.substr(0, key.find(':'));
+string PGQueryBuilder::constructTable(const string& table, const string& schema)
+{
+    const string& tab = (!table.empty() ? table : defaultTable);
+    
+    // no table specified
+    if (tab.empty()) {
+        return DEF_NO_TABLE;
+    }
+    // no DB schema in table name, use function arg or default schema
+    else if (tab.find('.') == string::npos) {
+        if (!schema.empty()) {
+            return schema + '.' + tab;
+        }
+        else if (!defaultSchema.empty()) {
+            return defaultSchema + '.' + tab;
+        }
+        else {
+            return DEF_NO_SCHEMA + '.' + tab;
+        }
+    }
+    // DB schema in table name
+    else {
+        return tab;
+    }
 }
 
-string PGQueryBuilder::escapeIdent(const string& ident) {
-    char    *ident_c = pg.PQescapeIdentifier((PGconn *)connection, ident.c_str(), ident.length());
-    string  escaped  = string(ident_c);
-    pg.PQfreemem(ident_c);
-    return escaped;
+string PGQueryBuilder::constructColumn(const string& column, const string& table)
+{
+    if (column.empty()) {
+        return DEF_NO_COLUMN;
+    }
+    else if (column[0] == '*') {
+        return constructTable(table) + ".*";
+    }
+    else {
+        // get column table first
+        string tab;
+        size_t dotPos = column.find('.');
+        if (dotPos == string::npos) {
+            tab = constructTable(table);
+        }
+        else {
+            tab = constructTable(column.substr(0, dotPos));
+        }
+
+        // check if column has unescapable part
+        // composite members are accessed through comma
+        size_t startPos = (dotPos == string::npos ? 0 : dotPos + 1);
+        size_t charPos  = column.find_first_of(":[(,", startPos);
+
+        if (charPos == string::npos) {
+            if (startPos == 0) {
+                return tab + '.' + escapeIdent(column.c_str());
+            }
+            else {
+                string col = column.substr(startPos, string::npos);
+                if (col.empty()) col = DEF_NO_COLUMN;
+
+                return tab + '.' + escapeIdent(col);
+            }
+        }
+        else {
+            string col;
+            string rest = column.substr(charPos, string::npos);
+
+            if (startPos == 0) {
+                col = column.substr(0, charPos);
+            }
+            else {
+                col = column.substr(startPos, charPos - startPos);
+            }
+            if (col.empty()) col = DEF_NO_COLUMN;
+
+            // composite values are accessed through comma
+            if (column[charPos] == ',') {
+                return '(' + tab + '.' + escapeIdent(col) + ')' + '.' + escapeIdent(&rest[1]);
+            }
+            else {
+                return tab + '.' + escapeIdent(col) + rest;
+            }
+        }
+    }
 }
 
-string PGQueryBuilder::escapeLiteral(const string& literal) {
-    char *literal_c = pg.PQescapeLiteral((PGconn *)connection, literal.c_str(), literal.length());
-    string  escaped  = string(literal_c);
-    pg.PQfreemem(literal_c);
-    return escaped;
+string PGQueryBuilder::constructAlias(const string& column)
+{
+    return column.substr(0, column.find_first_of(":[(,."));
 }
 
+string PGQueryBuilder::escapeIdent(const string& ident)
+{
+    char *escaped = pg.PQescapeIdentifier((PGconn *)connection, ident.c_str(), ident.length());
+    string ret(escaped);
+    pg.PQfreemem(escaped);
+    return ret;
+}
+
+string PGQueryBuilder::escapeLiteral(const string& literal)
+{
+    char *escaped = pg.PQescapeLiteral((PGconn *)connection, literal.c_str(), literal.length());
+    string ret(escaped);
+    pg.PQfreemem(escaped);
+    return ret;
+}
+
+PGtimestamp PGQueryBuilder::UnixTimeToTimestamp(const time_t& utime)
+{
+    PGtimestamp ret = {0};
+    struct tm* ts = gmtime(&utime);
+
+    ret.date.year = ts->tm_year + 1900;
+    ret.date.mon  = ts->tm_mon;
+    ret.date.mday = ts->tm_mday;
+    ret.time.hour = ts->tm_hour;
+    ret.time.min  = ts->tm_min;
+    ret.time.sec  = ts->tm_sec;
+
+    return ret;
+}
+
+string PGQueryBuilder::UnixTimeToTimestampString(const time_t& utime)
+{
+    struct tm* ts = gmtime(&utime);
+    char buffer[64];
+    
+    sprintf(buffer, "%d-%02d-%02d %02d:%02d:%02d",
+        ts->tm_year + 1900, ts->tm_mon + 1, ts->tm_mday,
+        ts->tm_hour, ts->tm_min, ts->tm_sec);
+    
+    return buffer;
+}
 #endif

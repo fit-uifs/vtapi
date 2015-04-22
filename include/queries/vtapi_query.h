@@ -49,7 +49,8 @@ public:
      * @param commons      pointer of the existing Commons object
      * @param initString   initial query string
      */
-    Query(const Commons& commons, const std::string& initString = "");
+    Query(const Commons& commons, const std::string& initString);
+
     /**
      * Destructor
      */
@@ -90,7 +91,7 @@ public:
      * @return success
      */
     bool checkQueryObject();
-    
+
 };
 
 } // namespace vtapi

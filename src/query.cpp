@@ -27,15 +27,23 @@ using namespace vtapi;
 
 
 Query::Query(const Commons& commons, const string& initString)
-: Commons(commons) {
-    thisClass       = "Query";
-
-    queryBuilder    = BackendFactory::createQueryBuilder(backend, *backendBase, connection->getConnectionObject(), initString);
-    resultSet       = BackendFactory::createResultSet(backend, *backendBase, connection->getDBTypes());
-    if (queryBuilder) {
-        this->queryBuilder->setDataset(this->dataset);
-        this->queryBuilder->setTable(this->selection);
+: Commons(commons)
+{
+    this->thisClass = thisClass;
+    
+    bool bIsQuery = (initString.find_first_of(" \t\n") != string::npos);
+    if (bIsQuery) {
+        queryBuilder = BackendFactory::createQueryBuilder(backend, *backendBase, connection->getConnectionObject(), initString);
+        if (!this->selection.empty()) queryBuilder->useDefaultTable(this->selection);
     }
+    else {
+        queryBuilder = BackendFactory::createQueryBuilder(backend, *backendBase, connection->getConnectionObject());
+        if (!initString.empty()) queryBuilder->useDefaultTable(initString);
+    }
+    queryBuilder->useDefaultSchema(this->dataset);
+
+    resultSet = BackendFactory::createResultSet(backend, *backendBase, connection->getDBTypes());
+
     executed        = false;
 }
 
@@ -97,8 +105,10 @@ bool Query::checkQueryObject() {
 
 
 Select::Select(const Commons& commons, const string& initString)
-: Query(commons, initString) {
-    thisClass = "Select";
+: Query(commons, initString)
+{
+    this->thisClass = "Select";
+    
     this->limit = queryLimit;
     this->offset = 0;
 }
@@ -170,13 +180,28 @@ bool Select::whereTimestamp(const string& key, const time_t& value, const string
     executed = false;
     return this->queryBuilder->whereTimestamp(key, value, oper, from);
 }
+bool Select::whereTimeRange(const string& key_start, const string& key_length, const time_t& value_start, const uint value_length, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereTimeRange(key_start, key_length, value_start, value_length, oper, from);
+}
+bool Select::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereRegion(key, value, oper, from);
+}
+bool Select::whereExpression(const string& expression, const std::string& value, const string& oper) {
+    executed = false;
+    return this->queryBuilder->whereExpression(expression, value, oper);
+}
+
 
 //================================== INSERT ====================================
 
 
 Insert::Insert(const Commons& commons, const string& initString)
-: Query(commons, initString) {
+: Query(commons, initString)
+{
     thisClass = "Insert";
+    
 }
 
 string Insert::getQuery() {
@@ -233,10 +258,6 @@ bool Insert::keyInouttype(const string& key, const string& value, const string& 
     executed = false;
     return this->queryBuilder->keyInouttype(key, value, from);
 }
-//bool Insert::keyPermissions(const string& key, const string& value, const string& from){
-//    executed = false;
-//    this->queryBuilder->keyPermissions(key, value, from);
-//}
 bool Insert::keyTimestamp(const string& key, const time_t& value, const string& from){
     executed = false;
     return this->queryBuilder->keyTimestamp(key, value, from);
@@ -257,7 +278,8 @@ bool Insert::keyIntervalEvent(const std::string& key, const IntervalEvent& value
 
 
 Update::Update(const Commons& commons, const string& initString)
-: Query(commons, initString) {
+: Query(commons, initString)
+{
     thisClass = "Update";
 
 }
@@ -316,10 +338,6 @@ bool Update::setInouttype(const string& key, const string& value, const string& 
     executed = false;
     return this->queryBuilder->keyInouttype(key, value, from);
 }
-//bool Update::setPermissions(const string& key, const string& value, const string& from){
-//    executed = false;
-//    this->queryBuilder->keyPermissions(key, value, from);
-//}
 bool Update::setTimestamp(const string& key, const time_t& value, const string& from){
     executed = false;
     this->queryBuilder->keyTimestamp(key, value, from);
@@ -348,4 +366,12 @@ bool Update::whereInouttype(const string& key, const string& value, const string
 bool Update::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
     executed = false;
     return this->queryBuilder->whereTimestamp(key, value, oper, from);
+}
+bool Update::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->whereRegion(key, value, oper, from);
+}
+bool Update::whereExpression(const string& expression, const std::string& value, const string& oper) {
+    executed = false;
+    return this->queryBuilder->whereExpression(expression, value, oper);
 }

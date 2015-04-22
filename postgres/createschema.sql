@@ -65,7 +65,7 @@ ALTER TABLE ONLY processes
         REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX processes_mtname_idx ON processes(mtname);
 CREATE INDEX processes_inputs_idx ON processes(inputs);
-CREATE INDEX processes_status_idx ON processes(state.status);
+CREATE INDEX processes_status_idx ON processes(( (state).status ));
 
 -------------------------------------
 -- CREATE module-specific tables
@@ -98,6 +98,7 @@ CREATE TABLE test1out (
 CREATE INDEX test1out_seqname_idx ON test1out(seqname);
 CREATE INDEX test1out_prsname_idx ON test1out(prsname);
 CREATE INDEX test1out_sec_length_idx ON test1out(sec_length);
+CREATE INDEX test1out_imglocation_idx ON test1out(imglocation);
 CREATE INDEX test1out_tsrange_idx ON test1out USING GIST ( public.tsrange(rt_start, sec_length) );
 CREATE INDEX test1out_event_region_idx ON test1out USING GIST (( (out_event).region ));
 

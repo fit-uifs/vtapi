@@ -24,9 +24,10 @@ using std::endl;
 using namespace vtapi;
 
 
-Logger::Logger(const string& filename, bool verbose) {
-    logFilename     = filename;
-    this->verbose   = verbose;
+Logger::Logger(const string& filename, bool verbose, bool debug) {
+    logFilename = filename;
+    m_verbose   = verbose;
+    m_debug     = debug;
 
     if (!logFilename.empty()) {
         logStream.open(filename.c_str());
@@ -68,15 +69,8 @@ void Logger::log(const string& logline) {
     }
 }
 
-void Logger::debug(const string& logline) {
-#ifdef _DEBUG
-    if (logStream.good() && verbose) {
-        log(logline);
-    }
-#endif
-}
-
-string Logger::timestamp() {
+string Logger::timestamp()
+{
     time_t timer;
     time(&timer);
     char timeBuffer[64];
@@ -84,20 +78,29 @@ string Logger::timestamp() {
     return string(timeBuffer);
 }
 
-void Logger::error(const string& logline, const string& thisMethod) {
+void Logger::error(const string& logline, const string& thisMethod)
+{
     log(string("ERROR at ") + thisMethod + ":\n" + logline);
     exit(1);
 }
 
-void Logger::error(int errnum, const string& logline, const string& thisMethod) {
+void Logger::error(int errnum, const string& logline, const string& thisMethod)
+{
     log(string("ERROR ") + toString(errnum) + " at " + thisMethod + ": " + logline);
     exit(1);
 }
 
-void Logger::warning(const string& logline, const string& thisMethod) {
-    log(string("WARNING at ") + thisMethod + ": " + logline);
+void Logger::warning(const string& logline, const string& thisMethod)
+{
+    if (m_verbose) log(string("WARNING at ") + thisMethod + ": " + logline);
 }
 
-void Logger::warning(int errnum, const string& logline, const string& thisMethod) {
-    log(string("WARNING ") + toString(errnum) + " at " + thisMethod + ": " + logline);
+void Logger::warning(int errnum, const string& logline, const string& thisMethod)
+{
+    if (m_verbose) log(string("WARNING ") + toString(errnum) + " at " + thisMethod + ": " + logline);
+}
+
+void Logger::debug(const string& logline)
+{
+    if (m_debug) log(logline);
 }

@@ -22,6 +22,22 @@ using namespace std;
 
 #define PVAL(name)      string name = getParamValue(params, #name);
 #define PVAL_OK(name)   (!name.empty())
+#define PVAL_WARN(name) printError("failed to parse parameter: " #name);
+#define PVAL_PARSE_UINT(name) \
+    unsigned int name ## _uint = 0;\
+    if (!parseUintValue(name, &name ## _uint)) PVAL_WARN(name);
+#define PVAL_PARSE_UINT_RANGE(name) \
+    unsigned int name ## 1_uint = 0, name ## 2_uint = 0;\
+    if (!parseUintRangeValue(name, &name ## 1_uint, &name ## 2_uint)) PVAL_WARN(name);
+#define PVAL_PARSE_FLOAT(name) \
+    double name ## _float = 0.0;\
+    if (!parseFloatValue(name, &name ## _float)) PVAL_WARN(name);
+#define PVAL_PARSE_FLOAT_RANGE(name) \
+    double name ## 1_float = 0.0, name ## 2_float = 0.0;\
+    if (!parseFloatRangeValue(name, &name ## 1_float, &name ## 2_float)) PVAL_WARN(name);
+#define PVAL_PARSE_REGION(name) \
+    IntervalEvent::box name ## _region;\
+    if (!parseRegionValue(name, &name ## _region)) PVAL_WARN(name);
 #define FPST(name)      fixPathSlashes(name, true)
 #define FPSNT(name)     fixPathSlashes(name, false)
 
@@ -68,7 +84,7 @@ const VTCli::VTCLI_OBJECT_DEF VTCli::m_obj[] =
 {
     { OBJ_DATASET,      "dataset",      PAR_NAME|PAR_LOCATION },
     { OBJ_SEQUENCE,     "sequence",     PAR_NAME|PAR_LOCATION|PAR_TYPE|PAR_REALTIME },
-    { OBJ_INTERVAL,     "interval",     PAR_ID|PAR_PROCESS|PAR_OUTPUTS|PAR_SEQUENCE|PAR_T1|PAR_T2|PAR_DURATION|PAR_LOCATION },
+    { OBJ_INTERVAL,     "interval",     PAR_ID|PAR_PROCESS|PAR_OUTPUTS|PAR_SEQUENCE|PAR_LOCATION|PAR_T1|PAR_T2|PAR_DURATION|PAR_TIMERANGE|PAR_REGION },
     { OBJ_PROCESS,      "process",      PAR_NAME|PAR_METHOD|PAR_INPUTS|PAR_OUTPUTS },
     { OBJ_METHOD,       "method",       PAR_NAME },
     { OBJ_METHODKEYS,   "methodkeys",   PAR_METHOD },
@@ -77,22 +93,34 @@ const VTCli::VTCLI_OBJECT_DEF VTCli::m_obj[] =
 
 const VTCli::VTCLI_PARAM_DEF VTCli::m_par[] = 
 {
-    { PAR_ID,       "id",       "numeric object identifier (interval only)" },
-    { PAR_NAME,     "name",     "object name" },
-    { PAR_LOCATION, "location", "object location (relative to base and dataset path)" },
-    { PAR_TYPE,     "type",     "sequence type (video|images)" },
-    { PAR_REALTIME, "realtime", "sequence real-world start time (POSIX time)" },
-    { PAR_T1,       "t1",       "interval start frame" },
-    { PAR_T2,       "t2",       "interval end frame" },
-    { PAR_DURATION, "duration", "interval duration (in frames)" },
-    { PAR_PROCESS,  "process",  "interval filter by process name" },
-    { PAR_SEQUENCE, "sequence", "interval filter by sequence name" },
-    { PAR_METHOD,   "method",   "process/methodkeys filter by method" },
-    { PAR_INPUTS,   "inputs",   "process filter by input process name" },
-    { PAR_OUTPUTS,  "outputs",  "process filter by output table" },
-    { PAR_NONE,     NULL,       NULL }
+    { PAR_ID,           "id",           "object ID", "id=5" },
+    { PAR_NAME,         "name",         "object name", "name=my_sequence" },
+    { PAR_LOCATION,     "location",     "object location (relative to base and dataset path)", "location=video3.mpg" },
+    { PAR_TYPE,         "type",         "sequence type (values=video|images)", "type=video" },
+    { PAR_REALTIME,     "realtime",     "sequence real time start (UNIX time)", "realtime=1429531506" },
+    { PAR_T1,           "t1",           "interval start frame", "t1=256" },
+    { PAR_T2,           "t2",           "interval end frame", "t2=531" },
+    { PAR_DURATION,     "duration",     "interval filter by duration in seconds", "duration=\"(0.5,3.5)\"" },
+    { PAR_TIMERANGE,    "timerange",    "interval filter by time range overlap (UNIX time)", "timerange=\"(1429531506,1429617906)\"" },
+    { PAR_REGION,       "region",       "interval filter by event region overlap(box corners)", "region=\"((0.1,0.31),(0.72,0.6))\"" },
+    { PAR_PROCESS,      "process",      "interval filter by process name", "process=demo1p_5000_25" },
+    { PAR_SEQUENCE,     "sequence",     "interval filter by sequence name", "sequence=video1" },
+    { PAR_METHOD,       "method",       "process/methodkeys filter by method", "method=demo1" },
+    { PAR_INPUTS,       "inputs",       "process filter by input process name", "inputs=demo1p_5000_25" },
+    { PAR_OUTPUTS,      "outputs",      "process filter by output table", "outputs=demo1outs" },
+    { PAR_NONE,         NULL,           NULL }
 };
 
+const VTCli::VTCLI_EXAMPLE_DEF VTCli::m_examples[] = 
+{
+    { "Select intervals of process demo1p_5000_25 which last between 0.5s-3.5s",
+        "./vtcli select interval process=demo1p_5000_25 duration=\"(0.5,3.5)\"" },
+    { "Select intervals of process demo1p_5000_25 and video3 overlapping with 1.4.2015",
+        "./vtcli select interval process=demo1p_5000_25 sequence=video3 timerange=\"(1427846400,1427932800)\"" },
+    { "Select intervals of process demo2p_video3_demo1p_11_50 and video3 with event overlapping video region",
+        "./vtcli select interval process=demo2p_video3_demo1p_11_50 sequence=video3 region=\"((0.1,0.31),(0.72,0.6))\"" },
+    { NULL, NULL }
+};
 
 
 ////////////////////////////////////////////////////////
@@ -319,6 +347,37 @@ string VTCli::getParamValue(VTCLI_KEYVALUE_LIST& keyValues, const string& key)
     return value;
 }
 
+bool VTCli::parseUintValue(const string& word, unsigned int *value)
+{
+    char *endptr = NULL;
+    *value = strtol(word.c_str(), &endptr, 10);
+    
+    return (endptr && !*endptr);
+}
+
+bool VTCli::parseUintRangeValue(const string& word, unsigned int *value1, unsigned int *value2)
+{
+    return (2 == sscanf(word.c_str(), "(%u,%u)", value1, value2)) && (*value1 <= *value2);
+}
+
+bool VTCli::parseFloatValue(const std::string& word, double *value)
+{
+    char *endptr = NULL;
+    *value = strtod(word.c_str(), &endptr);
+
+    return (endptr && !*endptr);
+}
+
+bool VTCli::parseFloatRangeValue(const string& word, double *value1, double *value2)
+{
+    return (2 == sscanf(word.c_str(), "(%lf,%lf)", value1, value2)) && (*value1 <= *value2);
+}
+
+bool VTCli::parseRegionValue(const std::string& word, IntervalEvent::box *value)
+{
+    return (4 == sscanf(word.c_str(), "((%lf,%lf),(%lf,%lf))",
+        &value->low.x, &value->low.y, &value->high.x, &value->high.y));
+}
 
 VTCli::VTCLI_COMMAND VTCli::getCommand(const std::string& word)
 {
@@ -391,7 +450,7 @@ bool VTCli::selectCommand(VTCLI_KEYVALUE_LIST& params)
         case OBJ_INTERVAL:
         {
             PVAL(id); PVAL(process); PVAL(outputs); PVAL(sequence);
-            PVAL(t1); PVAL(t2); PVAL(duration); PVAL(location);
+            PVAL(duration); PVAL(timerange); PVAL(region);
 
             // find table with intervals (directly by 'outputs' or by 'process' outputs)
             Interval* in = NULL;
@@ -415,13 +474,12 @@ bool VTCli::selectCommand(VTCLI_KEYVALUE_LIST& params)
                 in = new Interval(*(m_vtapi->commons));
             }
             
-            if (PVAL_OK(id))        in->select->whereInt("id", atoi(id.c_str()));
-            if (PVAL_OK(process))   in->select->whereString("prsname", process);
-            if (PVAL_OK(sequence))  in->select->whereString("seqname", sequence);
-            if (PVAL_OK(t1))        in->select->whereInt("t1", atoi(t1.c_str()), ">=");
-            if (PVAL_OK(t2))        in->select->whereInt("t2", atoi(t2.c_str()), "<=");
-            if (PVAL_OK(location))  in->select->whereString("imglocation", location);
-            //TODO: duration
+            if (PVAL_OK(id))        { PVAL_PARSE_UINT(id); in->filterById(id_uint); }
+            if (PVAL_OK(process))   in->filterByProcess(process);
+            if (PVAL_OK(sequence))  in->filterBySequence(sequence);
+            if (PVAL_OK(duration))  { PVAL_PARSE_FLOAT_RANGE(duration); in->filterByDuration(duration1_float, duration2_float); }
+            if (PVAL_OK(timerange)) { PVAL_PARSE_UINT_RANGE(timerange); in->filterByTimeRange(timerange1_uint, timerange2_uint); }
+            if (PVAL_OK(region))    { PVAL_PARSE_REGION(region); in->filterByRegion(region_region); }
 
             in->next();
             in->printAll();
@@ -832,72 +890,114 @@ bool VTCli::testCommand()
 
 bool VTCli::helpCommand()
 {
-    cout <<
-    "VTCli - VTApi command line interface" << endl <<
-    "Using " CMDLINE_PARSER_PACKAGE_NAME " " CMDLINE_PARSER_VERSION << endl << endl <<
-    "Usage:" << endl <<
-    "   ./vtcli [VTAPI_OPTIONS] COMMAND [OBJECT [PARAMS]]" << endl << endl <<
-    "Interactive mode:" << endl <<
-    "   ./vtcli [VTAPI_OPTIONS]" << endl <<
-    "       > COMMAND [OBJECT [PARAMS]]" << endl <<
-    "       > ..." << endl <<
-    "       > exit" << endl << endl <<
-    "--------------------- VTAPI OPTIONS ---------------------" << endl << endl;
+#define SECTION_HEADER(h) \
+    "---------------------------- " h " ----------------------------\n\n"
     
+    static const char *usage_text = 
+        SECTION_HEADER("VTCLI HELP")
+        "VTCli - VTApi command line interface\n"
+        "Using " CMDLINE_PARSER_PACKAGE_NAME " " CMDLINE_PARSER_VERSION "\n\n"
+        "Usage:\n"
+        "   ./vtcli [VTAPI_OPTIONS] COMMAND [OBJECT [PARAMS]]\n\n"
+        "Interactive mode:\n"
+        "   ./vtcli [VTAPI_OPTIONS]\n"
+        "       > COMMAND [OBJECT [PARAMS]]\n"
+        "       > ...\n"
+        "       > exit\n";
+    static const char *options_text =
+        SECTION_HEADER("VTAPI OPTIONS")
+        "These options modify VTApi behaviour, along with vtapi.conf\n";
+    static const char *commands_text =
+        SECTION_HEADER("COMMANDS")
+        "VTCli supports these commands, some are valid only for certain OBJECTS\n";
+    static const char *objects_text =
+        SECTION_HEADER("OBJECTS")
+        "Objects to select/insert/delete may be specified by PARAMS (format: PARAM=value)\n"
+        "No PARAMS usually means command works on ALL objects (careful with delete)\n";
+    static const char *params_text =
+        SECTION_HEADER("PARAMS")
+        "PARAMS are used either for specifying object parameters for INSERT\n"
+        "or for SELECT filters. All of them are PARAM=VALUE pairs\n"
+        "VALUE formatsmay be escaped (\"VALUE\"), deduce them from examples\n";
+    static const char *examples_text =
+        SECTION_HEADER("EXAMPLES")
+        "A few chosen VTCli examples:\n";
+    
+    // usage
+    cout << usage_text << endl;
+    
+    // vtapi options
+    cout << options_text << endl;
     for (size_t i = 0; gengetopt_args_info_help[i]; i++) {
         cout << gengetopt_args_info_help[i] << endl;
     }
     cout << endl;
     
-    cout << 
-    "--------------------- COMMANDS ---------------------" << endl << endl;
-    
+    //commands
+    cout << commands_text << endl;
     for (size_t i = 0; m_cmd[i].name; i++) {
-        if (i > 0) cout << ",";
+        if (i > 0) cout << ',';
         cout << m_cmd[i].name;
     }
-    
-    cout << endl << endl <<
-    "Some commands are valid only for certain OBJECTS" << endl << endl;
+    cout << endl << endl;
 
+    // commands details
     for (size_t i = 0; m_cmd[i].name; i++) {
+        if (i > 0) cout << endl;
         cout << i + 1 << ". " << m_cmd[i].name << endl <<
             "  * " << m_cmd[i].desc << endl;
         if (m_cmd[i].objects != OBJ_NONE) {
             cout << "  * OBJECTS: " << getObjectsString(m_cmd[i].objects) << endl;
         }
-        if (m_cmd[i].ex) {
-            cout << "  * ex. " << m_cmd[i].ex << endl << endl;
-        }
-        else {
-            cout << endl;
+        if (m_cmd[i].example) {
+            cout << "  * ex. " << m_cmd[i].example << endl;
         }
     }
+    cout << endl;
 
-    cout <<
-    "--------------------- OBJECTS ---------------------" << endl << endl;
-
+    // objects
+    cout << objects_text << endl;
     for (size_t i = 0; m_obj[i].name; i++) {
-        if (i > 0) cout << ",";
+        if (i > 0) cout << ',';
         cout << m_obj[i].name;
     }
+    cout << endl << endl;
     
-    cout << endl << endl <<
-    "Objects to select/insert/delete may be specified by PARAMS (format: PARAM=value)" << endl << 
-    "No PARAMS usually means ALL objects (careful with delete)" << endl << endl;
-    
+    // objects details
     for (size_t i = 0; m_obj[i].name; i++) {
+        if (i > 0) cout << endl;
         cout << i + 1 << ". " << m_obj[i].name << endl;
         if (m_obj[i].params != PAR_NONE) {
-            cout << "  * PARAMS: " << getParamsString(m_obj[i].params) << endl << endl;
+            cout << "  * PARAMS: " << getParamsString(m_obj[i].params) << endl;
         }
     }
+    cout << endl;
 
-    cout <<
-    "--------------------- PARAMS ---------------------" << endl << endl;
-
+    // params
+    cout << params_text << endl;
     for (size_t i = 0; m_par[i].name; i++) {
-        cout << left << setw(12) << m_par[i].name << m_par[i].desc  << endl;
+        if (i > 0) cout << ",";
+        cout << m_par[i].name;
+    }
+    cout << endl << endl;
+    
+    // params details
+    for (size_t i = 0; m_par[i].name; i++) {
+        if (i > 0) cout << endl;
+        cout << i + 1 << ". " << m_par[i].name << endl <<
+        "  * " << m_par[i].desc << endl;
+        if (m_par[i].example) {
+            cout << "  * ex. " << m_par[i].example << endl;
+        }
+    }
+    cout << endl;
+
+    // examples
+    cout << examples_text << endl;
+    for (size_t i = 0; m_examples[i].desc; i++) {
+        if (i > 0) cout << endl;
+        cout << i + 1 << ". " << m_examples[i].desc << endl <<
+        '\t' << m_examples[i].command << endl;
     }
     cout << endl;
 }

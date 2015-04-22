@@ -529,10 +529,8 @@ bool KeyValues::printRowOnly(const int row, const vector<int>* widths) {
 
 
 // =============== SETTERS (Update) ============================================
-// TODO: mozna by se dalo premyslet o PQsetvalue
 
 bool KeyValues::preSet() {
-    // TODO: tohle by se v budoucnu melo dat za pomoci system_catalog
     logger->warning(3010, "Set inherited from KeyValues at class " + thisClass, thisClass+"::preSet()");
 
     vt_destruct(update);
@@ -541,16 +539,9 @@ bool KeyValues::preSet() {
     return update ? VT_OK : VT_FAIL;
 }
 
-// TODO: how to change binary data???
 bool KeyValues::setString(const string& key, const string& value) {
     // call preset on the derived class
     if (!update) this->preSet();
-
-    /* 
-    if (select) {
-        char* tempc = const_cast<char*>(value.c_str()); // stupid C conversions
-        PQsetvalue(select->res, pos, PQfnumber(select->res, key.c_str()), tempc, value.length());
-    } */
 
     return update->setString(key, value);
 }

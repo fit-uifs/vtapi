@@ -129,10 +129,43 @@ public:
     bool preSet();
 
     /**
-     * Represents intervals only for selected sequence
-     * @param seqname   sequence name
+     * Sets filter for intervals by ID before calling next()
+     * @param id interval ID
+     * @return success
      */
-    void filterBySequence(const std::string& seqname);
+    bool filterById(const int id);
+    /**
+     * Sets filter for intervals by sequence before calling next()
+     * @param seqname   sequence name
+     * @return success
+     */
+    bool filterBySequence(const std::string& seqname);
+    /**
+     * Sets filter for intervals by process before calling next()
+     * @param prsname process name
+     * @return success
+     */
+    bool filterByProcess(const std::string& prsname);
+    /**
+     * Sets filter for intervals by duration(real seconds) before calling next()
+     * @param t_low min duration in real seconds
+     * @param t_high max duration in real seconds
+     * @return success
+     */
+    bool filterByDuration(const float t_low, const float t_high);
+    /**
+     * Sets filter for intervals by overlapping time range before calling next()
+     * @param t_low overlapping interval lower bound (UNIX time)
+     * @param t_high overlapping interval higher bound (UNIX time)
+     * @return success
+     */
+    bool filterByTimeRange(const time_t t_low, const time_t t_high);
+    /**
+     * Sets filter for intervals by overlapping event region before calling next()
+     * @param region overlapping region
+     * @return success
+     */
+    bool filterByRegion(const IntervalEvent::box& region);
 };
 
 

@@ -79,6 +79,7 @@ struct gengetopt_args_info
   int arraylimit_arg;	/**< @brief Limit amount of printed array elements.  */
   char * arraylimit_orig;	/**< @brief Limit amount of printed array elements original value given at command line.  */
   const char *arraylimit_help; /**< @brief Limit amount of printed array elements help description.  */
+  const char *debug_help; /**< @brief Don't try this help description.  */
   char * dataset_arg;	/**< @brief Set dataset to use.  */
   char * dataset_orig;	/**< @brief Set dataset to use original value given at command line.  */
   const char *dataset_help; /**< @brief Set dataset to use help description.  */
@@ -111,6 +112,7 @@ struct gengetopt_args_info
   unsigned int output_given ;	/**< @brief Whether output was given.  */
   unsigned int querylimit_given ;	/**< @brief Whether querylimit was given.  */
   unsigned int arraylimit_given ;	/**< @brief Whether arraylimit was given.  */
+  unsigned int debug_given ;	/**< @brief Whether debug was given.  */
   unsigned int dataset_given ;	/**< @brief Whether dataset was given.  */
   unsigned int sequence_given ;	/**< @brief Whether sequence was given.  */
   unsigned int method_given ;	/**< @brief Whether method was given.  */

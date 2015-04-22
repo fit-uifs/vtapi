@@ -36,8 +36,10 @@ DROP TABLE IF EXISTS public.datasets CASCADE;
 
 DROP TYPE IF EXISTS public.seqtype CASCADE;
 DROP TYPE IF EXISTS public.inouttype CASCADE;
+DROP TYPE IF EXISTS public.pstatus CASCADE;
 DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
+DROP TYPE IF EXISTS public.pstate CASCADE;
 
 DROP FUNCTION IF EXISTS public.tsrange(timestamp without time zone, real) CASCADE;
 DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
@@ -56,10 +58,9 @@ CREATE TYPE seqtype AS ENUM (
 
 -- method parameter type
 CREATE TYPE inouttype AS ENUM (
-    'in',       -- name of the process which supplies input data
-    'out',      -- name of the table into which outputs are inserted
-    'in_param', -- input parameter (numeric/string)
-    'out_param' -- output parameter (numeric/string)
+    'in_param',     -- input parameter (numeric/string)
+    'in',           -- input = column from other method's processes' output table
+    'out'           -- output = column from this method's processes' output table
 );
 
 -- process state enum

@@ -50,6 +50,7 @@ const char *gengetopt_args_info_help[] = {
   "  -o, --output=FILENAME    Write to specific output",
   "      --querylimit=INT     Limit number of rows fetched at once (0 - unlimited)",
   "      --arraylimit=INT     Limit amount of printed array elements",
+  "      --debug              Don't try this",
   "\nContext specification",
   "  -D, --dataset=STRING     Set dataset to use",
   "  -S, --sequence=STRING    Set sequence to use",
@@ -125,6 +126,7 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->output_given = 0 ;
   args_info->querylimit_given = 0 ;
   args_info->arraylimit_given = 0 ;
+  args_info->debug_given = 0 ;
   args_info->dataset_given = 0 ;
   args_info->sequence_given = 0 ;
   args_info->method_given = 0 ;
@@ -194,11 +196,12 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->output_help = gengetopt_args_info_help[13] ;
   args_info->querylimit_help = gengetopt_args_info_help[14] ;
   args_info->arraylimit_help = gengetopt_args_info_help[15] ;
-  args_info->dataset_help = gengetopt_args_info_help[17] ;
-  args_info->sequence_help = gengetopt_args_info_help[18] ;
-  args_info->method_help = gengetopt_args_info_help[19] ;
-  args_info->process_help = gengetopt_args_info_help[20] ;
-  args_info->selection_help = gengetopt_args_info_help[21] ;
+  args_info->debug_help = gengetopt_args_info_help[16] ;
+  args_info->dataset_help = gengetopt_args_info_help[18] ;
+  args_info->sequence_help = gengetopt_args_info_help[19] ;
+  args_info->method_help = gengetopt_args_info_help[20] ;
+  args_info->process_help = gengetopt_args_info_help[21] ;
+  args_info->selection_help = gengetopt_args_info_help[22] ;
   
 }
 
@@ -427,6 +430,8 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "querylimit", args_info->querylimit_orig, 0);
   if (args_info->arraylimit_given)
     write_into_file(outfile, "arraylimit", args_info->arraylimit_orig, 0);
+  if (args_info->debug_given)
+    write_into_file(outfile, "debug", 0, 0 );
   if (args_info->dataset_given)
     write_into_file(outfile, "dataset", args_info->dataset_orig, 0);
   if (args_info->sequence_given)
@@ -729,6 +734,7 @@ cmdline_parser_internal (
         { "output",	1, NULL, 'o' },
         { "querylimit",	1, NULL, 0 },
         { "arraylimit",	1, NULL, 0 },
+        { "debug",	0, NULL, 0 },
         { "dataset",	1, NULL, 'D' },
         { "sequence",	1, NULL, 'S' },
         { "method",	1, NULL, 'M' },
@@ -987,6 +993,20 @@ cmdline_parser_internal (
                 &(local_args_info.arraylimit_given), optarg, 0, 0, ARG_INT,
                 check_ambiguity, override, 0, 0,
                 "arraylimit", '-',
+                additional_error))
+              goto failure;
+          
+          }
+          /* Don't try this.  */
+          else if (strcmp (long_options[option_index].name, "debug") == 0)
+          {
+          
+          
+            if (update_arg( 0 , 
+                 0 , &(args_info->debug_given),
+                &(local_args_info.debug_given), optarg, 0, 0, ARG_NO,
+                check_ambiguity, override, 0, 0,
+                "debug", '-',
                 additional_error))
               goto failure;
           

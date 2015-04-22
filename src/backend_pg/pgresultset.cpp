@@ -104,7 +104,7 @@ int PGResultSet::getKeyIndex(const string& key)
 }
 
 // =============== SINGLE VALUES / ARRAYS / VECTORS TEMPLATES ===================
-    template<typename TDB, typename TOUT>
+template<typename TDB, typename TOUT>
 TOUT PGResultSet::getSingleValue(const int col, const char *def)
 {
     TDB value = {0};
@@ -716,8 +716,9 @@ time_t PGResultSet::getTimestamp(const int col)
     ts.tm_hour  = pgts.time.hour;
     ts.tm_min   = pgts.time.min;
     ts.tm_sec   = pgts.time.sec;
+    ts.tm_zone  = "GMT0";
     
-    return mktime(&ts);
+    return timegm(&ts);
 }
 
 IntervalEvent *PGResultSet::getIntervalEvent(const int col)

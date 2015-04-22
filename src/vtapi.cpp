@@ -136,7 +136,7 @@ void VTApi::test() {
     cout << endl << "---------------------------------------------------------------" << endl << endl;
 
 //    this->testPerformance();
-    this->testGenericClasses();
+    //this->testGenericClasses();
     this->testDataset();
     this->testSequence(dataset);
     this->testInterval(sequence);

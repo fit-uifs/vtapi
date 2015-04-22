@@ -58,7 +58,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     thisClass       = "Commons(init)";
 
     // initialize logger (log_arg has default value)
-    logger          = new Logger(string(args_info.log_arg), args_info.verbose_given);
+    logger          = new Logger(string(args_info.log_arg), args_info.verbose_given, args_info.debug_given);
 
     // other args (see vtapi.conf)
     configfile      = args_info.config_arg;

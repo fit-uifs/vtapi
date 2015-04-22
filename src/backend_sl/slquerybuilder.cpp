@@ -30,12 +30,12 @@ string SLQueryBuilder::getSelectQuery(const string& groupby, const string& order
     string tablesStr;
     string whereStr;
 
-    ((SLparam *)param)->database = this->dataset;
+    ((SLparam *)param)->database = defaultSchema;
     if (this->key_values_main.empty()) return initString; // in case of a direct query
 
     // go through keys
     for (int i = 0; i < key_values_main.size(); i++) {
-        string tmpTable  = !key_values_main[i]->from.empty() ? key_values_main[i]->from : this->table;
+        string tmpTable  = !key_values_main[i]->from.empty() ? key_values_main[i]->from : defaultTable;
         string tmpColumn = key_values_main[i]->key;
         size_t dotPos    = tmpTable.find(".");
         bool addTable    = true;
@@ -111,11 +111,11 @@ string SLQueryBuilder::getInsertQuery() {
     string valuesStr;
     size_t dotPos;
 
-    ((SLparam *)param)->database = this->dataset;
+    ((SLparam *)param)->database = this->defaultSchema;
     if (this->key_values_main.empty()) return initString; // in case of a direct query
 
     // in case we're lazy, we have the table specified in initString or selection
-    dstTable = (!initString.empty()) ? initString : this->table;
+    dstTable = (!initString.empty()) ? initString : this->defaultTable;
 
     // go through keys
     for (int i = 0; i < this->key_values_main.size(); ++i) {
@@ -130,10 +130,10 @@ string SLQueryBuilder::getInsertQuery() {
     dotPos = dstTable.find(".");
     // add the dataset selected and escape table
     if (dotPos == string::npos) {
-        dstTable = escapeColumn(dstTable, this->dataset);
+        dstTable = escapeColumn(dstTable, this->defaultSchema);
     }
     else {
-        dstTable = escapeColumn(dstTable.substr(dotPos+1, string::npos), this->dataset);
+        dstTable = escapeColumn(dstTable.substr(dotPos+1, string::npos), this->defaultSchema);
     }
     queryString = "INSERT INTO " + dstTable + " (" + intoStr + ")\n VALUES (" + valuesStr + ");";
     return queryString;
@@ -147,11 +147,11 @@ string SLQueryBuilder::getUpdateQuery() {
     string whereStr;
     size_t dotPos;
 
-    ((SLparam *)param)->database = this->dataset;
+    ((SLparam *)param)->database = this->defaultSchema;
     if (this->key_values_main.empty()) return initString; // in case of a direct query
 
     // in case we're lazy, we have the table specified in initString or selection
-    dstTable = (!initString.empty()) ? initString : this->table;
+    dstTable = (!initString.empty()) ? initString : this->defaultTable;
 
     // go through keys
     for (int i = 0; i < this->key_values_main.size(); ++i) {
@@ -165,10 +165,10 @@ string SLQueryBuilder::getUpdateQuery() {
     dotPos = dstTable.find(".");
     // add the dataset selected and escape table
     if (dotPos == string::npos) {
-        dstTable = escapeColumn(dstTable, this->dataset);
+        dstTable = escapeColumn(dstTable, this->defaultSchema);
     }
     else {
-        dstTable = escapeColumn(dstTable.substr(dotPos+1, string::npos), this->dataset);
+        dstTable = escapeColumn(dstTable.substr(dotPos+1, string::npos), this->defaultSchema);
     }
     //construct main part of the query
     queryString = "UPDATE " + dstTable + "\n SET " + setStr;
@@ -187,7 +187,7 @@ string SLQueryBuilder::getUpdateQuery() {
 }
 
 string SLQueryBuilder::getGenericQuery() {
-    ((SLparam *)param)->database = this->dataset;
+    ((SLparam *)param)->database = this->defaultSchema;
     return initString;
 }
 
@@ -285,15 +285,6 @@ bool SLQueryBuilder::keyInouttype(const string& key, const string& value, const 
     }
 }
 
-//bool SLQueryBuilder::keyPermissions(const string& key, const string& value, const string& from) {
-//    if (key.empty() || value.empty()) return VT_FAIL;
-//    else {
-//        TKeyValue<string> *tk = new TKeyValue<string>("permissions", key, value, from);
-//        key_values_main.push_back(tk);
-//        return VT_OK;
-//    }
-//}
-
 bool SLQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from) {
     if (key.empty()) return VT_FAIL;
     else {
@@ -384,12 +375,29 @@ bool SLQueryBuilder::whereTimestamp(const string& key, const time_t& value, cons
     }
 }
 
+bool SLQueryBuilder::whereTimeRange(const string& key_start, const string& key_length, const time_t& value_start, const uint value_length, const string& oper, const string& from)
+{
+    return false;
+}
+
+bool SLQueryBuilder::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from)
+{
+    return false;
+}
+
+bool SLQueryBuilder::whereExpression(const string& expression, const string& value, const string& oper)
+{
+    return false;
+}
+
+
 void SLQueryBuilder::reset() {
     destroyKeys();
     opers.clear();
 }
 
-void SLQueryBuilder::createParam() {
+bool SLQueryBuilder::createParam() {
+    return true;
 }
 
 void SLQueryBuilder::destroyParam() {

@@ -40,7 +40,7 @@ public:
     /**
      * Constructor of an INSERT query object
      * @param commons      configuration object of Commons class
-     * @param initString   initialization string (query/table or empty)
+     * @param initString   default table into which to insert / full SQL query
      */
     Insert(const Commons& commons, const std::string& initString = "");
     /**
@@ -128,16 +128,6 @@ public:
      * @note It may be called several times.
      */
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
-    /* * //TODO: delete a space between stars after keyPermissions will be actual
-     * This is a persistent function to add persmissions value to a key
-     * @param key      key holding value to be inserted
-     * @param value    permissions value to be inserted
-     * @param from     selection table (optional)
-     * @return success
-     * @note It may be called several times.
-     */
-//TODO: delete a space between stars in the upper doxygen comment after keyPermissions will be actual
-//    bool keyPermissions(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to add timestamp value to a key
      * @param key      key holding value to be inserted

@@ -63,7 +63,7 @@ ALTER TABLE ONLY processes
         REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT;
 CREATE INDEX processes_mtname_idx ON processes(mtname);
 CREATE INDEX processes_inputs_idx ON processes(inputs);
-CREATE INDEX processes_status_idx ON processes(state.status);
+CREATE INDEX processes_status_idx ON processes(( (state).status ));
 
 -- intervals table for demo1 results
 CREATE TABLE demo1out (
@@ -89,6 +89,7 @@ CREATE TABLE demo1out (
 CREATE INDEX demo1out_seqname_idx ON demo1out(seqname);
 CREATE INDEX demo1out_prsname_idx ON demo1out(prsname);
 CREATE INDEX demo1out_sec_length_idx ON demo1out(sec_length);
+CREATE INDEX demo1out_imglocation_idx ON demo1out(imglocation);
 CREATE INDEX demo1out_tsrange_idx ON demo1out USING GIST ( public.tsrange(rt_start, sec_length) );
 
 CREATE TRIGGER demo1out_provide_realtime
@@ -121,6 +122,7 @@ CREATE TABLE demo2out (
 CREATE INDEX demo2out_seqname_idx ON demo2out(seqname);
 CREATE INDEX demo2out_prsname_idx ON demo2out(prsname);
 CREATE INDEX demo2out_sec_length_idx ON demo2out(sec_length);
+CREATE INDEX demo2out_imglocation_idx ON demo2out(imglocation);
 CREATE INDEX demo2out_tsrange_idx ON demo2out USING GIST ( public.tsrange(rt_start, sec_length) );
 CREATE INDEX demo2out_event_region_idx ON demo2out USING GIST (( (event).region ));
 
@@ -155,6 +157,8 @@ INSERT INTO public.methods (mtname, userid, notes) VALUES
     ('demo2', 'demouser', 'auto-generated');
 INSERT INTO public.methods_keys (mtname, keyname, typname, inout, default_num, default_str) VALUES
     ('demo2', 'video', 'varchar', 'in_param', NULL, NULL),
+    ('demo2', 'features_array', 'real[]', 'in', NULL, NULL),
+    ('demo2', 'features_mat', 'public.cvmat', 'in', NULL, NULL),
     ('demo2', 'event', 'public.vtevent', 'out', NULL, NULL);
 
 -- insert videos

@@ -91,6 +91,8 @@ protected:
         PAR_T1          = (1 << 5),
         PAR_T2          = (1 << 6),
         PAR_DURATION    = (1 << 7),
+        PAR_TIMERANGE   = (1 << 8),
+        PAR_REGION      = (1 << 9),
         PAR_PROCESS     = (1 << 10),
         PAR_SEQUENCE    = (1 << 11),
         PAR_METHOD      = (1 << 12),
@@ -106,7 +108,7 @@ protected:
         const char *name;
         unsigned int objects;
         const char *desc;
-        const char *ex;
+        const char *example;
     } VTCLI_COMMAND_DEF;
 
     typedef struct
@@ -121,7 +123,14 @@ protected:
         VTCLI_PARAM par;
         const char *name;
         const char *desc;
+        const char *example;
     } VTCLI_PARAM_DEF;
+    
+    typedef struct
+    {
+        const char *desc;
+        const char *command;
+    } VTCLI_EXAMPLE_DEF;
     
     typedef std::pair<std::string,std::string>  VTCLI_KEYVALUE;     // key=value OR just value
     typedef std::list<VTCLI_KEYVALUE>           VTCLI_KEYVALUE_LIST;
@@ -132,7 +141,7 @@ protected:
     static const VTCLI_COMMAND_DEF m_cmd[];
     static const VTCLI_OBJECT_DEF m_obj[];
     static const VTCLI_PARAM_DEF m_par[];
-
+    static const VTCLI_EXAMPLE_DEF m_examples[];
     
 protected:
     /**
@@ -174,6 +183,12 @@ protected:
      * @return value
      */
     std::string getParamValue(VTCLI_KEYVALUE_LIST& keyValues, const std::string& key);
+
+    bool parseUintValue(const std::string& word, unsigned int *value);
+    bool parseUintRangeValue(const std::string& word, unsigned int *value1, unsigned int *value2);
+    bool parseFloatValue(const std::string& word, double *value);
+    bool parseFloatRangeValue(const std::string& word, double *value1, double *value2);
+    bool parseRegionValue(const std::string& word, IntervalEvent::box *value);
 
     VTCLI_COMMAND getCommand(const std::string& word);
     VTCLI_OBJECT getObject(const std::string& word);

@@ -46,7 +46,8 @@ protected:
 
     std::string     logFilename;    /**< Name of the file for storing logs */
     std::ofstream   logStream;      /**< Stream of file for storing logs */
-    bool            verbose;        /**< Print queries and debug info */
+    bool            m_verbose;      /**< Print warnings */
+    bool            m_debug;        /**< Print queries etc. */
 
 public:
 
@@ -54,8 +55,9 @@ public:
      * Constructor
      * @param filename   name of the file for storing logs
      * @param verbose verbosity
+     * @param debug print debug
      */
-    Logger(const std::string& filename = "", bool verbose = false);
+    Logger(const std::string& filename = "", bool verbose = false, bool debug = false);
     /**
      * Destructor
      */
@@ -66,12 +68,6 @@ public:
      * @param message   log level message
      */
     void log(const std::string& message);
-    /**
-     * Debug function flushes a timestamp with a message immediately into a logstream
-     * @param message   debug level message
-     */
-    void debug(const std::string& message);
-
     /**
      * This is to write to the standard error log
      * @param message   logged message
@@ -110,7 +106,11 @@ public:
      * @param thisMethod   method in which warning occurred
      */
     void warning(const std::string& message, const std::string& thisMethod);
-
+    /**
+     * Debug function flushes a timestamp with a message immediately into a logstream
+     * @param message   debug level message
+     */
+    void debug(const std::string& message);
 };
 
 } // namespace vtapi

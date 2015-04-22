@@ -173,6 +173,10 @@ public:
      */
     void filterByInputs(const std::string& processName);
     
+    /**
+     * Pre-update default setting
+     * @return success
+     */
     virtual bool preSet();
 
     /**
@@ -197,30 +201,7 @@ public:
      * @unimplemented
      */
     Sequence* newSequence(const std::string& name = "");
-    
-    /**
-     * Prepares an output selection table (checks if exist required attributes and if is necessary they would be added to the table)
-     * @param method      input method which is a core of the process
-     * @param selection   selection table for outputs
-     * @return success
-     */
-    bool prepareOutput(const std::string& method, const std::string& selection="intervals");
-    /**
-     * Performs a diff of columns: \<required method output columns\> - \<existing columns in output selection table\>
-     * @param table     selection table for outputs
-     * @param columns   all method attributes
-     * @return vector of columns to be added to the output selection table
-     */
-    std::map<std::string,std::string> diffColumns(const std::string& table, const TKeys& columns);
-    /**
-     * Ensures an addition of required columns to an output selection table
-     * @param table     selection table for outputs
-     * @param columns   vector of columns to be added
-     * @return success
-     */
-    bool addColumns(const std::string& table, const std::map<std::string,std::string>& columns);
 
-    // http://stackoverflow.com/questions/205529/c-c-passing-variable-number-of-arguments-around
     /**
      * Runs process
      * @return success

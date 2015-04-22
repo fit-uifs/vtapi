@@ -31,10 +31,10 @@ namespace vtapi {
 class QueryBuilder {
 protected:
     void                *connection;    /**< connection object */
-    std::string         initString;     /**< init query string (whole query or table) */
     void                *param;         /**< object for parametrized queries */
-    std::string         table;          /**< default table for queries */
-    std::string         dataset;        /**< active dataset */
+    std::string         initString;     /**< init query string (whole query or table) */
+    std::string         defaultSchema;  /**< default db schema for queries */
+    std::string         defaultTable;   /**< default table for queries */
 
 public:
     /**
@@ -42,9 +42,10 @@ public:
      * @param connection connection object
      * @param initString initialization string (query/table or empty)
      */
-    QueryBuilder(void *connection, const std::string& initString) {
-        this->initString    = initString;
+    QueryBuilder(void *connection, const std::string& initString)
+    {
         this->connection    = connection;
+        this->initString    = initString;
         this->param         = NULL;
     };
     /**
@@ -58,15 +59,20 @@ public:
      */
     void *getParam() { return this->param; }
     /**
-     * This is to specify dataset to be inserted in
-     * @param dataset dataset into which new data will be inserted
+     * Specify custom SQL string for query
+     * @param sql custom SQL string
      */
-    void setDataset(const std::string& dataset) { this->dataset = dataset; };
+    void useQueryString(const std::string& sql) { this->initString = sql; }
+    /**
+     * This is to specify default schema/dataset to be inserted into
+     * @param schema DB schema into which new data will be inserted
+     */
+    void useDefaultSchema(const std::string& schema) { this->defaultSchema = schema; };
    /**
      * This is to specify the (single) table to be inserted in
      * @param table table into which new data will be inserted
      */
-    void setTable(const std::string& table) { this->table = table; };
+    void useDefaultTable(const std::string& table) { this->defaultTable = table; };
     /**
      * Gets query from initialization string
      * @return query string
@@ -113,8 +119,9 @@ public:
     virtual void reset() = 0;
     /**
      * Allocates new query param structure, destroys the old one
+     * @return success
      */
-    virtual void createParam() = 0;
+    virtual bool createParam() = 0;
     /**
      * Destroys query param structure
      */
@@ -212,15 +219,6 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-//    virtual bool keyPermissions(const std::string& key, const std::string& value, const std::string& from = "") = 0;
-    /**
-     * This is a persistent function to add keys (columns) and values
-     * It may be called several times.
-     * @param key key
-     * @param value value
-     * @param from selection (table; this is optional)
-     * @return success
-     */
     virtual bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "") = 0;
 
 #ifdef HAVE_OPENCV
@@ -300,16 +298,6 @@ public:
      */
     virtual bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "") = 0;
     /**
-     * This is a WHERE statement construction class for permissions
-     * It can be called several times.
-     * @param key key to compare with the value
-     * @param value requested value for key
-     * @param oper comparision operator between key and value
-     * @param from table where the key is situated
-     * @return success
-     */
-//    virtual bool wherePermissions(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "") = 0;
-    /**
      * This is a WHERE statement construction class for timestamp
      * It can be called several times.
      * @param key key to compare with the value
@@ -319,43 +307,60 @@ public:
      * @return success
      */
     virtual bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "") = 0;
-
+     /**
+      * This is a WHERE statement construction function for filters by overlapping time ranges
+      * @param key_start    key with range start time [timestamp]
+      * @param key_length   key with range length [s]
+      * @param value_start  compared range start time [UNIX time]
+      * @param value_length compared range length [s]
+      * @param oper comparison operator between ranges
+      * @param from table where keys are situated
+      * @return success
+      */
+     virtual bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper = "&&", const std::string& from = "") = 0;
+    /**
+     * This is a WHERE statement construction function for filters by box
+     * @param key  key to compare with a value
+     * @param value requested value for key
+     * @param oper comparison operator between key and value
+     * @param from table where the key is situated
+     * @return success
+     */
+    virtual bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = "") = 0;
+    
+    /**
+     * This is a WHERE statement construction function for custom expression
+     * @param expression
+     * @param value requested value for expression
+     * @param oper comparison operator between expression and value
+     * @return  success
+     */
+    virtual bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper = "=") = 0;
+    
 protected:
-
-    /**
-     * Escape key/table pair
-     * @param key key
-     * @param table table
-     * @return escaped full key name
-     */
-    virtual std::string escapeColumn(const std::string& key, const std::string& table) = 0;
-    /**
-     * Escape identifier
-     * @param ident identifier
-     * @return escaped identifier
-     */
-    virtual std::string escapeIdent(const std::string& ident) = 0;
-    /**
-     * Escape literal
-     * @param literal literal
-     * @return escaped literal
-     */
-    virtual std::string escapeLiteral(const std::string& literal) = 0;
     /**
      * Checks validity of seqtype value
      * @param value seqtype value
      * @return success
      */
-    bool checkSeqtype(const std::string& value) {
-        return (value.compare("images") == 0) || (value.compare("video") == 0) || (value.compare("data") == 0);
+    bool checkSeqtype(const std::string& value)
+    {
+        return (
+            (value.compare("images") == 0)  ||
+            (value.compare("video") == 0)   ||
+            (value.compare("data") == 0));
     }
     /**
      * Checks validity of inouttype value
      * @param value inouttype value
      * @return success
      */
-    bool checkInouttype(const std::string& value) {
-        return (value.compare("in") == 0) || (value.compare("inout") == 0) || (value.compare("out") == 0);
+    bool checkInouttype(const std::string& value)
+    {
+        return (
+            (value.compare("in_param") == 0)    ||
+            (value.compare("in_process") == 0)  ||
+            (value.compare("out_table") == 0));
     }
 };
 
@@ -364,13 +369,36 @@ class PGQueryBuilder : public QueryBuilder, public PGBackendBase
 {
 private:
 
-    TKeys                   keys_main;          /**< table keys storage for SELECT FROM, INSERT INTO and UPDATE SET clauses */
-    TKeys                   keys_where;         /**< table keys storage for WHERE clause */
-    std::vector<std::string> opers;             /**< operators */
+    typedef struct _MAIN_ITEM
+    {
+        TKey            key;            /**< table column */
+        unsigned int    idParam;        /**< bind value ID (PGparam used) */
 
-    int                     keysCnt;            /**< keys counter */
-    std::vector<int>        keys_main_order;    /**< Indexes of keys_main */
-    std::vector<int>        keys_where_order;   /**< Indexes of keys_where */
+        _MAIN_ITEM(const std::string& key, const std::string& table, const unsigned int idParam)
+            : key("", key, 1, table), idParam(idParam) { };
+    } MAIN_ITEM;
+    typedef std::list<MAIN_ITEM>    MAIN_LIST;
+    typedef MAIN_LIST::iterator     MAIN_LIST_IT;
+    
+    typedef struct _WHERE_ITEM
+    {
+        TKey            key;            /**< key(is expression if idParam = 0) + table */
+        std::string     oper;           /**< operator */
+        std::string     value;          /**< explicit value (PGparam not used) */
+        unsigned int    idParam;        /**< bind value ID (PGparam used) */
+        
+        _WHERE_ITEM(const std::string& key, const std::string& table, const std::string& oper, const unsigned int idParam)
+            : key("", key, 1, table), oper(oper), idParam(idParam) {};
+        _WHERE_ITEM(const std::string& exp, const std::string& oper, const std::string& value)
+            : key("", exp, 1, ""), oper(oper), value(value), idParam(0) { };
+    } WHERE_ITEM;
+    typedef std::list<WHERE_ITEM>   WHERE_LIST;
+    typedef WHERE_LIST::iterator    WHERE_LIST_IT;
+    
+private:    
+    WHERE_LIST      m_listWhere;        /**< list of WHERE clause items */
+    MAIN_LIST       m_listMain;
+    uint            m_cntParam;         /**< keys counter */
 
 public:
 
@@ -394,7 +422,6 @@ public:
     bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = "");
     bool keySeqtype(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
-//    bool keyPermissions(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
 #if HAVE_OPENCV
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
@@ -406,19 +433,36 @@ public:
     bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
-//    bool wherePermissions(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
+    bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper = "&&", const std::string& from = "");
+    bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = "");
+    bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper = "=");
 
     void reset();
-    void createParam();
+    bool createParam();
     void destroyParam();
 
 protected:
 
-    std::string escapeColumn(const std::string& key, const std::string& table);
+    std::string constructTable(const std::string& table = "", const std::string& schema = "");
+    std::string constructColumn(const std::string& column, const std::string& table = "");
+    std::string constructAlias(const std::string& column);
     std::string escapeIdent(const std::string& ident);
-    std::string escapeAlias(const std::string& key);
     std::string escapeLiteral(const std::string& literal);
+
+    PGtimestamp UnixTimeToTimestamp(const time_t& utime);
+    std::string UnixTimeToTimestampString(const time_t& utime);
+
+    template<typename T>
+    uint addToParam(const char* type, T value);
+
+    template<typename T>
+    bool keySingleValue(const std::string& key, T value, const char *type, const std::string& from);
+    template<typename T>
+    bool keyArray(const std::string& key, T* values, const int size, const char *type, const char* type_arr, const std::string& from);
+    template<typename T>
+    bool whereSingleValue(const std::string& key, T value, const char *type, const std::string& oper, const std::string& from);
+    
 };
 #endif
 
@@ -453,7 +497,6 @@ public:
     bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = "");
     bool keySeqtype(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
-//    bool keyPermissions(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
 #if HAVE_OPENCV
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
@@ -465,11 +508,13 @@ public:
     bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
-//    bool wherePermissions(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
-    
+    bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper = "&&", const std::string& from = "");
+    bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = "");
+    bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper = "=");
+
     void reset();
-    void createParam();
+    bool createParam();
     void destroyParam();
 
 protected:
@@ -477,7 +522,7 @@ protected:
     std::string escapeColumn(const std::string& key, const std::string& table);
     std::string escapeIdent(const std::string& ident);
     std::string escapeLiteral(const std::string& literal);
-
+    
 private:
 
     /**

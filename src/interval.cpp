@@ -117,7 +117,8 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
     return retval;
 }
 
-bool Interval::preSet() {
+bool Interval::preSet()
+{
     bool retval = VT_OK;
 
     vt_destruct(update);
@@ -130,18 +131,46 @@ bool Interval::preSet() {
     return retval;
 }
 
-void Interval::filterBySequence(const string& seqname) {
-    select->whereString("seqname", seqname);
+bool Interval::filterById(const int id)
+{
+    return select->whereInt("id", id);
+}
+bool Interval::filterBySequence(const string& seqname)
+{
+    return select->whereString("seqname", seqname);
+}
+bool Interval::filterByProcess(const string& prsname)
+{
+    return select->whereString("prsname", prsname);
+}
+
+bool Interval::filterByDuration(const float t_low, const float t_high)
+{
+    return
+        select->whereFloat("sec_length", t_low, ">=") &&
+        select->whereFloat("sec_length", t_high, "<=");
+}
+
+bool Interval::filterByTimeRange(const time_t t_low, const time_t t_high)
+{
+    return select->whereTimeRange("rt_start", "sec_length", t_low, t_high - t_low, "&&");
+}
+
+bool Interval::filterByRegion(const IntervalEvent::box& region)
+{
+    return select->whereRegion("event,region", region, "&&");
 }
 
 //=================================== IMAGE ====================================
 
 
-Image::Image(const KeyValues& orig, const string& selection) : Interval(orig, selection) {
+Image::Image(const KeyValues& orig, const string& selection) : Interval(orig, selection)
+{
     thisClass = "Image";
 }
 
-int Image::getTime() {
+int Image::getTime()
+{
     int t1 = this->getStartTime();
     int t2 = this->getEndTime();
 
@@ -152,20 +181,24 @@ int Image::getTime() {
     return t1;
 }
 
-bool Image::add(const string& sequence, const int t, const string& location) {
+bool Image::add(const string& sequence, const int t, const string& location)
+{
     return ((Interval*)this)->add(sequence, t, t, location);
 }
 
-string Image::getImgLocation() {
+string Image::getImgLocation()
+{
     return this->getString("imglocation");
 }
 
-string Image::getDataLocation() {
+string Image::getDataLocation()
+{
     return (this->getDataLocation() + this->getImgLocation());
 }
 
 #if HAVE_OPENCV
-cv::Mat Image::getData() {
+cv::Mat Image::getData()
+{
     if (this->image.data) this->image.release();
     
     this->image = cv::imread(this->getDataLocation().c_str(), CV_LOAD_IMAGE_COLOR);

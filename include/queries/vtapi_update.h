@@ -129,16 +129,6 @@ public:
      * @note It may be called several times.
      */
     bool setInouttype(const std::string& key, const std::string& value, const std::string& from = "");
-    /* * //TODO: delete a space between stars after setPermissions will be actual
-     * This is a persistent function to set permissions value to a key
-     * @param key       key holding value to be set
-     * @param value     permissions value to be set
-     * @param from      selection table (optional)
-     * @return success
-     * @note It may be called several times.
-     */
-//TODO: delete a space between stars in the upper doxygen comment after setPermissions will be actual
-//    bool setPermissions(const std::string& key, const std::string& value, const std::string& from = "");
     /**
      * This is a persistent function to set timestamp value to a key
      * @param key       key holding value to be set
@@ -199,17 +189,6 @@ public:
      * @note It may be called several times.
      */
      bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
-    /* * //TODO: delete a space between stars after wherePermissions will be actual
-     * This is a WHERE statement construction function for permissions
-     * @param key     key to compare with a value
-     * @param value   requested value for key
-     * @param oper    comparision operator between key and value
-     * @param from    table where the key is situated
-     * @return success
-     * @note It may be called several times.
-     */
-//TODO: delete a space between stars in the upper doxygen comment after wherePermissions will be actual
-//     bool wherePermissions(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for timestamp
      * @param key     key to compare with a value
@@ -220,7 +199,23 @@ public:
      * @note It may be called several times.
      */
      bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
-
+     /**
+     * This is a WHERE statement construction function for filters by box
+     * @param key  key to compare with a value
+     * @param value requested value for key
+     * @param oper comparison operator between key and value
+     * @param from    table where the key is situated
+     * @return success
+     */
+     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "", const std::string& from = "");
+    /**
+     * This is a WHERE statement construction function for custom expression
+     * @param expression
+     * @param value requested value for expression
+     * @param oper comparison operator between expression and value
+     * @return  success
+     */
+    bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper = "=");
 };
 
 } // namespace vtapi
