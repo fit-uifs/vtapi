@@ -67,6 +67,9 @@ Kompilace vseho
 Test launcheru
 ./launcher
 
+Test launcheru s vlastnim konfigurakem
+./launcher --config=/absolute/path/to/vtapi.conf
+
 Reset databaze do puvodniho stavu
 ./sql/reset-schema.sh
 

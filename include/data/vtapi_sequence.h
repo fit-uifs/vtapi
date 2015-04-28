@@ -50,7 +50,7 @@ public:
     Sequence(const KeyValues& orig, const std::string& name = "");
 
     /**
-     * Moves to a next sequence and set sequence name and location varibles
+     * Moves to a next sequence and sets sequence name and location varibles
      * @return success
      * @note Overloading next() from KeyValues
      */
@@ -115,19 +115,6 @@ public:
      * @return pointer to the new image
      */
     Image* newImage(const std::string& name = "");
-
-#if HAVE_OPENCV
-    Image* imageBuffer;   /**< Buffer of images metadata at a same location */
-    cv::Mat frame;        /**< Video frame or image data */
-    
-    /**
-     * This is to get the data from the sequence - either video frames or images. 
-     * In the second case, the imageBuffer is used and you are not supposed to call next (as well as in the case of video).
-     * @return cv::Mat
-     */
-    cv::Mat getData();
-#endif
-
 };
 
 /**
@@ -197,9 +184,16 @@ public:
      */
     bool add(const std::string& name, const std::string& location, const time_t& realtime = 0);
 
-
+    /**
+     * Moves to a next video, releases capture/frame and sets sequence name and location varibles
+     * @return success
+     * @note Overloading next() from Sequence
+     */
+    bool next();
+    
 #if HAVE_OPENCV
     cv::VideoCapture capture;   /**< Video file capture */
+    cv::Mat frame;              /**< Current video frame */
     
     /**
      * Opens a video capture (not necessary to call directly)

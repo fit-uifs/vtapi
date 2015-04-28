@@ -71,8 +71,9 @@ KeyValues::~KeyValues()
     vt_destruct(select);
 }
 
-KeyValues* KeyValues::next() {
-    int rowCount    = 0;
+KeyValues* KeyValues::next()
+{
+    int rowCount = 0;
 
     // whether should be something inserted
     if (insert) {
@@ -112,6 +113,22 @@ KeyValues* KeyValues::next() {
     return this;
 }
 
+size_t KeyValues::count()
+{
+    if (!select) logger->error(301, "There is no select class", thisClass + "::count()");
+
+    size_t cnt = 0;
+//    Select *sel = new Select(*this, select->queryBuilder->getCountQuery());
+//    if (sel) {
+//        if (sel->execute()) {
+//            cnt = sel->resultSet->getInt("count");
+//        }
+//        delete sel;
+//    }
+    
+    return cnt;
+}
+
 TKey KeyValues::getKey(int col) {
     return select->resultSet->getKey(col);
 }
@@ -122,7 +139,6 @@ TKeys* KeyValues::getKeys() {
 
 
 // =============== GETTERS (Select) ============================================
-//TODO: optimalize getters, keys and metadata are sometimes retrieved twice
 
 /**
  * Generic getter - fetches any value from resultset and returns it as string
@@ -130,8 +146,8 @@ TKeys* KeyValues::getKeys() {
  * @param arrayLimit limits size of elements of returned array
  * @return string representation of field value
  */
-string KeyValues::getValue(const int col, const int arrayLimit) {
-
+string KeyValues::getValue(const int col, const int arrayLimit)
+{
     return select->resultSet->getValue(col, arrayLimit);
 }
 
@@ -354,15 +370,27 @@ GEOSGeometry *KeyValues::getLineString(const int col) {
 }
 #endif
 
-IntervalEvent *KeyValues::getIntervalEvent(const std::string& key) {
+IntervalEvent *KeyValues::getIntervalEvent(const std::string& key)
+{
     return select->resultSet->getIntervalEvent(key);
 }
-
-IntervalEvent *KeyValues::getIntervalEvent(const int col) {
+IntervalEvent *KeyValues::getIntervalEvent(const int col)
+{
     return select->resultSet->getIntervalEvent(col);
+}
+ProcessState *KeyValues::getProcessState(const std::string& key)
+{
+    return select->resultSet->getProcessState(key);
+}
+
+ProcessState *KeyValues::getProcessState(const int col)
+{
+    return select->resultSet->getProcessState(col);
 }
     
 // =============== GETTERS - OTHER =============================================
+
+
 
 void *KeyValues::getBlob(const std::string& key, int &size) {
     return select->resultSet->getBlob(key, size);
@@ -576,6 +604,11 @@ bool KeyValues::setTimestamp(const std::string& key, const time_t& value)
     return update->setTimestamp(key, value);
 }
 
+bool KeyValues::setPStatus(const std::string& key, ProcessState::STATUS_T value)
+{
+    if (!update) this->preSet();
+    return update->setPStatus(key, value);
+}
 
 bool KeyValues::setExecute()
 {

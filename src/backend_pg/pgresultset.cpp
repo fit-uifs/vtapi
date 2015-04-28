@@ -3,6 +3,8 @@
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_resultset.h>
 
+#include "data/vtapi_processstate.h"
+
 #if HAVE_POSTGRESQL
 
 using std::string;
@@ -764,6 +766,44 @@ IntervalEvent *PGResultSet::getIntervalEvent(const int col)
     return event;
 }
 
+ProcessState *PGResultSet::getProcessState(const int col)
+{
+    PGresult *psres     = NULL;
+    ProcessState *pstate = NULL;
+
+    do {
+        // get process state structure
+        psres = getSingleValue<PGresult*, PGresult*>(col, "%public.pstate");
+        if (!psres) break;
+
+        // get event members
+        PGvarchar ps_status = NULL, ps_curritem = NULL, ps_lasterror = NULL;
+        PGfloat4 ps_progress = 0;
+        if (! pqt.PQgetf(psres, 0, "%varchar %float4 %varchar %varchar",
+        0, &ps_status, 1, &ps_progress, 2, &ps_curritem, 3, &ps_lasterror)) {
+            logger->warning(324, "Cannot get pstate header", thisClass + "::getProcessState()");
+            break;
+        }
+
+        // create event
+        pstate = new ProcessState();
+        if (!pstate) {
+            logger->warning(324, "Failed to create ProcessState", thisClass + "::getProcessState()");
+            break;
+        }
+
+        pstate->status      = pstate->toStatusValue(ps_status);
+        pstate->progress    = ps_progress;
+        pstate->currentItem = ps_curritem;
+        pstate->lastError   = ps_lasterror;
+        
+    } while (0);
+
+    if (psres) pg.PQclear(psres);
+
+    return pstate;
+}
+
 // ========================= GETTERS - OTHER ==================================
 
 
@@ -895,6 +935,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
         case DBTYPE_GEO_GEOMETRY:
         {
 #if HAVE_POSTGIS
+            //TODO: handle PostGIS geometry
 #endif
             break;
         }
@@ -904,6 +945,11 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
             break;
         }
         case DBTYPE_UD_INOUTTYPE:
+        {
+            GET_AND_SERIALIZE_VALUE(getString);
+            break;
+        }
+        case DBTYPE_UD_PSTATUS:
         {
             GET_AND_SERIALIZE_VALUE(getString);
             break;
@@ -918,6 +964,11 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
         case DBTYPE_UD_EVENT:
         {
             GET_AND_SERIALIZE_VALUE_ALLOC(IntervalEvent, getIntervalEvent);
+            break;
+        }
+        case DBTYPE_UD_PSTATE:
+        {
+            //TODO: process state
             break;
         }
         case DBTYPE_REF_TYPE:

@@ -328,10 +328,15 @@ time_t SLResultSet::getTimestamp(const int col) {
     else return toTimestamp(sl_res->res[sl_res_i]);
 }
 
-IntervalEvent *SLResultSet::getIntervalEvent(const int col) {
+IntervalEvent *SLResultSet::getIntervalEvent(const int col)
+{
     return NULL;
 }
 
+ProcessState *SLResultSet::getProcessState(const int col)
+{
+    return NULL;
+}
 
 // ========================= GETTERS - OTHER ==================================
 

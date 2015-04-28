@@ -150,6 +150,16 @@ public:
      */
      bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     /**
+     * This is a WHERE statement construction function for pstate type
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparison operator between key and value
+     * @param from    table where the key is situated
+     * @return success
+     * @note It may be called several times.
+     */
+     bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper = "=", const std::string& from = "");
+    /**
      * This is a WHERE statement construction function for timestamp
      * @param key     key to compare with a value
      * @param value   requested value for key

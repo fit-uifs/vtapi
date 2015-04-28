@@ -159,6 +159,15 @@ public:
      * @note It may be called several times.
      */
     bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = "");
+    /**
+     * This is a persistent function to add ProcessState value to a key
+     * @param key     key holding value to be inserted
+     * @param value   ProcessState value to be inserted
+     * @param from    selection table (optional)
+     * @return success
+     * @note It may be called several times.
+     */
+    bool keyProcessState(const std::string& key, const ProcessState& value, const std::string& from = "");
 };
 
 } // namespace vtapi

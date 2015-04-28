@@ -13,6 +13,8 @@
  * 
  * Oba moduly jsou pro synchronni beh jedne instance modulu.
  * U prvniho modulu jsou komentare, co je treba vzdy ve tride zmenit/doimplementovat.
+ *
+ * [CHANGE] oznacuje zmeny z commitu 29.4.2015
 */
 
 // format process ID
@@ -33,8 +35,8 @@ class CDemo1Module;
 class CDemo2Module;
 
 int main(int argc, char *argv[]);
-static void Demo1Callback(Process::STATE_T state, Process *process, void *context);
-static void Demo2Callback(Process::STATE_T state, Process *process, void *context);
+static void Demo1Callback(const ProcessState& state, void *context);
+static void Demo2Callback(const ProcessState& state, void *context);
 
 
 ///////////////////////////////////////////////////////////
@@ -44,17 +46,20 @@ static void Demo2Callback(Process::STATE_T state, Process *process, void *contex
 class CDemo1Module : public Method
 {
 public:
-    Process *m_process;     // instance beziciho procesu
+    Process *m_process;         // instance beziciho procesu
+    ProcessControl *m_pctrl;    // [CHANGE] ovladani procesu a prijimani notifikaci o zmene stavu
     
 public:
     // v konstruktoru treba upravit nazev modulu ("demo1")
     CDemo1Module(VTApi *vtapi) : Method(*vtapi->commons, "demo1")
     {
         m_process = NULL;
+        m_pctrl = NULL;
         next();
     };
     virtual ~CDemo1Module()
     {
+        if (m_pctrl) delete m_pctrl;
         if (m_process) delete m_process;
     };
     
@@ -63,8 +68,9 @@ public:
     void SetParams(int param1, double param2)
     {
         // timto zpusobem se vytvari novy proces
-        if (!m_process) m_process = this->addProcess(Demo1Callback, (void *)this);
-
+        // [CHANGE] odebrany argumenty
+        if (!m_process) m_process = this->addProcess();
+        
         // k dispozici zatim setParamInt, setParamDouble, setParamString, setParamInputs
         m_process->setParamInt("param1", param1);
         m_process->setParamDouble("param2", param2);
@@ -80,14 +86,37 @@ public:
     // Funkce pro synchronni beh modulu
     void Run()
     {
-        // timto zpusobem se vytvari novy proces
-        // callback + context mohou byt NULL
-        if (!m_process) m_process = this->addProcess(Demo1Callback, (void *)this);
+        printf("starting process of mod_demo1 (asynchronous, suspended)\n");
 
-        printf("\nrunning process...\n");
-        m_process->run();
+        // timto zpusobem se vytvari novy proces
+        // [CHANGE] odebrany argumenty
+        if (!m_process) m_process = this->addProcess();
+
+        // [CHANGE] asynchronni volani, vytvoreni pozastaveneho procesu
+        if (m_process->run(true, true)) {
+            printf("%s started\n", getOutputID().c_str());
+            
+            // [CHANGE] inicializujeme objekt pro komunikaci s procesem
+            if (!m_pctrl) m_pctrl = m_process->getProcessControl();
+            if (m_pctrl->client(2500, Demo1Callback, this)) {
+                
+                // odpauzujeme proces
+                if (m_process->controlResume(m_pctrl)) {
+                    printf("%s unpaused\n", getOutputID().c_str());
+                }
+                else {
+                    fprintf(stderr, "failed to unpause process\n");
+                }
+            }
+            else {
+                fprintf(stderr, "failed to connect to server process\n");
+            }
+        }
         
         // zde dalsi mozne operace nad skoncenym procesem
+        
+        // cekani na koncovou notifikaci finished/error
+        // ...
     }
         
     // Pomocna funkce pro ziskani ID vystupnich dat, pouze kosmeticky ucel
@@ -96,30 +125,33 @@ public:
         return m_process->getName();
     }
     
-    // Callback volany z procesu behem funkce run()
-    void ProcessCallback(Process::STATE_T state)
+    // Callback volany z procesu behem funkce run(), pozor - jine vlakno
+    void ProcessCallback(const ProcessState& state)
     {
-        switch (state)
+        switch (state.status)
         {
-            case Process::STATE_STARTED:
+            // proces reportuje progres
+            case ProcessState::STATUS_RUNNING:
             {
-                printf("%s has been started\n", m_process->getName().c_str());
+                printf("%s progress: %f%%\n", getOutputID().c_str(), state.progress);
                 break;
             }
-            case Process::STATE_RUNNING:
+            // proces byl pozastaven
+            case ProcessState::STATUS_SUSPENDED:
             {
-                // proces muze mit castecne vysledky
-                printf("%s is running\n", m_process->getName().c_str());
+                printf("%s has been suspended\n", getOutputID().c_str());
                 break;
             }
-            case Process::STATE_DONE:
+            // proces skoncil uspesne
+            case ProcessState::STATUS_FINISHED:
             {
-                printf("%s finished\n", m_process->getName().c_str());
+                printf("%s finished succesfully\n", getOutputID().c_str());
                 break;
             }
-            case Process::STATE_ERROR:
+            // proces skoncil s chybou
+            case ProcessState::STATUS_ERROR:
             {
-                fprintf(stderr, "Error occurred in %s\n", m_process->getName().c_str());
+                fprintf(stderr, "%s finished with ERROR\n", getOutputID().c_str());
                 break;
             }
         }
@@ -134,20 +166,25 @@ class CDemo2Module : public Method
 {
 public:
     Process *m_process;
+    ProcessControl *m_pctrl;
     
 public:
     CDemo2Module(VTApi *vtapi) : Method(*vtapi->commons, "demo2") {
         m_process = NULL;
+        m_pctrl = NULL;
         next();
     };
     virtual ~CDemo2Module()
     {
+        if (m_pctrl) delete m_pctrl;
         if (m_process) delete m_process;
     }
     
     void SetParams(const std::string& inputID, const std::string& videoName)
     {
-        if (!m_process) m_process = this->addProcess(Demo2Callback, this);
+        if (!m_process) m_process = this->addProcess();
+
+        if (!m_pctrl) m_pctrl = m_process->getProcessControl();
 
         m_process->setInputs(inputID);
         m_process->setParamString("video", videoName);
@@ -161,48 +198,57 @@ public:
     
     void Run()
     {
-        printf("\nrunning process...\n");
-        m_process->run();
-        
-        Interval *outputs = m_process->getOutputData();
-        printf("\nprocess %s new outputs:\n", m_process->getName().c_str());
-        while(outputs->next())
-        {
-            IntervalEvent *event = outputs->getIntervalEvent("event");
-            if (event) {
-                printf("event: %s\n", toString(*event).c_str());
-                delete event;
+        printf("starting process of mod_demo2 (synchronous)\n");
+
+        if (!m_process) m_process = this->addProcess();
+
+        if (m_process->run()) {
+            printf("%s started\n", m_process->getName().c_str());
+
+            if (!m_pctrl) m_pctrl = m_process->getProcessControl();
+            if (m_pctrl->client(2500, Demo1Callback, this)) {
+                Interval *outputs = m_process->getOutputData();
+                printf("\nprocess %s new outputs:\n", m_process->getName().c_str());
+                while (outputs->next()) {
+                    IntervalEvent *event = outputs->getIntervalEvent("event");
+                    if (event) {
+                        printf("event: %s\n", toString(*event).c_str());
+                        delete event;
+                    }
+                    else {
+                        printf("failed to get event\n");
+                    }
+                }
+                delete outputs; 
             }
             else {
-                printf("failed to get event\n");
+                fprintf(stderr, "failed to connect to server process\n");
             }
         }
-        delete outputs;
     }
-    
-    void ProcessCallback(Process::STATE_T state)
+
+    void ProcessCallback(const ProcessState& state)
     {
-        switch (state)
+        switch (state.status)
         {
-            case Process::STATE_STARTED:
+            case ProcessState::STATUS_RUNNING:
             {
-                printf("%s has been started\n", m_process->getName().c_str());
+                printf("%s progress: %f%%\n", m_process->getName().c_str(), state.progress);
                 break;
             }
-            case Process::STATE_RUNNING:
+            case ProcessState::STATUS_SUSPENDED:
             {
-                // proces muze mit castecne vysledky
-                printf("%s is running\n", m_process->getName().c_str());
+                printf("%s has been suspended\n", m_process->getName().c_str());
                 break;
             }
-            case Process::STATE_DONE:
+            case ProcessState::STATUS_FINISHED:
             {
-                printf("%s finished\n", m_process->getName().c_str());
+                printf("%s finished succesfully\n", m_process->getName().c_str());
                 break;
             }
-            case Process::STATE_ERROR:
+            case ProcessState::STATUS_ERROR:
             {
-                fprintf(stderr, "Error occurred in %s\n", m_process->getName().c_str());
+                fprintf(stderr, "%s finished with ERROR\n", m_process->getName().c_str());
                 break;
             }
         }
@@ -212,19 +258,17 @@ public:
 ///////////////////////////////////////////////////////////
 // CALLBACKY pro update statusu procesu
 ///////////////////////////////////////////////////////////
+// [CHANGE]
 // Callback pro spusteny proces
 // - state      = stav procesu
-// - process    = objekt pro dotazovani vysledku apod. (netreba pro 1-proces modul)
 // - context    = kontext zadany pri spousteni (typicky napr. this)
 
-void Demo1Callback(Process::STATE_T state, Process *process, void *context)
+void Demo1Callback(const ProcessState& state, void *context)
 {
-    (process);  // unused
     return ((CDemo1Module *)context)->ProcessCallback(state);
 }
-void Demo2Callback(Process::STATE_T state, Process *process, void *context)
+void Demo2Callback(const ProcessState& state, void *context)
 {
-    (process);  // unused
     return ((CDemo2Module *)context)->ProcessCallback(state);
 }
 

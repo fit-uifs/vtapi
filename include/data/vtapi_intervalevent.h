@@ -11,15 +11,15 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef INTERVALEVENT_H
-#define	INTERVALEVENT_H
+#ifndef VTAPI_INTERVALEVENT_H
+#define	VTAPI_INTERVALEVENT_H
 
 namespace vtapi {
     
 /**
  * @brief
  * 
- * @todo @b doc: put together a few letters into brief description and class members and methods..
+ * Class representing universal event in video interval
  * 
  * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
@@ -36,15 +36,12 @@ public:
         double x;
         double y;
         
-        _point()
-        {
-            memset(this, 0, sizeof(point));
-        };
         _point(const _point &pt)
         {
-            memcpy(this, &pt, sizeof(point));
+            this->x = pt.x;
+            this->y = pt.y;
         };
-        _point(const double x, const double y)
+        _point(double x = 0, double y = 0)
         {
             this->x = x;
             this->y = y;
@@ -56,20 +53,18 @@ public:
         point high;
         point low;
         
-        _box()
-        {
-            memset(this, 0, sizeof(box));
-        };
+
         _box(const _box &b)
         {
-            memcpy(this, &b, sizeof(box));
+            this->high = b.high;
+            this->low = b.low;
         };  
-        _box(const point high, const point low)
+        _box(const point& high, const point& low)
         {
             this->high = high;
             this->low = low;
         };
-        _box(const double x_high, const double y_high, const double x_low, const double y_low)
+        _box(double x_high = 0, double y_high = 0, double x_low = 0, double y_low = 0)
         {
             this->high.x = x_high;
             this->high.y = y_high;
@@ -79,22 +74,26 @@ public:
     } box;
 
 public:
+    /**
+     * Public class members
+     */
+    
+    int group_id;           /**< groups associate events together */
+    int class_id;           /**< event class (user-defined) */
+    bool is_root;           /**< is this event a meta-event (eg. trajectory envelope) */
+    box region;             /**< event region in video */
+    double score;           /**< event score (user-defined) */
+    size_t user_data_size;  /**< user_data size */
+    void *user_data;        /**< additional custom user-defined data */
+    
+public:
     IntervalEvent();
     IntervalEvent(const IntervalEvent& orig);
     virtual ~IntervalEvent();
     
     void SetUserData(const void *data, size_t size);
-    
-    int group_id;
-    int class_id;
-    bool is_root;
-    box region;
-    double score;
-    size_t user_data_size;
-    void *user_data;
-
 };
 
 } // namespace vtapi
 
-#endif	/* INTERVALEVENT_H */
+#endif	/* VTAPI_INTERVALEVENT_H */

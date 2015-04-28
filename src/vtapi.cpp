@@ -27,27 +27,30 @@ using namespace vtapi;
 
 VTApi::VTApi(int argc, char** argv) {
     gengetopt_args_info args_info;
-    struct cmdline_parser_params *cli_params;
+    struct cmdline_parser_params cli_params;
     bool warn = false;
-
+    
     // Initialize parser parameters structure
-    cli_params = cmdline_parser_params_create();
     // Hold check for required arguments until config file is parsed
-    cli_params->check_required = 0;
-	// Parse cmdline first
-    if (cmdline_parser_ext (argc, argv, &args_info, cli_params) != 0) warn = true;
+    cmdline_parser_params_init(&cli_params);
+    cli_params.check_required = 0;
+    
+    // Parse cmdline first
+    warn |= (cmdline_parser_ext (argc, argv, &args_info, &cli_params) != 0);
+    
     // Get the rest of arguments from config file, don't override cmdline
-    cli_params->initialize = 0;
-    cli_params->override = 0;
-    cli_params->check_required = 1;
-	// Parse config file
-    if (cmdline_parser_config_file (args_info.config_arg, &args_info, cli_params) != 0) warn = true;
-        // Check if all args are specified
+    cli_params.initialize = 0;
+    cli_params.override = 0;
+    cli_params.check_required = 1;
+    
+    // Parse config file now
+    warn |= (cmdline_parser_config_file (args_info.config_arg, &args_info, &cli_params) != 0);
+    
+    // Check if all args are specified
     if (cmdline_parser_required (&args_info, "VTApi") != EXIT_SUCCESS) {
         cerr << "Aborting: Database connection info missing. Use \"-h\" for help. " << endl;
         cerr << "Use config file (--config=\"/path/to/somefile.conf\") or check help for command line option \"-c\"." << endl;
         cmdline_parser_free (&args_info);
-        vt_destruct(cli_params);
         throw new std::exception();
     }
     // TODO: user authentization here
@@ -55,10 +58,9 @@ VTApi::VTApi(int argc, char** argv) {
     // Create commons class to store connection etc.
     commons = new Commons(args_info);
     if (warn) {
-        cerr << "Error parsing config arguments" << endl;
+        commons->getLogger()->warning("Error parsing config arguments", "VTApi()");
     }
     cmdline_parser_free (&args_info);
-    vt_destruct(cli_params);
 }
 
 VTApi::VTApi(const string& configFile) {
@@ -90,10 +92,18 @@ Dataset* VTApi::newDataset(const string& name) {
     return (new Dataset(*commons, name));
 }
 
-Process *VTApi::initProcess() {
-    if (this->commons->getProcess().empty()) return NULL;
+Process *VTApi::initProcess()
+{
+    Process *p = NULL;
     
-    return new Process(*this->commons);
+    if (!this->commons->getProcess().empty()) {
+        p = new Process(*this->commons);
+        if (p && !p->next()) {
+            vt_destruct(p);
+        }
+    }
+
+    return p;
 }
 
 

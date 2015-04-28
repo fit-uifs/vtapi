@@ -42,6 +42,8 @@
         <itemPath>../include/data/vtapi_keyvalues.h</itemPath>
         <itemPath>../include/data/vtapi_method.h</itemPath>
         <itemPath>../include/data/vtapi_process.h</itemPath>
+        <itemPath>../include/data/vtapi_processcontrol.h</itemPath>
+        <itemPath>../include/data/vtapi_processstate.h</itemPath>
         <itemPath>../include/data/vtapi_sequence.h</itemPath>
       </logicalFolder>
       <logicalFolder name="f2" displayName="postgis" projectFiles="true">
@@ -89,6 +91,8 @@
       <itemPath>logger.cpp</itemPath>
       <itemPath>method.cpp</itemPath>
       <itemPath>process.cpp</itemPath>
+      <itemPath>processcontrol.cpp</itemPath>
+      <itemPath>processstate.cpp</itemPath>
       <itemPath>query.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>
       <itemPath>timexer.cpp</itemPath>
@@ -258,6 +262,16 @@
       </item>
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/data/vtapi_processcontrol.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_processstate.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/data/vtapi_sequence.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/postgis/geos_c.h" ex="false" tool="3" flavor2="0">
@@ -313,6 +327,10 @@
       <item path="method.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="process.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="processcontrol.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="processstate.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="query.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -441,6 +459,16 @@
       </item>
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/data/vtapi_processcontrol.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_processstate.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/data/vtapi_sequence.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/postgis/geos_c.h" ex="false" tool="3" flavor2="0">
@@ -496,6 +524,10 @@
       <item path="method.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="process.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="processcontrol.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="processstate.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="query.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -657,6 +689,16 @@
       </item>
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="../include/data/vtapi_processcontrol.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_processstate.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/data/vtapi_sequence.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/postgis/geos_c.h" ex="false" tool="3" flavor2="0">
@@ -712,6 +754,10 @@
       <item path="method.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="process.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="processcontrol.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="processstate.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="query.cpp" ex="false" tool="1" flavor2="0">
       </item>

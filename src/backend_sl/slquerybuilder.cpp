@@ -5,6 +5,13 @@
 
 #if HAVE_SQLITE
 
+#define DEF_NO_SCHEMA   "!NO_SCHEMA!"
+#define DEF_NO_TABLE    "!NO_TABLE!"
+#define DEF_NO_COLUMN   "!NO_COLUMN!"
+#define DEF_NO_VALUES   "!NO_VALUES!"
+#define DEF_NO_QUERY    "!NO_QUERY!"
+
+
 using std::string;
 using std::stringstream;
 
@@ -23,8 +30,14 @@ SLQueryBuilder::SLQueryBuilder(const SLBackendBase &base, void *connection, cons
      if (param) delete ((SLparam *) param);
      destroyKeys();
 }
+string SLQueryBuilder::getGenericQuery()
+{
+    ((SLparam *) param)->database = this->defaultSchema;
+    return initString;
+}
 
-string SLQueryBuilder::getSelectQuery(const string& groupby, const string& orderby, const int limit, const int offset) {
+string SLQueryBuilder::getSelectQuery(const string& groupby, const string& orderby, const int limit, const int offset)
+{
     string queryString;
     string columnsStr;
     string tablesStr;
@@ -104,7 +117,8 @@ string SLQueryBuilder::getSelectQuery(const string& groupby, const string& order
     return (queryString);
 }
 
-string SLQueryBuilder::getInsertQuery() {
+string SLQueryBuilder::getInsertQuery()
+{
     string queryString;
     string dstTable;
     string intoStr;
@@ -140,7 +154,8 @@ string SLQueryBuilder::getInsertQuery() {
     return "";
 }
 
-string SLQueryBuilder::getUpdateQuery() {
+string SLQueryBuilder::getUpdateQuery()
+{
     string queryString;
     string dstTable;
     string setStr;
@@ -186,9 +201,19 @@ string SLQueryBuilder::getUpdateQuery() {
     return queryString;
 }
 
-string SLQueryBuilder::getGenericQuery() {
-    ((SLparam *)param)->database = this->defaultSchema;
-    return initString;
+string SLQueryBuilder::getCountQuery()
+{
+    string queryString;
+    
+//    size_t fromPos = initString.find(" FROM ");
+//    if (fromPos != string::npos) {
+//        queryString = "SELECT COUNT(*) AS count" + initString.substr(fromPos);
+//    }
+//    else {
+//        queryString = DEF_NO_QUERY;
+//    }
+        
+    return queryString;
 }
 
 string SLQueryBuilder::getBeginQuery()
@@ -285,6 +310,16 @@ bool SLQueryBuilder::keyInouttype(const string& key, const string& value, const 
     }
 }
 
+bool SLQueryBuilder::keyPStatus(const string& key, ProcessState::STATUS_T value, const string& from)
+{
+    if (key.empty() || value == ProcessState::STATUS_NONE) return VT_FAIL;
+    else {
+        TKeyValue<string> *tk = new TKeyValue<string>("pstatus", key, ProcessState::toStatusString(value), from);
+        key_values_main.push_back(tk);
+        return VT_OK;
+    }
+}
+
 bool SLQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from) {
     if (key.empty()) return VT_FAIL;
     else {
@@ -359,6 +394,17 @@ bool SLQueryBuilder::whereInouttype(const string& key, const string& value, cons
     if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("inouttype", key, value, from);
+        key_values_where.push_back(tk);
+        opers.push_back(oper);
+        return VT_OK;
+    }
+}
+
+bool SLQueryBuilder::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
+{
+    if (key.empty() || value == ProcessState::STATUS_NONE) return VT_FAIL;
+    else {
+        TKeyValue<string> *tk = new TKeyValue<string>("pstatus", key, ProcessState::toStatusString(value), from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
         return VT_OK;

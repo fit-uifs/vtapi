@@ -17,6 +17,8 @@
 #include "vtapi_keyvalues.h"
 #include "vtapi_sequence.h"
 #include "vtapi_interval.h"
+#include "vtapi_processstate.h"
+#include "vtapi_processcontrol.h"
 #include "../common/vtapi_tkeyvalue.h"
 
 namespace vtapi {
@@ -36,30 +38,13 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Process : public KeyValues {
-public:
-    /**
-     * Process state
-     */
-    typedef enum _STATE_T
-    {
-        STATE_INIT,      /**< process was initialized */
-        STATE_STARTED,   /**< process was started */
-        STATE_RUNNING,   /**< process is already running */
-        STATE_DONE,      /**< process was sucessfuly done */
-        STATE_ERROR      /**< process was terminated with an error */
-    } STATE_T;
-
-    /**
-     * @todo @b doc: put together a few letters..
-     */
-    typedef void (*fCallback)(STATE_T state, Process *process, void *context);
-
+class Process : public KeyValues
+{
 public:
 
     /**
      * Constructor for processes
-     * @param orig   pointer to the parrent KeyValues object
+     * @param orig   pointer to the parent KeyValues object
      * @param name   specific name of process, which we can construct
      */
     Process(const KeyValues& orig, const std::string& name = "");
@@ -78,11 +63,60 @@ public:
      * @return string value with the name of the process
      */
     std::string getName();
+    
     /**
-     * Gets current process state
-     * @return state
+     * Gets detailed process state
+     * @return process state object
      */
-    STATE_T getState();
+    ProcessState *getState();
+    /**
+     * Sets process status as RUNNING
+     * @param progress percentage progress [0-100]
+     * @param currentItem currently processed item
+     * @param control ProcessControl object through which to send state update notification
+     * @return success
+     */
+    bool updateStateRunning(float progress, const std::string& currentItem, ProcessControl *control = NULL);
+    /**
+     * Sets process status as SUSPENDED (paused)
+     * @param control ProcessControl object through which to send state update notification
+     * @return success
+     */
+    bool updateStateSuspended(ProcessControl *control = NULL);
+    /**
+     * Sets process status as FINISHED (without error)
+     * @param progress final percentage progress [0-100]
+     * @param control ProcessControl object through which to send state update notification
+     * @return success
+     */
+    bool updateStateFinished(float progress, ProcessControl *control = NULL);
+    /**
+     * Sets process status as ERROR and sets last error message
+     * @param errorMsg error message
+     * @param control ProcessControl object through which to send state update notification
+     * @return 
+     */
+    bool updateStateError(const std::string& lastError, ProcessControl *control = NULL);
+    
+    /**
+     * Sends control message to process: resume.
+     * @param control ProcessControl object through which to send command
+     * @return success
+     */
+    bool controlResume(ProcessControl *control);
+    /**
+     * Sends control message to process: suspend.
+     * @param control ProcessControl object through which to send command
+     * @return success
+     */
+    bool controlSuspend(ProcessControl *control);
+    /**
+     * Sends control message to process: stop.
+     * @param control ProcessControl object through which to send command
+     * @return success
+     */
+    bool controlStop(ProcessControl *control);
+    
     /**
      * Gets a process name which outputs are inputs for this process
      * @return string value with the input data table name
@@ -160,12 +194,6 @@ public:
      * @param value   value of parameter
      */
     void setParamString(const std::string& key, const std::string& value);
-    /**
-     * Sets a process status update callback
-     * @param callback   callback function
-     * @param pContext   context supplied to callbacks
-     */
-    void setCallback(fCallback callback, void *pContext);
     
     /**
      * Represents processes with specific input process only. Use this before calling next()
@@ -201,40 +229,47 @@ public:
      * @unimplemented
      */
     Sequence* newSequence(const std::string& name = "");
-
+   
     /**
-     * Runs process
+     * Launches process and waits for its finish (unless async is specified)
+     * @param async function returns immediately after launching process
+     * @param suspended start process in suspended state (use ProcessControl to unpause it)
      * @return success
      */
-    bool run();
+    bool run(bool async = false, bool suspended = false);
+
+    /**
+     * Get process control object to initialize server/client notifications
+     * between launcher and process
+     * @return process control object or NULL on failure
+     */
+    ProcessControl *getProcessControl();
 
 protected:
-    std::string inputs;   /**< A process name which outputs are inputs for this process */
-    TKeyValues params;    /**< Vector of process parameters */
-    
-    fCallback callback;       /**< @todo @b doc: put together a few letters.. */
-    void *pCallbackContext;   /**< @todo @b doc: put together a few letters.. */
+    std::string inputs;     /**< A process name which outputs are inputs for this process */
+    TKeyValues params;      /**< Vector of process parameters */
     
 protected:
     /**
      * Constructs a process name (composed of method name and input parameters)
      * @return process name
-     * @todo @b doc: Check if it is correct & exhaustive
      */
     std::string constructName();
     /**
      * Performs a serialization of parameters
      * @return serialized parameters
-     * @todo @b doc: Check if it is correct & exhaustive
      */
     std::string serializeParams();
     /**
-     * Performs a deserialization of parameters
+     * Performs a deserialization of parameters into params memeber
      * @param paramString serialized parameters
-     * @todo @b doc: Check if it is correct & exhaustive
+     * @return count of deserialized params, -1 on format error
      */
-    void deserializeParams(std::string paramString);
-
+    int deserializeParams(const std::string& paramString);
+    /**
+     * Deallocates parameters
+     */
+    void destroyParams();
 };
 
 } // namespace vtapi

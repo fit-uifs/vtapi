@@ -65,11 +65,11 @@ CREATE TYPE inouttype AS ENUM (
 
 -- process state enum
 CREATE TYPE pstatus AS ENUM (
-    'init',     -- process has been created
-    'started',  -- process has been started in the past, hasn't finished and is not running
+    'created',  -- process has been newly registered but not yet started
     'running',  -- process is currently working
-    'done',     -- process has finished succesfully
-    'error'     -- process has finished with error
+    'suspended',-- process is currently in paused state
+    'finished', -- process has finished succesfully
+    'error'     -- process has finished with an error
 );
 
 -- OpenCV matrix type
@@ -94,7 +94,7 @@ CREATE TYPE pstate AS (
     status public.pstatus,  -- process status
     progress real,          -- process progress (0-100)
     current_item varchar,   -- currently processed item
-    error_msg varchar       -- error message
+    last_error varchar      -- error message
 );
 
 -------------------------------------

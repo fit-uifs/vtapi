@@ -12,6 +12,7 @@
 #include "../common/vtapi_types.h"
 #include "../common/vtapi_tkeyvalue.h"
 #include "../data/vtapi_intervalevent.h"
+#include "../data/vtapi_processstate.h"
 
 namespace vtapi {
 
@@ -538,7 +539,7 @@ public:
     virtual GEOSGeometry* getLineString(const int col) = 0;
 #endif
 
-    // =============== GETTERS - INTERVAL EVENT ================================
+    // =============== GETTERS - CUSTOM COMPOSITE TYPES ========================
     /**
      * Get interval event by column key
      * @param key column key
@@ -553,6 +554,20 @@ public:
      * @return interval event class
      */
     virtual IntervalEvent *getIntervalEvent(const int col) = 0;
+    /**
+     * Gets process state by a column key
+     * @param key   column key
+     * @return process state class
+     */
+    ProcessState *getProcessState(const std::string& key) {
+        return this->getProcessState(this->getKeyIndex(key));
+    }
+    /**
+     * Gets process state by an index of a column
+     * @param col   index of the column
+     * @return process state class
+     */
+    virtual ProcessState *getProcessState(const int col) = 0;
     
     // =============== GETTERS - OTHER =========================================
 
@@ -642,6 +657,7 @@ public:
     std::vector<double>* getFloat8V(const int col);
     time_t getTimestamp(const int col);
     IntervalEvent *getIntervalEvent(const int col);
+    ProcessState *getProcessState(const int col);
 #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     PGpoint* getPointA(const int col, int& size);
@@ -710,6 +726,7 @@ public:
     std::vector<double>* getFloat8V(const int col);
     time_t getTimestamp(const int col);
     IntervalEvent *getIntervalEvent(const int col);
+    ProcessState *getProcessState(const int col);
 #if HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     PGpoint* getPointA(const int col, int& size);

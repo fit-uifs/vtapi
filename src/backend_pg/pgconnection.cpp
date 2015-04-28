@@ -160,8 +160,8 @@ bool PGConnection::loadDBTypes()
             {"geometry", geometry_put, geometry_get},
 #endif
             {"public.seqtype", enum_put, enum_get},
-            {"public.inouttype", enum_put, enum_get}//,
-            //{"public.permissions", enum_put, enum_get}
+            {"public.inouttype", enum_put, enum_get},
+            {"public.pstatus", enum_put, enum_get}
         };
         retval = pqt.PQregisterTypes(conn, PQT_USERDEFINED, types_userdef, sizeof (types_userdef) / sizeof (PGregisterType), 0);
         if (!retval) {
@@ -175,7 +175,8 @@ bool PGConnection::loadDBTypes()
 #if HAVE_OPENCV
             {"public.cvmat", NULL, NULL},
 #endif
-            {"public.vtevent", NULL, NULL}
+            {"public.vtevent", NULL, NULL},
+            {"public.pstate", NULL, NULL}
         };
         retval = pqt.PQregisterTypes(conn, PQT_COMPOSITE, types_comp, sizeof (types_comp) / sizeof (PGregisterType), 0);
         if (!retval) {
@@ -268,6 +269,9 @@ short PGConnection::getTypeCategoryFlags(char c, const std::string &name)
             else if (name.compare("vtevent") == 0) {
                 DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_EVENT | DBTYPE_FLAG_USERDEFINED);
             }
+            else if (name.compare("pstate") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_PSTATE | DBTYPE_FLAG_USERDEFINED);
+            }
             break;
         }
         case 'D':   // date/time
@@ -281,8 +285,12 @@ short PGConnection::getTypeCategoryFlags(char c, const std::string &name)
         {
             if (name.compare("seqtype") == 0) {
                 DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_SEQTYPE | DBTYPE_FLAG_USERDEFINED);
-            } else if (name.compare("inouttype") == 0) {
+            }
+            else if (name.compare("inouttype") == 0) {
                 DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_INOUTTYPE | DBTYPE_FLAG_USERDEFINED);
+        }
+            else if (name.compare("pstatus") == 0) {
+                DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_PSTATUS | DBTYPE_FLAG_USERDEFINED);
             }
             break;
         }

@@ -35,8 +35,9 @@ Sequence::Sequence(const KeyValues& orig, const string& name) : KeyValues(orig)
     if (!this->sequence.empty()) select->whereString("seqname", this->sequence);
 }
 
-bool Sequence::next() {
-    KeyValues* kv = ((KeyValues*)this)->next();
+bool Sequence::next()
+{
+    KeyValues* kv = KeyValues::next();
     if (kv) {
         this->sequence = this->getName();
         this->sequenceLocation = this->getLocation();
@@ -70,28 +71,6 @@ Image* Sequence::newImage(const string& name)
 
     return image;
 }
-
-
-#if HAVE_OPENCV
-cv::Mat Sequence::getData() {
-    if (this->frame.data) this->frame.release();
-    
-    if (this->getType().compare("video")) {
-        return dynamic_cast<Video*>(this)->getData();
-    }
-    else if (this->getType().compare("images")) {
-        if (this->imageBuffer == NULL) {
-            this->imageBuffer = this->newImage();
-        }
-        if (this->imageBuffer->next()) {
-            this->frame = this->imageBuffer->getData();
-            return frame;
-        }
-    }
-    
-    return frame;
-}
-#endif
 
 bool Sequence::add(const string& name, const string& location, const string& type)
 {
@@ -154,11 +133,13 @@ bool ImageFolder::add(const string& name, const string& location)
 
     return bRet;
 }
+
 //================================= VIDEO ======================================
 
 
 
-Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name) {
+Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name)
+{
     thisClass = "Video";
 
     select->whereSeqtype("seqtyp", "video");
@@ -208,21 +189,32 @@ bool Video::add(const string& name, const string& location, const time_t& realti
     return bRet;
 }
 
+bool Video::next()
+{
+#if HAVE_OPENCV
+    closeVideo();
+#endif
+    
+    return Sequence::next();
+}
+
 #if HAVE_OPENCV
 
-bool Video::openVideo() {
+bool Video::openVideo()
+{
     closeVideo();
     this->capture = cv::VideoCapture(this->getDataLocation());
     return this->capture.isOpened();
 }
 
-void Video::closeVideo() {
+void Video::closeVideo()
+{
+    if (this->frame.data) this->frame.release();
     if (this->capture.isOpened()) this->capture.release();
 }
 
-cv::Mat Video::getData() {
-    if (this->frame.data) this->frame.release();
-    
+cv::Mat Video::getData()
+{
     if (this->capture.isOpened() || this->openVideo()) {
         this->capture >> this->frame;
     }

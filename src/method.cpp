@@ -53,11 +53,15 @@ Process* Method::newProcess(const string& name) {
     return (new Process(*this, name));
 }
 
-Process* Method::addProcess(Process::fCallback callback, void *pContext) {
-    // don't call add() until process is run
+Process* Method::addProcess()
+{
     Process *p = new Process(*this);
-    if (callback) p->setCallback(callback, pContext);
-    p->add();
+    if (p) {
+        if (!p->add()) {
+            delete p;
+            p = NULL;
+        }
+    }
     return p;
 }
 

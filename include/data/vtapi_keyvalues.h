@@ -17,6 +17,7 @@
 
 #include "vtapi_commons.h"
 #include "vtapi_intervalevent.h"
+#include "vtapi_processstate.h"
 #include "../queries/vtapi_select.h"
 #include "../queries/vtapi_insert.h"
 #include "../queries/vtapi_update.h"
@@ -74,6 +75,12 @@ public:
      */
     KeyValues* next();
 
+    /**
+     * Count total number of represented objects
+     * NOT YET IMPLEMENTED
+     * @return object count
+     */
+    size_t count();
     /**
      * Gets key of a single table column
      * @param col   column index
@@ -488,7 +495,7 @@ public:
     GEOSGeometry* getLineString(const int col);
 #endif
 
-    // =============== GETTERS - INTERVAL EVENT ================================
+    // =============== GETTERS - CUSTOM COMPOSITE TYPES ========================
     /**
      * Gets interval event by a column key
      * @param key   column key
@@ -501,6 +508,18 @@ public:
      * @return interval event class
      */
     IntervalEvent *getIntervalEvent(const int col);
+    /**
+     * Gets process state by a column key
+     * @param key   column key
+     * @return process state class
+     */
+    ProcessState *getProcessState(const std::string& key);
+    /**
+     * Gets process state by an index of a column
+     * @param col   index of the column
+     * @return process state class
+     */
+    ProcessState *getProcessState(const int col);
     
     // =============== GETTERS - OTHER =========================================
     /**
@@ -609,7 +628,13 @@ public:
      * @return  success
      */
     bool setTimestamp(const std::string& key, const time_t& value);
-    
+    /**
+     * Sets a new process status of a specified key
+     * @param key column key to update
+     * @param value status value
+     * @return success
+     */
+    bool setPStatus(const std::string& key, ProcessState::STATUS_T value);
     /**
      * Executes SQL UPDATE command
      * @return success

@@ -83,11 +83,9 @@ public:
     Process* newProcess(const std::string& name = "");
     /**
      * Creates process object for starting new process
-     * @param callback   process status update callback
-     * @param pContext   supplied callback context
-     * @return 
+     * @return new process object
      */
-    Process* addProcess(Process::fCallback callback = NULL, void *pContext = NULL);  
+    Process* addProcess();  
 
     /**
      * @unimplemented

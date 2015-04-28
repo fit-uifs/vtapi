@@ -130,6 +130,15 @@ public:
      */
     bool setInouttype(const std::string& key, const std::string& value, const std::string& from = "");
     /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+    bool setPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from = "");
+    /**
      * This is a persistent function to set timestamp value to a key
      * @param key       key holding value to be set
      * @param value     timestamp value to be set
@@ -189,6 +198,16 @@ public:
      * @note It may be called several times.
      */
      bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+    /**
+     * This is a WHERE statement construction function for pstatus type
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
+     * @return success
+     * @note It may be called several times.
+     */
+    bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper = "=", const std::string& from = "");
     /**
      * This is a WHERE statement construction function for timestamp
      * @param key     key to compare with a value

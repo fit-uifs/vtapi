@@ -4,7 +4,7 @@ lib_LTLIBRARIES = libvtapi.la
 
 libvtapi_la_SOURCES_PG = backend_pg/pgbackendbase.cpp backend_pg/pgconnection.cpp backend_pg/pgquerybuilder.cpp backend_pg/pgresultset.cpp
 libvtapi_la_SOURCES_SL = backend_sl/slbackendbase.cpp backend_sl/slconnection.cpp backend_sl/slquerybuilder.cpp backend_sl/slresultset.cpp
-libvtapi_la_SOURCES = $(libvtapi_la_SOURCES_PG) $(libvtapi_la_SOURCES_SL) backend_factory.cpp commons.cpp keyvalues.cpp dataset.cpp interval.cpp  intervalevent.cpp logger.cpp method.cpp process.cpp query.cpp sequence.cpp timexer.cpp tkey.cpp vtapi.cpp vtapi_settings.cpp vtapi_misc.cpp
+libvtapi_la_SOURCES = $(libvtapi_la_SOURCES_PG) $(libvtapi_la_SOURCES_SL) backend_factory.cpp commons.cpp keyvalues.cpp dataset.cpp interval.cpp intervalevent.cpp logger.cpp method.cpp process.cpp processstate.cpp processcontrol.cpp query.cpp sequence.cpp timexer.cpp tkey.cpp vtapi.cpp vtapi_settings.cpp vtapi_misc.cpp
 libvtapi_la_CFLAGS =  $(PQ_CFLAGS) $(LIBLWGEOM_CFLAGS) $(GEOS_CFLAGS) $(OPENCV_CFLAGS) $(SQLITE_CFLAGS) $(LTDL_CFLAGS) $(READPROC_CFLAGS)
 libvtapi_la_CXXFLAGS = $(PQ_CFLAGS) $(LIBLWGEOM_CFLAGS) $(GEOS_CFLAGS) $(OPENCV_CFLAGS) $(SQLITE_CFLAGS) $(LTDL_CFLAGS) $(READPROC_CFLAGS)
 libvtapi_la_LIBADD = $(DEPS_LIBS)  $(LIBPQTYPES_LIBS) $(PQ_LIBS) $(LIBLWGEOM_LIBS) $(GEOS_LIBS) $(OPENCV_LIBS) $(SQLITE_LIBS) $(LTDL_LIBS) $(READPROC_LIBS) $(WIN32_EXTRA_LDFLAGS) 

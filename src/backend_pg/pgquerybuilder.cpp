@@ -11,11 +11,11 @@
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"
 #define DEF_NO_TABLE    "!NO_TABLE!"
 #define DEF_NO_COLUMN   "!NO_COLUMN!"
-#define DEF_NO_VALUES   "|NO_VALUES|"
+#define DEF_NO_VALUES   "!NO_VALUES!"
+#define DEF_NO_QUERY    "!NO_QUERY!"
 
 using std::string;
 using std::set;
-using std::ostringstream;
 
 using namespace vtapi;
 
@@ -87,8 +87,8 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
         queryString = "SELECT " + columnsStr + "\nFROM " + tablesStr;
 
         if (bError) {
-            logger->error(201, "incomplete query: " + queryString, thisClass + "::getSelectQuery()");
-            return "";
+            logger->warning(201, "incomplete query: " + queryString, thisClass + "::getSelectQuery()");
+            return DEF_NO_QUERY;
         }
     }
     
@@ -172,8 +172,8 @@ string PGQueryBuilder::getInsertQuery()
         string queryString = "INSERT INTO " + tableStr + "(" + intoStr + ")\nVALUES(" + valuesStr + ");";
 
         if (bError) {
-            logger->error(202, "incomplete query: " + queryString, thisClass + "::getInsertQuery()");
-            return "";
+            logger->warning(202, "incomplete query: " + queryString, thisClass + "::getInsertQuery()");
+            return DEF_NO_QUERY;
         }
 
         return queryString;
@@ -206,7 +206,7 @@ string PGQueryBuilder::getUpdateQuery()
             if (!key.from.empty()) tab = key.from;
             
             if (!setStr.empty()) setStr += ',';
-            setStr  += escapeIdent(key.key) + "=$" + toString((*it).idParam);
+            setStr += constructColumnNoTable(key.key) + "=$" + toString((*it).idParam);
         }
 
         bool bError = tab.empty() || setStr.empty();
@@ -217,8 +217,8 @@ string PGQueryBuilder::getUpdateQuery()
         queryString = "UPDATE " + tableStr + "\nSET " + setStr;
 
         if (bError) {
-            logger->error(203, "incomplete query: " + queryString, thisClass + "::getUpdateQuery()");
-            return "";
+            logger->warning(203, "incomplete query: " + queryString, thisClass + "::getUpdateQuery()");
+            return DEF_NO_QUERY;
         }
     }
     
@@ -249,6 +249,22 @@ string PGQueryBuilder::getUpdateQuery()
     }
 
     queryString += ";";
+
+    return queryString;
+}
+
+string PGQueryBuilder::getCountQuery()
+{
+    string queryString;
+
+//    size_t fromPos = initString.find("\nFROM ");
+//    if (fromPos != string::npos) {
+//        queryString = "SELECT COUNT(*) AS count" + initString.substr(fromPos);
+//        printf("%s\n", queryString.c_str());
+//    }
+//    else {
+//        queryString = DEF_NO_QUERY;
+//    }
 
     return queryString;
 }
@@ -387,6 +403,11 @@ bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const 
     return checkInouttype(value) && keySingleValue(key, value.c_str(), "%public.inouttype", from);
 }
 
+bool PGQueryBuilder::keyPStatus(const string& key, ProcessState::STATUS_T value, const string& from)
+{
+    return (value != ProcessState::STATUS_NONE) && keySingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", from);
+}
+
 bool PGQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from)
 {
     PGtimestamp ts = UnixTimeToTimestamp(value);
@@ -501,6 +522,11 @@ bool PGQueryBuilder::whereInouttype(const string& key, const string& value, cons
     return checkInouttype(value) && whereSingleValue(key, value.c_str(), "%public.inouttype", oper, from);
 }
 
+bool PGQueryBuilder::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
+{
+    return value != ProcessState::STATUS_NONE && whereSingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", oper, from);
+}
+
 bool PGQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
 {
     PGtimestamp ts = UnixTimeToTimestamp(value);
@@ -515,12 +541,12 @@ bool PGQueryBuilder::whereTimeRange(const string& key_start, const string& key_l
         if (key_start.empty() || key_length.empty()) { bRet = false; break; }
 
         string exp = 
-            "'[" + UnixTimeToTimestampString(value_start) + "," +
+            "'[" + UnixTimeToTimestampString(value_start) + ',' +
             UnixTimeToTimestampString(value_start + value_length) + "]'";
         
         string value =
-            "public.tsrange(" + constructColumn(key_start, from) + "," +
-            constructColumn(key_length,from) + ')';
+            "public.tsrange(" + constructColumn(key_start, from) + ',' +
+            constructColumn(key_length, from) + ')';
         
         m_listWhere.push_back(WHERE_ITEM(exp, oper, value));
     } while (0);
@@ -576,9 +602,7 @@ unsigned int PGQueryBuilder::addToParam(const char* type, T value)
         if (!param && !createParam()) break;
 
         if (pqt.PQputf((PGparam *) param, type, value) == 0) {
-            ostringstream oss;
-            oss << "failed to add value to query: " << toString(value);
-            logger->warning(658, oss.str(), thisClass + "::addToParam()");
+            logger->warning(658, "failed to add value to query: " + toString(value), thisClass + "::addToParam()");
             break;
         }
 
@@ -634,10 +658,10 @@ string PGQueryBuilder::constructColumn(const string& column, const string& table
         }
 
         // check if column has unescapable part
-        // composite members are accessed through comma
         size_t startPos = (dotPos == string::npos ? 0 : dotPos + 1);
         size_t charPos  = column.find_first_of(":[(,", startPos);
-
+        
+        // escape full column
         if (charPos == string::npos) {
             if (startPos == 0) {
                 return tab + '.' + escapeIdent(column.c_str());
@@ -649,10 +673,9 @@ string PGQueryBuilder::constructColumn(const string& column, const string& table
                 return tab + '.' + escapeIdent(col);
             }
         }
+        // escape column part
         else {
             string col;
-            string rest = column.substr(charPos, string::npos);
-
             if (startPos == 0) {
                 col = column.substr(0, charPos);
             }
@@ -661,16 +684,31 @@ string PGQueryBuilder::constructColumn(const string& column, const string& table
             }
             if (col.empty()) col = DEF_NO_COLUMN;
 
-            // composite values are accessed through comma
+            // composite members are accessed through comma, special escape
             if (column[charPos] == ',') {
-                return '(' + tab + '.' + escapeIdent(col) + ')' + '.' + escapeIdent(&rest[1]);
+                string rest = column.substr(charPos+1, string::npos);
+                return '(' + tab + '.' + escapeIdent(col) + ')' + '.' + escapeIdent(rest);
             }
+            // escape column part only
             else {
+                string rest = column.substr(charPos, string::npos);
                 return tab + '.' + escapeIdent(col) + rest;
             }
         }
     }
 }
+
+string PGQueryBuilder::constructColumnNoTable(const string& column)
+{
+    size_t charPos = column.find_first_of(",.");
+    if (charPos > 0 && charPos < column.length() - 1) {
+        return escapeIdent(column.substr(0,charPos)) + '.' + escapeIdent(column.substr(charPos+1, string::npos));
+    }
+    else {
+        return escapeIdent(column);
+    }
+}
+
 
 string PGQueryBuilder::constructAlias(const string& column)
 {
@@ -680,7 +718,7 @@ string PGQueryBuilder::constructAlias(const string& column)
 string PGQueryBuilder::escapeIdent(const string& ident)
 {
     char *escaped = pg.PQescapeIdentifier((PGconn *)connection, ident.c_str(), ident.length());
-    string ret(escaped);
+    string ret = escaped;
     pg.PQfreemem(escaped);
     return ret;
 }
@@ -688,7 +726,7 @@ string PGQueryBuilder::escapeIdent(const string& ident)
 string PGQueryBuilder::escapeLiteral(const string& literal)
 {
     char *escaped = pg.PQescapeLiteral((PGconn *)connection, literal.c_str(), literal.length());
-    string ret(escaped);
+    string ret = escaped;
     pg.PQfreemem(escaped);
     return ret;
 }

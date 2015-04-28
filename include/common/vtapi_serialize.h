@@ -15,6 +15,7 @@
 #define	VTAPI_SERIALIZE_H
 
 #include "../data/vtapi_intervalevent.h"
+#include "../data/vtapi_processstate.h"
 
 namespace vtapi {
 
@@ -28,7 +29,8 @@ std::vector<unsigned char> base64_decode(const std::string& encoded);
  * @return string containing the numeric value
  */
 template <class T>
-inline std::string toString(const T& value) {
+inline std::string toString(const T& value)
+{
     std::ostringstream ostr;
     ostr << value;
     
@@ -58,11 +60,7 @@ inline std::string toString(const T* values, const int size, const int limit = 0
     return str;
 }
 
-template <>
-inline std::string toString <void>(const void* data, const int data_size, const int limit)
-{
-    return base64_encode(data, data_size);
-}
+// specialized toString
 
 template <>
 inline std::string toString <std::string>(const std::string& value)
@@ -70,16 +68,23 @@ inline std::string toString <std::string>(const std::string& value)
     return value;
 };
 
-#if HAVE_POSTGRESQL
 template <>
-inline std::string toString <PGpoint>(const PGpoint& value)
+inline std::string toString <void>(const void* data, const int data_size, const int limit)
 {
-    std::ostringstream ostr;
-    ostr << '(' << value.x << ',' << value.y << ')';
-    
-    return ostr.str();
+    return base64_encode(data, data_size);
+}
+
+template <>
+inline std::string toString <time_t>(const time_t& value)
+{
+    struct tm *ts = gmtime(&value);
+    ts->tm_year -= 1900;
+
+    char buff[20];
+    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", ts);
+
+    return buff;
 };
-#endif
 
 template <>
 inline std::string toString <IntervalEvent::point>(const IntervalEvent::point& value)
@@ -104,11 +109,37 @@ inline std::string toString <IntervalEvent>(const IntervalEvent& value)
 {
     std::ostringstream ostr;
     ostr << '(' << value.group_id << ',' << value.class_id << ',' << value.is_root << ','
-        << toString(value.region) << ',' << value.score << ','
-        << toString(value.user_data, value.user_data_size, 0) << ')';
-    
+    << toString(value.region) << ',' << value.score << ','
+    << toString(value.user_data, value.user_data_size, 0) << ')';
+
     return ostr.str();
 };
+
+#if HAVE_POSTGRESQL
+template <>
+inline std::string toString <PGpoint>(const PGpoint& value)
+{
+    return toString<IntervalEvent::point>((const IntervalEvent::point&)value);
+};
+
+template <>
+inline std::string toString <PGbox>(const PGbox& value)
+{
+    return toString<IntervalEvent::box>((const IntervalEvent::box&)value);
+};
+#endif
+
+template <>
+inline std::string toString <ProcessState>(const ProcessState& value)
+{
+    std::ostringstream ostr;
+    ostr << '(' << ProcessState::toStatusString(value.status) << ','
+        << value.progress << ',' << value.currentItem << ','
+        << value.lastError << ')';
+
+    return ostr.str();
+};
+
 
 #if HAVE_OPENCV
 template <typename T>
@@ -184,22 +215,6 @@ inline std::string toString <cv::Mat>(const cv::Mat& value)
 };
 #endif
 
-/**
- * @brief Converts timestamp to string (yyyy-mm-dd hh:mm:ss)
- * @param value   time value
- * @return time string
- */
-template <>
-inline std::string toString <time_t>(const time_t& value)
-{
-    struct tm *ts = gmtime(&value);
-    ts->tm_year -= 1900;
-    
-    char buff[20];
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", ts);
-    
-    return buff;
-};
 
 /**
  * @brief Converts time string (yyyy-mm-dd hh:mm:ss) to timestamp

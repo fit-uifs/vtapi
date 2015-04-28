@@ -35,8 +35,10 @@ typedef enum
     DBTYPE_GEO_GEOMETRY,    // geometric - generic PostGIS geometry type
     DBTYPE_UD_SEQTYPE,      // user defined - sequence type
     DBTYPE_UD_INOUTTYPE,    // user defined - in/out enum typ
+    DBTYPE_UD_PSTATUS,      // user defined - process status enum
     DBTYPE_UD_CVMAT,        // user defined - OpenCV matrix
     DBTYPE_UD_EVENT,        // user defined - VT event
+    DBTYPE_UD_PSTATE,       // user defined - process state
     DBTYPE_REF_TYPE,        // database type
     DBTYPE_REF_CLASS,       // database class (column ...)
     DBTYPE_MAX = 0xFF

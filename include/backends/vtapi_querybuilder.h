@@ -98,6 +98,11 @@ public:
      */
     virtual std::string getUpdateQuery() = 0;
     /**
+     * Builds SELECT COUNT(*) query
+     * @return SELECT COUNT query string
+     */
+    virtual std::string getCountQuery() = 0;
+    /**
      * Builds BEGIN TRANSACTION query
      * @return begin query string
      */
@@ -219,6 +224,15 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
+    virtual bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from = "") = 0;
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     virtual bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "") = 0;
 
 #ifdef HAVE_OPENCV
@@ -297,6 +311,16 @@ public:
      * @return success
      */
     virtual bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "") = 0;
+    /**
+     * This is a WHERE statement construction class for pstatus type
+     * It can be called several times.
+     * @param key key to compare with the value
+     * @param value requested value for key
+     * @param oper comparision operator between key and value
+     * @param from table where the key is situated
+     * @return success
+     */
+    virtual bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper = "=", const std::string& from = "") = 0;
     /**
      * This is a WHERE statement construction class for timestamp
      * It can be called several times.
@@ -409,6 +433,7 @@ public:
     std::string getSelectQuery(const std::string& groupby, const std::string& orderby, const int limit, const int offset);
     std::string getInsertQuery();
     std::string getUpdateQuery();
+    std::string getCountQuery();
     std::string getBeginQuery();
     std::string getCommitQuery();
     std::string getRollbackQuery();
@@ -422,6 +447,7 @@ public:
     bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = "");
     bool keySeqtype(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
+    bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from = "");
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
 #if HAVE_OPENCV
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
@@ -433,6 +459,7 @@ public:
     bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+    bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper = "=", const std::string& from = "");
     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
     bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper = "&&", const std::string& from = "");
     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = "");
@@ -446,6 +473,7 @@ protected:
 
     std::string constructTable(const std::string& table = "", const std::string& schema = "");
     std::string constructColumn(const std::string& column, const std::string& table = "");
+    std::string constructColumnNoTable(const std::string& column);
     std::string constructAlias(const std::string& column);
     std::string escapeIdent(const std::string& ident);
     std::string escapeLiteral(const std::string& literal);
@@ -484,6 +512,7 @@ public:
     std::string getSelectQuery(const std::string& groupby, const std::string& orderby, const int limit, const int offset);
     std::string getInsertQuery();
     std::string getUpdateQuery();
+    std::string getCountQuery();
     std::string getBeginQuery();
     std::string getCommitQuery();
     std::string getRollbackQuery();
@@ -497,6 +526,7 @@ public:
     bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = "");
     bool keySeqtype(const std::string& key, const std::string& value, const std::string& from = "");
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
+    bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from = "");
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
 #if HAVE_OPENCV
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
@@ -508,6 +538,7 @@ public:
     bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+    bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper = "=", const std::string& from = "");
     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
     bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper = "&&", const std::string& from = "");
     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = "");

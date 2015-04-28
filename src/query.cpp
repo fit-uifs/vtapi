@@ -176,6 +176,10 @@ bool Select::whereInouttype(const string& key, const string& value, const string
     executed = false;
     return this->queryBuilder->whereInouttype(key, value, oper, from);
 }
+bool Select::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->wherePStatus(key, value, oper, from);
+}
 bool Select::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
     executed = false;
     return this->queryBuilder->whereTimestamp(key, value, oper, from);
@@ -242,23 +246,23 @@ bool Insert::keyIntA(const string& key, int* values, const int size, const strin
     executed = false;
     return this->queryBuilder->keyIntA(key, values, size, from);
 }
-bool Insert::keyFloat(const string& key, float value, const string& from){
+bool Insert::keyFloat(const string& key, float value, const string& from) {
     executed = false;
     return this->queryBuilder->keyFloat(key, value, from);
 }
-bool Insert::keyFloatA(const string& key, float* values, const int size, const string& from){
+bool Insert::keyFloatA(const string& key, float* values, const int size, const string& from) {
     executed = false;
     return this->queryBuilder->keyFloatA(key, values, size, from);
 }
-bool Insert::keySeqtype(const string& key, const string& value, const string& from){
+bool Insert::keySeqtype(const string& key, const string& value, const string& from) {
     executed = false;
     return this->queryBuilder->keySeqtype(key, value, from);
 }
-bool Insert::keyInouttype(const string& key, const string& value, const string& from){
+bool Insert::keyInouttype(const string& key, const string& value, const string& from) {
     executed = false;
     return this->queryBuilder->keyInouttype(key, value, from);
 }
-bool Insert::keyTimestamp(const string& key, const time_t& value, const string& from){
+bool Insert::keyTimestamp(const string& key, const time_t& value, const string& from) {
     executed = false;
     return this->queryBuilder->keyTimestamp(key, value, from);
 }
@@ -338,6 +342,10 @@ bool Update::setInouttype(const string& key, const string& value, const string& 
     executed = false;
     return this->queryBuilder->keyInouttype(key, value, from);
 }
+bool Update::setPStatus(const string& key, ProcessState::STATUS_T value, const string& from){
+    executed = false;
+    return this->queryBuilder->keyPStatus(key, value, from);
+}
 bool Update::setTimestamp(const string& key, const time_t& value, const string& from){
     executed = false;
     this->queryBuilder->keyTimestamp(key, value, from);
@@ -362,6 +370,10 @@ bool Update::whereSeqtype(const string& key, const string& value, const string& 
 bool Update::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
     executed = false;
     return this->queryBuilder->whereInouttype(key, value, oper, from);
+}
+bool Update::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from) {
+    executed = false;
+    return this->queryBuilder->wherePStatus(key, value, oper, from);
 }
 bool Update::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
     executed = false;

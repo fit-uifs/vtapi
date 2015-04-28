@@ -4,6 +4,8 @@
  * 
  * Dummy modul; pro vstupni hodnoty (= vystupy demo1 modulu) a dane video
  * ulozi 1 udalost definovanou nazvem a cislem.
+ *
+ * ZASTARALE - nova funkcnost viz mod_demo1.cpp
 */
 
 #include <cstdlib>
@@ -13,27 +15,25 @@ using namespace vtapi;
 
 void do_work(Process *p, Dataset *ds);
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     VTApi *vtapi = new VTApi(argc, argv);
     
     Process *process = vtapi->initProcess();
     if (process) {
-        if (process->next()) {
-            printf("mod_demo2: launched as process %s\n", process->getName().c_str());
-            
-            Dataset *dataset = vtapi->newDataset();
-            dataset->next();
-            
-            // provedeme nejakou dummy praci
-            do_work(process, dataset);
-            
-            delete dataset;
-        }
-        else {
-            printf("mod_demo2: not launched\n");
-        }
-        
+        printf("mod_demo2: launched as process %s\n", process->getName().c_str());
+
+        Dataset *dataset = vtapi->newDataset();
+        dataset->next();
+
+        // provedeme nejakou dummy praci
+        do_work(process, dataset);
+
+        delete dataset;
         delete process;
+    }
+    else {
+        printf("mod_demo2: not launched\n");
     }
 
     delete vtapi;
@@ -41,7 +41,8 @@ int main(int argc, char** argv) {
     return 0;
 }
 
-void do_work(Process *p, Dataset *ds) {
+void do_work(Process *p, Dataset *ds)
+{
     // ziskame parametr naseho procesu
     std::string videoName = p->getParamString("video");
     

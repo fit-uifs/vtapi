@@ -1,4 +1,4 @@
--- Create PostgreSQL database schema for demo project (demo1+demo2 modules)
+﻿-- Create PostgreSQL database schema for demo project (demo1+demo2 modules)
 --
 -- This is how to use this with psql:
 --      psql -h 127.0.0.1 -p 5432 -f demo-schema.sql <db> <user>
@@ -50,7 +50,7 @@ CREATE TABLE processes (
     inputs name,
     outputs regclass,
     params character varying,
-    state public.pstate DEFAULT '(init,0,,)',
+    state public.pstate DEFAULT '(created,0,,)',
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
@@ -169,11 +169,11 @@ INSERT INTO sequences (seqname, seqlocation, seqtyp, vid_length, vid_fps, vid_sp
 
 -- insert processes (3 processes for both modules)
 INSERT INTO processes (prsname, mtname, inputs, outputs, state, params, userid, notes) VALUES
-    ('demo1p_5000_25', 'demo1', NULL, 'demo1out', '(done,100,,)', '{param1:5000,param2:25}', 'demouser', 'pre-generated'),
+    ('demo1p_5000_25', 'demo1', NULL, 'demo1out', '(finished,100,,)', '{param1:5000,param2:25}', 'demouser', 'pre-generated'),
     ('demo1p_0_10', 'demo1', NULL, 'demo1out', '(error,32,"video1","cannot process video")', '{param1:0,param2:10}', 'demouser', 'pre-generated'),
     ('demo1p_11_50', 'demo2', NULL, 'demo1out', '(running,35,"video3",)','{param1:11,param2:50}', 'demouser', 'pre-generated'),
-    ('demo2p_video3_demo1p_5000_25', 'demo2', 'demo1p_5000_25', 'demo2out', '(done,100,,)','{video:video3}', 'demouser', 'pre-generated'),
-    ('demo2p_video1_demo1p_11_50', 'demo2', 'demo1p_11_50', 'demo2out', '(running,10,"video1",)','{video:video1}', 'demouser', 'pre-generated'),
+    ('demo2p_video3_demo1p_5000_25', 'demo2', 'demo1p_5000_25', 'demo2out', '(finished,100,,)','{video:video3}', 'demouser', 'pre-generated'),
+    ('demo2p_video1_demo1p_11_50', 'demo2', 'demo1p_11_50', 'demo2out', '(suspended,10,"video1",)','{video:video1}', 'demouser', 'pre-generated'),
     ('demo2p_video3_demo1p_11_50', 'demo2', 'demo1p_11_50', 'demo2out', '(running,15,"video2",)','{video:video3}', 'demouser', 'pre-generated');
 
 -- insert results for demo1 processes (only process 1)

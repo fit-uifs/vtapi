@@ -54,6 +54,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/logger.o \
 	${OBJECTDIR}/method.o \
 	${OBJECTDIR}/process.o \
+	${OBJECTDIR}/processcontrol.o \
+	${OBJECTDIR}/processstate.o \
 	${OBJECTDIR}/query.o \
 	${OBJECTDIR}/sequence.o \
 	${OBJECTDIR}/timexer.o \
@@ -171,6 +173,16 @@ ${OBJECTDIR}/process.o: process.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/process.o process.cpp
+
+${OBJECTDIR}/processcontrol.o: processcontrol.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/processcontrol.o processcontrol.cpp
+
+${OBJECTDIR}/processstate.o: processstate.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/processstate.o processstate.cpp
 
 ${OBJECTDIR}/query.o: query.cpp 
 	${MKDIR} -p ${OBJECTDIR}
