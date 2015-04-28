@@ -24,7 +24,8 @@ using std::string;
 using namespace vtapi;
 
 
-Dataset::Dataset(const KeyValues& orig, const string& name) : KeyValues(orig) {
+Dataset::Dataset(const KeyValues& orig, const string& name) : KeyValues(orig)
+{
     thisClass = "Dataset";
 
     // set the dataset name
