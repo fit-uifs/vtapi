@@ -43,12 +43,9 @@ Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig)
     if (!name.empty()) {
         this->process = name;
     }
-    if (!this->process.empty()) {
-        select->whereString("prsname", this->process);
-    }
-    if (!this->method.empty()) {
-        this->select->whereString("mtname", this->method);
-    }
+    
+    if (!process.empty()) select->whereString("prsname", process);
+    if (!method.empty()) select->whereString("mtname", method);
 }
 
 Process::~Process() {

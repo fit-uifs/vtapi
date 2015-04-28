@@ -28,11 +28,11 @@ Sequence::Sequence(const KeyValues& orig, const string& name) : KeyValues(orig)
 {
     thisClass = "Sequence";
 
-    if (!name.empty()) this->sequence = name;
+    if (!name.empty()) sequence = name;
 
     select = new Select(orig);
     select->from("sequences", "*");
-    if (!this->sequence.empty()) select->whereString("seqname", this->sequence);
+    if (!sequence.empty()) select->whereString("seqname", sequence);
 }
 
 bool Sequence::next()

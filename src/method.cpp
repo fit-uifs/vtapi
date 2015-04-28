@@ -21,12 +21,13 @@ using std::string;
 using namespace vtapi;
 
 Method::Method(const KeyValues& orig, const string& name)
-    : KeyValues(orig) {
+    : KeyValues(orig)
+{
     thisClass = "Method";
     
     select = new Select(orig);
     select->from("public.methods", "*");
-    select->whereString("mtname", name);
+    if (!name.empty()) select->whereString("mtname", name);
     
     this->method = name;
 }

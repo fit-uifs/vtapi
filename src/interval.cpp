@@ -29,12 +29,8 @@ Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(o
 
     this->select = new Select(orig);
     this->select->from(this->selection, "*");
-    if (!this->sequence.empty()) {
-        this->select->whereString("seqname", this->sequence);
-    }
-    if (!this->process.empty()) {
-        this->select->whereString("prsname", this->process);
-    }
+    if (!sequence.empty()) select->whereString("seqname", this->sequence);
+    if (!process.empty()) select->whereString("prsname", this->process);
 }
 
 int Interval::getId() {

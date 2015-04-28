@@ -34,9 +34,10 @@ Dataset::Dataset(const KeyValues& orig, const string& name) : KeyValues(orig) {
     if (dataset.empty()) {
         logger->warning(313, "No dataset specified", thisClass+"::Dataset()");
     }
+    
     select = new Select(orig);
     select->from("public.datasets", "*");
-    select->whereString("dsname", this->dataset);
+    if (!dataset.empty()) select->whereString("dsname", dataset);
 }
 
 bool Dataset::next() {
