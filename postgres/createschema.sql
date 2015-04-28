@@ -52,7 +52,7 @@ CREATE TABLE processes (
     inputs name,
     outputs regclass,
     params character varying,
-    state public.pstate DEFAULT '(init,0,,)',
+    state public.pstate DEFAULT '(created,0,,)',
     userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
