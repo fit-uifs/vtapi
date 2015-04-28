@@ -31,7 +31,7 @@ namespace vtapi {
 class QueryBuilder {
 protected:
     void                *connection;    /**< connection object */
-    void                *param;         /**< object for parametrized queries */
+    void                *queryParam;    /**< object for parametrized queries */
     std::string         initString;     /**< init query string (whole query or table) */
     std::string         defaultSchema;  /**< default db schema for queries */
     std::string         defaultTable;   /**< default table for queries */
@@ -46,7 +46,7 @@ public:
     {
         this->connection    = connection;
         this->initString    = initString;
-        this->param         = NULL;
+        this->queryParam    = NULL;
     };
     /**
      * Virtual destructor - destroy implementation first
@@ -54,10 +54,29 @@ public:
     virtual ~QueryBuilder() { };
 
     /**
+     * Resets query builder to initial state
+     */
+    virtual void reset() = 0;
+    
+    /**
+     * Create new query param structure, remember to destroQueryParam() it
+     * @return new query param object
+     */
+    virtual void *createQueryParam() = 0;
+    /**
+     * Destroys query param structure
+     */
+    virtual void destroyQueryParam(void *param) = 0;
+    /**
+     * Duplicates existing query param structure, destroys the old one
+     * @return new query param object
+     */
+    virtual void *duplicateQueryParam(void *param) = 0;
+    /**
      * Gets object for parametrized queries
      * @return param object for parametrized queries
      */
-    void *getParam() { return this->param; }
+    void *getQueryParam() { return this->queryParam; }
     /**
      * Specify custom SQL string for query
      * @param sql custom SQL string
@@ -117,20 +136,6 @@ public:
      * @return rollback string
      */
     virtual std::string getRollbackQuery() = 0;
-
-    /**
-     * Resets query builder to initial state
-     */
-    virtual void reset() = 0;
-    /**
-     * Allocates new query param structure, destroys the old one
-     * @return success
-     */
-    virtual bool createParam() = 0;
-    /**
-     * Destroys query param structure
-     */
-    virtual void destroyParam() = 0;
 
     /**
      * This is used to specify the table for FROM statement and the column list for SELECT statement
@@ -429,6 +434,12 @@ public:
     PGQueryBuilder(const PGBackendBase &base, void *connection, const std::string& initString = "");
     ~PGQueryBuilder();
 
+    void reset();
+    
+    void *createQueryParam();
+    void destroyQueryParam(void *param);
+    void *duplicateQueryParam(void *param);
+    
     std::string getGenericQuery();
     std::string getSelectQuery(const std::string& groupby, const std::string& orderby, const int limit, const int offset);
     std::string getInsertQuery();
@@ -465,9 +476,7 @@ public:
     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = "");
     bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper = "=");
 
-    void reset();
-    bool createParam();
-    void destroyParam();
+
 
 protected:
 
@@ -508,6 +517,12 @@ public:
     SLQueryBuilder(const SLBackendBase &base, void *connection, const std::string& initString = "");
     ~SLQueryBuilder();
 
+    void reset();
+
+    void *createQueryParam();
+    void destroyQueryParam(void *param);
+    void *duplicateQueryParam(void *param);
+    
     std::string getGenericQuery();
     std::string getSelectQuery(const std::string& groupby, const std::string& orderby, const int limit, const int offset);
     std::string getInsertQuery();
@@ -543,10 +558,6 @@ public:
     bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper = "&&", const std::string& from = "");
     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = "");
     bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper = "=");
-
-    void reset();
-    bool createParam();
-    void destroyParam();
 
 protected:
 

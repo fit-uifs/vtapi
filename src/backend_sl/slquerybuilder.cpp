@@ -23,16 +23,59 @@ SLQueryBuilder::SLQueryBuilder(const SLBackendBase &base, void *connection, cons
     SLBackendBase(base)
 {
     thisClass   = "SLQueryBuilder";
-    param       = (void *) new SLparam();
+    queryParam  = createQueryParam();
 }
 
- SLQueryBuilder::~SLQueryBuilder() {
-     if (param) delete ((SLparam *) param);
+ SLQueryBuilder::~SLQueryBuilder()
+ {
+     destroyQueryParam(queryParam);
      destroyKeys();
 }
+
+void SLQueryBuilder::reset()
+{
+    opers.clear();
+    destroyKeys();
+    destroyQueryParam(queryParam);
+}
+
+ void *SLQueryBuilder::createQueryParam()
+{
+    return (void*) new SLparam();
+}
+
+void SLQueryBuilder::destroyQueryParam(void *param)
+{
+    if (param) {
+        delete (SLparam *)param;
+    }
+}
+
+void *SLQueryBuilder::duplicateQueryParam(void *param)
+{
+    if (param) {
+        SLparam *p = (SLparam *)createQueryParam();
+        if (p) p->database = ((SLparam *)param)->database;
+        return p;
+    }
+    else {
+        return NULL;
+    }
+}
+
+void SLQueryBuilder::destroyKeys()
+{
+    for (TKeyValues::iterator it = key_values_main.begin(); it != key_values_main.end(); ++it) {
+        vt_destruct(*it);
+    }
+    for (TKeyValues::iterator it = key_values_where.begin(); it != key_values_where.end(); ++it) {
+        vt_destruct(*it);
+    }
+}
+
 string SLQueryBuilder::getGenericQuery()
 {
-    ((SLparam *) param)->database = this->defaultSchema;
+    ((SLparam *)queryParam)->database = this->defaultSchema;
     return initString;
 }
 
@@ -43,7 +86,7 @@ string SLQueryBuilder::getSelectQuery(const string& groupby, const string& order
     string tablesStr;
     string whereStr;
 
-    ((SLparam *)param)->database = defaultSchema;
+    ((SLparam *) queryParam)->database = defaultSchema;
     if (this->key_values_main.empty()) return initString; // in case of a direct query
 
     // go through keys
@@ -125,7 +168,7 @@ string SLQueryBuilder::getInsertQuery()
     string valuesStr;
     size_t dotPos;
 
-    ((SLparam *)param)->database = this->defaultSchema;
+    ((SLparam *) queryParam)->database = this->defaultSchema;
     if (this->key_values_main.empty()) return initString; // in case of a direct query
 
     // in case we're lazy, we have the table specified in initString or selection
@@ -162,7 +205,7 @@ string SLQueryBuilder::getUpdateQuery()
     string whereStr;
     size_t dotPos;
 
-    ((SLparam *)param)->database = this->defaultSchema;
+    ((SLparam *) queryParam)->database = this->defaultSchema;
     if (this->key_values_main.empty()) return initString; // in case of a direct query
 
     // in case we're lazy, we have the table specified in initString or selection
@@ -434,28 +477,6 @@ bool SLQueryBuilder::whereRegion(const string& key, const IntervalEvent::box& va
 bool SLQueryBuilder::whereExpression(const string& expression, const string& value, const string& oper)
 {
     return false;
-}
-
-
-void SLQueryBuilder::reset() {
-    destroyKeys();
-    opers.clear();
-}
-
-bool SLQueryBuilder::createParam() {
-    return true;
-}
-
-void SLQueryBuilder::destroyParam() {
-}
-
-void SLQueryBuilder::destroyKeys() {
-    for (TKeyValues::iterator it = key_values_main.begin(); it != key_values_main.end(); ++it) {
-        vt_destruct(*it);
-    }
-    for (TKeyValues::iterator it = key_values_where.begin(); it != key_values_where.end(); ++it) {
-        vt_destruct(*it);
-    }
 }
 
 string SLQueryBuilder::escapeColumn(const string& key, const string& table) {

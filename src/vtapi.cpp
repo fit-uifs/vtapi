@@ -304,13 +304,15 @@ void VTApi::testGenericClasses() {
     cout << endl << "---------------------------------------------------------------" << endl << endl;
 }
 
-void VTApi::testDataset() {
+void VTApi::testDataset()
+{
     cout << "TESTING  Dataset..." << endl <<  endl;
 
     cout << "** NEW dataset" << endl;
     Dataset* dataset = this->newDataset();
     dataset->next();
     dataset->printAll();
+    cout << "Testing count(): " << dataset->count() << endl;
 
     cout << "** COUNT sequences in dataset" << endl;
     KeyValues* kv = new KeyValues(*dataset);
@@ -318,7 +320,7 @@ void VTApi::testDataset() {
     kv->next();
     kv->printAll();
     cout << "There are " << kv->getInt8(0) << " sequences in this dataset." << endl;
-
+    
     cout << "** CLEANUP" << endl;
     vt_destruct(kv);
     vt_destruct(dataset);
@@ -352,6 +354,7 @@ void VTApi::testSequence(Dataset *dataset) {
     sequence = dataset->newSequence();
     sequence->next();
     sequence->printAll();
+    cout << "Testing count(): " << sequence->count() << endl;
 
     cout << "** DELETING Sequence " << sn << endl;
     Query* query = new Query(*sequence, "DELETE FROM "+ dataset->getDataset() + ".sequences WHERE seqname='" + sn + "';");
@@ -377,6 +380,7 @@ void VTApi::testInterval(Sequence *sequence) {
     // interval->select->whereString("test", "NULL");
     interval->next();
     interval->print();
+    cout << "Testing count(): " << interval->count() << endl;
 
     
     cout << "** PRINTING interval TKeys" << endl;

@@ -784,7 +784,7 @@ ProcessState *PGResultSet::getProcessState(const int col)
             logger->warning(324, "Cannot get pstate header", thisClass + "::getProcessState()");
             break;
         }
-
+        
         // create event
         pstate = new ProcessState();
         if (!pstate) {

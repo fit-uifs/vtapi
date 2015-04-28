@@ -76,7 +76,8 @@ bool PGConnection::isConnected () {
     return (conn && pg.PQstatus(conn) == CONNECTION_OK);
 }
 
-bool PGConnection::execute(const string& query, void *param) {
+bool PGConnection::execute(const string& query, void *param)
+{
     PGresult    *pgres  = NULL;
     bool        retval  = VT_OK;
 
@@ -106,13 +107,14 @@ bool PGConnection::execute(const string& query, void *param) {
     return retval;
 }
 
-int PGConnection::fetch(const string& query, void *param, ResultSet *resultSet) {
+int PGConnection::fetch(const string& query, void *param, ResultSet *resultSet)
+{
     int         retval  = ER_FAIL;
     PGresult    *pgres  = NULL;
     
     errorMessage.clear();
     
-    if (param && (PGparam *)param) {
+    if (param) {
         pgres = pqt.PQparamExec(conn, (PGparam *)param, query.c_str(), PG_FORMAT);
     }
     else {

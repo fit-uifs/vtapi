@@ -24,12 +24,42 @@ PGQueryBuilder::PGQueryBuilder(const PGBackendBase &base, void *connection, cons
     PGBackendBase(base)
 {
     thisClass = "PGQueryBuilder";
-    reset();
+    m_cntParam = 0;
 }
 
 PGQueryBuilder::~PGQueryBuilder()
 {
-    destroyParam();    
+    destroyQueryParam(queryParam);    
+}
+
+void PGQueryBuilder::reset()
+{
+    m_listMain.clear();
+    m_listWhere.clear();
+    m_cntParam = 0;
+    destroyQueryParam(queryParam);    
+}
+
+void *PGQueryBuilder::createQueryParam()
+{
+    return (void*) pqt.PQparamCreate((PGconn *) connection);
+}
+
+void PGQueryBuilder::destroyQueryParam(void *param)
+{
+    if (param) {
+        pqt.PQparamClear((PGparam *) param);
+    }
+}
+
+void *PGQueryBuilder::duplicateQueryParam(void *param)
+{
+    if (param) {
+        return pqt.PQparamDup((PGparam *) param);
+    }
+    else {
+        return NULL;
+    }
 }
 
 string PGQueryBuilder::getGenericQuery()
@@ -255,18 +285,15 @@ string PGQueryBuilder::getUpdateQuery()
 
 string PGQueryBuilder::getCountQuery()
 {
-    string queryString;
-
-//    size_t fromPos = initString.find("\nFROM ");
-//    if (fromPos != string::npos) {
-//        queryString = "SELECT COUNT(*) AS count" + initString.substr(fromPos);
-//        printf("%s\n", queryString.c_str());
-//    }
-//    else {
-//        queryString = DEF_NO_QUERY;
-//    }
-
-    return queryString;
+    string queryString = getSelectQuery("", "", 0, 0);
+    size_t fromPos = queryString.find("\nFROM ");
+    
+    if (fromPos != string::npos) {
+        return "SELECT COUNT(*) AS count" + queryString.substr(fromPos);
+    }
+    else {
+        return DEF_NO_QUERY;
+    }
 }
 
 string PGQueryBuilder::getBeginQuery()
@@ -570,38 +597,15 @@ bool PGQueryBuilder::whereExpression(const string& expression, const std::string
     }
 }
 
-void PGQueryBuilder::reset()
-{
-    m_listMain.clear();
-    m_listWhere.clear();
-    m_cntParam = 0;
-    destroyParam();
-}
-
-bool PGQueryBuilder::createParam()
-{
-    destroyParam();
-    param = (void*)pqt.PQparamCreate((PGconn *)connection);
-    return (param != NULL);
-}
-
-void PGQueryBuilder::destroyParam()
-{
-    if (param) {
-        pqt.PQparamClear((PGparam *)param);
-        param = NULL;
-    }
-}
-
 template<typename T>
 unsigned int PGQueryBuilder::addToParam(const char* type, T value)
 {
     uint ret = 0;
     
     do {
-        if (!param && !createParam()) break;
+        if (!queryParam && !(queryParam = createQueryParam())) break;
 
-        if (pqt.PQputf((PGparam *) param, type, value) == 0) {
+        if (pqt.PQputf((PGparam *)queryParam, type, value) == 0) {
             logger->warning(658, "failed to add value to query: " + toString(value), thisClass + "::addToParam()");
             break;
         }

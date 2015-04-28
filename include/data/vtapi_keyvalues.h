@@ -77,10 +77,9 @@ public:
 
     /**
      * Count total number of represented objects
-     * NOT YET IMPLEMENTED
-     * @return object count
+     * @return object count, -1 for error
      */
-    size_t count();
+    int count();
     /**
      * Gets key of a single table column
      * @param col   column index

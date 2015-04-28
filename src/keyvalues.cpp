@@ -43,27 +43,25 @@ KeyValues::KeyValues(const KeyValues& orig, const string& selection)
 
 KeyValues::~KeyValues()
 {
-    bool executed = true;
-    
     for (list<Insert *>::iterator it = store.begin(); it != store.end(); it++) {
-        executed &= (*it)->executed;
+        if (!(*it)->executed) {
+            logger->warning(313, "INSERT operation was not executed:\n" + (*it)->getQuery(), thisClass + "~KeyValues()");
+        }
         delete (*it);
     }
     
     // whether should be something inserted
     if (insert) {
-        executed &= insert->executed;
+        if (!insert->executed) {
+            logger->warning(313, "INSERT operation was not executed:\n" + insert->getQuery(), thisClass + "~KeyValues()");
+        }
         vt_destruct(insert);
-    }
-
-    if (!executed) {
-        logger->warning(313, "INSERT operation was not executed:", thisClass + "~KeyValues()");
     }
 
     // whether should be something updated
     if (update) {
         if (!update->executed) {
-            logger->warning(314, "There should be something updated: \n" + update->getQuery(), thisClass+"~KeyValues()");
+            logger->warning(314, "UPDATE operation was not executed:\n" + update->getQuery(), thisClass+"~KeyValues()");
         }
         vt_destruct(update);
     }
@@ -113,19 +111,27 @@ KeyValues* KeyValues::next()
     return this;
 }
 
-size_t KeyValues::count()
+int KeyValues::count()
 {
     if (!select) logger->error(301, "There is no select class", thisClass + "::count()");
 
-    size_t cnt = 0;
-//    Select *sel = new Select(*this, select->queryBuilder->getCountQuery());
-//    if (sel) {
-//        if (sel->execute()) {
-//            cnt = sel->resultSet->getInt("count");
-//        }
-//        delete sel;
-//    }
+    int cnt = -1;
     
+    std::string query   = select->queryBuilder->getCountQuery();
+    void *param         = select->queryBuilder->getQueryParam();
+    void *paramDup      = select->queryBuilder->duplicateQueryParam(param);
+    ResultSet *res      = BackendFactory::createResultSet(backend, *backendBase, connection->getDBTypes());
+
+    logger->debug("Count query: " + query);
+    
+    if (connection->fetch(query, paramDup, res) > 0) {
+        res->step();
+        cnt = res->getInt8(0);
+    }
+    
+    if (paramDup) select->queryBuilder->destroyQueryParam(paramDup);
+    if (res) delete res;
+
     return cnt;
 }
 
