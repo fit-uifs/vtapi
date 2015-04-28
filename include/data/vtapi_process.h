@@ -63,6 +63,12 @@ public:
      * @return string value with the name of the process
      */
     std::string getName();
+
+    /**
+     * Constructs a process name from method name and input parameters
+     * @return process name
+     */
+    std::string constructName();
     
     /**
      * Gets detailed process state
@@ -250,11 +256,7 @@ protected:
     TKeyValues params;      /**< Vector of process parameters */
     
 protected:
-    /**
-     * Constructs a process name (composed of method name and input parameters)
-     * @return process name
-     */
-    std::string constructName();
+
     /**
      * Performs a serialization of parameters
      * @return serialized parameters

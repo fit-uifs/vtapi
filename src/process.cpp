@@ -71,7 +71,7 @@ bool Process::next()
     }
     
     destroyParams();
-    this->inputs.clear();
+    inputs.clear();
 
     return kv;
 }
@@ -349,26 +349,24 @@ ProcessControl *Process::getProcessControl()
     }
 }
 
-std::string Process::constructName()
+string Process::constructName()
 {
-    std::stringstream ss;
+    string ret;
     
-    ss << this->method << "p";
+    ret += method;
+    ret += "p";
+    
     for (size_t i = 0; i < this->params.size(); i++) {
-        if (params[i]->type.compare("int") == 0) {
-            ss << "_" << ((TKeyValue<int> *)params[i])->values[0];
-        }
-        else if (params[i]->type.compare("double") == 0) {
-            ss << "_" << ((TKeyValue<double> *)params[i])->values[0];
-        }
-        else if (params[i]->type.compare("string") == 0) {
-            ss << "_" << ((TKeyValue<std::string> *)params[i])->getValue();
-        }
+        ret += "_";
+        ret += params[i]->getValue();
     }
     
-    if (!this->inputs.empty()) ss << "_" << this->inputs;
+    if (!this->inputs.empty()) {
+        ret += "_";
+        ret += inputs;
+    }
     
-    return ss.str();
+    return ret;
 }
 
 std::string Process::serializeParams()
@@ -406,7 +404,7 @@ int Process::deserializeParams(const std::string& paramString)
     }
     else {
         int ret = 0;
-        size_t keyPos = (*paramString.begin() == '{' ? 1 : 0);
+        size_t keyPos = (paramString[0] == '{' ? 1 : 0);
         size_t maxPos = paramString.length();
 
         do {
@@ -441,7 +439,7 @@ int Process::deserializeParams(const std::string& paramString)
             size_t valLen = 0;
             if (valEndPos == string::npos) {
                 valLen = maxPos - valPos;
-                if (*paramString.end() == '}') valLen--;
+                if (paramString[maxPos-1] == '}') valLen--;
             }
             else {
                 valLen = valEndPos - valPos;
