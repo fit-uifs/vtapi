@@ -29,7 +29,7 @@ using namespace vtapi;
 Query::Query(const Commons& commons, const string& initString)
 : Commons(commons)
 {
-    this->thisClass = thisClass;
+    this->thisClass = "Query";
     
     bool bIsQuery = (initString.find_first_of(" \t\n") != string::npos);
     if (bIsQuery) {
@@ -44,11 +44,12 @@ Query::Query(const Commons& commons, const string& initString)
 
     resultSet = BackendFactory::createResultSet(backend, *backendBase, connection->getDBTypes());
 
-    executed        = false;
+    executed = false;
 }
 
-Query::~Query() {
-    if (!executed) logger-> warning(208, "The query was not executed after the last change\n" + this->getQuery(), thisClass+"::~Query()");
+Query::~Query()
+{
+    //if (!executed) logger-> warning(208, "The query was not executed after the last change\n" + this->getQuery(), thisClass+"::~Query()");
 
     vt_destruct(resultSet);
     vt_destruct(queryBuilder);
@@ -73,12 +74,13 @@ bool Query::rollbackTransaction()
     return connection->execute(this->queryBuilder->getRollbackQuery(), NULL);
 }
 
-bool Query::execute() {
+bool Query::execute()
+{
     bool retval = VT_OK;
     string queryString = this->getQuery();
 
     logger->debug("SQL query:\n" + queryString);
-    retval = connection->execute(queryString, queryBuilder->getParam());
+    retval = connection->execute(queryString, queryBuilder->getQueryParam());
     executed = true;
 
     if (!retval) {
@@ -113,20 +115,23 @@ Select::Select(const Commons& commons, const string& initString)
     this->offset = 0;
 }
 
-string Select::getQuery() {
+string Select::getQuery()
+{
     return queryBuilder->getSelectQuery(groupby, orderby, limit, offset);
 }
 
-bool Select::function(const string& funtext) {
+bool Select::function(const string& funtext)
+{
     // TODO: 
 }
 
-bool Select::execute() {
+bool Select::execute()
+{
     int result = 0;
     string queryString = this->getQuery();
 
     logger->debug("Select query:\n" + queryString);
-    result = connection->fetch(queryString, queryBuilder->getParam(), resultSet);
+    result = connection->fetch(queryString, queryBuilder->getQueryParam(), resultSet);
     executed = true;
 
     if (result < 0) {
@@ -139,7 +144,8 @@ bool Select::execute() {
     }
 }
 
-bool Select::executeNext() {
+bool Select::executeNext()
+{
     if (limit > 0) {
         offset += limit;
         return this->execute();
@@ -147,7 +153,8 @@ bool Select::executeNext() {
     else return VT_FAIL;
 }
 
-bool Select::from(const string& table, const string& column) {
+bool Select::from(const string& table, const string& column)
+{
     bool retval = VT_OK;
 
     retval &= this->queryBuilder->keyFrom(table, column);
@@ -213,12 +220,13 @@ string Insert::getQuery() {
 }
 
 
-bool Insert::execute() {
+bool Insert::execute()
+{
     bool retval = VT_OK;
     string queryString = this->getQuery();
 
     logger->debug("Insert query:\n" + queryString);
-    retval = connection->execute(queryString, queryBuilder->getParam());
+    retval = connection->execute(queryString, queryBuilder->getQueryParam());
     executed = true;
     if (retval) {
         logger->debug("INSERT succeeded");
@@ -292,12 +300,13 @@ string Update::getQuery() {
     return queryBuilder->getUpdateQuery();
 }
 
-bool Update::execute() {
+bool Update::execute()
+{
     bool retval = VT_OK;
     string queryString = this->getQuery();
 
     logger->debug("Update query:\n" + queryString);
-    retval = connection->execute(queryString, queryBuilder->getParam());
+    retval = connection->execute(queryString, queryBuilder->getQueryParam());
     executed = true;
 
     if (retval) {

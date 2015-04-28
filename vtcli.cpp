@@ -646,7 +646,6 @@ bool VTCli::insertCommand(VTCLI_KEYVALUE_LIST& params)
                 bRet = false;
             }
 
-            in->select->executed = true;
             delete in;
             break;
         }
@@ -1037,7 +1036,6 @@ bool VTCli::loadDirectory(Dataset *ds, const string& basepath, const string& dir
                 
             }
         }
-        vid->select->executed = true;
         delete vid;
         
     } while(0);
@@ -1064,7 +1062,6 @@ bool VTCli::loadVideo(Dataset *ds, const std::string &filepath, const time_t& re
         bRet = false;
     }
 
-    vid->select->executed = true;
     delete vid;
     
     return bRet;
@@ -1125,7 +1122,7 @@ bool VTCli::loadImageFolder(Dataset *ds, const string &dirpath)
         }
     } while(0);
 
-    if (im) { im->select->executed = true; delete im; }
+    if (im) delete im;
     if (ifld) delete ifld;
     if (dir) closedir(dir);
 
