@@ -779,7 +779,7 @@ ProcessState *PGResultSet::getProcessState(const int col)
         // get event members
         PGvarchar ps_status = NULL, ps_curritem = NULL, ps_lasterror = NULL;
         PGfloat4 ps_progress = 0;
-        if (! pqt.PQgetf(psres, 0, "%varchar %float4 %varchar %varchar",
+        if (! pqt.PQgetf(psres, 0, "%public.pstatus %float4 %varchar %varchar",
         0, &ps_status, 1, &ps_progress, 2, &ps_curritem, 3, &ps_lasterror)) {
             logger->warning(324, "Cannot get pstate header", thisClass + "::getProcessState()");
             break;
@@ -792,10 +792,10 @@ ProcessState *PGResultSet::getProcessState(const int col)
             break;
         }
 
-        pstate->status      = pstate->toStatusValue(ps_status);
-        pstate->progress    = ps_progress;
-        pstate->currentItem = ps_curritem;
-        pstate->lastError   = ps_lasterror;
+        if (ps_status)   pstate->status = pstate->toStatusValue(ps_status);
+        if (ps_curritem) pstate->currentItem = ps_curritem;
+        if (ps_lasterror)pstate->lastError = ps_lasterror;
+        pstate->progress = ps_progress;
         
     } while (0);
 
@@ -968,7 +968,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
         }
         case DBTYPE_UD_PSTATE:
         {
-            //TODO: process state
+            GET_AND_SERIALIZE_VALUE_ALLOC(ProcessState, getProcessState);
             break;
         }
         case DBTYPE_REF_TYPE:
