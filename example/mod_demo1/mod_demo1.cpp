@@ -109,6 +109,21 @@ void ControlCallback(ProcessControl::COMMAND_T command, void *context)
     sync->command = command;
     pthread_cond_signal(&sync->cond);
     pthread_mutex_unlock(&sync->mtx);
+
+    switch (command)
+    {
+    case ProcessControl::COMMAND_RESUME:
+        printf("mod_demo1: RESUME command received\n");
+        break;
+    case ProcessControl::COMMAND_SUSPEND:
+        printf("mod_demo1: SUSPEND command received\n");
+        break;
+    case ProcessControl::COMMAND_STOP:
+        printf("mod_demo1: STOP command received\n");
+        break;
+    default:
+        break;
+    }
 }
 
 // [CHANGE] overeni, zda nebyl prijat kontroli prikaz
@@ -123,21 +138,6 @@ ProcessControl::COMMAND_T check_command(SYNC_T& sync)
         sync.command = ProcessControl::COMMAND_NONE;
     }
     pthread_mutex_unlock(&sync.mtx);
-
-    switch (cmd)
-    {
-    case ProcessControl::COMMAND_RESUME:
-        printf("mod_demo1: RESUME command received\n");
-        break;
-    case ProcessControl::COMMAND_SUSPEND:
-        printf("mod_demo1: SUSPEND command received\n");
-        break;
-    case ProcessControl::COMMAND_STOP:
-        printf("mod_demo1: STOP command received\n");
-        break;
-    default:
-        break;
-    }
     
     return cmd;
 }
@@ -226,6 +226,10 @@ void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& 
             video->getName().c_str(),
             toString(features_array, sizeof (features_array) / sizeof (float), 0).c_str(),
             features_mat.rows, features_mat.cols, toStringCvMat(features_mat).c_str());
+        
+        // [CHANGE] overime, zda nedorazil prikaz a zachovame se podle toho
+        // proces by mel vzdy updatovat svuj stav (napr. updateStateSuspended)
+        if (check_command(sync) == ProcessControl::COMMAND_STOP) break;
     }
     
     delete video;

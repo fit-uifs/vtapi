@@ -2,24 +2,28 @@
  * Demo VTApi pro launcher modulu
  * by: Vojtech Froml (ifroml[at]fit.vutbr.cz)
  * 
- * 1. Spusti demo1 modul nad celym datasetem videi s 2 nahodnymi ciselnymi parametry.
- * 2. Nad vysledky demo1 pro video "video3.mpg" spusti demo2 modul
- * 3. Vypise vysledek modulu demo2
+ * Ukazky:
  *
- * 4. Ziska parametry modulu a jejich typy
- * 5. Ziska hodnoty parametru pro jeden proces
- * 6. Nalezne vysledky pro urcity modul s urcitymi parametry a vypise je
+ * 1. Spusteni procesu urciteho modulu (asynchronne)
+ *    - proces pro demo1 modul; vstupy = dataset videi, 2 nahodne ciselne parametry.
+ *    - asynchronne, otevre komunikaci s instanci procesu
+ *
+ * 2. Spusteni procesu urciteho modulu (synchronne, retezeny)
+ *    - proces pro demo2 modul; vstupy = vysledky z predchoziho procesu, nazev videa
+ *    - synchronne, neotevira komunikaci, pouze ceka na jeho skonceni
+ *    - retezeny, pouziva vysledky procesu z ukazky 1 pro video "video3.mpg"
+ *
+ * 3. Vypis vysledku procesu
+ *
+ * 4. Ziskani parametry modulu a jejich typu
+ *
+ * 5. Nalezeni jiz existujiciho procesu dle jeho parametru
+ * 
+ * 6. Ziska hodnoty parametru pro jeden proces
  * 
  * 
- * Oba moduly jsou pro synchronni beh jedne instance modulu.
- * U prvniho modulu jsou komentare, co je treba vzdy ve tride zmenit/doimplementovat.
- *
  * [CHANGE] oznacuje zmeny z commitu 29.4.2015
 */
-
-// format process ID
-#define GET_PROCESS_ID(id,m,p1,p2) \
-    { std::stringstream ss; ss << m.getName() << "p_" << p1 << "_" << p2; id = ss.str(); }
 
 
 ///////////////////////////////////////////////////////////
@@ -27,16 +31,17 @@
 ///////////////////////////////////////////////////////////
 
 #include <cstdio>
+#include <unistd.h> // sleep
 #include <vtapi.h>
 
 using namespace vtapi;
+using namespace std;
 
 class CDemo1Module;
 class CDemo2Module;
 
 int main(int argc, char *argv[]);
 static void Demo1Callback(const ProcessState& state, void *context);
-static void Demo2Callback(const ProcessState& state, void *context);
 
 
 ///////////////////////////////////////////////////////////
@@ -86,7 +91,7 @@ public:
     // Funkce pro synchronni beh modulu
     void Run()
     {
-        printf("starting process of mod_demo1 (asynchronous, suspended)\n");
+        cout << "starting process of mod_demo1 (asynchronous, suspended)" << endl;
 
         // timto zpusobem se vytvari novy proces
         // [CHANGE] odebrany argumenty
@@ -94,7 +99,7 @@ public:
 
         // [CHANGE] asynchronni volani, vytvoreni pozastaveneho procesu
         if (m_process->run(true, true)) {
-            printf("%s started\n", getOutputID().c_str());
+            cout << m_process->getName() << " started" << endl;
             
             // [CHANGE] inicializujeme objekt pro komunikaci s procesem
             if (!m_pctrl) m_pctrl = m_process->getProcessControl();
@@ -102,14 +107,14 @@ public:
                 
                 // odpauzujeme proces
                 if (m_process->controlResume(m_pctrl)) {
-                    printf("%s unpaused\n", getOutputID().c_str());
+                    cout << m_process->getName() << " unpaused" << endl;
                 }
                 else {
-                    fprintf(stderr, "failed to unpause process\n");
+                    cerr << "failed to unpause process" << endl;
                 }
             }
             else {
-                fprintf(stderr, "failed to connect to server process\n");
+                cerr << "failed to connect to server process" << endl;
             }
         }
         
@@ -117,12 +122,8 @@ public:
         
         // cekani na koncovou notifikaci finished/error
         // ...
-    }
+        sleep(2);
         
-    // Pomocna funkce pro ziskani ID vystupnich dat, pouze kosmeticky ucel
-    std::string getOutputID()
-    {
-        return m_process->getName();
     }
     
     // Callback volany z procesu behem funkce run(), pozor - jine vlakno
@@ -133,25 +134,25 @@ public:
             // proces reportuje progres
             case ProcessState::STATUS_RUNNING:
             {
-                printf("%s progress: %f%%\n", getOutputID().c_str(), state.progress);
+                cout << m_process->getName() << " progress: " << state.progress << "%" << endl;
                 break;
             }
             // proces byl pozastaven
             case ProcessState::STATUS_SUSPENDED:
             {
-                printf("%s has been suspended\n", getOutputID().c_str());
+                cout << m_process->getName() << " has been suspended" << endl;
                 break;
             }
             // proces skoncil uspesne
             case ProcessState::STATUS_FINISHED:
             {
-                printf("%s finished succesfully\n", getOutputID().c_str());
+                cout << m_process->getName() << " finished succesfully" << endl;
                 break;
             }
             // proces skoncil s chybou
             case ProcessState::STATUS_ERROR:
             {
-                fprintf(stderr, "%s finished with ERROR\n", getOutputID().c_str());
+                cerr << m_process->getName() << " finished with ERROR: " << state.lastError << endl;
                 break;
             }
         }
@@ -171,26 +172,22 @@ public:
 public:
     CDemo2Module(VTApi *vtapi) : Method(*vtapi->commons, "demo2") {
         m_process = NULL;
-        m_pctrl = NULL;
         next();
     };
     virtual ~CDemo2Module()
     {
-        if (m_pctrl) delete m_pctrl;
         if (m_process) delete m_process;
     }
     
-    void SetParams(const std::string& inputID, const std::string& videoName)
+    void SetParams(const string& inputID, const string& videoName)
     {
         if (!m_process) m_process = this->addProcess();
-
-        if (!m_pctrl) m_pctrl = m_process->getProcessControl();
 
         m_process->setInputs(inputID);
         m_process->setParamString("video", videoName);
     }
     
-    void Run(const std::string& inputID, const std::string& videoName)
+    void Run(const string& inputID, const string& videoName)
     {
         SetParams(inputID, videoName);
         Run();
@@ -198,59 +195,31 @@ public:
     
     void Run()
     {
-        printf("starting process of mod_demo2 (synchronous)\n");
+        cout << "starting process of mod_demo2 (synchronous)" << endl;
 
         if (!m_process) m_process = this->addProcess();
 
         if (m_process->run()) {
-            printf("%s started\n", m_process->getName().c_str());
+            cout << m_process->getName() << " started" << endl;
 
-            if (!m_pctrl) m_pctrl = m_process->getProcessControl();
-            if (m_pctrl->client(2500, Demo1Callback, this)) {
-                Interval *outputs = m_process->getOutputData();
-                printf("\nprocess %s new outputs:\n", m_process->getName().c_str());
-                while (outputs->next()) {
-                    IntervalEvent *event = outputs->getIntervalEvent("event");
-                    if (event) {
-                        printf("event: %s\n", toString(*event).c_str());
-                        delete event;
-                    }
-                    else {
-                        printf("failed to get event\n");
-                    }
+            // UKAZKA 3
+            // vypis vystupu procesu
+            
+            cout << "\nEXAMPLE 3: Printing process outputs" << endl;
+            cout << "-------------------------------------------------" << endl;
+
+            Interval *outputs = m_process->getOutputData();
+            while (outputs->next()) {
+                IntervalEvent *event = outputs->getIntervalEvent("event");
+                if (event) {
+                    cout << "event: " << toString(*event) << endl;
+                    delete event;
                 }
-                delete outputs; 
+                else {
+                    cerr << "failed to get event" << endl;
+                }
             }
-            else {
-                fprintf(stderr, "failed to connect to server process\n");
-            }
-        }
-    }
-
-    void ProcessCallback(const ProcessState& state)
-    {
-        switch (state.status)
-        {
-            case ProcessState::STATUS_RUNNING:
-            {
-                printf("%s progress: %f%%\n", m_process->getName().c_str(), state.progress);
-                break;
-            }
-            case ProcessState::STATUS_SUSPENDED:
-            {
-                printf("%s has been suspended\n", m_process->getName().c_str());
-                break;
-            }
-            case ProcessState::STATUS_FINISHED:
-            {
-                printf("%s finished succesfully\n", m_process->getName().c_str());
-                break;
-            }
-            case ProcessState::STATUS_ERROR:
-            {
-                fprintf(stderr, "%s finished with ERROR\n", m_process->getName().c_str());
-                break;
-            }
+            delete outputs; 
         }
     }
 };
@@ -267,10 +236,6 @@ void Demo1Callback(const ProcessState& state, void *context)
 {
     return ((CDemo1Module *)context)->ProcessCallback(state);
 }
-void Demo2Callback(const ProcessState& state, void *context)
-{
-    return ((CDemo2Module *)context)->ProcessCallback(state);
-}
 
 
 ///////////////////////////////////////////////////////////
@@ -281,136 +246,115 @@ int main(int argc, char *argv[])
     // zvolime nejake parametry procesu
     srand(time(NULL));
     int param1 = rand() % 1000;
-    double param2 = 10;
-    std::string video = "video3";
+    double param2 = (rand() % 1000) / 1000.0;
+    string video = "video3";
     
     // VTApi instance
     VTApi *vtapi = new VTApi(argc, argv);
     
-    // priklad retezeni 2 demo modulu, viz popis v hlavicce souboru
+    // UKAZKA 1 + 2
+    // priklad retezeni procesu 2 demo modulu, viz popis v hlavicce souboru
     try
     {
-        printf("Starting demo1 and demo2 modules example...\n");
+        cout << endl << "EXAMPLE 1: Starting demo1 process" << endl;
+        cout << "-------------------------------------------------" << endl;
         
         CDemo1Module demo1(vtapi);
         demo1.SetParams(param1, param2);
         demo1.Run();
 
+        cout << endl << "EXAMPLE 2: Starting demo2 process" << endl;
+        cout << "-------------------------------------------------" << endl;
+
         CDemo2Module demo2(vtapi);
-        demo2.SetParams(demo1.getOutputID(), video);
+        demo2.SetParams(demo1.m_process->getName(), video);
         demo2.Run();
     }
-    catch(std::exception e)
+    catch(exception e)
     {
-        std::cerr << e.what() << std::endl;
+        cerr << e.what() << endl;
     }
-    
+
+    // UKAZKA 4
     // pristup k typum parametru modulu
     try
-    {
+{
+        cout << endl << "EXAMPLE 4: Accessing module parameters" << endl;
+        cout << "-------------------------------------------------" << endl;
+
         CDemo1Module demo1(vtapi);
         TKeys keys = demo1.getMethodKeys();
         
-        printf("\nmodule %s parameters:\n", demo1.getName().c_str());
+        cout << demo1.getName() << " parameters:" << endl;
         for (size_t i = 0; i < keys.size(); i++) {
-            printf("%s: %s %s \n",
-                keys[i].from.c_str(), keys[i].type.c_str(), keys[i].key.c_str());
+            cout << keys[i].from << ": " << keys[i].type << ' ' << keys[i].key << endl;
         }
         
     }
-    catch(std::exception e)
+    catch(exception e)
     {
-        std::cerr << e.what() << std::endl;
+        cerr << e.what() << endl;
     }
     
-    // pristup k hodnotam parametru procesu
+    // UKAZKA 5 + 6
+    // a) nalezneme proces s urcitymi parametry
+    // b) zjistime, jestli existuje
+    // c) vypiseme zpet jeho parametry
+    // slozity priklad:
+    //      chceme najit vysledky procesu z demo2 pro video3
+    //      spocitane nad mezivysledky z demo1 s danymi hodnotami parametru
     try
-    {
-        CDemo1Module demo1(vtapi);
+{
+        cout << endl << "EXAMPLE 5: Finding process by its parameters" << endl;
+        cout << "-------------------------------------------------" << endl;
 
-        // proces identifikovany output ID
-        std::string processID;
-        GET_PROCESS_ID(processID, demo1, param1, param2);
-        
-        Process *p = demo1.newProcess(processID);
-        p->next();
+        // a) k sestaveni ID hledaneho procesu potrebujeme:
 
-        printf("\nprocess %s parameter values:\nparam1 = %d\nparam2 = %.2f\n",
-            p->getName().c_str(),
-            p->getParamInt("param1"),
-            p->getParamDouble("param2"));
-        
-    }
-    catch(std::exception e)
-    {
-        std::cerr << e.what() << std::endl;
-    }
-    
-    // pristup k vysledkum pro urcite parametry nejakeho modulu
-    // priklad: chceme najit vysledky demo2 pro video3
-    //          spocitane nad mezivysledky z demo1 s danymi hodnotami parametru
-    try
-    {
-        bool found = false;
+        // ID vstupniho procesu
         CDemo1Module demo1(vtapi);
-        
-        // najdeme proces pro demo1 s 1. parametrem 11
-        // iteracni pristup
         Process *p1 = demo1.newProcess();
-        while(p1->next()) {
-            if (p1->getParamInt("param1") == param1) {
-                found = true;
-                break;
-            }
-        }
-        
-        // ALTERNATIVA - slozit si process ID rucne
-        //std::string processID;
-        //GET_PROCESS_ID(processID, demo1, param1, param2);
-        //Process *p1_alt = demo1.newProcess(processID);
-        //if (p1_alt->next()) found = true;
-        
-        if (found) {
-            found = false;
-            CDemo2Module demo2(vtapi);
-            
-            // najdeme proces, ktery ma jako vstup vystupy p1 a parametr video3.mpg
-            Process *p2 = demo2.newProcess();
-            // optimalizacni trik, at neiterujeme pres vsechny procesy
-            p2->filterByInputs(p1->getName());
-            while (p2->next()) {
-                if (p2->getParamString("video").compare(video) == 0) {
-                    found = true;
-                    break;
-                }
-            }
+        p1->setParamInt("param1", param1);      // nastavime parametry vstupniho procesu
+        p1->setParamDouble("param2", param2);
+        string inputID = p1->constructName();   // ID vstupniho procesu
+        delete p1;
 
-            if (found) {
-                // vypiseme vysledky pro nalezeny proces
-                Interval *outputs = p2->getOutputData();
-                printf("\nprocess %s previously calculated outputs:\n", p2->getName().c_str());
-                while(outputs->next())
-                {
-                    IntervalEvent *event = outputs->getIntervalEvent("event");
-                    if (event) {
-                        printf("event: %s\n", toString(*event).c_str());
-                        delete event;
-                    }
-                    else {
-                        printf("failed to get event\n");
-                    }
-                }
-                delete outputs;
-            }
-            delete p2;
+        // ID vystupniho procesu
+        CDemo2Module demo2(vtapi);
+        Process *p2 = demo2.newProcess();
+        p2->setParamString("video", video);     // hledame vysledky pro video3
+        p2->setInputs(inputID);                 // nad mezivysledky z procesu demo1
+        string outputID = p2->constructName();  // ID vstupniho procesu
+        delete p2;
+
+        // b) nalezneme proces
+        
+        Process *p = demo2.newProcess(outputID);
+        if (p->next()) {
+            cout << "found process: " << outputID << endl;
+        }
+        else {
+            cerr << "failed to find process: " << outputID << endl;
+        }
+        delete p;
+        
+        // c) vypsani parametru
+        
+        cout << endl << "EXAMPLE 6: Getting process parameters:" << endl;
+        cout << "-------------------------------------------------" << endl;
+
+        p1 = demo1.newProcess(inputID);
+        if (p1->next()) {
+            cout << "process " << inputID << " parameters:" << endl
+                << "param1: " << p->getParamInt("param1") << endl
+                << "param2: " << p->getParamDouble("param2") << endl;
         }
         delete p1;
     }
-    catch(std::exception e)
+    catch(exception e)
     {
-        std::cerr << e.what() << std::endl;
+        cerr << e.what() << endl;
     }
-    
+
     // cleanup
     delete vtapi;
     
