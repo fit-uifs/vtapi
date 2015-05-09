@@ -142,10 +142,18 @@ function stripLibsAbsolutePath () {
 #   libboost-system-dev
 #   libboost-filesystem-dev
 
+# extra boost preprocessor macros:
 # BOOST_DATE_TIME_NO_LIB
 #   - avoid unnecessary linking of DateTime library
 # BOOST_FILESYSTEM_NO_DEPRECATED
 #   - don't include deprecated FileSystem features
+
+
+# THIS BULLSHIT FINDS WRONG BOOST LIB DIR AND THEN IT FAILS!
+#AX_BOOST_BASE(1.55)
+#AX_BOOST_SYSTEM
+#AX_BOOST_FILESYSTEM
+
 
 BOOST_CPPFLAGS="-DBOOST_DATE_TIME_NO_LIB -DBOOST_FILESYSTEM_NO_DEPRECATED"
 BOOST_LIBS="-lboost_system -lboost_filesystem"
