@@ -15,6 +15,9 @@ AC_PROG_CXX
 # Use entered compiler for checks
 AC_LANG([C++])
 
+# Require C++11
+AX_CXX_COMPILE_STDCXX_11
+
 # Checks for libraries.
 
 # aby se dalo vyrobit .so
@@ -128,6 +131,27 @@ function stripLibsAbsolutePath () {
   echo "${TMP_LIBS}"
 }
 
+
+
+###############################################################################
+#####   Boost support                                                     #####
+###############################################################################
+
+# boost packages necessary (at least v1.55):
+#   libboost-dev
+#   libboost-system-dev
+#   libboost-filesystem-dev
+
+# BOOST_DATE_TIME_NO_LIB
+#   - avoid unnecessary linking of DateTime library
+# BOOST_FILESYSTEM_NO_DEPRECATED
+#   - don't include deprecated FileSystem features
+
+BOOST_CPPFLAGS="-DBOOST_DATE_TIME_NO_LIB -DBOOST_FILESYSTEM_NO_DEPRECATED"
+BOOST_LIBS="-lboost_system -lboost_filesystem"
+
+AC_SUBST([BOOST_CPPFLAGS])
+AC_SUBST([BOOST_LIBS])
 
 
 ###############################################################################
