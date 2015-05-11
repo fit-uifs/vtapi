@@ -273,194 +273,194 @@ string SLQueryBuilder::getRollbackQuery()
 }
 
 bool SLQueryBuilder::keyFrom(const string& table, const string& column) {
-    if (column.empty()) return VT_FAIL;
+    if (column.empty()) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("", column, "", table);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keyString(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty()) return VT_FAIL;
+    if (key.empty() || value.empty()) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("text", key, value, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }    
 }
 
 bool SLQueryBuilder::keyStringA(const string& key, string* values, const int size, const string& from) {    
-    if (key.empty() || !values || size <= 0) return VT_FAIL;
+    if (key.empty() || !values || size <= 0) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("textA", key, values, size, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keyInt(const string& key, int value, const string& from) {
-    if (key.empty()) return VT_FAIL;
+    if (key.empty()) return false;
     else {
         TKeyValue<int> *tk = new TKeyValue<int>("integer", key, value, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keyIntA(const string& key, int* values, const int size, const string& from) {
-    if (key.empty() || !values || size <= 0) return VT_FAIL;
+    if (key.empty() || !values || size <= 0) return false;
     else {
         TKeyValue<int> *tk = new TKeyValue<int>("integerA", key, values, size, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keyFloat(const string& key, float value, const string& from) {
-    if (key.empty()) return VT_FAIL;
+    if (key.empty()) return false;
     else {
         TKeyValue<float> *tk = new TKeyValue<float>("float", key, value, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keyFloatA(const string& key, float* values, const int size, const string& from) {
-    if (key.empty() || !values || size <= 0) return VT_FAIL;
+    if (key.empty() || !values || size <= 0) return false;
     else {
         TKeyValue<float> *tk = new TKeyValue<float>("floatA", key, values, size, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keySeqtype(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
+    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("seqtype", key, value, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keyInouttype(const string& key, const string& value, const string& from) {
-    if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
+    if (key.empty() || value.empty() || !this->checkInouttype(value)) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("inouttype", key, value, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keyPStatus(const string& key, ProcessState::STATUS_T value, const string& from)
 {
-    if (key.empty() || value == ProcessState::STATUS_NONE) return VT_FAIL;
+    if (key.empty() || value == ProcessState::STATUS_NONE) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("pstatus", key, ProcessState::toStatusString(value), from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from) {
-    if (key.empty()) return VT_FAIL;
+    if (key.empty()) return false;
     else {
         TKeyValue<time_t> *tk = new TKeyValue<time_t>("timestamp", key, value, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 #if HAVE_OPENCV
 bool SLQueryBuilder::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) {
-    if (key.empty()) return VT_FAIL;
+    if (key.empty()) return false;
     else {
         TKeyValue<cv::Mat> *tk = new TKeyValue<cv::Mat>("cvmat", key, value, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 #endif 
 
 bool SLQueryBuilder::keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from) {
-    if (key.empty()) return VT_FAIL;
+    if (key.empty()) return false;
     else {
         TKeyValue<IntervalEvent> *tk = new TKeyValue<IntervalEvent>("vtevent", key, value, from);
         key_values_main.push_back(tk);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty()) return VT_FAIL;
+    if (key.empty() || value.empty()) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("text", key, value, from);
         key_values_where.push_back(tk);
         if (value.compare("NULL") == 0 || value.compare("NOT NULL") == 0) opers.push_back(" IS ");
         else opers.push_back(oper);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from) {
-    if (key.empty()) return VT_FAIL;
+    if (key.empty()) return false;
     else {
         TKeyValue<int> *tk = new TKeyValue<int>("integer", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::whereFloat(const string& key, const float value, const string& oper, const string& from) {
-    if (key.empty()) return VT_FAIL;
+    if (key.empty()) return false;
     else {
         TKeyValue<float> *tk = new TKeyValue<float>("float", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::whereSeqtype(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return VT_FAIL;
+    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("seqtype", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
-    if (key.empty() || value.empty() || !this->checkInouttype(value)) return VT_FAIL;
+    if (key.empty() || value.empty() || !this->checkInouttype(value)) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("inouttype", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
 {
-    if (key.empty() || value == ProcessState::STATUS_NONE) return VT_FAIL;
+    if (key.empty() || value == ProcessState::STATUS_NONE) return false;
     else {
         TKeyValue<string> *tk = new TKeyValue<string>("pstatus", key, ProcessState::toStatusString(value), from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return VT_OK;
+        return true;
     }
 }
 
 bool SLQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
-    if (key.empty()) return VT_FAIL;
+    if (key.empty()) return false;
     else {
         TKeyValue<time_t> *tk = new TKeyValue<time_t>("timestamp", key, value, from);
         key_values_where.push_back(tk);
         opers.push_back(oper);
-        return VT_OK;
+        return true;
     }
 }
 

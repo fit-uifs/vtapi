@@ -76,7 +76,7 @@ bool Query::rollbackTransaction()
 
 bool Query::execute()
 {
-    bool retval = VT_OK;
+    bool retval = true;
     string queryString = this->getQuery();
 
     logger->debug("SQL query:\n" + queryString);
@@ -136,11 +136,11 @@ bool Select::execute()
 
     if (result < 0) {
         logger->warning(200, "SELECT failed\n"+connection->getErrorMessage(), thisClass+"::execute()");
-        return VT_FAIL;
+        return false;
     }
     else {        
         logger->debug("SELECT succeeded, "+toString(result)+" row(s) returned");
-        return VT_OK;
+        return true;
     }
 }
 
@@ -150,12 +150,12 @@ bool Select::executeNext()
         offset += limit;
         return this->execute();
     }
-    else return VT_FAIL;
+    else return false;
 }
 
 bool Select::from(const string& table, const string& column)
 {
-    bool retval = VT_OK;
+    bool retval = true;
 
     retval &= this->queryBuilder->keyFrom(table, column);
     executed = false;
@@ -222,7 +222,7 @@ string Insert::getQuery() {
 
 bool Insert::execute()
 {
-    bool retval = VT_OK;
+    bool retval = true;
     string queryString = this->getQuery();
 
     logger->debug("Insert query:\n" + queryString);
@@ -302,7 +302,7 @@ string Update::getQuery() {
 
 bool Update::execute()
 {
-    bool retval = VT_OK;
+    bool retval = true;
     string queryString = this->getQuery();
 
     logger->debug("Update query:\n" + queryString);

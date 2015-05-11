@@ -97,7 +97,7 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
 bool Interval::add(const string& sequence, const int t1, const int t2, const string& location,
     const string& userid, const string& notes)
 {
-    bool retval = VT_OK;
+    bool retval = true;
     int te2 = (t2 < 0) ? t1 : t2;
 
     if (insert) store.push_back(insert);
@@ -115,7 +115,7 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
 
 bool Interval::preSet()
 {
-    bool retval = VT_OK;
+    bool retval = true;
 
     vt_destruct(update);
     update = new Update(*this, this->selection);

@@ -13,7 +13,7 @@ using namespace vtapi;
 if ((sl.F = (SL_ ## F)lt_dlsym(hLibsqlite, #F)) == NULL) { \
     string warning = string("Function ") + #F + " not loaded.";\
     logger->warning(555, warning.c_str(), thisClass + "::base_load_libs()");\
-    retval = VT_FAIL;\
+    retval = false;\
     break;\
 };
 
@@ -36,7 +36,7 @@ SLBackendBase::~SLBackendBase() {
 }
 
 bool SLBackendBase::base_load_libs() {
-    bool retval = VT_OK;
+    bool retval = true;
     lt_dladvise ldadvise = NULL;
 
     do {
@@ -49,7 +49,7 @@ bool SLBackendBase::base_load_libs() {
         hLibsqlite = lt_dlopenadvise("libsqlite3", ldadvise);
         if (hLibsqlite) {
             logger->warning(556, "libsqlite3 library not found.", thisClass + "::base_load_libs()");
-            retval = VT_FAIL;
+            retval = false;
             break;
         }
 

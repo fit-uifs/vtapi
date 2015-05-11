@@ -80,7 +80,7 @@ bool Sequence::add(const string& name, const string& location, const string& typ
 bool Sequence::add(const string& name, const string& location, const string& type,
     const string& userid, const string& notes)
 {
-    bool retval = VT_OK;
+    bool retval = true;
 
     if (insert) store.push_back(insert);
     insert = new Insert(*this, "sequences");
@@ -99,7 +99,7 @@ bool Sequence::preSet() {
     update = new Update(*this, "sequences");
     update->whereString("seqname", this->sequence);
 
-    return VT_OK;
+    return true;
 }
 
 //============================== IMAGE FOLDER ===================================
@@ -256,7 +256,7 @@ VideoPlayer::VideoPlayer(Video& orig) : Commons(orig) {
 // TODO: play 1, 2, 4, 6, 9, 12 and 16 videos at once :)
 // TODO: P3k dodelat nacteni vice Video a Interval
 bool VideoPlayer::play() {
-    bool retval = VT_OK;
+    bool retval = true;
     cv::VideoCapture cap;
     int fps = 25;
 
@@ -285,7 +285,7 @@ bool VideoPlayer::play() {
     }
     else {
         logger->warning(161, "Sorry, there is nothing to play, aborting :(", thisClass+"::play()");
-        retval = VT_FAIL;
+        retval = false;
     }
 
     return retval;

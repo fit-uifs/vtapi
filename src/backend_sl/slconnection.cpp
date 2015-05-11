@@ -21,7 +21,7 @@ SLConnection::~SLConnection() {
 }
 
 bool SLConnection::connect (const string& connectionInfo) {
-    bool retval     = VT_OK;
+    bool retval     = true;
     string dbname   = "";
 
     connInfo    = connectionInfo;
@@ -59,14 +59,14 @@ bool SLConnection::isConnected () {
         return (sl.sqlite3_db_status(conn, SQLITE_DBSTATUS_SCHEMA_USED, &cur, &high, false) == SQLITE_OK);
     }
     else {
-        return VT_FAIL;
+        return false;
     }
 }
 
 bool SLConnection::execute(const string& query, void *param) {
     SLparam     *sl_param   = (SLparam *) param;
     char        *errmsg     = NULL;
-    bool        retval      = VT_OK;
+    bool        retval      = true;
 
     errorMessage.clear();
 
@@ -134,14 +134,14 @@ bool SLConnection::fixSlashes(string& path) {
         nsPos--;
         if (nsPos < 0) {
             path.clear();
-            return VT_FAIL;
+            return false;
         }
     } while (path[nsPos] == '/');
     if (nsPos < len - 1) {
         path = path.substr(0, nsPos + 1);
     }
 
-    return VT_OK;
+    return true;
 }
 
 bool SLConnection::attachDatabase(string& dbfile) {
@@ -150,7 +150,7 @@ bool SLConnection::attachDatabase(string& dbfile) {
         return sl.sqlite3_exec(conn, query.c_str(), NULL, NULL, NULL) == SQLITE_OK;
     }
     else {
-        return VT_OK;
+        return true;
     }
 }
 

@@ -27,7 +27,7 @@ PGConnection::~PGConnection() {
 }
 
 bool PGConnection::connect (const string& connectionInfo) {
-    bool retval = VT_OK;
+    bool retval = true;
 
     do {
         if (!connectionInfo.empty()) {
@@ -79,7 +79,7 @@ bool PGConnection::isConnected () {
 bool PGConnection::execute(const string& query, void *param)
 {
     PGresult    *pgres  = NULL;
-    bool        retval  = VT_OK;
+    bool        retval  = true;
 
     errorMessage.clear();
 
@@ -92,14 +92,14 @@ bool PGConnection::execute(const string& query, void *param)
 
     if (!pgres) {
         errorMessage = string(pg.PQerrorMessage(conn));
-        retval = VT_FAIL;
+        retval = false;
     }
     else {
         int result = pg.PQresultStatus(pgres);
         if (result != PGRES_TUPLES_OK && result != PGRES_COMMAND_OK) {
             logger->warning(2012, "Apocalypse warning", thisClass+"::execute()");
             errorMessage = string(pg.PQerrorMessage(conn));
-            retval = VT_FAIL;
+            retval = false;
         }
         pg.PQclear(pgres);
     }
@@ -150,7 +150,7 @@ void* PGConnection::getConnectionObject() {
 
 bool PGConnection::loadDBTypes()
 {
-    bool retval = VT_OK;
+    bool retval = true;
     PGresult *pgres = NULL;
 
     do {
@@ -168,7 +168,7 @@ bool PGConnection::loadDBTypes()
         retval = pqt.PQregisterTypes(conn, PQT_USERDEFINED, types_userdef, sizeof (types_userdef) / sizeof (PGregisterType), 0);
         if (!retval) {
             logger->warning(666, pqt.PQgeterror(), thisClass + "::loadTypes()");
-            retval = VT_FAIL;
+            retval = false;
             break;
         }
 
@@ -183,7 +183,7 @@ bool PGConnection::loadDBTypes()
         retval = pqt.PQregisterTypes(conn, PQT_COMPOSITE, types_comp, sizeof (types_comp) / sizeof (PGregisterType), 0);
         if (!retval) {
             logger->warning(666, pqt.PQgeterror(), thisClass + "::loadTypes()");
-            retval = VT_FAIL;
+            retval = false;
             break;
         }
         
@@ -192,7 +192,7 @@ bool PGConnection::loadDBTypes()
         // select type info from catalog
         pgres = pqt.PQexecf(conn, "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type", PG_FORMAT);
         if (!pgres) {
-            retval = VT_FAIL;
+            retval = false;
             break;
         }
         

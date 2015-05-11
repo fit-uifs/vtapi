@@ -45,7 +45,7 @@ int PGResultSet::countCols()
 }
 bool PGResultSet::isOk()
 {
-    return PGRES ? VT_OK : VT_FAIL;
+    return PGRES ? true : false;
 }
 void PGResultSet::clear()
 {

@@ -410,7 +410,7 @@ void *KeyValues::getBlob(const int col, int &size) {
 bool KeyValues::print() {
     if (!select || !select->resultSet->isOk() || select->resultSet->getPosition() < 0) {
         logger->warning(302, "There is nothing to print (see other messages)", thisClass+"::print()");
-        return VT_FAIL;
+        return false;
     }
     else {
         int origpos = select->resultSet->getPosition();
@@ -428,19 +428,19 @@ bool KeyValues::print() {
         vt_destruct(fInfo.second);
         
         select->resultSet->setPosition(origpos);
-        return VT_OK;
+        return true;
     }
 }
 
 bool KeyValues::printAll() {
-    bool retval = VT_OK;
+    bool retval = true;
     int origpos = select->resultSet->getPosition();
     pair< TKeys*, vector<int>* > fInfo(NULL, NULL);
 
     do {
         if (!select || !select->resultSet->isOk()) {
             logger->warning(303, "There is nothing to print (see other messages)", thisClass + "::printAll()");
-            retval = VT_FAIL;
+            retval = false;
             break;
         } 
 
@@ -514,7 +514,7 @@ bool KeyValues::printHeader(const pair< TKeys*, vector<int>* > &fInfo) {
         cout << table.str();
     }
 
-    return VT_OK;
+    return true;
 }
 
 bool KeyValues::printFooter(const int count) {
@@ -527,11 +527,11 @@ bool KeyValues::printFooter(const int count) {
     else if (format == HTML) output << "</table>" << endl;
     cout << output.str();
 
-    return VT_OK;
+    return true;
 }
 
 bool KeyValues::printRowOnly(const int row, const vector<int>* widths) {
-    bool retval = VT_OK;
+    bool retval = true;
     stringstream output;
     int cols = select->resultSet->countCols();
 
@@ -570,7 +570,7 @@ bool KeyValues::preSet() {
     vt_destruct(update);
     update = new Update(*this);
 
-    return update ? VT_OK : VT_FAIL;
+    return update ? true : false;
 }
 
 bool KeyValues::setString(const string& key, const string& value) {
@@ -631,37 +631,37 @@ bool KeyValues::setExecute()
 
 // =================== ADDERS (Insert) =========================================
 bool KeyValues::addString(const std::string& key, const std::string& value) {
-    return this->insert ? this->insert->keyString(key, value) : VT_FAIL;
+    return this->insert ? this->insert->keyString(key, value) : false;
 }
 bool KeyValues::addInt(const std::string& key, int value) {
-    return this->insert ? this->insert->keyInt(key, value) : VT_FAIL;
+    return this->insert ? this->insert->keyInt(key, value) : false;
 }
 bool KeyValues::addIntA(const std::string& key, int* value, int size) {
-    return this->insert ? this->insert->keyIntA(key, value, size) : VT_FAIL;
+    return this->insert ? this->insert->keyIntA(key, value, size) : false;
 }
 bool KeyValues::addFloat(const std::string& key, float value) {
-    return this->insert ? this->insert->keyFloat(key, value) : VT_FAIL;
+    return this->insert ? this->insert->keyFloat(key, value) : false;
 }
 bool KeyValues::addFloatA(const std::string& key, float* value, int size) {
-    return this->insert ? this->insert->keyFloatA(key, value, size) : VT_FAIL;
+    return this->insert ? this->insert->keyFloatA(key, value, size) : false;
 }
 bool KeyValues::addTimestamp(const std::string& key, const time_t& value)
 {
-    return this->insert ? this->insert->keyTimestamp(key, value) : VT_FAIL;
+    return this->insert ? this->insert->keyTimestamp(key, value) : false;
 }
 #if HAVE_OPENCV
 bool KeyValues::addCvMat(const std::string& key, cv::Mat& value) {
-    return this->insert ? this->insert->keyCvMat(key, value) : VT_FAIL;
+    return this->insert ? this->insert->keyCvMat(key, value) : false;
 }
 #endif
     
 bool KeyValues::addIntervalEvent(const std::string& key, IntervalEvent& value) {
-    return this->insert ? this->insert->keyIntervalEvent(key, value) : VT_FAIL;
+    return this->insert ? this->insert->keyIntervalEvent(key, value) : false;
 }
 
 bool KeyValues::addExecute()
 {
-    bool retval = VT_OK;
+    bool retval = true;
     bool trans = !store.empty() && insert;
     
     if (trans) {
@@ -685,7 +685,7 @@ bool KeyValues::addExecute()
         vt_destruct(insert);
     }
     else {
-        retval = VT_FAIL;
+        retval = false;
     }
 
     return retval;
@@ -695,10 +695,10 @@ bool KeyValues::addExecute()
 bool KeyValues::checkStorage() {
     logger->warning(3018, "Check might fail at class " + thisClass, thisClass+"::checkStorage()");
 
-    if (!sequence.empty() && fileExists(getDataLocation())) return VT_OK;
-    else if (!dataset.empty() && fileExists(getDataLocation())) return VT_OK;
+    if (!sequence.empty() && fileExists(getDataLocation())) return true;
+    else if (!dataset.empty() && fileExists(getDataLocation())) return true;
 
-    return VT_FAIL;
+    return false;
 }
 
 

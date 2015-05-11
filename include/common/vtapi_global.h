@@ -27,18 +27,6 @@
  */
 #define vt_destructall(v)      if (v) { delete[](v); (v) = NULL; }
 
-
-// RETURN CODES
-/**
- * @brief VTApi success return code
- */
-#define VT_OK               true
-/**
- * @brief VTApi failure return code
- */
-#define VT_FAIL             false
-
-
 // ERRORS
 /**
  * @brief VTApi general failure error code

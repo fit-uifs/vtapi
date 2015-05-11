@@ -359,12 +359,12 @@ bool PGQueryBuilder::keyArray(const std::string& key, T* values, const int size,
 bool PGQueryBuilder::keyFrom(const string& table, const string& column)
 {
     if (column.empty()) {
-        return VT_FAIL;
+        return false;
     }
     else {
         if (defaultTable.empty()) defaultTable = table;
         m_listMain.push_back(MAIN_ITEM(column, table, 0));
-        return VT_OK;
+        return true;
     }
 }
 
@@ -486,7 +486,7 @@ bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& va
     
     do {
         // user data
-        PGbytea data = { value.user_data_size, (char*) value.user_data };
+        PGbytea data = { (int)value.user_data_size, (char*) value.user_data };
 
         // create interval event composite
         event = pqt.PQparamCreate((PGconn *) connection);

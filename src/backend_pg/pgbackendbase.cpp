@@ -13,7 +13,7 @@ using namespace vtapi;
 if ((pg.F = (PQ_ ## F)lt_dlsym(hLibpq, #F)) == NULL) { \
     string warning = string("Function ") + #F + " not loaded.";\
     logger->warning(555, warning.c_str(), thisClass + "::base_load_libs()");\
-    retval = VT_FAIL;\
+    retval = false;\
     break;\
 };
 
@@ -21,7 +21,7 @@ if ((pg.F = (PQ_ ## F)lt_dlsym(hLibpq, #F)) == NULL) { \
 if ((pqt.F = (PQT_ ## F)lt_dlsym(hLibpqtypes, #F)) == NULL) { \
     string warning = string("Function ") + #F + " not loaded.";\
     logger->warning(555, warning.c_str(), thisClass + "::base_load_libs()");\
-    retval = VT_FAIL;\
+    retval = false;\
     break;\
 }
 
@@ -50,7 +50,7 @@ PGBackendBase::~PGBackendBase()
 }
 
 bool PGBackendBase::base_load_libs() {
-    bool retval = VT_OK;
+    bool retval = true;
     lt_dladvise ldadvise = NULL;
 
     do {       
@@ -63,7 +63,7 @@ bool PGBackendBase::base_load_libs() {
         hLibpq = lt_dlopenadvise(PG_LIB_PATH "/libpq", ldadvise);
         if (!hLibpq) {
             logger->warning(556, "libpq library not found.", thisClass + "::base_load_libs()");
-            retval = VT_FAIL;
+            retval = false;
             break;
         }
         
@@ -71,7 +71,7 @@ bool PGBackendBase::base_load_libs() {
         hLibpqtypes = lt_dlopenadvise("libpqtypes", ldadvise);
         if (!hLibpqtypes) {
             logger->warning(556, "libpqtypes library not found.", thisClass + "::base_load_libs()");
-            retval = VT_FAIL;
+            retval = false;
             break;
         }
         
