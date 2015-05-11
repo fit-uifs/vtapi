@@ -47,6 +47,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/backend_sl/slquerybuilder.o \
 	${OBJECTDIR}/backend_sl/slresultset.o \
 	${OBJECTDIR}/commons.o \
+	${OBJECTDIR}/compat.o \
 	${OBJECTDIR}/dataset.o \
 	${OBJECTDIR}/interval.o \
 	${OBJECTDIR}/intervalevent.o \
@@ -138,6 +139,11 @@ ${OBJECTDIR}/commons.o: commons.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/commons.o commons.cpp
+
+${OBJECTDIR}/compat.o: compat.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -g -D_DEBUG -I.. -I../include -I../include/postgresql -I/usr/include/postgresql -I/usr/local/include/opencv2 -fPIC  -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/compat.o compat.cpp
 
 ${OBJECTDIR}/dataset.o: dataset.cpp 
 	${MKDIR} -p ${OBJECTDIR}

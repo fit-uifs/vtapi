@@ -22,6 +22,7 @@
       </logicalFolder>
       <logicalFolder name="f5" displayName="common" projectFiles="true">
         <itemPath>../include/common/vtapi_autoconfig.h</itemPath>
+        <itemPath>../include/common/vtapi_compat.h</itemPath>
         <itemPath>../include/common/vtapi_config.h</itemPath>
         <itemPath>../include/common/vtapi_global.h</itemPath>
         <itemPath>../include/common/vtapi_logger.h</itemPath>
@@ -84,6 +85,7 @@
       </logicalFolder>
       <itemPath>backend_factory.cpp</itemPath>
       <itemPath>commons.cpp</itemPath>
+      <itemPath>compat.cpp</itemPath>
       <itemPath>dataset.cpp</itemPath>
       <itemPath>interval.cpp</itemPath>
       <itemPath>intervalevent.cpp</itemPath>
@@ -217,6 +219,8 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../include/common/vtapi_compat.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
@@ -313,6 +317,8 @@
       <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="compat.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -414,6 +420,8 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../include/common/vtapi_compat.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
@@ -510,6 +518,8 @@
       <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="compat.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -644,6 +654,8 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../include/common/vtapi_compat.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_global.h" ex="false" tool="3" flavor2="0">
@@ -740,6 +752,8 @@
       <item path="backend_sl/slresultset.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="commons.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="compat.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="dataset.cpp" ex="false" tool="1" flavor2="0">
       </item>

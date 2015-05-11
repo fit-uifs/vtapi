@@ -11,9 +11,9 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <unistd.h>
-#include <sys/wait.h>
 #include <common/vtapi_global.h>
+#include <common/vtapi_compat.h>
+#include <boost/filesystem.hpp>
 #include <data/vtapi_method.h>
 #include <data/vtapi_process.h>
 
@@ -257,7 +257,7 @@ void Process::filterByInputs(const std::string& processName) {
 
 bool Process::add(const std::string& outputs)
 {
-    bool retval = VT_OK;
+    bool retval = true;
     
     vt_destruct(insert);
     insert = new Insert(*this, "processes");
@@ -272,7 +272,7 @@ bool Process::preSet() {
     update = new Update(*this, "processes");
     update->whereString("prsname", this->process);
 
-    return VT_OK;
+    return true;
 }
 
 Interval* Process::newInterval(const int t1, const int t2) {
@@ -289,54 +289,30 @@ bool Process::run(bool async, bool suspended)
         updateStateSuspended();
     }
 
-    char cdir[1024];
-    if (getcwd(cdir, sizeof (cdir)) == NULL) {
-        logger->error("getcwd failed :" + this->getName(), thisClass + "::run()");
+    boost::filesystem::path cdir = boost::filesystem::current_path();
+    if (cdir.empty()) {
+        logger->error("failed to get current directory", thisClass + "::run()");
         return false;
     }
     
-    string arg0(cdir);
-    arg0 += "/modules/";
-    arg0 += this->method;
-    string arg1("--config=");
-    arg1 += this->configfile;
-    string arg2("--process=");
-    arg2 += this->process;
-
-    const char *argv[4];
-    argv[0] = arg0.c_str();
-    argv[1] = arg1.c_str();
-    argv[2] = arg2.c_str();
-    argv[3] = NULL;
+    boost::filesystem::path bin(cdir);
+    bin /= "modules";
+    bin /= this->method;
     
-    pid_t cpid = fork();
-    if (cpid == 0) {
-        if (execv(arg0.c_str(), (char**)argv) < 0) {
-            logger->error("execv failed :" + this->getName(), thisClass + "::run()");
-        }
-        exit(1);
-    }
-    else if (cpid > 0) {
-        if (!async) {
-            int ret = 0;
-            if (waitpid(cpid, &ret, 0) == -1) {
-                logger->error("waitpid failed :" + this->getName(), thisClass + "::run()");
-                return false;
-            }
-            else if(WIFEXITED(ret) && WEXITSTATUS(ret) != 0) {
-                logger->warning("child process exited with non-zero status", thisClass + "::run()");
-                return false;
-            }
-            else {
-                return true;
-            }
-        }
-    }
-    else {
-        logger->error("fork failed :" + this->getName(), thisClass + "::run()");
-        return false;
+    boost::filesystem::path cfg = boost::filesystem::absolute(this->configfile, cdir);
+    
+    compat::ARGS_LIST args;
+    args.push_back("--config=" + cfg.string());
+    args.push_back("--process=" + this->process);
+    args.push_back("--dataset=" + this->dataset);
+    
+    bool ret = compat::launchProcess(bin.string(), args, !async);
+    if (!ret) {
+        logger->warning("error launching process " + this->getName()
+            + ": " + bin.string(), thisClass + "::run()");
     }
     
+    return ret;
 }
 
 ProcessControl *Process::getProcessControl()

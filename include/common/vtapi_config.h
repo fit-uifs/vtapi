@@ -30,6 +30,14 @@
 #include <time.h>
 #include <typeinfo>
 
+// boost
+#include <boost/interprocess/ipc/message_queue.hpp>
+
+
+// c++11
+#include <utility>
+#include <thread>
+
 
 /**
  * @brief TODO
