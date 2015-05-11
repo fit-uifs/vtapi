@@ -62,10 +62,14 @@ const VTCli::VTCLI_COMMAND_DEF VTCli::m_cmd[] =
         "\tload dataset"},
     { CMD_STATS,    "stats",     OBJ_INTERVAL,
         "calculates coverage of video intervals by events for one process\n"
-        "\tformat: length(bits),bitmap(base64)\n"
-        "\t(bitmap, where 1 = frame covered by event)",
-        "get coverage for video1 and specified process:\n"
-        "\tstats interval sequence=video1 process=demo1p_5000_video1" },
+        "\tformat: length(bits),coverage(percents)[,bitmap(base64)]\n"
+        "\t(bitmap output: 1 = frame covered by event)",
+        "get coverage for video1 and specified process (with/without bitmap):\n"
+        "\tstats interval sequence=video1 process=demo1p_5000_video1\n"
+        "\tstats interval sequence=video1 process=demo1p_5000_video1\n bitmap=true" },
+    { CMD_CONTROL,  "control",  OBJ_PROCESS,
+        "sends control message to running process\n",
+        "\t control process name=demo1p_5000_video1 command=stop" },
     { CMD_TEST,     "test",     OBJ_NONE,
         "runs VTApi unit tests",
         NULL},
@@ -84,7 +88,7 @@ const VTCli::VTCLI_OBJECT_DEF VTCli::m_obj[] =
 {
     { OBJ_DATASET,      "dataset",      PAR_NAME|PAR_LOCATION },
     { OBJ_SEQUENCE,     "sequence",     PAR_NAME|PAR_LOCATION|PAR_TYPE|PAR_REALTIME },
-    { OBJ_INTERVAL,     "interval",     PAR_ID|PAR_PROCESS|PAR_OUTPUTS|PAR_SEQUENCE|PAR_LOCATION|PAR_T1|PAR_T2|PAR_DURATION|PAR_TIMERANGE|PAR_REGION },
+    { OBJ_INTERVAL,     "interval",     PAR_ID|PAR_PROCESS|PAR_OUTPUTS|PAR_SEQUENCE|PAR_LOCATION|PAR_T1|PAR_T2|PAR_DURATION|PAR_TIMERANGE|PAR_REGION|PAR_BITMAP },
     { OBJ_PROCESS,      "process",      PAR_NAME|PAR_METHOD|PAR_INPUTS|PAR_OUTPUTS },
     { OBJ_METHOD,       "method",       PAR_NAME },
     { OBJ_METHODKEYS,   "methodkeys",   PAR_METHOD },
@@ -108,6 +112,8 @@ const VTCli::VTCLI_PARAM_DEF VTCli::m_par[] =
     { PAR_METHOD,       "method",       "process/methodkeys filter by method", "method=demo1" },
     { PAR_INPUTS,       "inputs",       "process filter by input process name", "inputs=demo1p_5000_25" },
     { PAR_OUTPUTS,      "outputs",      "process filter by output table", "outputs=demo1outs" },
+    { PAR_BITMAP,       "bitmap",       "include bitmap in stats output", "bitmap=true" },
+    { PAR_COMMAND,      "command",      "process control command(resume|suspend|stop)", "command=stop" },
     { PAR_NONE,         NULL,           NULL }
 };
 
@@ -233,7 +239,10 @@ bool VTCli::handleCommandLine(const std::string& line, bool *pbStop)
             bRet = loadCommand(tokens);
             break;
         case CMD_STATS:
-            bRet= statsCommand(tokens);
+            bRet = statsCommand(tokens);
+            break;
+        case CMD_CONTROL:
+            bRet = controlCommand(tokens);
             break;
         case CMD_TEST:
             bRet = testCommand();
@@ -576,7 +585,7 @@ bool VTCli::insertCommand(VTCLI_KEYVALUE_LIST& params)
                 if (type.compare("video") == 0) {
                     bRet = loadVideo(ds, FPSNT(location), PVAL_OK(realtime) ? atol(realtime.c_str()) : 0);
                 }
-                    // load directory of images
+                // load directory of images
                 else if (type.compare("images") == 0) {
                     bRet = loadImageFolder(ds, FPST(location));
                 }
@@ -784,7 +793,9 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
         {
         case OBJ_INTERVAL:
         {
-            PVAL(sequence); PVAL(process);
+            PVAL(sequence);
+            PVAL(process);
+            PVAL(bitmap);
 
             if (!PVAL_OK(sequence)) {
                 printError("parent sequence not specified(sequence=<sequencename>)");
@@ -796,11 +807,13 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
                 bRet = false;
                 break;
             }
+            
+            bool do_bitmap = PVAL_OK(bitmap) && (bitmap.compare("true") == 0);
 
             Video *vid = new Video(*(m_vtapi->commons), sequence);
             Process *pr = new Process(*(m_vtapi->commons), process);
             Interval *outs = NULL;
-            unsigned char *bitmap = NULL;
+            unsigned char *bmap = NULL;
             
             do {
                 // check video and process for existence
@@ -825,8 +838,8 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
                 
                 // allocate bitmap
                 size_t lenAlloc = ((len + 7) >> 3) << 3;
-                bitmap = (unsigned char *)malloc(lenAlloc);
-                if (!bitmap) {
+                bmap = (unsigned char *)malloc(lenAlloc);
+                if (!bmap) {
                     stringstream ss;
                     ss << "failed to allocate bitmap of size: " << lenAlloc;
                     printError(ss.str());
@@ -839,7 +852,7 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
                 outs->filterBySequence(sequence);
                 
                 // go through outputs and fill bitmap
-                memset(bitmap, 0, lenAlloc);
+                memset(bmap, 0, lenAlloc);
                 while (outs->next()) {
                     int t1 = outs->getStartTime() - 1;
                     int x1 = (t1 >> 3) << 3;
@@ -847,24 +860,126 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
                     int bits = outs->getEndTime() - t1;
                     
                     for (int x = x1; bits; x++) {
-                        for (int y = 7; y >= y1 && bits; y++) {
-                            bitmap[x] |= (1 << y);
+                        for (int y = 7; y >= y1 && bits; y--) {
+                            bmap[x] |= (1 << y);
                             bits--;
                         }
                         y1 = 0;
                     }
                 }
                 
-                // print length,bitmap
-                cout << len << ',' << base64_encode(bitmap, lenAlloc) << endl;
-
+                // calculate total coverage
+                size_t total = 0;
+                for (size_t x = 0; x < len; x += 8) {
+                    for (int y = 7; y >= 0; y--) {
+                        if (bmap[x] & (1 << y)) total++;
+                    }
+                }
+                
+                // print length,coverage,bitmap
+                cout << "length,coverage";
+                if (do_bitmap) cout << ",bitmap";
+                cout << len << ',' << (double)total/len;
+                if (do_bitmap) cout << ',' << base64_encode(bmap, lenAlloc) << endl;
                 
             } while(0);
             
-            if (bitmap) free(bitmap);
+            if (bmap) free(bmap);
             if (outs) delete outs;
             if (pr) delete pr;
             if (vid) delete vid;
+
+            break;
+        }
+        default:
+        {
+            printError(string("invalid object: ").append(param));
+            bRet = false;
+            break;
+        }
+        }
+
+    } while (0);
+
+    return bRet;
+}
+
+bool VTCli::controlCommand(VTCLI_KEYVALUE_LIST& params)
+{
+    bool bRet = true;
+
+    do {
+        if (params.empty()) {
+            printError("what object for control? type 'help' for list");
+            bRet = false;
+            break;
+        }
+
+        string param = params.front().second;
+        params.pop_front();
+        switch (getObject(param))
+        {
+        case OBJ_PROCESS:
+        {
+            PVAL(name);
+            PVAL(command);
+
+            if (!PVAL_OK(name)) {
+                printError("process name not specified(name=<processname>)");
+                bRet = false;
+                break;
+            }
+            if (!PVAL_OK(command)) {
+                printError("command not specified(command=resume|suspend|stop)");
+                bRet = false;
+                break;
+            }
+
+            Process *pr = new Process(*(m_vtapi->commons), name);
+            ProcessControl *pc = NULL; 
+            
+            do {
+                // check process for existence
+                if (!pr->next()) {
+                    printError(string("process doesn't exist: ").append(name).c_str());
+                    bRet = false;
+                    break;
+                }
+
+                // get command
+                ProcessControl::COMMAND_T cmd = ProcessControl::toCommandValue(command);
+                if (cmd == ProcessControl::COMMAND_NONE) {
+                    printError(string("invalid command: ").append(command).c_str());
+                    bRet = false;
+                    break;
+                }
+                
+                // get process control object
+                pc = pr->getProcessControl();
+                if (!pc) {
+                    printError(string("failed to get process control: ").append(name).c_str());
+                    bRet = false;
+                    break;
+                }
+
+                // connect to server (process instance)
+                bRet = pc->client();
+                if (!bRet) {
+                    printError(string("failed to connect to process: ").append(name).c_str());
+                    break;
+                }
+                
+                // try sending control command
+                bRet = pc->control(cmd);
+                if (!bRet) {
+                    printError(string("failed to send command to process: ").append(name).c_str());
+                    break;
+                }
+
+            } while (0);
+
+            if (pc) delete pc;
+            if (pr) delete pr;
 
             break;
         }

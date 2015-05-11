@@ -63,6 +63,7 @@ protected:
         CMD_DELETE,
         CMD_LOAD,
         CMD_STATS,
+        CMD_CONTROL,
         CMD_TEST,
         CMD_HELP,
         CMD_EXIT
@@ -98,6 +99,8 @@ protected:
         PAR_METHOD      = (1 << 12),
         PAR_INPUTS      = (1 << 13),
         PAR_OUTPUTS     = (1 << 14),
+        PAR_BITMAP      = (1 << 15),
+        PAR_COMMAND     = (1 << 16),
         PAR_ALL         = 0xFFFF        
     } VTCLI_PARAM;
 
@@ -198,6 +201,7 @@ protected:
     bool deleteCommand(VTCLI_KEYVALUE_LIST& params);
     bool loadCommand(VTCLI_KEYVALUE_LIST& params);
     bool statsCommand(VTCLI_KEYVALUE_LIST& params);
+    bool controlCommand(VTCLI_KEYVALUE_LIST& params);
     bool testCommand();
     bool helpCommand();
     
