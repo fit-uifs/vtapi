@@ -66,7 +66,7 @@ const VTCli::VTCLI_COMMAND_DEF VTCli::m_cmd[] =
         "\t(bitmap output: 1 = frame covered by event)",
         "get coverage for video1 and specified process (with/without bitmap):\n"
         "\tstats interval sequence=video1 process=demo1p_5000_video1\n"
-        "\tstats interval sequence=video1 process=demo1p_5000_video1\n bitmap=true" },
+        "\tstats interval sequence=video1 process=demo1p_5000_video1 bitmap=true" },
     { CMD_CONTROL,  "control",  OBJ_PROCESS,
         "sends control message to running process\n",
         "\t control process name=demo1p_5000_video1 command=stop" },
