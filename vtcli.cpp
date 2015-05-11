@@ -879,8 +879,10 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
                 // print length,coverage,bitmap
                 cout << "length,coverage";
                 if (do_bitmap) cout << ",bitmap";
+                cout << endl;
                 cout << len << ',' << (double)total/len;
-                if (do_bitmap) cout << ',' << base64_encode(bmap, lenAlloc) << endl;
+                if (do_bitmap) cout << ',' << base64_encode(bmap, lenAlloc);
+                cout << endl;
                 
             } while(0);
             
