@@ -1,7 +1,7 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf to produce a configure script
 
-AC_INIT([VTApi], [2.0], [ivolf@fit.vutbr.cz], [vtapi], [http://vidte.fit.vutbr.cz])
+AC_INIT([VTApi], [2.5], [ivolf@fit.vutbr.cz], [vtapi], [http://vidte.fit.vutbr.cz])
 AM_INIT_AUTOMAKE
 
 AC_PREREQ([2.63]) # originally, there was autoconf ver. 2.68, but it seems that 2.63 is also OK ;)
@@ -24,8 +24,10 @@ AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 AC_PROG_LIBTOOL(libtool)
 
-VTAPI_API_VERSION=2.0
-VTAPI_SO_VERSION=${VTAPI_API_VERSION//\./\:}
+VTAPI_API_VERSION=$PACKAGE_VERSION
+tmp_version=`echo $VTAPI_API_VERSION | grep -oE "[[0-9]]+(\.[[0-9]]+(\.[[0-9]]+)?)?"`
+tmp_version=(${tmp_version//\./ })
+VTAPI_SO_VERSION=$(( ${tmp_version[[0]]} + ${tmp_version[[1]]} )):$(( ${tmp_version[[2]]} )):$(( ${tmp_version[[1]]} ))
 AC_SUBST([VTAPI_API_VERSION])
 AC_SUBST([VTAPI_SO_VERSION])
 
