@@ -33,14 +33,10 @@ function stripLibsAbsolutePath() {
 }
 
 ### Check, if given macro exists
-function macroExists() {
-  if test `cat aclocal.m4 | grep -oF "[[${1}]]"`
-  then
-    return 0
-  else
-    return 1
-  fi
-}
+m4_define([VT_CHECK_MACRO], 
+  [{ 
+    AS_IF([test -z `cat aclocal.m4 | grep -oF "[[$1]]"`], [AC_MSG_ERROR([could not find m4 macro "[$1]". Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])])
+  }])
 
 
 ###############################################################################
@@ -96,13 +92,8 @@ AC_PROG_CXX
 AC_LANG([C++])
 
 ### Require C++11  
-if macroExists [AX_CXX_COMPILE_STDCXX_11]
-then
-  AX_CXX_COMPILE_STDCXX_11
-else
-  AC_MSG_ERROR([could not find m4 macro ["AX_CXX_COMPILE_STDCXX_11"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
-fi
-
+VT_CHECK_MACRO([AX_CXX_COMPILE_STDCXX_11])
+AX_CXX_COMPILE_STDCXX_11
 
 ### Checks for libraries.
 LT_INIT([disable-static]) # aby se dalo vyrobit .so
@@ -164,11 +155,7 @@ fi
 #   - don't include deprecated FileSystem features
 
 
-if ! macroExists [AX_BOOST_BASE]
-then
-  AC_MSG_ERROR([could not find m4 macro ["AX_BOOST_BASE"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
-fi
-
+VT_CHECK_MACRO([AX_BOOST_BASE])
 boost_present="no"
 AX_BOOST_BASE(1.54, [boost_present="yes"])
 if test "x${boost_present}" = "xno"
@@ -176,17 +163,10 @@ then
   AC_MSG_ERROR([could not find boost headers or libs. Please, install libboost-devel.])
 fi
 
-if ! macroExists [AX_BOOST_SYSTEM]
-then
-  AC_MSG_ERROR([could not find m4 macro ["AX_BOOST_SYSTEM"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
-fi
+VT_CHECK_MACRO([AX_BOOST_SYSTEM])
 AX_BOOST_SYSTEM
 
-
-if ! macroExists [AX_BOOST_FILESYSTEM]
-then
-  AC_MSG_ERROR([could not find m4 macro ["AX_BOOST_FILESYSTEM"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
-fi
+VT_CHECK_MACRO([AX_BOOST_FILESYSTEM])
 AX_BOOST_FILESYSTEM
 
 
