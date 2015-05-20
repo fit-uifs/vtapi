@@ -477,7 +477,7 @@ fi
 
 
 ###############################################################################
-#####   Additions to autoheader (vtapi_autoconfig.h.in) file              #####
+#####   Additions to autoheader (vtapi_autoconfig.h) file                 #####
 ###############################################################################
 AH_TOP([/**
  * @file
