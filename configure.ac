@@ -98,6 +98,7 @@ AC_ARG_WITH([sqlite], AS_HELP_STRING([--without-sqlite], [compile without SQLite
 
 ### Configure enable arguments
 AC_ARG_ENABLE([doc], AS_HELP_STRING([--enable-doc], [Build the documentation]))
+AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Build with debugging symbols and no optimalization]))
 
 
 
@@ -132,6 +133,19 @@ function stripLibsAbsolutePath () {
   fi
   echo "${TMP_LIBS}"
 }
+
+
+
+###############################################################################
+#####   Enable debug                                                      #####
+###############################################################################
+
+if test "x${enable_debug}" = "xyes"
+then
+  CPPFLAGS="-g -O0 ${CPPFLAGS}"
+else
+  enable_debug="no"
+fi
 
 
 
@@ -600,5 +614,6 @@ fi
 
 AC_MSG_RESULT([  proc/procps:    ${readproc_present}])
 AC_MSG_RESULT([  documentation:  ${DOC_SUMMARY}])
+AC_MSG_RESULT([  debug symbols:  ${enable_debug}])
 AC_MSG_RESULT()
 AC_MSG_RESULT()
