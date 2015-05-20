@@ -16,7 +16,12 @@ AC_PROG_CXX
 AC_LANG([C++])
 
 # Require C++11
-AX_CXX_COMPILE_STDCXX_11
+if test `cat aclocal.m4 | grep -oF "[[AX_CXX_COMPILE_STDCXX_11]]"`
+then
+  AX_CXX_COMPILE_STDCXX_11
+else
+  AC_MSG_ERROR([could not find m4 macro ["AX_CXX_COMPILE_STDCXX_11"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
+fi
 
 # Checks for libraries.
 
