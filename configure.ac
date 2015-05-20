@@ -1,5 +1,11 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script
+###############################################################################
+##### Autoconf instructions for VTApi                                     #####
+#####                                                                     #####
+##### Author: Tomas Volf, ivolf@fit.vutbr.cz                              #####
+###############################################################################
+##### Process ./autogen.sh to produce a configure script.                 #####
+##### Do not forget to re-run ./autogen.sh on each change of this file.   #####
+###############################################################################
 
 AC_INIT([VTApi], [2.5], [ivolf@fit.vutbr.cz], [vtapi], [http://vidte.fit.vutbr.cz])
 AM_INIT_AUTOMAKE
@@ -9,39 +15,32 @@ AC_PREREQ([2.63]) # originally, there was autoconf ver. 2.68, but it seems that 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([include/common/vtapi_autoconfig.h])
 
-# Checks for programs.
-AC_PROG_CXX
 
-# Use entered compiler for checks
-AC_LANG([C++])
+###############################################################################
+#####   Core tools - some useful functions                                #####
+###############################################################################
 
-# Require C++11
-if test `cat aclocal.m4 | grep -oF "[[AX_CXX_COMPILE_STDCXX_11]]"`
-then
-  AX_CXX_COMPILE_STDCXX_11
-else
-  AC_MSG_ERROR([could not find m4 macro ["AX_CXX_COMPILE_STDCXX_11"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
-fi
+### Strip absolute path of *.so libs (/path/to/lib/libXYZ.so) to format "-L/path/to/lib -lXYZ" for LD
+function stripLibsAbsolutePath() {
+  local TMP_LIBS=`echo $1 | sed -r 's@([[^ ]]*/)?lib([[-_.A-Za-z0-9]]+)\.so(\s|$)@ \-l\2 @g'`
+  local TMP_LDIR=`echo $1 | grep -o -E '[[^ ]]+/lib[[-_.A-Za-z0-9]]+\.so' | head -n 1`
+  if test "x${TMP_LDIR}" != "x"
+  then
+    TMP_LDIR=`echo ${TMP_LDIR} | sed -r 's@([[^ ]]+)/lib[[-_.A-Za-z0-9]]+\.so@\-L\1@'`
+    TMP_LIBS="${TMP_LDIR} ${TMP_LIBS}"
+  fi
+  echo "${TMP_LIBS}"
+}
 
-# Checks for libraries.
-
-# aby se dalo vyrobit .so
-LT_INIT([disable-static])
-AC_LIBTOOL_DLOPEN
-AC_ENABLE_SHARED
-AC_DISABLE_STATIC
-AC_PROG_LIBTOOL(libtool)
-
-VTAPI_API_VERSION=$PACKAGE_VERSION
-tmp_version=`echo $VTAPI_API_VERSION | grep -oE "[[0-9]]+(\.[[0-9]]+(\.[[0-9]]+)?)?"`
-tmp_version=(${tmp_version//\./ })
-VTAPI_SO_VERSION=$(( ${tmp_version[[0]]} + ${tmp_version[[1]]} )):$(( ${tmp_version[[2]]} )):$(( ${tmp_version[[1]]} ))
-AC_SUBST([VTAPI_API_VERSION])
-AC_SUBST([VTAPI_SO_VERSION])
-
-
-CPPFLAGS="${CPPFLAGS} ${VTAPI_CPPFLAGS}"
-LDFLAGS="${LDFLAGS} ${VTAPI_LDFLAGS}"
+### Check, if given macro exists
+function macroExists() {
+  if test `cat aclocal.m4 | grep -oF "[[${1}]]"`
+  then
+    return 0
+  else
+    return 1
+  fi
+}
 
 
 ###############################################################################
@@ -85,37 +84,54 @@ AC_ARG_ENABLE([debug], AS_HELP_STRING([--enable-debug], [Build with debugging sy
 
 
 
+
+
 ###############################################################################
 #####   Core tools presence check                                         #####
 ###############################################################################
+### Checks for programs.
+AC_PROG_CXX
+
+### Use entered compiler for checks
+AC_LANG([C++])
+
+### Require C++11  
+if macroExists [AX_CXX_COMPILE_STDCXX_11]
+then
+  AX_CXX_COMPILE_STDCXX_11
+else
+  AC_MSG_ERROR([could not find m4 macro ["AX_CXX_COMPILE_STDCXX_11"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
+fi
+
+
+### Checks for libraries.
+LT_INIT([disable-static]) # aby se dalo vyrobit .so
+AC_LIBTOOL_DLOPEN
+AC_ENABLE_SHARED
+AC_DISABLE_STATIC
+AC_PROG_LIBTOOL(libtool)
 
 ### ltdl => yum install libtool-ltdl-devel (urpmi libtool-base)
-AC_CHECK_HEADER(ltdl.h, [], [AC_MSG_ERROR([the ltdl.h header is missing. Please install package libtool-ltdl-devel (libtool-base, ..).])])
+AC_CHECK_HEADER(ltdl.h, [], [AC_MSG_ERROR([ltdl.h header is missing. Please, install package libtool-ltdl-devel (libtool-base, ..).])])
 LTDL_CFLAGS=""
 LTDL_LIBS="-lltdl"
 AC_SUBST([LTDL_CFLAGS])
 AC_SUBST([LTDL_LIBS])
 
 ### pkg-config
-AC_PATH_PROG([PKG_CONFIG], [pkg-config], [AC_MSG_ERROR([could not find pkg-config. You may need to install pkg-config.])])
+AC_PATH_PROG([PKG_CONFIG], [pkg-config], [AC_MSG_ERROR([could not find pkg-config. Please, install pkg-config.])])
 
 
+VTAPI_API_VERSION=$PACKAGE_VERSION
+tmp_version=`echo $VTAPI_API_VERSION | grep -oE "[[0-9]]+(\.[[0-9]]+(\.[[0-9]]+)?)?"`
+tmp_version=(${tmp_version//\./ })
+VTAPI_SO_VERSION=$(( ${tmp_version[[0]]} + ${tmp_version[[1]]} )):$(( ${tmp_version[[2]]} )):$(( ${tmp_version[[1]]} ))
+AC_SUBST([VTAPI_API_VERSION])
+AC_SUBST([VTAPI_SO_VERSION])
 
-###############################################################################
-#####   Core tools - some useful functions                                #####
-###############################################################################
 
-### Strip absolute path of *.so libs (/path/to/lib/libXYZ.so) to format "-L/path/to/lib -lXYZ" for LD
-function stripLibsAbsolutePath () {
-  local TMP_LIBS=`echo $1 | sed -r 's@([[^ ]]*/)?lib([[-_.A-Za-z0-9]]+)\.so(\s|$)@ \-l\2 @g'`
-  local TMP_LDIR=`echo $1 | grep -o -E '[[^ ]]+/lib[[-_.A-Za-z0-9]]+\.so' | head -n 1`
-  if test "x${TMP_LDIR}" != "x"
-  then
-    TMP_LDIR=`echo ${TMP_LDIR} | sed -r 's@([[^ ]]+)/lib[[-_.A-Za-z0-9]]+\.so@\-L\1@'`
-    TMP_LIBS="${TMP_LDIR} ${TMP_LIBS}"
-  fi
-  echo "${TMP_LIBS}"
-}
+CPPFLAGS="${CPPFLAGS} ${VTAPI_CPPFLAGS}"
+LDFLAGS="${LDFLAGS} ${VTAPI_LDFLAGS}"
 
 
 
@@ -148,10 +164,30 @@ fi
 #   - don't include deprecated FileSystem features
 
 
-# THIS BULLSHIT FINDS WRONG BOOST LIB DIR AND THEN IT FAILS!
-#AX_BOOST_BASE(1.55)
-#AX_BOOST_SYSTEM
-#AX_BOOST_FILESYSTEM
+if ! macroExists [AX_BOOST_BASE]
+then
+  AC_MSG_ERROR([could not find m4 macro ["AX_BOOST_BASE"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
+fi
+
+boost_present="no"
+AX_BOOST_BASE(1.54, [boost_present="yes"])
+if test "x${boost_present}" = "xno"
+then
+  AC_MSG_ERROR([could not find boost headers or libs. Please, install libboost-devel.])
+fi
+
+if ! macroExists [AX_BOOST_SYSTEM]
+then
+  AC_MSG_ERROR([could not find m4 macro ["AX_BOOST_SYSTEM"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
+fi
+AX_BOOST_SYSTEM
+
+
+if ! macroExists [AX_BOOST_FILESYSTEM]
+then
+  AC_MSG_ERROR([could not find m4 macro ["AX_BOOST_FILESYSTEM"]. Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])
+fi
+AX_BOOST_FILESYSTEM
 
 
 BOOST_CPPFLAGS="-DBOOST_DATE_TIME_NO_LIB -DBOOST_FILESYSTEM_NO_DEPRECATED"
