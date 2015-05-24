@@ -176,6 +176,23 @@ BOOST_LIBS="-lboost_system -lboost_filesystem"
 AC_SUBST([BOOST_CPPFLAGS])
 AC_SUBST([BOOST_LIBS])
 
+# ac_boost_path = NULL => user-defined path was not requested - use one of system path
+boost_version_fpath="/include/boost/version.hpp"
+if test "${ac_boost_path}" = ""
+then
+  for i in /usr /usr/local /opt /opt/local
+  do
+    if test -f "${i}${boost_version_fpath}"
+    then
+      ac_boost_path=$i
+      break
+    fi
+  done
+fi
+BOOST_VERSION=`sed -n 's/.*BOOST_LIB_VERSION "\([[[:digit:]]]\+\)_\([[[:digit:]]]\+\)".*/\1.\2/p' "${ac_boost_path}${boost_version_fpath}"`
+
+BOOST_SUMMARY="yes   (version: ${BOOST_VERSION})"
+
 
 ###############################################################################
 #####   OpenCV presence check                                             #####
@@ -603,6 +620,7 @@ AC_OUTPUT
 AC_MSG_RESULT()
 AC_MSG_RESULT()
 AC_MSG_RESULT([ ---------- VTApi ${VTAPI_API_VERSION} configure summary ----------])
+AC_MSG_RESULT([  Boost:          ${BOOST_SUMMARY}])
 AC_MSG_RESULT([  OpenCV:         ${OPENCV_SUMMARY}])
 AC_MSG_RESULT([  SQLite:         ${SQLITE_SUMMARY}])
 if test "x${sqlite_present}" = "xyes" -a "x${SQLITE_PC}" != "x"
