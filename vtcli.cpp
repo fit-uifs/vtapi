@@ -256,7 +256,9 @@ bool VTCli::handleCommandLine(const std::string& line, bool *pbStop)
         }
     }
     else {
-        printError(string("failed to parse line: ").append(line));
+        if (! pbStop) {
+	    printError(string("failed to parse line: ").append(line));
+	}
     }
     
     return bRet;
