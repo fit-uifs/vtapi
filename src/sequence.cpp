@@ -170,6 +170,7 @@ bool Video::add(string name, string location) {
             retval = VT_FAIL;
         }
     }
+    this->closeVideo();
     
 #endif
     
@@ -236,7 +237,7 @@ bool VideoPlayer::play() {
 
     if (!videos.empty()) {
         cap = cv::VideoCapture(videos.front().getDataLocation());
-        int fps = (int) cap.get(CV_CAP_PROP_FPS);
+        fps = (int) cap.get(CV_CAP_PROP_FPS);
     }
     // TODO: images, ...
     // frame = cv::imread("img.jpg");
@@ -247,14 +248,18 @@ bool VideoPlayer::play() {
 
     // toz a jedem
     if(cap.isOpened()) {
-        cv::namedWindow("video",1);
+        cv::namedWindow("video", CV_WINDOW_AUTOSIZE);
         cv::Mat frame;
         while(1)
         {
             cap >> frame;
+            if (frame.empty()) {
+                break;
+            }
             cv::imshow("video", frame);
             if(cv::waitKey(1000 / fps) >= 0) break; // correct the with real timer!
         }
+        cap.release();
         cv::destroyWindow("video");
     }
     else {
