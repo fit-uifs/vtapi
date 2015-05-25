@@ -67,6 +67,9 @@ int VTCli::run() {
         if (do_help) {
             printHelp (command);
         }
+        else if (command.empty() && this->interact) {
+            continue;
+        }
         // commands
         else if (command.compare("select") == 0) {
             selectCommand (line);
