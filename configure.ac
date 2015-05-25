@@ -34,8 +34,8 @@ function stripLibsAbsolutePath() {
 
 ### Check, if given macro exists
 m4_define([VT_CHECK_MACRO], 
-  [{ 
-    AS_IF([test -z `cat aclocal.m4 | grep -oF "[[$1]]"`], [AC_MSG_ERROR([could not find m4 macro "[$1]". Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])])
+  [{
+    AS_IF([test -z `cat aclocal.m4 | grep -oF "[[$1]]"` && test -z `cat aclocal.m4 | grep -ioF "4_include([[m4/$1.m4]])"`], [AC_MSG_ERROR([could not find m4 macro "[$1]". Please, install package autoconf-archive, rebuild configure by autogen.sh and try it again.])])
   }])
 
 
