@@ -15,6 +15,7 @@ AC_PREREQ([2.63]) # originally, there was autoconf ver. 2.68, but it seems that 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_HEADERS([include/common/vtapi_autoconfig.h])
 
+${CXXFLAGS=""}
 
 ###############################################################################
 #####   Core tools - some useful functions                                #####
@@ -135,6 +136,7 @@ then
   CPPFLAGS="-g -O0 ${CPPFLAGS}"
 else
   enable_debug="no"
+  CPPFLAGS="-O2 ${CPPFLAGS}"
 fi
 
 
