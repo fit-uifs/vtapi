@@ -46,7 +46,7 @@ VTApi::VTApi(int argc, char** argv) {
         cerr << "Aborting: Database connection info missing. Use \"-h\" for help. " << endl;
         cerr << "Use config file (--config=\"/path/to/somefile.conf\") or check help for command line option \"-c\"." << endl;
         cmdline_parser_free (&args_info);
-        vt_destruct(cli_params);
+        free(cli_params);
         throw new std::exception();
     }
     // TODO: user authentization here
@@ -57,7 +57,7 @@ VTApi::VTApi(int argc, char** argv) {
         cerr << "Error parsing config arguments" << endl;
     }
     cmdline_parser_free (&args_info);
-    vt_destruct(cli_params);
+    free(cli_params);
 }
 
 VTApi::VTApi(const string& configFile) {
@@ -285,8 +285,9 @@ void VTApi::testGenericClasses() {
     kvFloatA.print();
 
     cout << "** CLEANUP" << endl;
-    vt_destruct(int_deserial);
-    vt_destruct(fl_deserial);
+    vt_destructall(int_deserial);
+    vt_destructall(fl_deserial);
+    vt_destruct(arr_serial);
     vt_destruct(kvStringPt);
 
     cout << endl << "DONE testing generic classes.";
@@ -359,7 +360,7 @@ void VTApi::testInterval(Sequence *sequence) {
     cout << "USING sequence " << sequence->getSequence() << endl << endl;
 
     cout << "** SHOWING all intervals" << endl;
-    Interval* interval = sequence->newInterval();
+    Interval* interval = new Interval(*sequence, "test1out");
     interval->select->setLimit(10);
     // interval->select->from("intervals", "DESC_DENSE16_CSIFT_NoA_UNC_K32_o10_L01_KM_L12[1]");
     // interval->select->whereFloat("DESC_DENSE16_CSIFT_NoA_UNC_K32_o10_L01_KM_L12[1]", 0.0, ">");
