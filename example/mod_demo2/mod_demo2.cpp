@@ -47,6 +47,8 @@ void do_work(Process *p, Dataset *ds)
     // ziskame parametr naseho procesu
     std::string videoName = p->getParamString("video");
     
+    p->updateStateRunning(0, videoName);
+    
     // vystupni data, do kterych budeme ukladat vysledky
     Interval *output = p->getOutputData();
     output->next();
@@ -67,6 +69,9 @@ void do_work(Process *p, Dataset *ds)
         // iterujeme pres vstupni data, vyfiltrujeme si pouze nase video
         Interval *input = p->getInputData();
         input->filterBySequence(videoName);
+        int cntTotal = input->count();
+        int cntDone = 0;
+        
         while (input->next()) {
             // ziskame predvypocitany vektor floatu
             int size = 0;
@@ -78,6 +83,7 @@ void do_work(Process *p, Dataset *ds)
                 }
                 delete[] features_array;
             }
+
             // ziskame predvypocitanou matici
             cv::Mat1f *features_mat = (cv::Mat1f *)input->getCvMat("features_mat");
             if (features_mat) {
@@ -87,6 +93,8 @@ void do_work(Process *p, Dataset *ds)
                 }
                 delete features_mat;
             }
+            
+            p->updateStateRunning(((float)++cntDone / cntTotal) * 100.0, videoName);
         }
         delete input;
         
@@ -100,4 +108,6 @@ void do_work(Process *p, Dataset *ds)
     delete video;
     
     delete output;
+    
+    p->updateStateFinished(100.0);
 }
