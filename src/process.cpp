@@ -85,64 +85,66 @@ ProcessState *Process::getState()
     return this->getProcessState("state");
 }
 
-bool Process::updateStateRunning(float progress, const string& currentItem, ProcessControl *control)
+bool Process::updateState(const ProcessState& state, ProcessControl *control)
 {
     bool retval = true;
-    retval &= setPStatus("state,status", ProcessState::STATUS_RUNNING);
-    retval &= setFloat("state,progress", progress);
-    retval &= setString("state,current_item", currentItem);
+    
+    retval &= setPStatus("state,status", state.status);
+    
+    switch (state.status)
+    {
+    case ProcessState::STATUS_RUNNING:
+        retval &= setFloat("state,progress", state.progress);
+        retval &= setString("state,current_item", state.currentItem);
+        break;
+    case ProcessState::STATUS_FINISHED:
+        retval &= setFloat("state,progress", state.progress);
+        break;
+    case ProcessState::STATUS_ERROR:
+        retval &= setString("state,last_error", state.lastError);
+        break;
+    case ProcessState::STATUS_SUSPENDED:
+        break;
+    default:
+        retval = false;
+        break;
+    }
+
     if (retval) {
         retval = setExecute();
         if (retval && control) {
-            retval = control->notify(ProcessState(ProcessState::STATUS_RUNNING, progress, currentItem));
+            retval = control->notify(state);
         }
+    }
+    else {
+        preSet();
     }
 
     return retval;
+}
+
+bool Process::updateStateRunning(float progress, const string& currentItem, ProcessControl *control)
+{
+    return updateState(
+        ProcessState(ProcessState::STATUS_RUNNING, progress, currentItem), control);
 }
 
 bool Process::updateStateSuspended(ProcessControl *control)
 {
-    bool retval = true;
-    retval &= setPStatus("state,status", ProcessState::STATUS_SUSPENDED);
-    if (retval) {
-        retval = setExecute();
-        if (retval && control) {
-            retval = control->notify(ProcessState(ProcessState::STATUS_SUSPENDED));
-        }
-    }
-
-    return retval;
+    return updateState(
+        ProcessState(ProcessState::STATUS_SUSPENDED, 0, ""), control);
 }
 
 bool Process::updateStateFinished(float progress, ProcessControl *control)
 {
-    bool retval = true;
-    retval &= setPStatus("state,status", ProcessState::STATUS_FINISHED);
-    retval &= setFloat("state,progress", progress);
-    if (retval) {
-        retval = setExecute();
-        if (retval && control) {
-            retval = control->notify(ProcessState(ProcessState::STATUS_FINISHED, progress));
-        }
-    }
-
-    return retval;
+    return updateState(
+        ProcessState(ProcessState::STATUS_FINISHED, progress, ""), control);
 }
 
 bool Process::updateStateError(const string& lastError, ProcessControl *control)
 {
-    bool retval = true;
-    retval &= setPStatus("state,status", ProcessState::STATUS_ERROR);
-    retval &= setString("state,last_error", lastError);
-    if (retval) {
-        retval = setExecute();
-        if (retval && control) {
-            retval = control->notify(ProcessState(ProcessState::STATUS_ERROR, 0, lastError));
-        }
-    }
-    
-    return retval;
+    return updateState(
+        ProcessState(ProcessState::STATUS_ERROR, 0, lastError), control);
 }
 
 bool Process::controlResume(ProcessControl *control)

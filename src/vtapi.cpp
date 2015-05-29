@@ -92,14 +92,22 @@ Dataset* VTApi::newDataset(const string& name) {
     return (new Dataset(*commons, name));
 }
 
-Process *VTApi::initProcess()
+Process *VTApi::initProcess(ProcessState &initState)
 {
-    Process *p = NULL;
+    Process * p = NULL;
     
     if (!this->commons->getProcess().empty()) {
-        p = new Process(*this->commons);
-        if (p && !p->next()) {
-            vt_destruct(p);
+        if (p = new Process(*this->commons)) {
+            if (p->next()) {
+                ProcessState *ps = p->getProcessState("state");
+                if (ps) {
+                    initState = *ps;
+                    delete ps;
+                }
+            }
+            else {
+                vt_destruct(p);
+            }
         }
     }
 
