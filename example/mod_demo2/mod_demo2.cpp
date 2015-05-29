@@ -18,8 +18,9 @@ void do_work(Process *p, Dataset *ds);
 int main(int argc, char** argv)
 {
     VTApi *vtapi = new VTApi(argc, argv);
-    
-    Process *process = vtapi->initProcess();
+
+    ProcessState initState;
+    Process *process = vtapi->initProcess(initState);
     if (process) {
         printf("mod_demo2: launched as process %s\n", process->getName().c_str());
 

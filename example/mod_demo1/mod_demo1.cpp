@@ -11,8 +11,8 @@
 */
 
 #include <cstdlib>
-#include <pthread.h>
-#include <unistd.h>
+#include <mutex>
+#include <condition_variable>
 #include <vtapi.h>
 
 using namespace vtapi;
@@ -20,21 +20,15 @@ using namespace vtapi;
 // [CHANGE] synchronizacni pomucka
 typedef struct _SYNC_T
 {
-    pthread_mutex_t mtx;
-    pthread_cond_t cond;
-    ProcessControl::COMMAND_T command;
-
-    _SYNC_T()
+    std::mutex mtxLock;
+    std::condition_variable cvResume;
+    bool bSuspended;
+    bool bStopped;
+    
+    _SYNC_T(bool bSuspended)
     {
-        pthread_mutex_init(&mtx, NULL);
-        pthread_cond_init(&cond, NULL);
-        command = ProcessControl::COMMAND_NONE;
-    }
-
-    ~_SYNC_T()
-    {
-        pthread_cond_destroy(&cond);
-        pthread_mutex_destroy(&mtx);
+        this->bSuspended = bSuspended;
+        this->bStopped = false;
     }
 } SYNC_T;
 
@@ -42,7 +36,7 @@ typedef struct _SYNC_T
 // [CHANGE] callback pro reakce na kontrolni prikazy z launcheru (kontrolni vlakno)
 void ControlCallback(ProcessControl::COMMAND_T command, void *context);
 // [CHANGE] overeni, zda nebyl prijat kontroli prikaz
-ProcessControl::COMMAND_T check_command(SYNC_T& sync);
+bool check_state(Process *process, ProcessControl *pctrl, SYNC_T& sync);
 // [CHANGE] vypocetni funkce (vypocetni vlakno)
 void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& sync);
 
@@ -55,14 +49,17 @@ int main(int argc, char** argv)
     // instanciace VTApi, pripojeni k DB
     VTApi *vtapi = new VTApi(argc, argv);
     
+    // [CHANGE] vstupni stav procesu
+    ProcessState initState;
+    
     // ziskani proces objektu, jehoz jsme instanci
     // [CHANGE] - odstranena nutnost nasledujici funkce next()
-    Process *process = vtapi->initProcess();
+    Process *process = vtapi->initProcess(initState);
     if (process) {
         printf("mod_demo1: launched as process %s\n", process->getName().c_str());
 
         // synchronizacni objekty
-        SYNC_T sync;
+        SYNC_T sync(initState.status == ProcessState::STATUS_SUSPENDED);
         
         // [CHANGE] objekt pro komunikaci
         ProcessControl *pctrl = process->getProcessControl();
@@ -104,22 +101,19 @@ int main(int argc, char** argv)
 void ControlCallback(ProcessControl::COMMAND_T command, void *context)
 {
     SYNC_T *sync = (SYNC_T *)context;
-    
-    pthread_mutex_lock(&sync->mtx);
-    sync->command = command;
-    pthread_cond_signal(&sync->cond);
-    pthread_mutex_unlock(&sync->mtx);
+    std::unique_lock<std::mutex> lk(sync->mtxLock);
 
     switch (command)
     {
+    case ProcessControl::COMMAND_STOP:
+        sync->bStopped = true;
     case ProcessControl::COMMAND_RESUME:
-        printf("mod_demo1: RESUME command received\n");
+        sync->bSuspended = false;
+        lk.unlock();
+        sync->cvResume.notify_all();
         break;
     case ProcessControl::COMMAND_SUSPEND:
-        printf("mod_demo1: SUSPEND command received\n");
-        break;
-    case ProcessControl::COMMAND_STOP:
-        printf("mod_demo1: STOP command received\n");
+        sync->bSuspended = true;
         break;
     default:
         break;
@@ -127,28 +121,29 @@ void ControlCallback(ProcessControl::COMMAND_T command, void *context)
 }
 
 // [CHANGE] overeni, zda nebyl prijat kontroli prikaz
-ProcessControl::COMMAND_T check_command(SYNC_T& sync)
+bool check_state(Process *process, ProcessControl *pctrl, SYNC_T& sync)
 {
-    ProcessControl::COMMAND_T cmd = ProcessControl::COMMAND_NONE;
-    struct timespec tw = {0};
+    std::unique_lock<std::mutex> lk(sync.mtxLock);
     
-    pthread_mutex_lock(&sync.mtx);
-    if (pthread_cond_timedwait(&sync.cond, &sync.mtx, &tw) == 0) {
-        cmd = sync.command;
-        sync.command = ProcessControl::COMMAND_NONE;
+    if (sync.bSuspended) {
+        process->updateStateSuspended(pctrl);
+        sync.cvResume.wait(lk);
     }
-    pthread_mutex_unlock(&sync.mtx);
-    
-    return cmd;
+
+    return !sync.bStopped;
 }
 
 // vypocetni funkce (vypocetni vlakno)
 void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& sync)
 {
+    // [CHANGE] initial wait if process was started suspended
+    // false = stop proces
+    if (!check_state(process, pctrl, sync)) return;
+    
     // ziskame parametry naseho procesu
     int param1 = process->getParamInt("param1");
     double param2 = process->getParamDouble("param2");
-
+    
     // vysledne pole floatu a matice
     float features_array[3] = { 0 };
     cv::Mat1f features_mat(3, 2);
@@ -162,8 +157,7 @@ void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& 
     Video *video = dataset->newVideo();
     
     // [CHANGE] pocet videi celkove
-    //size_t cntTotal = video->count(); // zatim nefunguje
-    size_t cntTotal = 10;
+    size_t cntTotal = video->count();
     size_t cntDone  = 0;
     bool error = false;
 
@@ -171,8 +165,9 @@ void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& 
     process->updateStateRunning(0, video->getName(), pctrl);
 
     // projdeme vsechna videa datasetu
-    while (video->next()) {
-        
+    // [CHANGE] overeni pozastaveni/stopnuti procesu
+    while (video->next() && check_state(process, pctrl, sync)) {
+
         // [CHANGE] ukazka otevreni, zpracovani videa
         if (video->openVideo()) {
             // ukazka: vlastni cv capture
@@ -207,11 +202,7 @@ void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& 
             *it = dummy_seed;
             dummy_seed += 0.1;
         }
-        
         output->addCvMat("features_mat", features_mat);
-        
-        // potvrdime insert
-        output->addExecute();
         
         // [CHANGE] update stavu procesu
         ++cntDone;
@@ -222,16 +213,15 @@ void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& 
             "video %s\n"
             "  features array = %s\n"
             "  features mat(%d,%d) = %s\n",
-            cntDone/(float)cntTotal,
+            progress,
             video->getName().c_str(),
             toString(features_array, sizeof (features_array) / sizeof (float), 0).c_str(),
             features_mat.rows, features_mat.cols, toStringCvMat(features_mat).c_str());
-        
-        // [CHANGE] overime, zda nedorazil prikaz a zachovame se podle toho
-        // proces by mel vzdy updatovat svuj stav (napr. updateStateSuspended)
-        if (check_command(sync) == ProcessControl::COMMAND_STOP) break;
     }
-    
+
+    // potvrdime vsechny inserty
+    output->addExecute();
+
     delete video;
     delete output;
 
@@ -243,5 +233,4 @@ void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& 
     else {
         process->updateStateError("this is error message", pctrl);
     }
-
 }
