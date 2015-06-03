@@ -446,17 +446,16 @@ bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const str
 {
     bool ret = true;
     PGparam *cvmat = NULL;
+    PGarray mat_dims = { 0 };
 
     do {
         // create dimensions array
-        PGarray mat_dims    = { 0 };
         mat_dims.param = pqt.PQparamCreate((PGconn *) connection);
         if (!mat_dims.param) { ret = false; break; }
         
         for (int i = 0; i < value.dims; i++) {
             ret &= (0 != pqt.PQputf(mat_dims.param, "%int4", value.size[i]));
         }
-        pqt.PQparamClear(mat_dims.param);
         if (!ret) break;
 
         // matrix data
@@ -474,7 +473,8 @@ bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const str
     } while(0);
 
     if (cvmat) pqt.PQparamClear(cvmat);
-    
+    if (mat_dims.param) pqt.PQparamClear(mat_dims.param);
+
     return ret;
 }
 #endif

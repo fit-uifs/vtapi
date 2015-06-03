@@ -568,7 +568,7 @@ bool VTCli::insertCommand(VTCLI_KEYVALUE_LIST& params)
         }
         case OBJ_SEQUENCE:
         {
-            PVAL(location); PVAL(type); PVAL(realtime);
+            PVAL(location); PVAL(type); PVAL(realtime); PVAL(name);
 
             if (!PVAL_OK(location)) {
                 printError("sequence location not specified(location=<relativepath>)");
@@ -585,7 +585,7 @@ bool VTCli::insertCommand(VTCLI_KEYVALUE_LIST& params)
             if (ds->next()) {
                 // load one video
                 if (type.compare("video") == 0) {
-                    bRet = loadVideo(ds, FPSNT(location), PVAL_OK(realtime) ? atol(realtime.c_str()) : 0);
+                    bRet = loadVideo(ds, name,FPSNT(location), PVAL_OK(realtime) ? atol(realtime.c_str()) : 0);
                 }
                 // load directory of images
                 else if (type.compare("images") == 0) {
@@ -1164,12 +1164,12 @@ bool VTCli::loadDirectory(Dataset *ds, const string& basepath, const string& dir
     return bRet;
 }
 
-bool VTCli::loadVideo(Dataset *ds, const std::string &filepath, const time_t& realtime)
+bool VTCli::loadVideo(Dataset *ds, const std::string &name, const std::string &filepath, const time_t& realtime)
 {
     bool bRet = true;
     
     Video *vid = ds->newVideo();
-    if (vid->add(getFileNameNoExt(filepath), filepath, realtime)) {
+    if (vid->add(name.empty() ? getFileNameNoExt(filepath) : name, filepath, realtime)) {
         if (!vid->addExecute()) {
             printError(string("failed to insert video: ").append(filepath).c_str());
             bRet = false;

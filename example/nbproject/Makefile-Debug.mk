@@ -64,7 +64,7 @@ launcher: ${OBJECTFILES}
 ${OBJECTDIR}/launcher.o: launcher.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -g -I../include -I/usr/include/postgresql -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/launcher.o launcher.cpp
+	$(COMPILE.cc) -g -I../include -I/usr/include/postgresql -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/launcher.o launcher.cpp
 
 # Subprojects
 .build-subprojects:

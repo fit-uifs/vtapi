@@ -37,9 +37,9 @@ public:
     typedef enum _COMMAND_T
     {
         COMMAND_NONE,       /**< invalid command */
+        COMMAND_STOP,       /**< stop running process */
         COMMAND_RESUME,     /**< resume suspended process */
-        COMMAND_SUSPEND,    /**< pause running process */
-        COMMAND_STOP        /**< stop running process */
+        COMMAND_SUSPEND     /**< pause running process */
     } COMMAND_T;
 
     // Registerable callback type on server side, notifies on control command
@@ -49,7 +49,7 @@ public:
     typedef void (*fClientCallback)(const ProcessState& state, void *context);
     
 public:
-    ProcessControl(const std::string& name);
+    ProcessControl(const std::string& processName);
     virtual ~ProcessControl();
 
     /**
@@ -91,16 +91,96 @@ public:
     bool notify(const ProcessState& state);
     
     /**
-     * Closes server/client connection end
-     * @return success
+     * Closes server/client connection
      */
-    bool close();
+    void close();
 
     static COMMAND_T toCommandValue(const std::string& command_string);
     static std::string toCommandString(COMMAND_T command);
     
-protected:
-    std::string processName;
+private:
+    class ComBase
+    {
+    public:
+        explicit ComBase(const std::string& baseName);
+        virtual ~ComBase();
+        
+    protected:
+        class ThreadArgs
+        {
+        public:
+            ThreadArgs(ComBase *pBase);
+            void setReady(bool bSuccess);
+
+        private:            
+            ComBase *m_pBase;
+            std::mutex m_mtxReady;
+            std::condition_variable m_cvReady;
+            bool m_bSuccess;
+            
+            friend class ComBase;
+        };
+        
+        bool runThread();
+        void waitForThread();
+        static void threadProc(ThreadArgs *pArgs);
+        virtual void threadMain(ThreadArgs &args) = 0;
+        
+        std::mutex m_mtxSend;
+        std::string m_baseName;
+        
+    private:
+        std::thread *m_pThread;
+    };
+    
+    class Server : public ComBase
+    {
+    public:
+        Server(const std::string& baseName);
+        virtual ~Server();
+
+        bool create(fServerCallback callback, void *context);
+        void close();
+        bool sendNotify(const ProcessState& state);
+
+    protected:
+        void threadMain(ThreadArgs &args);
+
+    private:
+        boost::interprocess::message_queue *m_pCommandQueue;
+        std::vector<boost::interprocess::message_queue*> m_vctNotifyQueues;
+        fServerCallback m_callback;
+        void *m_pCallbackContext;
+    };
+    
+    
+    class Client : public ComBase
+    {
+    public:
+        explicit Client(const std::string& baseName);
+        virtual ~Client();
+
+        bool create(unsigned int connectTimeout, fClientCallback callback, void *context);
+        void close();
+        bool sendCommand(COMMAND_T command);
+
+    protected:
+        void threadMain(ThreadArgs &args);
+        
+    private:
+        bool sendConnect();
+        bool sendDisconnect();
+        
+        int m_slot;
+        boost::interprocess::message_queue *m_pCommandQueue;
+        boost::interprocess::message_queue *m_pNotifyQueue;
+        fClientCallback m_callback;
+        void *m_pCallbackContext;
+    };
+    
+    
+    Server m_server;
+    Client m_client;
 } ;
 
 }

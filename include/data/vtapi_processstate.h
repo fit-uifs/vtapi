@@ -56,6 +56,7 @@ public:
     
 public:
     ProcessState();
+    ProcessState(const std::string& stateString);
     ProcessState(STATUS_T status, float progress = 0, const std::string& item = "");
     virtual ~ProcessState();
 

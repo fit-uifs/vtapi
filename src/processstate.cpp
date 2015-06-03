@@ -28,6 +28,24 @@ ProcessState::ProcessState()
     progress = 0.0;
 }
 
+ProcessState::ProcessState(const std::string& stateString)
+{
+    size_t pos = stateString.find('(', 0);
+    size_t pos2  = stateString.find(',', pos + 1);
+    size_t pos3 = stateString.find(',', pos2 + 1);
+    size_t pos4 = stateString.find(',', pos3 + 1);
+    size_t pos5 = stateString.find(')', pos4 + 1);
+    if (pos != string::npos && pos2 != string::npos &&
+        pos3 != string::npos && pos4 != string::npos &&
+        pos5 != string::npos)
+    {
+        status      = toStatusValue(stateString.substr(pos+1,pos2-pos-1));
+        progress    = atof(stateString.substr(pos2+1,pos3-pos2-1).c_str());
+        currentItem = stateString.substr(pos3+1, pos4-pos3-1);
+        lastError   = stateString.substr(pos4+1, pos5-pos4-1);
+    }        
+}
+
 ProcessState::ProcessState(STATUS_T status, float progress, const std::string& item)
 {
     this->status = status;

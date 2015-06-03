@@ -76,6 +76,13 @@ public:
      */
     ProcessState *getState();
     /**
+     * Sets custom process state
+     * @param state process state
+     * @param control ProcessControl object through which to send state update notification
+     * @return success
+     */
+    bool updateState(const ProcessState& state, ProcessControl *control = NULL);
+    /**
      * Sets process status as RUNNING
      * @param progress percentage progress [0-100]
      * @param currentItem currently processed item

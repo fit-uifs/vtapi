@@ -31,7 +31,8 @@
 ///////////////////////////////////////////////////////////
 
 #include <cstdio>
-#include <unistd.h> // sleep
+#include <mutex>
+#include <condition_variable>
 #include <vtapi.h>
 
 using namespace vtapi;
@@ -50,10 +51,6 @@ static void Demo1Callback(const ProcessState& state, void *context);
 ///////////////////////////////////////////////////////////
 class CDemo1Module : public Method
 {
-public:
-    Process *m_process;         // instance beziciho procesu
-    ProcessControl *m_pctrl;    // [CHANGE] ovladani procesu a prijimani notifikaci o zmene stavu
-    
 public:
     // v konstruktoru treba upravit nazev modulu ("demo1")
     CDemo1Module(VTApi *vtapi) : Method(*vtapi->commons, "demo1")
@@ -80,6 +77,11 @@ public:
         m_process->setParamInt("param1", param1);
         m_process->setParamDouble("param2", param2);
     }
+    
+    std::string GetProcessID()
+    {
+        return (m_process ? m_process->getName() : "");
+    }
 
     // Kombinace SetParams() a Run(), pouze kosmeticky ucel
     void Run(int param1, double param2)
@@ -88,7 +90,7 @@ public:
         Run();
     }
     
-    // Funkce pro synchronni beh modulu
+    // Funkce pro asynchronni beh modulu
     void Run()
     {
         cout << "starting process of mod_demo1 (asynchronous, suspended)" << endl;
@@ -104,10 +106,12 @@ public:
             // [CHANGE] inicializujeme objekt pro komunikaci s procesem
             if (!m_pctrl) m_pctrl = m_process->getProcessControl();
             if (m_pctrl->client(2500, Demo1Callback, this)) {
+                std::unique_lock<std::mutex> lk(m_mtx);
                 
-                // odpauzujeme proces
+                // odpauzujeme proces a cekame na signalizaci konce finished/error
                 if (m_process->controlResume(m_pctrl)) {
-                    cout << m_process->getName() << " unpaused" << endl;
+                    cout << m_process->getName() << " unpaused, waiting for finish..." << endl;
+                    m_cvStop.wait(lk);
                 }
                 else {
                     cerr << "failed to unpause process" << endl;
@@ -117,20 +121,21 @@ public:
                 cerr << "failed to connect to server process" << endl;
             }
         }
-        
-        // zde dalsi mozne operace nad skoncenym procesem
-        
-        // cekani na koncovou notifikaci finished/error
-        // ...
-        sleep(2);
-        
     }
     
     // Callback volany z procesu behem funkce run(), pozor - jine vlakno
     void ProcessCallback(const ProcessState& state)
     {
+        std::unique_lock<std::mutex> lk(m_mtx);
+
         switch (state.status)
         {
+            // proces byl prave spusten
+            case ProcessState::STATUS_CREATED:
+            {
+                cout << m_process->getName() << " started" << endl;
+                break;
+            }
             // proces reportuje progres
             case ProcessState::STATUS_RUNNING:
             {
@@ -146,17 +151,27 @@ public:
             // proces skoncil uspesne
             case ProcessState::STATUS_FINISHED:
             {
+                lk.unlock();
+                m_cvStop.notify_one();
                 cout << m_process->getName() << " finished succesfully" << endl;
                 break;
             }
             // proces skoncil s chybou
             case ProcessState::STATUS_ERROR:
             {
+                lk.unlock();
+                m_cvStop.notify_one();
                 cerr << m_process->getName() << " finished with ERROR: " << state.lastError << endl;
                 break;
             }
         }
     }
+    
+protected:
+    Process *m_process;         // instance beziciho procesu
+    ProcessControl *m_pctrl;    // [CHANGE] ovladani procesu a prijimani notifikaci o zmene stavu
+    std::mutex m_mtx;
+    std::condition_variable m_cvStop;
 };
 
 ///////////////////////////////////////////////////////////
@@ -267,7 +282,7 @@ int main(int argc, char *argv[])
         cout << "-------------------------------------------------" << endl;
 
         CDemo2Module demo2(vtapi);
-        demo2.SetParams(demo1.m_process->getName(), video);
+        demo2.SetParams(demo1.GetProcessID(), video);
         demo2.Run();
     }
     catch(exception e)
@@ -345,8 +360,8 @@ int main(int argc, char *argv[])
         p1 = demo1.newProcess(inputID);
         if (p1->next()) {
             cout << "process " << inputID << " parameters:" << endl
-                << "param1: " << p->getParamInt("param1") << endl
-                << "param2: " << p->getParamDouble("param2") << endl;
+                << "param1: " << p1->getParamInt("param1") << endl
+                << "param2: " << p1->getParamDouble("param2") << endl;
         }
         delete p1;
     }

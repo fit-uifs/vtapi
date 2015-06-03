@@ -216,11 +216,12 @@ protected:
     /**
      * Loads video into dataset
      * @param ds dataset object
+     * @param name video name, empty => default name
      * @param filepath video path relative to dataset base path
      * @param realtime real time of video start
      * @return success
      */
-    bool loadVideo(Dataset *ds, const std::string &filepath, const time_t& realtime = 0);
+    bool loadVideo(Dataset *ds, const std::string &name, const std::string &filepath, const time_t& realtime = 0);
     /**
      * Loads image folder with all images into dataset
      * @param ds dataset object

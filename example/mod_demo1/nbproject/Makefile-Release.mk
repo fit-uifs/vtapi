@@ -65,7 +65,7 @@ LDLIBSOPTIONS=-L../../src/.libs -Wl,-rpath,../src/.libs -lvtapi -lopencv_core -l
 ${OBJECTDIR}/mod_demo1.o: mod_demo1.cpp 
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -I../../include -I/usr/include/postgresql -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/mod_demo1.o mod_demo1.cpp
+	$(COMPILE.cc) -O2 -I../../include -I/usr/include/postgresql -std=c++11 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/mod_demo1.o mod_demo1.cpp
 
 # Subprojects
 .build-subprojects:

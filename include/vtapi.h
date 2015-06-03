@@ -107,9 +107,10 @@ public:
     
     /**
      * Initializes app as vtapi Process instance
+     * @param initState initial process state
      * @return Process instance object
      */
-    Process *initProcess();
+    Process *initProcess(ProcessState &initState);
 
     
 private:
