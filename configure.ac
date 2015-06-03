@@ -47,6 +47,7 @@ m4_define([VT_CHECK_MACRO],
 ### Configure variables
 AC_ARG_VAR(GEOS_CONFIG, [GEOS geos_config file which will be used to build with.])
 AC_ARG_VAR(LIBPQTYPES_PREFIX, [libpqtypes prefix which will be used to build with.])
+AC_ARG_VAR(LIBXMLXX_PC, [libXML++ libxml++-2.6.pc file which will be used to build with.])
 AC_ARG_VAR(PG_CONFIG, [PostgreSQL pg_config file which will be used to build with.])
 AC_ARG_VAR(SQLITE_PC, [SQLite sqlite3.pc file which will be used to build with.])
 
@@ -59,6 +60,10 @@ AC_ARG_WITH([libpqtypes-prefix],
             [AS_HELP_STRING([--with-libpqtypes-prefix=PREFIX], [specify an alternative prefix for libpqtypes files])],
             [LIBPQTYPES_PREFIX="${withval}"], 
             [])
+AC_ARG_WITH([libxmlxxpc],
+            [AS_HELP_STRING([--with-libxmlxxpc=FILE], [specify an alternative libxml++*.pc file])],
+            [LIBXMLXX_PC="${withval}"], 
+            [])
 AC_ARG_WITH([pgconfig], 
             [AS_HELP_STRING([--with-pgconfig=FILE], [specify an alternative pg_config file])],
             [PG_CONFIG="${withval}"], 
@@ -69,6 +74,7 @@ AC_ARG_WITH([sqlitepc],
             [])
 
 ### Configure without arguments
+AC_ARG_WITH([libxmlxx], AS_HELP_STRING([--without-libxmlxx], [compile without libXML++ support]))
 AC_ARG_WITH([opencv], AS_HELP_STRING([--without-opencv], [compile without OpenCV support]))
 AC_ARG_WITH([pgsql], AS_HELP_STRING([--without-pgsql], [compile without PostgreSQL support (i.e. force SQLite)]))
 AC_ARG_WITH([postgis], AS_HELP_STRING([--without-postgis], [compile without PostGIS support]))
@@ -510,6 +516,71 @@ fi
 
 
 
+###############################################################################
+#####   LibXML++ presence check                                           #####
+###############################################################################
+libxmlxx_want="yes"
+
+AS_IF([test "x${with_libxmlxx}" = "xno"], [libxmlxx_want="no"])
+
+if test "x${libxmlxx_want}" = "xyes"
+then
+  libxmlxx_present="yes"
+
+  if test "x${LIBXMLXX_PC}" = "x"
+  then
+    # try to search in current path
+    package=libxml++-2.6
+    LIBXMLXX_VERSION=`"${PKG_CONFIG}" "${package}" --modversion`
+    if test "x${LIBXMLXX_VERSION}" = "x"
+    then
+      libxmlxx_present="no"
+    fi
+  else
+    # we have specific libxml++*.pc path - so we must check it
+    if test -f "${LIBXMLXX_PC}"
+    then
+      AC_MSG_RESULT([Using user-specified lixml++*.pc file: ${LIBXMLXX_PC}])    
+    else
+      AC_MSG_ERROR([the user-specified libxml++*.pc file (${LIBXMLXX_PC}) does not exist - please, check the specified path or do not set --with-libxmlxxpc argument.])
+      libxmlxx_present="no"
+    fi
+    package=${LIBXMLXX_PC}
+  fi
+  
+  if test "x${libxmlxx_present}" = "xyes"
+  then
+    LIBXMLXX_VERSION=`"${PKG_CONFIG}" "${package}" --modversion`
+    LIBXMLXX_CFLAGS=`"${PKG_CONFIG}" "${package}" --cflags`
+    LIBXMLXX_LIBS=`"${PKG_CONFIG}" "${package}" --libs`
+    LIBXMLXX_LIBDIR=`"${PKG_CONFIG}" "${package}" --variable=libdir`
+    
+    TMP_CPPFLAGS="${CPPFLAGS}"
+    CPPFLAGS="${LIBXMLXX_CFLAGS} ${CPPFLAGS}"
+    TMP_LIBS="${LIBS}"
+    LIBS="${LIBXMLXX_LIBS} ${LIBS}"
+
+    AC_CHECK_HEADER(libxml++/libxml++.h, [], [libxmlxx_present="no"])
+    AC_CHECK_LIB([xml++-2.6], [main], [], [libxmlxx_present="no"])
+    
+    CPPFLAGS="${TMP_CPPFLAGS}"
+    LIBS="${TMP_LIBS}"
+  fi
+  
+  LIBXMLXX_SUMMARY="${libxmlxx_present}"
+  if test "x${libxmlxx_present}" = "xyes" 
+  then
+    AC_DEFINE([HAVE_XMLXX], [1], [libXML++ is present])
+    AC_SUBST([LIBXMLXX_CFLAGS])
+    AC_SUBST([LIBXMLXX_LIBS])
+    LIBXMLXX_SUMMARY="${LIBXMLXX_SUMMARY}   (version: ${LIBXMLXX_VERSION})"
+  fi
+
+else
+  AC_MSG_NOTICE([libXML++ support disabled (by user through --without-libxmlxx argument).])
+  LIBXMLXX_SUMMARY="disabled" # by user (through --without-libxmlxx)"
+fi
+
 
 ###############################################################################
 #####   Additions to autoheader (vtapi_autoconfig.h) file                 #####
@@ -624,11 +695,14 @@ AC_MSG_RESULT()
 AC_MSG_RESULT([ ---------- VTApi ${VTAPI_API_VERSION} configure summary ----------])
 AC_MSG_RESULT([  Boost:          ${BOOST_SUMMARY}])
 AC_MSG_RESULT([  OpenCV:         ${OPENCV_SUMMARY}])
+
+
 AC_MSG_RESULT([  SQLite:         ${SQLITE_SUMMARY}])
 if test "x${sqlite_present}" = "xyes" -a "x${SQLITE_PC}" != "x"
 then
   AC_MSG_RESULT([                    -> sqlite3.pc custom path: ${SQLITE_PC}])
 fi
+
 
 AC_MSG_RESULT([  PostgreSQL:     ${PGSQL_SUMMARY]})
 if test "x${pgsql_present}" = "xyes"
@@ -639,6 +713,7 @@ then
     AC_MSG_RESULT([                    -> libpqtypes prefix: ${LIBPQTYPES_PREFIX}])
   fi
 fi
+
 
 AC_MSG_RESULT([  PostGIS:        ${POSTGIS_SUMMARY]})
 
@@ -652,6 +727,14 @@ if test "x${geos_present}" = "xyes"
 then
   AC_MSG_RESULT([                    -> geos_config path: ${GEOS_CONFIG}])
 fi
+
+
+AC_MSG_RESULT([  libXML++:       ${LIBXMLXX_SUMMARY}])
+if test "x${libxmlxx_present}" = "xyes" -a "x${LIBXMLXX_PC}" != "x"
+then
+  AC_MSG_RESULT([                    -> libxml++*.pc custom path: ${LIBXMLXX_PC}])
+fi
+
 
 AC_MSG_RESULT([  proc/procps:    ${readproc_present}])
 AC_MSG_RESULT([  documentation:  ${DOC_SUMMARY}])
