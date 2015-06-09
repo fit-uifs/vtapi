@@ -13,57 +13,16 @@ SET client_encoding = 'UTF8';
 SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
+
+
+SELECT VT_dataset_drop('demo');
+SELECT VT_dataset_create('demo', 'demo/', 'auto-generated demo');
+
 SET search_path = demo, pg_catalog;
-
--------------------------------------
--- DROP and CREATE demo schema
--------------------------------------
-
-DROP SCHEMA IF EXISTS demo CASCADE;
-CREATE SCHEMA demo;
-GRANT ALL ON SCHEMA demo TO postgres;
 
 -------------------------------------
 -- CREATE tables
 -------------------------------------
-
--- table for sequences (video/imagefolders)
-CREATE TABLE sequences (
-    seqname name NOT NULL,
-    seqlocation character varying,
-    seqtyp public.seqtype,
-    vid_length integer,
-    vid_fps real,
-    vid_speed  real  DEFAULT 1,
-    vid_time timestamp without time zone,
-    userid name,
-    created timestamp without time zone DEFAULT now(),
-    notes text,
-    CONSTRAINT sequences_pk PRIMARY KEY (seqname)
-);
-CREATE INDEX sequences_seqtyp_idx ON sequences(seqtyp);
-
--- table for processes
-CREATE TABLE processes (
-    prsname name NOT NULL,
-    mtname name NOT NULL,
-    inputs name,
-    outputs regclass,
-    params character varying,
-    state public.pstate DEFAULT '(created,0,,)',
-    userid name,
-    created timestamp without time zone DEFAULT now(),
-    notes text,
-    CONSTRAINT processes_pk PRIMARY KEY (prsname),
-    CONSTRAINT mtname_fk FOREIGN KEY (mtname)
-        REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE RESTRICT
-);
-ALTER TABLE ONLY processes
-    ADD CONSTRAINT inputs_fk FOREIGN KEY (inputs)
-        REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX processes_mtname_idx ON processes(mtname);
-CREATE INDEX processes_inputs_idx ON processes(inputs);
-CREATE INDEX processes_status_idx ON processes(( (state).status ));
 
 -- intervals table for demo1 results
 CREATE TABLE demo1out (
@@ -135,11 +94,6 @@ CREATE TRIGGER demo2out_provide_realtime
 -------------------------------------
 -- DROP and INSERT new schema metadata
 -------------------------------------
-
--- insert into dataset list
-DELETE FROM public.datasets WHERE dsname = 'demo';
-INSERT INTO public.datasets (dsname, dslocation, userid, notes) VALUES
-    ('demo', 'demo/', 'demouser', 'auto-generated demo');
 
 -- insert demo1 modules metadata into public schema
 DELETE FROM public.methods WHERE mtname = 'demo1';
