@@ -14,58 +14,11 @@ SET standard_conforming_strings = on;
 SET check_function_bodies = false;
 SET client_min_messages = warning;
 SET default_with_oids = false;
+
+SELECT VT_dataset_drop('test');
+SELECT VT_dataset_create('test', 'data/test/', 'testovaci dataset');
+
 SET search_path = test, pg_catalog;
-      
-
--------------------------------------
--- DROP and CREATE test schema
--------------------------------------
-
-DROP SCHEMA IF EXISTS test CASCADE;
-CREATE schema test;
-GRANT ALL ON SCHEMA test TO postgres;
-
--------------------------------------
--- CREATE common tables, don't change
--------------------------------------
-
--- table for sequences (video/imagefolders)
-CREATE TABLE sequences (
-    seqname name NOT NULL,
-    seqlocation character varying,
-    seqtyp public.seqtype,
-    vid_length integer,
-    vid_fps real,
-    vid_speed  real  DEFAULT 1,
-    vid_time timestamp without time zone,
-    userid name,
-    created timestamp without time zone DEFAULT now(),
-    notes text,
-    CONSTRAINT sequences_pk PRIMARY KEY (seqname)
-);
-CREATE INDEX sequences_seqtyp_idx ON sequences(seqtyp);
-
--- table for processes
-CREATE TABLE processes (
-    prsname name NOT NULL,
-    mtname name NOT NULL,
-    inputs name,
-    outputs regclass,
-    params character varying,
-    state public.pstate DEFAULT '(created,0,,)',
-    userid name,
-    created timestamp without time zone DEFAULT now(),
-    notes text,
-    CONSTRAINT processes_pk PRIMARY KEY (prsname),
-    CONSTRAINT mtname_fk FOREIGN KEY (mtname)
-        REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE RESTRICT
-);
-ALTER TABLE ONLY processes
-    ADD CONSTRAINT inputs_fk FOREIGN KEY (inputs)
-        REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT;
-CREATE INDEX processes_mtname_idx ON processes(mtname);
-CREATE INDEX processes_inputs_idx ON processes(inputs);
-CREATE INDEX processes_status_idx ON processes(( (state).status ));
 
 -------------------------------------
 -- CREATE module-specific tables
@@ -107,14 +60,3 @@ CREATE TRIGGER test1out_provide_realtime
   ON test1out
   FOR EACH ROW
   EXECUTE PROCEDURE public.trg_interval_provide_realtime();
-
-
--------------------------------------
--- DELETE and INSERT schema from/into dataset list
--------------------------------------
-DELETE FROM public.datasets WHERE dsname = 'test';
-INSERT INTO public.datasets(dsname, dslocation, userid, notes)
-    VALUES ('test', 'data/test/', 'testuser', 'testovaci dataset');
-
-
-
