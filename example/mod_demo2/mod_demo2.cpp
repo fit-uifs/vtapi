@@ -56,6 +56,8 @@ void do_work(Process *p, Dataset *ds)
     
     p->updateStateRunning(0, videoName);
     
+    p->updateStateRunning(0, videoName);
+    
     // vystupni data, do kterych budeme ukladat vysledky
     Interval *output = p->getOutputData();
     output->next();

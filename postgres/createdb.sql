@@ -25,7 +25,7 @@ SET search_path = public, pg_catalog;
 -------------------------------------
 
 CREATE SCHEMA IF NOT EXISTS public;
-GRANT ALL ON SCHEMA public TO postgres;
+-- GRANT ALL ON SCHEMA public TO postgres;
 
 -------------------------------------
 -- DROP all VTApi objects
@@ -134,15 +134,131 @@ CREATE TABLE methods_keys (
 );
 
 
+
+
 -------------------------------------
--- CREATE functions
+-- VTApi CORE UNDERLYING functions for DATASETS
 -------------------------------------
-CREATE OR REPLACE FUNCTION tsrange(IN rt_start timestamp without time zone, IN sec_length real)
+
+-- DATASET: create
+-- Function behavior (proposed, partially implemented):
+--   * Successful creation of a dataset => returns TRUE
+--   * Whole dataset structures already exist => returns FALSE
+--   * There already exist some parts of dataset and some parts not exist => INTERRUPTED with INCONSISTENCY EXCEPTION
+--   * Some error in CREATE statement OR INSERT statement => INTERRUPTED with statement ERROR/EXCEPTION
+CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCHAR, _dsnotes TEXT DEFAULT NULL) 
+  RETURNS BOOLEAN AS 
+  $VT_dataset_create$
+  BEGIN
+--    IF $1 IS NULL THEN  
+--      RAISE EXCEPTION 'Dataset name can not be empty.'; 
+--    END IF;
+--    IF $2 IS NULL THEN  
+--      RAISE EXCEPTION 'Dataset location can not be empty.'; 
+--    END IF;
+
+    -- FUTURE TODO: check if exists schema && tables & datasets => FALSE
+    -- TODO: only some of schema && tables & datasets exists => INCONSISTENCY EXCEPTION (like in drop function)
+
+    -- create schema (dataset)
+    EXECUTE 'CREATE SCHEMA ' || quote_ident(_dsname);
+    EXECUTE 'SET search_path=' || quote_ident(_dsname);
+    -- create sequences in schema (dataset)
+    CREATE TABLE sequences (
+      seqname name NOT NULL,
+      seqlocation character varying,
+      seqtyp public.seqtype,
+      vid_length integer,
+      vid_fps real,
+      vid_speed  real  DEFAULT 1,
+      vid_time timestamp without time zone,
+      userid name,
+      created timestamp without time zone DEFAULT now(),
+      notes text,
+      CONSTRAINT sequences_pk PRIMARY KEY (seqname)
+    );
+    CREATE INDEX sequences_seqtyp_idx ON sequences(seqtyp);
+
+    -- table for processes
+    CREATE TABLE processes (
+      prsname name NOT NULL,
+      mtname name NOT NULL,
+      inputs name,
+      outputs regclass,
+      params character varying,
+      state public.pstate DEFAULT '(created,0,,)',
+      userid name,
+      created timestamp without time zone DEFAULT now(),
+      notes text,
+      CONSTRAINT processes_pk PRIMARY KEY (prsname),
+      CONSTRAINT mtname_fk FOREIGN KEY (mtname)
+          REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE RESTRICT,
+      CONSTRAINT inputs_fk FOREIGN KEY (inputs)
+          REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
+    );
+    CREATE INDEX processes_mtname_idx ON processes(mtname);
+    CREATE INDEX processes_inputs_idx ON processes(inputs);
+    CREATE INDEX processes_status_idx ON processes(( (state).status ));
+
+    -- register dataset
+    IF _dsnotes IS NOT NULL THEN
+      INSERT INTO public.datasets(dsname, dslocation, notes) VALUES (_dsname, _dslocation, _dsnotes);
+    ELSE 
+      INSERT INTO public.datasets(dsname, dslocation) VALUES (_dsname, _dslocation);
+    END IF;
+    
+    RETURN TRUE;
+  END;
+  $VT_dataset_create$
+  LANGUAGE plpgsql CALLED ON NULL INPUT;
+
+
+-- DATASET: drop (delete)
+-- Function behavior:
+--   * Successful creation of a dataset => returns TRUE
+--   * Whole dataset structures already exist => returns FALSE
+--   * There already exist some parts of dataset and some parts not exist => INTERRUPTED with INCONSISTENCY EXCEPTION
+--   * Some error in CREATE statement OR INSERT statement => INTERRUPTED with statement ERROR/EXCEPTION
+CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR) 
+  RETURNS BOOLEAN AS 
+  $VT_dataset_drop$
+  DECLARE
+    _dsnamecount INT;
+    _schemacount INT;
+  BEGIN
+    EXECUTE 'SELECT COUNT(*)
+             FROM public.datasets
+             WHERE dsname = ' || quote_literal(_dsname)
+      INTO _dsnamecount;
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
+      INTO _schemacount;
+
+    IF _dsnamecount <> _schemacount THEN
+      RAISE EXCEPTION 'Inconsistency was detected in datasets.';
+    ELSIF _dsnamecount = 0 THEN
+      RETURN FALSE;
+    END IF;
+
+    EXECUTE 'DELETE FROM public.datasets WHERE dsname = ' || quote_literal(_dsname);
+    EXECUTE 'DROP SCHEMA ' || quote_ident(_dsname) || ' CASCADE';
+    RETURN TRUE;
+  END
+  $VT_dataset_drop$
+  LANGUAGE plpgsql STRICT;
+
+
+
+-------------------------------------
+-- Functions to work with real time
+-------------------------------------
+CREATE OR REPLACE FUNCTION tsrange(_rt_start timestamp without time zone, _sec_length real)
   RETURNS tsrange AS
   $tsrange$
-    SELECT CASE rt_start
+    SELECT CASE _rt_start
       WHEN NULL THEN NULL
-      ELSE tsrange(rt_start, rt_start + sec_length * '1 second'::interval, '[]')
+      ELSE tsrange(_rt_start, _rt_start + _sec_length * '1 second'::interval, '[]')
     END
   $tsrange$
   LANGUAGE SQL;
@@ -152,30 +268,29 @@ CREATE OR REPLACE FUNCTION trg_interval_provide_realtime()
   RETURNS TRIGGER AS
   $trg_interval_provide_realtime$
     DECLARE
-      fps real := NULL;
-      speed real := NULL;
-      rt_start timestamp without time zone := NULL;
-      tabname name := NULL;
+      _fps real := NULL;
+      _speed real := NULL;
+      _rt_start timestamp without time zone := NULL;
+      _tabname name := NULL;
     BEGIN
       IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2)) THEN  
-        tabname := quote_ident(TG_TABLE_SCHEMA) || '.sequences';
+        _tabname := quote_ident(TG_TABLE_SCHEMA) || '.sequences';
         EXECUTE 'SELECT vid_fps, vid_speed, vid_time
                    FROM '
-                   || tabname::regclass
+                   || _tabname::regclass
                    || ' WHERE seqname = $1.seqname;'
-          INTO fps, speed, rt_start
+          INTO _fps, _speed, _rt_start
           USING NEW;
-        IF fps = 0 OR speed = 0 THEN
-          fps = NULL;
+        IF _fps = 0 OR _speed = 0 THEN
+          _fps = NULL;
         ELSE
-          fps = fps / speed;
+          _fps = _fps / _speed;
         END IF;
 
-        NEW.sec_length := (NEW.t2 - NEW.t1) / fps;
-        NEW.rt_start := rt_start + (NEW.t1 / fps) * '1 second'::interval;
+        NEW.sec_length := (NEW.t2 - NEW.t1) / _fps;
+        NEW.rt_start := _rt_start + (NEW.t1 / _fps) * '1 second'::interval;
       END IF;
       RETURN NEW;
     END;
   $trg_interval_provide_realtime$
   LANGUAGE PLPGSQL;
-
