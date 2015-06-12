@@ -37,44 +37,33 @@ Sequence::Sequence(const KeyValues& orig, const string& name) : KeyValues(orig)
 
 bool Sequence::next()
 {
-    KeyValues* kv = KeyValues::next();
-    if (kv) {
+    if (KeyValues::next()) {
         this->sequence = this->getName();
         this->sequenceLocation = this->getLocation();
+        return true;
     }
-
-    return kv;
+    else {
+        return false;
+    }
 }
 
-string Sequence::getName() {
+string Sequence::getName()
+{
     return this->getString("seqname");
 }
-
-string Sequence::getLocation() {
+string Sequence::getLocation()
+{
     return this->getString("seqlocation");
 }
-
-string Sequence::getType() {
+string Sequence::getType()
+{
     return this->getString("seqtype");
 }
 
-Interval* Sequence::newInterval(const int t1, const int t2)
-{
-    return new Interval(*this);
-}
-
-Image* Sequence::newImage(const string& name)
-{
-    Image* image = new Image(*this);
-    
-    if (!name.empty()) image->select->whereString("imglocation", name);
-
-    return image;
-}
 
 bool Sequence::add(const string& name, const string& location, const string& type)
 {
-    return add(name, location, type, getUser(), "");
+    return add(name, location, type, getUser(), std::string());
 }
 
 bool Sequence::add(const string& name, const string& location, const string& type,
@@ -82,8 +71,7 @@ bool Sequence::add(const string& name, const string& location, const string& typ
 {
     bool retval = true;
 
-    if (insert) store.push_back(insert);
-    insert = new Insert(*this, "sequences");
+    retval &= KeyValues::preAdd(this->getDataset() + ".sequences");
     retval &= insert->keyString("seqname", name);
     retval &= insert->keyString("seqlocation", location);
     retval &= insert->keySeqtype("seqtyp", type);
@@ -93,13 +81,14 @@ bool Sequence::add(const string& name, const string& location, const string& typ
     return retval;
 }
 
-bool Sequence::preSet() {
-    vt_destruct(update);
+bool Sequence::preUpdate()
+{
+    bool ret = KeyValues::preUpdate("sequences");
+    if (ret) {
+        ret &= update->whereString("seqname", this->sequence);
+    }
 
-    update = new Update(*this, "sequences");
-    update->whereString("seqname", this->sequence);
-
-    return true;
+    return ret;
 }
 
 //============================== IMAGE FOLDER ===================================
@@ -144,6 +133,12 @@ Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name)
 
     select->whereSeqtype("seqtyp", "video");
 }
+
+Video::~Video()
+{
+    closeVideo();
+}
+
 
 bool Video::add(const string& name, const string& location, const time_t& realtime)
 {
@@ -238,9 +233,9 @@ time_t Video::getRealStartTime()
     return getTimestamp("vid_time");
 }
 
-bool Video::setRealStartTime(const time_t& starttime)
+bool Video::updateRealStartTime(const time_t& starttime)
 {
-    return (setTimestamp("vid_time", starttime) && setExecute());
+    return (updateTimestamp("vid_time", starttime) && updateExecute());
 }
 
 VideoPlayer::VideoPlayer(Commons& orig) : Commons(orig) {

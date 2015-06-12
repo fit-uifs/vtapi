@@ -246,7 +246,7 @@ void VTApi::testPerformance() {
 // update
 //4.82s     246.76s
 //while (interval->next()) {
-//        interval->setFloatA("svm", svm, 150);
+//        interval->updateFloatA("svm", svm, 150);
 //    }
 
 // select
@@ -352,8 +352,8 @@ void VTApi::testSequence(Dataset *dataset) {
     sequence->print();
 
     cout << "** UPDATING sequence location" << sn << endl;
-    sequence->setString("seqlocation", "/UPDATED");
-    sequence->setExecute();
+    sequence->updateString("seqlocation", "/UPDATED");
+    sequence->updateExecute();
     sequence->next();   // this will now return NULL, because we have only one sequence
     sequence->next();   // this will now get us our old sequence but with updated data
     sequence->print();
@@ -445,8 +445,8 @@ void VTApi::testImage(Sequence *sequence) {
     cout << endl;
     vt_destructall(kf2);
 
-    image->setString("imglocation", "tudlenudle.png");
-    image->setExecute();  // NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+    image->updateString("imglocation", "tudlenudle.png");
+    image->updateExecute();  // NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 
     // delete where t1 > 999999 to get rid of the testing value
     cout << "DELETING Image " << sn << endl;
@@ -502,9 +502,14 @@ void VTApi::testMethod(Dataset *dataset) {
         method->printAll();
 
         cout << "SHOWING method keys for method " << method->getName() << endl;
-        if (method->methodKeys.empty()) cout << "(no keys)" << endl;
-        else for (int i = 0; i < method->methodKeys.size(); i++) {
-            method->methodKeys[i].print();
+        TKeys mk = method->getMethodKeys();
+        if (mk.empty()) {
+            cout << "(no keys)" << endl;
+        }
+        else {
+            for (int i = 0; i < mk.size(); i++) {
+                mk[i].print();
+            }
         }
     }
 

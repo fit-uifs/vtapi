@@ -12,7 +12,6 @@
  */
 
 #include <common/vtapi_global.h>
-#include <common/vtapi_compat.h>
 #include <boost/filesystem.hpp>
 #include <data/vtapi_method.h>
 #include <data/vtapi_process.h>
@@ -48,33 +47,87 @@ Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig)
     if (!method.empty()) select->whereString("mtname", method);
 }
 
-Process::~Process() {
-    for (size_t i = 0; i < this->params.size(); i++) delete this->params[i];
-}
+Process::~Process()
+{}
 
 bool Process::next()
 {
-    // process is being added
-    if (insert) {
-        if (this->process.empty()) this->process = constructName();
-        insert->keyString("prsname", this->process);
-        insert->keyString("params", serializeParams());
-        insert->keyString("inputs", this->inputs);
-//        insert->keyString("outputs", this->getDataset() + "." + outputs);
-        select->whereString("prsname", this->process);
+    m_instance.close();
+    
+    if (insert && !addExecute()) {
+        return false;
     }
     
-    KeyValues* kv = ((KeyValues*)this)->next();
-    if (kv) {
+    bool ret = KeyValues::next();
+    if (ret) {
         this->process   = this->getName();
-        this->selection = this->getOutputs();
+        this->selection = this->getOutputTable();
+        return true;
     }
-    
-    destroyParams();
-    inputs.clear();
-
-    return kv;
+    else {
+        return false;
+    }
+    return ret;
 }
+
+bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
+{
+    if (!this->select->resultSet->isOk() && !next()) {
+        return false;
+    }
+
+    if (suspended) {
+        updateStateSuspended();
+    }
+
+    boost::filesystem::path cdir = boost::filesystem::current_path();
+    if (cdir.empty()) {
+        logger->error("failed to get current directory", thisClass + "::run()");
+        return false;
+    }
+
+    boost::filesystem::path exec(cdir);
+    exec /= "modules";
+    exec /= this->method;
+
+    boost::filesystem::path cfg = boost::filesystem::absolute(this->configfile, cdir);
+
+    compat::ProcessInstance::Args args;
+    args.push_back("--config=" + cfg.string());
+    args.push_back("--process=" + this->process);
+    args.push_back("--dataset=" + this->dataset);
+
+    bool ret = m_instance.launch(exec.string(), args, !async);
+    if (ret) {
+        if (ctrl) *ctrl = new ProcessControl(this->getName(), m_instance);
+    }
+    else {
+        logger->warning("error launching process " + this->getName()
+        + ": " + exec.string(), thisClass + "::run()");
+    }
+
+    return ret;
+}
+
+string Process::constructName(const ProcessParams & params)
+{
+    string ret;
+
+    ret += this->method;
+    ret += 'p';
+
+    string par = params.serializeAsName();
+    if (!par.empty()) {
+        ret += '_';
+        ret += par;
+    }
+
+    return ret;
+}
+
+//////////////////////////////////////////////////
+// getters - SELECT
+//////////////////////////////////////////////////
 
 string Process::getName() {
     return this->getString("prsname");
@@ -85,23 +138,135 @@ ProcessState *Process::getState()
     return this->getProcessState("state");
 }
 
+string Process::getInputProcessName()
+{
+    return this->getString("inputs");
+}
+
+string Process::getOutputTable()
+{
+    return this->getString("outputs");
+}
+
+Process *Process::getInputProcess()
+{
+    string inputs = getInputProcessName();
+
+    return inputs.empty() ? NULL : new Process(*this, inputs);
+}
+
+Interval *Process::getInputData()
+{
+    string inputs = this->getInputProcessName();
+    if (!inputs.empty()) {
+        Process p(*this, inputs);
+        p.next();
+        return new Interval(*this, p.getOutputTable());
+    }
+    else {
+        return NULL;
+    }
+}
+
+Interval *Process::getOutputData()
+{
+    return new Interval(*this, this->getOutputTable());
+}
+
+ProcessParams *Process::getParams()
+{
+    ProcessParams *params = new ProcessParams(this->getString("params"));
+    params->setInputProcessName(getInputProcessName());
+    
+    return params;
+}
+
+//////////////////////////////////////////////////
+// adders - INSERT
+//////////////////////////////////////////////////
+
+bool Process::add(const std::string& outputs)
+{
+    bool retval = true;
+
+    retval &= KeyValues::preAdd(this->getDataset() + ".processes");
+    retval &= addString("mtname", this->method);
+    retval &= addString("outputs", this->getDataset() + "." + (outputs.empty() ? this->method + "out" : outputs));
+
+    return retval;
+}
+
+bool Process::addInputProcessName(const std::string& processName)
+{
+    m_inputProcess = processName;
+    return true;
+}
+
+bool Process::addOutputTable(const std::string& table)
+{
+    return addString("outputs", this->getDataset() + "." + table);
+}
+
+bool Process::addParams(ProcessParams && params)
+{
+    m_params = std::move(params);
+    return true;
+}
+
+bool Process::addExecute()
+{
+    if (this->process.empty()) {
+        if (!m_inputProcess.empty()) {
+            m_params.setInputProcessName(m_inputProcess);
+        }
+        else {
+            m_params.getInputProcess(m_inputProcess);
+        }
+        this->process = constructName(m_params);
+    }
+    
+    insert->keyString("prsname", this->process);
+    insert->keyString("params", m_params.serialize());
+    if (!m_inputProcess.empty()) insert->keyString("inputs", m_inputProcess);
+
+    m_params.clear();
+    m_inputProcess.clear();
+    
+    select->whereString("prsname", this->process);
+    
+    return KeyValues::addExecute();
+}
+
+//////////////////////////////////////////////////
+// updaters - UPDATE
+//////////////////////////////////////////////////
+
+bool Process::preUpdate()
+{
+    bool ret = KeyValues::preUpdate("processes");
+    if (ret) {
+        ret &= update->whereString("prsname", this->process);
+    }
+
+    return ret;
+}
+
 bool Process::updateState(const ProcessState& state, ProcessControl *control)
 {
     bool retval = true;
     
-    retval &= setPStatus("state,status", state.status);
+    retval &= updateProcessStatus("state,status", state.status);
     
     switch (state.status)
     {
     case ProcessState::STATUS_RUNNING:
-        retval &= setFloat("state,progress", state.progress);
-        retval &= setString("state,current_item", state.currentItem);
+        retval &= updateFloat("state,progress", state.progress);
+        retval &= updateString("state,current_item", state.currentItem);
         break;
     case ProcessState::STATUS_FINISHED:
-        retval &= setFloat("state,progress", state.progress);
         break;
     case ProcessState::STATUS_ERROR:
-        retval &= setString("state,last_error", state.lastError);
+        retval &= updateString("state,last_error", state.lastError);
         break;
     case ProcessState::STATUS_SUSPENDED:
         break;
@@ -111,13 +276,13 @@ bool Process::updateState(const ProcessState& state, ProcessControl *control)
     }
 
     if (retval) {
-        retval = setExecute();
+        retval = updateExecute();
         if (retval && control) {
             retval = control->notify(state);
         }
     }
     else {
-        preSet();
+        preUpdate();
     }
 
     return retval;
@@ -135,16 +300,30 @@ bool Process::updateStateSuspended(ProcessControl *control)
         ProcessState(ProcessState::STATUS_SUSPENDED, 0, ""), control);
 }
 
-bool Process::updateStateFinished(float progress, ProcessControl *control)
+bool Process::updateStateFinished(ProcessControl *control)
 {
     return updateState(
-        ProcessState(ProcessState::STATUS_FINISHED, progress, ""), control);
+        ProcessState(ProcessState::STATUS_FINISHED, 0, ""), control);
 }
 
 bool Process::updateStateError(const string& lastError, ProcessControl *control)
 {
     return updateState(
         ProcessState(ProcessState::STATUS_ERROR, 0, lastError), control);
+}
+
+//////////////////////////////////////////////////
+// controls - commands to process instance
+//////////////////////////////////////////////////
+
+ProcessControl *Process::getProcessControl()
+{
+    if (this->select->resultSet->isOk()) {
+        return new ProcessControl(this->getName(), m_instance);
+    }
+    else {
+        return NULL;
+    }
 }
 
 bool Process::controlResume(ProcessControl *control)
@@ -162,307 +341,26 @@ bool Process::controlStop(ProcessControl *control)
     return control ? control->control(ProcessControl::COMMAND_STOP) : false;
 }
 
-string Process::getInputs() {
-    return this->getString("inputs");
-}
+//////////////////////////////////////////////////
+// filters/utilities
+//////////////////////////////////////////////////
 
-string Process::getOutputs() {
-    return this->getString("outputs");
-}
-
-Process *Process::getInputProcess() {
-    string inputs = getInputs();
-    
-    return inputs.empty() ? NULL : new Process(*this, inputs);
-}
-
-Interval *Process::getInputData() {
-    string inputs = this->getInputs();
-    if (inputs.empty()) return NULL;
-    
-    Process p(*this, inputs);
-    p.next();
-    
-    return p.getOutputData();
-}
-
-Interval *Process::getOutputData() {
-    return new Interval(*this, this->getOutputs());
-}
-
-void Process::deleteOutputData() {
-    Query q(*this, "DELETE FROM " + this->getOutputs() + " WHERE prsname = '" + this->getName() + "';");
-    q.execute();
-}
-
-int Process::getParamInt(const std::string& key)
+void Process::filterByInputProcessName(const std::string& processName)
 {
-    if (this->params.empty()) {
-        deserializeParams(this->getString("params"));
-    }
-    
-    return (int)getParamDouble(key);
-}
-
-double Process::getParamDouble(const std::string& key)
-{
-    if (this->params.empty()) {
-        deserializeParams(this->getString("params"));
-    }
-    
-    for (size_t i = 0; i < this->params.size(); i++) {
-        if (this->params[i]->key.compare(key) == 0) {
-            return ((TKeyValue<double> *)this->params[i])->values[0];
-        }
-    }
-    return -1;
-}
-
-std::string Process::getParamString(const std::string& key)
-{
-    if (this->params.empty()) {
-        deserializeParams(this->getString("params"));
-    }
-    
-    for (size_t i = 0; i < this->params.size(); i++) {
-        if (this->params[i]->key.compare(key) == 0) {
-            return ((TKeyValue<std::string> *)this->params[i])->getValue();
-        }
-    }
-    return "";
-}
-
-void Process::setInputs(const std::string& processName)
-{
-    this->inputs = processName;
-}
-
-void Process::setOutputs(const std::string& table)
-{
-    if (insert) ;//insert->keyString("outputs", this->getDataset() + "." + table);
-    else this->setString("outputs", this->getDataset() + "." + table);
-}
-
-void Process::setParamInt(const std::string& key, int value) {
-    this->setParamDouble(key, (double)value);
-}
-void Process::setParamDouble(const std::string& key, double value) {
-    this->params.push_back(new TKeyValue<double>("double", key, value));
-}
-void Process::setParamString(const std::string& key, const std::string& value) {
-    this->params.push_back(new TKeyValue<std::string>("string", key, value));
-}
-
-void Process::filterByInputs(const std::string& processName) {
     this->select->whereString("inputs", processName);
 }
 
-bool Process::add(const std::string& outputs)
+void Process::filterByOutputTable(const std::string& table)
 {
-    bool retval = true;
-    
-    vt_destruct(insert);
-    insert = new Insert(*this, "processes");
-    insert->keyString("mtname", this->method);
-    insert->keyString("outputs", this->getDataset() + "." + (outputs.empty() ? this->method + "out" : outputs));
-
-    return retval;
+    this->select->whereString("outputs", table);
 }
 
-bool Process::preSet() {
-    vt_destruct(update);
-    update = new Update(*this, "processes");
-    update->whereString("prsname", this->process);
-
-    return true;
-}
-
-Interval* Process::newInterval(const int t1, const int t2) {
-    return new Interval(*this);
-}
-
-bool Process::run(bool async, bool suspended)
+bool Process::clearOutputData()
 {
-    if (!this->select->resultSet->isOk() && !next()) {
-        return false;
-    }
-    
-    if (suspended) {
-        updateStateSuspended();
-    }
-
-    boost::filesystem::path cdir = boost::filesystem::current_path();
-    if (cdir.empty()) {
-        logger->error("failed to get current directory", thisClass + "::run()");
-        return false;
-    }
-    
-    boost::filesystem::path bin(cdir);
-    bin /= "modules";
-    bin /= this->method;
-    
-    boost::filesystem::path cfg = boost::filesystem::absolute(this->configfile, cdir);
-    
-    compat::ARGS_LIST args;
-    args.push_back("--config=" + cfg.string());
-    args.push_back("--process=" + this->process);
-    args.push_back("--dataset=" + this->dataset);
-    
-    bool ret = compat::launchProcess(bin.string(), args, !async);
-    if (!ret) {
-        logger->warning("error launching process " + this->getName()
-            + ": " + bin.string(), thisClass + "::run()");
-    }
-    
-    return ret;
+    Query q(*this,
+        "DELETE FROM " + this->getOutputTable() +
+        " WHERE prsname = '" + this->getName() + "';");
+    return q.execute();
 }
 
-ProcessControl *Process::getProcessControl()
-{
-    if (this->select->resultSet->isOk()) {
-        return new ProcessControl(this->getName());
-    }
-    else {
-        return NULL;
-    }
-}
 
-string Process::constructName()
-{
-    string ret;
-    
-    ret += method;
-    ret += "p";
-    
-    for (size_t i = 0; i < this->params.size(); i++) {
-        ret += "_";
-        ret += params[i]->getValue();
-    }
-    
-    if (!this->inputs.empty()) {
-        ret += "_";
-        ret += inputs;
-    }
-    
-    return ret;
-}
-
-std::string Process::serializeParams()
-{
-    std::stringstream ss;
-
-    ss << "{";
-    
-    for (size_t i = 0; i < this->params.size(); i++) {
-        ss << params[i]->key << ":";
-        if (params[i]->type.compare("double") == 0) {
-            ss << ((TKeyValue<double> *)params[i])->values[0];
-        }
-        else if (params[i]->type.compare("string") == 0) {
-            ss << "\"" << ((TKeyValue<std::string> *)params[i])->getValue() << "\"";
-        }
-        else {
-            ss << "0";
-        }
-        if (i < this->params.size()-1) ss << ",";
-    }
-    
-    ss << "}";
-
-    return ss.str();
-}
-
-int Process::deserializeParams(const std::string& paramString)
-{
-
-    destroyParams();
-
-    if (paramString.empty()) {
-        return 0;
-    }
-    else {
-        int ret = 0;
-        size_t keyPos = (paramString[0] == '{' ? 1 : 0);
-        size_t maxPos = paramString.length();
-
-        do {
-            bool isString = false;
-
-            // find key end
-            size_t valPos = paramString.find(':', keyPos);
-            if (valPos == string::npos) break;
-
-            // count key length
-            size_t keyLen = valPos - keyPos;
-            if (++valPos >= maxPos) {
-                ret = -1;
-                break;
-            }
-
-            // find value end, quoted => is string
-            size_t valEndPos = string::npos;
-            if (paramString[valPos] == '\"' && valPos < maxPos - 1) {
-                valEndPos = paramString.find('\"', ++valPos);
-                if (valEndPos == string::npos) {
-                    ret = -1;
-                    break;
-                }
-                isString = true;
-            }
-            else {
-                valEndPos = paramString.find(',', valPos);
-            }
-
-            // count value length
-            size_t valLen = 0;
-            if (valEndPos == string::npos) {
-                valLen = maxPos - valPos;
-                if (paramString[maxPos-1] == '}') valLen--;
-            }
-            else {
-                valLen = valEndPos - valPos;
-            }
-
-            // get substrings, construct key/value
-            TKey *key = NULL;
-            if (isString) {
-                key = new TKeyValue<std::string>("string",
-                    paramString.substr(keyPos, keyLen),
-                    paramString.substr(valPos, valLen));
-            }
-            else {
-                char *endptr = NULL;
-                double vald = strtod(paramString.substr(valPos, valLen).c_str(), &endptr);
-                if (endptr && !*endptr) {
-                    key = new TKeyValue<double>("double",
-                        paramString.substr(keyPos, keyLen),
-                        vald);
-                }
-                else {
-                    ret = -1;
-                    break;
-                }
-            }
-            if (key) {
-                this->params.push_back(key);
-            }
-
-            // find next key
-            if (valEndPos == string::npos) break;
-            keyPos = paramString.find_first_not_of("\",", valEndPos);
-
-        } while(keyPos != string::npos);
-        
-        return ret < 0 ? ret : this->params.size();
-    }
-}
-
-void Process::destroyParams()
-{
-    if (!params.empty()) {
-        for (size_t i = 0; i < this->params.size(); i++) {
-            delete this->params[i];
-        }
-        this->params.clear();
-    }
-}

@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f1" displayName="DB Scripts" projectFiles="true">
-      <logicalFolder name="f1" displayName="example" projectFiles="true">
-        <itemPath>../example/sql/demo-schema.sql</itemPath>
-        <itemPath>../example/sql/reset-schema.sh</itemPath>
-      </logicalFolder>
-      <itemPath>../postgres/createdb.sql</itemPath>
-      <itemPath>../postgres/createschema.sql</itemPath>
+    <logicalFolder name="f2"
+                   displayName="Config Files"
+                   projectFiles="true"
+                   kind="ROOT">
+      <itemPath>Makefile.am</itemPath>
+      <itemPath>../configure.ac</itemPath>
+      <itemPath>../vtapi.conf</itemPath>
+      <itemPath>vtapi.ggo</itemPath>
     </logicalFolder>
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
@@ -44,6 +45,7 @@
         <itemPath>../include/data/vtapi_method.h</itemPath>
         <itemPath>../include/data/vtapi_process.h</itemPath>
         <itemPath>../include/data/vtapi_processcontrol.h</itemPath>
+        <itemPath>../include/data/vtapi_processparams.h</itemPath>
         <itemPath>../include/data/vtapi_processstate.h</itemPath>
         <itemPath>../include/data/vtapi_sequence.h</itemPath>
       </logicalFolder>
@@ -61,12 +63,6 @@
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
                    projectFiles="true">
-      <itemPath>../doc/LICENCE.txt</itemPath>
-      <itemPath>Makefile.am</itemPath>
-      <itemPath>../doc/SAMPLES.txt</itemPath>
-      <itemPath>../configure.ac</itemPath>
-      <itemPath>../vtapi.conf</itemPath>
-      <itemPath>vtapi.ggo</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -102,6 +98,14 @@
       <itemPath>vtapi.cpp</itemPath>
       <itemPath>vtapi_misc.cpp</itemPath>
       <itemPath>vtapi_settings.cpp</itemPath>
+    </logicalFolder>
+    <logicalFolder name="f1" displayName="SQL Files" projectFiles="true">
+      <logicalFolder name="f1" displayName="example" projectFiles="true">
+        <itemPath>../example/sql/demo-schema.sql</itemPath>
+        <itemPath>../example/sql/reset-schema.sh</itemPath>
+      </logicalFolder>
+      <itemPath>../postgres/createdb.sql</itemPath>
+      <itemPath>../postgres/createschema.sql</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
                    displayName="Test Files"
@@ -175,10 +179,6 @@
         </packFileList>
       </packaging>
       <item path="../configure.ac" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../example/sql/demo-schema.sql" ex="false" tool="3" flavor2="0">
       </item>
@@ -267,6 +267,11 @@
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_processcontrol.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_processparams.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -377,10 +382,6 @@
       </compileType>
       <item path="../configure.ac" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../example/sql/demo-schema.sql" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../example/sql/reset-schema.sh" ex="false" tool="3" flavor2="0">
@@ -468,6 +469,11 @@
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_processcontrol.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_processparams.h"
             ex="false"
             tool="3"
             flavor2="0">
@@ -611,10 +617,6 @@
       </packaging>
       <item path="../configure.ac" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../doc/LICENCE.txt" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../doc/SAMPLES.txt" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../example/sql/demo-schema.sql" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../example/sql/reset-schema.sh" ex="false" tool="3" flavor2="0">
@@ -702,6 +704,11 @@
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_processcontrol.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_processparams.h"
             ex="false"
             tool="3"
             flavor2="0">

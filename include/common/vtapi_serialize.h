@@ -38,15 +38,14 @@ inline std::string toString(const T& value)
 };
 
 /**
- * @brief A generic function to convert any array of numeric types to string
- * (any numeric type, e.g. int, float, double, etc.)
+ * @brief A generic function to convert any array of supported types to string
  * @param values   array of numeric values
  * @param size input array size
- * @param limit limit of array elements to print
- * @return string containing the numeric value
+ * @param limit limit of array elements to serialize
+ * @return string containing the serialized result
  */
 template <class T>
-inline std::string toString(const T* values, const int size, const int limit = 0)
+inline std::string toString(const T* values, const int size, const int limit)
 {
     std::string str;
     int lim = (limit && limit < size) ? limit : size;
@@ -60,7 +59,31 @@ inline std::string toString(const T* values, const int size, const int limit = 0
     return str;
 }
 
+/**
+ * @brief A generic function to convert any vector of supported types to string
+ * @param values vector of values
+ * @param limit limit array of elements to serialize
+ * @return string containing the serialized result
+ */
+template <class T>
+inline std::string toString(const std::vector<T>& values, const int limit)
+{
+    return toString(values.data(), (int) values.size(), limit);
+}
+
 // specialized toString
+
+template <>
+inline std::string toString< std::vector<int> > (const std::vector<int>& values)
+{
+    return toString(values, 0);
+}
+
+template <>
+inline std::string toString< std::vector<double> > (const std::vector<double>& values)
+{
+    return toString(values, 0);
+}
 
 template <>
 inline std::string toString <std::string>(const std::string& value)
@@ -237,7 +260,7 @@ inline time_t toTimestamp(const std::string& value)
  * @return array of values
  */
 template<class T>
-inline T* deserializeA(char *buffer, int& size) {
+inline T* deserializeA(const char *buffer, int& size) {
     T *ret  = NULL;
     std::string valStr   = std::string(buffer);     
     
@@ -275,7 +298,7 @@ inline T* deserializeA(char *buffer, int& size) {
  * @return vector of values
  */
 template<class T>
-inline std::vector<T>* deserializeV(char *buffer) {
+inline std::vector<T>* deserializeV(const char *buffer) {
     std::vector<T> *ret  = NULL;
     std::string valStr   = std::string(buffer);
 

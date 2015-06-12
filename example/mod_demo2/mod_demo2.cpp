@@ -44,8 +44,17 @@ int main(int argc, char** argv)
 
 void do_work(Process *p, Dataset *ds)
 {
-    // ziskame parametr naseho procesu
-    std::string videoName = p->getParamString("video");
+    std::string videoName;
+    
+    // ziskame parametry naseho procesu
+    ProcessParams *params = p->getParams();
+    if (params) {
+        if (params->getString("video", videoName))
+            printf("mod_demo2 : video=%s\n", videoName.c_str());
+        delete params;
+    }
+    
+    p->updateStateRunning(0, videoName);
     
     // vystupni data, do kterych budeme ukladat vysledky
     Interval *output = p->getOutputData();
@@ -60,13 +69,18 @@ void do_work(Process *p, Dataset *ds)
         IntervalEvent event;
         event.class_id = rand() % 50;
         event.group_id = rand() % 50;
-        event.region.high = IntervalEvent::point(11,11);
-        event.region.low = IntervalEvent::point(22,22);
+        event.region.high = IntervalEvent::point(
+            ((rand() % 100) + 1) / 100.0, ((rand() % 100) + 1) / 100.0);
+        event.region.low = IntervalEvent::point(
+            ((rand() % 100) + 1) / 100.0, ((rand() % 100) + 1) / 100.0);
         event.SetUserData("user_data", 9);
         
         // iterujeme pres vstupni data, vyfiltrujeme si pouze nase video
         Interval *input = p->getInputData();
         input->filterBySequence(videoName);
+        int cntTotal = input->count();
+        int cntDone = 0;
+        
         while (input->next()) {
             // ziskame predvypocitany vektor floatu
             int size = 0;
@@ -78,6 +92,7 @@ void do_work(Process *p, Dataset *ds)
                 }
                 delete[] features_array;
             }
+
             // ziskame predvypocitanou matici
             cv::Mat1f *features_mat = (cv::Mat1f *)input->getCvMat("features_mat");
             if (features_mat) {
@@ -87,6 +102,8 @@ void do_work(Process *p, Dataset *ds)
                 }
                 delete features_mat;
             }
+            
+            p->updateStateRunning(((float)++cntDone / cntTotal) * 100.0, videoName);
         }
         delete input;
         
@@ -100,4 +117,6 @@ void do_work(Process *p, Dataset *ds)
     delete video;
     
     delete output;
+    
+    p->updateStateFinished();
 }

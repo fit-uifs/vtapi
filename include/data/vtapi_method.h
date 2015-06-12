@@ -38,10 +38,6 @@ class Process;
  */
 class Method : public KeyValues {
 public:
-
-    TKeys methodKeys; /**< A vector of key-value pairs*/
-
-public:
     
     /**
      * Constructor for methods
@@ -80,49 +76,28 @@ public:
      * Creates process object for access to existing processes
      * @return pointer to new process object
      */
-    Process* newProcess(const std::string& name = "");
+    Process* newProcess(const std::string& name = "")
+    {
+        return (new Process(*this, name));
+    }
     /**
      * Creates process object for starting new process
      * @return new process object
      */
-    Process* addProcess();  
+    Process* addProcess()
+    {
+        Process *p = new Process(*this);
+        if (p) {
+            if (!p->add()) {
+                delete p;
+                p = NULL;
+            }
+        }
+        return p;
+    }
 
-    /**
-     * @unimplemented
-     */
-    Method* add(const std::string& name);
-    
-    /**
-     * @unimplemented
-     */
-    Method* loadCode();    
-
-    /**
-     * @unimplemented
-     */
-    Method* saveCode();    
-    
-    /**
-     * @unimplemented
-     */
-    void init();
-    /**
-     * @unimplemented
-     */
-    void exit();
-    
-    /**
-     * @unimplemented
-     */
-    std::string getLastError() { return std::string(""); }
-    
-private:
-
-    /**
-     * @unimplemented
-     */
-    void printData(const std::string& inout);
-
+protected:
+    virtual bool preUpdate();
 };
 
 } // namespace vtapi

@@ -23,16 +23,6 @@
 namespace vtapi {
 
 /**
- * @brief Output data format
- */
-typedef enum {
-    STANDARD = 0,   /**< plain text */
-    CSV,            /**< comma-separated values format */
-    HTML            /**< HTML format */
-}  format_t;
-
-
-/**
  * @brief This is common predecessor to each object in the %VTApi - manages connection, logging and error handling.
  *
  * This class is inherited by many and many other classes, but it manages just single resources,
@@ -62,7 +52,6 @@ protected:
 
     std::string     configfile;         /**< VTApi config file */
     std::string     dbconn;             /**< Connection string / databases folder */
-    format_t        format;             /**< Output format */
     std::string     input;              /**< A filename from which we read an input */
     std::string     output;             /**< A filename into which we write an output */
     std::string     user;               /**< Current user */
@@ -181,16 +170,6 @@ public:
      * @return success exists
      */
     static bool dirExists(const std::string& dirpath);
-    
-private:
-
-    /**
-     * Maps string to format_t
-     * @param format   string format
-     * @return format_t value
-     */
-    format_t mapFormat(const std::string& format);
-
 };
 
 } // namespace vtapi

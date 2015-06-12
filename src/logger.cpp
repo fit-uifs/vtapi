@@ -34,7 +34,7 @@ Logger::Logger(const string& filename, bool verbose, bool debug) {
         // FIXME: logStream.setf nolock, nolockbuf
 
         if (logStream.fail()) {
-            logFilename = ""; // just cerr??? logger failures cannot be logged :)
+            logFilename.clear(); // just cerr??? logger failures cannot be logged :)
             cerr << endl << timestamp() << ": ERROR 101! Logger cannot open the file specified, trying stderr instead." << endl;
         }
     }

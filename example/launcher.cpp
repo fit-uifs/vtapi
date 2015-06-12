@@ -72,10 +72,12 @@ public:
         // timto zpusobem se vytvari novy proces
         // [CHANGE] odebrany argumenty
         if (!m_process) m_process = this->addProcess();
-        
-        // k dispozici zatim setParamInt, setParamDouble, setParamString, setParamInputs
-        m_process->setParamInt("param1", param1);
-        m_process->setParamDouble("param2", param2);
+
+        // [CHANGE] nastaveni parametru pro instanci procesu
+        ProcessParams params;
+        params.addInt("param1", param1);
+        params.addDouble("param2", param2);
+        m_process->addParams(std::move(params));
     }
     
     std::string GetProcessID()
@@ -100,11 +102,10 @@ public:
         if (!m_process) m_process = this->addProcess();
 
         // [CHANGE] asynchronni volani, vytvoreni pozastaveneho procesu
-        if (m_process->run(true, true)) {
+        if (m_process->run(true, true, &m_pctrl)) {
             cout << m_process->getName() << " started" << endl;
             
             // [CHANGE] inicializujeme objekt pro komunikaci s procesem
-            if (!m_pctrl) m_pctrl = m_process->getProcessControl();
             if (m_pctrl->client(2500, Demo1Callback, this)) {
                 std::unique_lock<std::mutex> lk(m_mtx);
                 
@@ -130,12 +131,6 @@ public:
 
         switch (state.status)
         {
-            // proces byl prave spusten
-            case ProcessState::STATUS_CREATED:
-            {
-                cout << m_process->getName() << " started" << endl;
-                break;
-            }
             // proces reportuje progres
             case ProcessState::STATUS_RUNNING:
             {
@@ -151,19 +146,21 @@ public:
             // proces skoncil uspesne
             case ProcessState::STATUS_FINISHED:
             {
-                lk.unlock();
-                m_cvStop.notify_one();
                 cout << m_process->getName() << " finished succesfully" << endl;
+                lk.unlock();
+                m_cvStop.notify_all();
                 break;
             }
             // proces skoncil s chybou
             case ProcessState::STATUS_ERROR:
             {
-                lk.unlock();
-                m_cvStop.notify_one();
                 cerr << m_process->getName() << " finished with ERROR: " << state.lastError << endl;
+                lk.unlock();
+                m_cvStop.notify_all();
                 break;
             }
+        default:
+            break;
         }
     }
     
@@ -198,8 +195,11 @@ public:
     {
         if (!m_process) m_process = this->addProcess();
 
-        m_process->setInputs(inputID);
-        m_process->setParamString("video", videoName);
+        ProcessParams params;
+        params.setInputProcessName(inputID);
+        params.addString("video", videoName);
+        
+        m_process->addParams(std::move(params));
     }
     
     void Run(const string& inputID, const string& videoName)
@@ -328,17 +328,19 @@ int main(int argc, char *argv[])
         // ID vstupniho procesu
         CDemo1Module demo1(vtapi);
         Process *p1 = demo1.newProcess();
-        p1->setParamInt("param1", param1);      // nastavime parametry vstupniho procesu
-        p1->setParamDouble("param2", param2);
-        string inputID = p1->constructName();   // ID vstupniho procesu
+        ProcessParams params1;
+        params1.addInt("param1", param1);      // nastavime parametry vstupniho procesu
+        params1.addDouble("param2", param2);
+        string inputID = p1->constructName(params1);   // ID vstupniho procesu
         delete p1;
 
         // ID vystupniho procesu
         CDemo2Module demo2(vtapi);
         Process *p2 = demo2.newProcess();
-        p2->setParamString("video", video);     // hledame vysledky pro video3
-        p2->setInputs(inputID);                 // nad mezivysledky z procesu demo1
-        string outputID = p2->constructName();  // ID vstupniho procesu
+        ProcessParams params2;
+        params2.addString("video", video);      // hledame vysledky pro video3
+        params2.setInputProcessName(inputID);       // nad mezivysledky z procesu demo1
+        string outputID = p2->constructName(params2);  // ID vstupniho procesu
         delete p2;
 
         // b) nalezneme proces
@@ -359,9 +361,25 @@ int main(int argc, char *argv[])
 
         p1 = demo1.newProcess(inputID);
         if (p1->next()) {
-            cout << "process " << inputID << " parameters:" << endl
-                << "param1: " << p1->getParamInt("param1") << endl
-                << "param2: " << p1->getParamDouble("param2") << endl;
+            ProcessParams *params = p1->getParams();
+            if (params) {
+                cout << "process " << inputID << " parameters:" << endl;
+                string inputProcess;
+                int param1;
+                double param2;
+                
+                if (params->getInputProcess(inputProcess))
+                    cout << "input process: " << inputProcess << endl;
+                if (params->getInt("param1", param1))
+                    cout << "param1: " << param1 << endl;
+                if (params->getDouble("param2", param2))
+                    cout << "param2: " << param2 << endl;
+                
+                delete params;
+            }
+            else {
+                cerr << "failed to get proces parameters: " << inputID << endl;
+            }
         }
         delete p1;
     }

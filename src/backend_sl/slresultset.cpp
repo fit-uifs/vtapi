@@ -364,54 +364,5 @@ string SLResultSet::getValue(const int col, const int arrayLimit) {
 }
 
 
-
-pair< TKeys*, vector<int>* > SLResultSet::getKeysWidths(const int row, bool get_widths, const int arrayLimit) {
-    SLres *sl_res    = (SLres *) this->res;
-    vector<int> *widths = get_widths ? new vector<int>() : NULL;
-    TKeys *keys         = getKeys();
-
-    if (!get_widths && keys) return std::make_pair(keys, widths);
-    else if (!widths || !keys || sl_res->cols != keys->size() || sl_res->cols == 0 || sl_res->rows == 0) {
-        vt_destruct(widths);
-        vt_destruct(keys);
-        return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
-    }
-
-    for (int col = 0; col < sl_res->cols; col++) {
-        int max_width = 0;
-        int col_width = 0;
-        size_t comPos = 0;
-        for (int row = 0; row < sl_res->rows+1; row++) {
-            char *val_c     = sl_res->res[(sl_res->cols)*row+col];
-            string value    = val_c ? val_c : "";
-            if (arrayLimit > 0) {
-                for (int lim = 0; lim < arrayLimit; lim++) {
-                    comPos = value.find(',', comPos);
-                    if (comPos == string::npos) break;
-                    comPos++;
-                }
-                col_width = value.substr(0, comPos).length();
-            }
-            else {
-                col_width = value.length();
-            }
-            comPos      = 0;
-            max_width   = max_width > col_width ? max_width : col_width;
-        }
-        widths->push_back(max_width);
-    }
-
-    if (widths->size() != keys->size()) {
-        vt_destruct(widths);
-        vt_destruct(keys);
-        return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
-    }
-    else return std::make_pair(keys, widths);
-}
-
-
-
-
-
 #endif // HAVE_POSTGRESQL
 

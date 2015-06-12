@@ -47,34 +47,27 @@ public:
     Interval(const KeyValues& orig, const std::string& selection = "intervals");
 
     /*
-     * Unnecessary
+     * Moves to next interval
      * @return success
      * @note Overloading next() from KeyValues
      */
-    //bool next();
+    bool next();
 
     /**
      * Gets interval ID
      * @return interval ID
      */
     int getId();
-    
+    /** 
+     * Gets process name of associated process
+     * @return process string
+     */
+    std::string getProcessName();
     /**
      * Gets sequence name of parent sequence
      * @return sequence string
      */
     std::string getSequenceName();
-    /** Gets process name of associated process
-     * 
-     * @return process string
-     */
-    std::string getProcessName();
-    /**
-     * Gets sequence object of parent sequence
-     * @return sequence object
-     */
-    Sequence* getParentSequence();
-
     /**
      * Gets a start frame of the current interval
      * @return start time
@@ -98,7 +91,7 @@ public:
      * @param t1 start time
      * @param t2 end time
      */
-    bool setStartEndTime(const int t1, const int t2 = -1);
+    bool updateStartEndTime(const int t1, const int t2 = -1);
 
     /**
      * Adds new interval to the table - minimal insert
@@ -121,12 +114,6 @@ public:
      */
     bool add(const std::string& sequence, const int t1, const int t2, const std::string& location,
     const std::string& userid, const std::string& notes);
-
-    /**
-     * Resets interval to the initial state
-     * @return success
-     */
-    bool preSet();
 
     /**
      * Sets filter for intervals by ID before calling next()
@@ -166,6 +153,9 @@ public:
      * @return success
      */
     bool filterByRegion(const IntervalEvent::box& region);
+    
+protected:
+    bool preUpdate();
 };
 
 
@@ -193,9 +183,10 @@ public:
     /**
      * Constructor for Images
      * @param orig        pointer to the parrent KeyValues object
+     * @param name        image name
      * @param selection   specific name of a selection table
      */
-    Image(const KeyValues& orig, const std::string& selection = "intervals");
+    explicit Image(const KeyValues& orig, const std::string& name = "", const std::string& selection = "intervals");
 
     /**
      * Gets a sequence (order) number of the current image (interval)
@@ -228,7 +219,7 @@ public:
 #endif
     
 protected:
-
+    
     /**
      * This is here just for image name
      * @return string value with the location of the image

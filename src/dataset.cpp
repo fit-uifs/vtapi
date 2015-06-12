@@ -30,55 +30,45 @@ Dataset::Dataset(const KeyValues& orig, const string& name) : KeyValues(orig)
 
     // set the dataset name
     if (!name.empty()) {
-        dataset = name;
+        this->dataset = name;
     }
-    if (dataset.empty()) {
+    if (this->dataset.empty()) {
         logger->warning(313, "No dataset specified", thisClass+"::Dataset()");
     }
     
     select = new Select(orig);
     select->from("public.datasets", "*");
-    if (!dataset.empty()) select->whereString("dsname", dataset);
+    if (!this->dataset.empty()) select->whereString("dsname", this->dataset);
 }
 
-bool Dataset::next() {
-    KeyValues* kv = ((KeyValues*)this)->next();
-    if (kv) {
+bool Dataset::next()
+{
+    if (KeyValues::next()) {
         this->dataset = this->getName();
         this->datasetLocation = this->getLocation();
+        return true;
     }
-
-    return kv;
+    else {
+        return false;
+    }
 }
 
-string Dataset::getName() {
+string Dataset::getName()
+{
     return this->getString("dsname");
 }
 
-
-string Dataset::getLocation() {
+string Dataset::getLocation()
+{
     return this->getString("dslocation");
 }
 
-
-Sequence* Dataset::newSequence(const string& name) {
-    return (new Sequence(*this, name));
-}
-
-Video* Dataset::newVideo(const string& name) {
-    return (new Video(*this, name));
-}
-
-ImageFolder* Dataset::newImageFolder(const string& name)
+bool Dataset::preUpdate()
 {
-    return (new ImageFolder(*this, name));
-}
-
-
-Method* Dataset::newMethod(const string& name) {
-    return (new Method(*this, name));
-}
-
-Process* Dataset::newProcess(const string& name) {
-    return (new Process(*this, name));
+    bool ret = KeyValues::preUpdate("public.datasets");
+    if (ret) {
+        ret &= update->whereString("dsname", this->dataset);
+    }
+    
+    return ret;
 }

@@ -22,11 +22,10 @@ SLConnection::~SLConnection() {
 
 bool SLConnection::connect (const string& connectionInfo) {
     bool retval     = true;
-    string dbname   = "";
 
     connInfo    = connectionInfo;
     fixSlashes(connInfo);
-    dbname      = connInfo + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
+    string dbname = connInfo + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
     sl.sqlite3_open_v2(dbname.c_str(), &conn, SQLITE_OPEN_READWRITE, NULL);
 
     retval = isConnected();

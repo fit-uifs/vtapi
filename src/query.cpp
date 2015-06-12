@@ -150,7 +150,9 @@ bool Select::executeNext()
         offset += limit;
         return this->execute();
     }
-    else return false;
+    else {
+        return false;
+    }
 }
 
 bool Select::from(const string& table, const string& column)
@@ -351,7 +353,7 @@ bool Update::setInouttype(const string& key, const string& value, const string& 
     executed = false;
     return this->queryBuilder->keyInouttype(key, value, from);
 }
-bool Update::setPStatus(const string& key, ProcessState::STATUS_T value, const string& from){
+bool Update::updateProcessStatus(const string& key, ProcessState::STATUS_T value, const string& from){
     executed = false;
     return this->queryBuilder->keyPStatus(key, value, from);
 }

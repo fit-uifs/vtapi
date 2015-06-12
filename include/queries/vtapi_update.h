@@ -137,7 +137,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    bool setPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from = "");
+    bool updateProcessStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from = "");
     /**
      * This is a persistent function to set timestamp value to a key
      * @param key       key holding value to be set

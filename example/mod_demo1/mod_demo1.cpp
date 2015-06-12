@@ -141,8 +141,16 @@ void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& 
     if (!check_state(process, pctrl, sync)) return;
     
     // ziskame parametry naseho procesu
-    int param1 = process->getParamInt("param1");
-    double param2 = process->getParamDouble("param2");
+    int param1 = 0;
+    double param2 = 0.0;
+    ProcessParams *params = process->getParams();
+    if (params) {
+        if (params->getInt("param1", param1))
+            printf("mod_demo1 : param1=%d\n", param1);
+        if (params->getDouble("param2", param2))
+            printf("mod_demo1 : param2=%g\n", param2);
+        delete params;
+    }
     
     // vysledne pole floatu a matice
     float features_array[3] = { 0 };
@@ -227,8 +235,7 @@ void do_work(Process *process, ProcessControl *pctrl, Dataset *dataset, SYNC_T& 
 
     // [CHANGE] update koncoveho stavu procesu
     if (!error) {
-        float progress = cntTotal ? ((float) cntDone) / cntTotal * 100.0 : 100.0;
-        process->updateStateFinished(progress, pctrl);
+        process->updateStateFinished(pctrl);
     }
     else {
         process->updateStateError("this is error message", pctrl);

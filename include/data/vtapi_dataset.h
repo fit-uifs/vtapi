@@ -50,7 +50,7 @@ public:
      * @param name   specific dataset name
      * @note Use rather "vtapi->newDataset()"
      */
-    Dataset(const KeyValues& orig, const std::string& name = "");
+    explicit Dataset(const KeyValues& orig, const std::string& name = "");
 
     /**
      * Moves to a next dataset and sets dataset name and location varibles
@@ -76,34 +76,49 @@ public:
      * @param name   sequence name (no name = all sequences)
      * @return pointer to the new Sequence object
      */
-    Sequence* newSequence(const std::string& name = "");
-
+    Sequence* newSequence(const std::string& name = "")
+    {
+        return (new Sequence(*this, name));
+    }
     /**
      * Creates new Video (Sequence) object for the current dataset
      * @param name   video (sequence) name (no name = all sequences)
      * @return pointer to the new Video object
      */
-    Video* newVideo(const std::string& name = "");
+    Video* newVideo(const std::string& name = "")
+    {
+        return (new Video(*this, name));
+    }
     /**
      * Creates new ImageFolder (Sequence) object for the current dataset
      * @param name image folder name (no name = all image folders)
      * @return pointer to the new ImageFolder object
      */
-    ImageFolder* newImageFolder(const std::string& name = "");
+    ImageFolder* newImageFolder(const std::string& name = "")
+    {
+        return (new ImageFolder(*this, name));
+    }
     /**
      * Creates new Method object for the current dataset
      * @param name   method name (no name = all methods)
      * @return pointer to the new Method object
      */
-    Method* newMethod(const std::string& name = "");
-
+    Method* newMethod(const std::string& name = "")
+    {
+        return (new Method(*this, name));
+    }
     /**
      * Creates new Process object for the current dataset
      * @param name   process name (no name = all processes)
      * @return pointer to the new Process object
      */
-    Process* newProcess(const std::string& name = "");
+    Process* newProcess(const std::string& name = "")
+    {
+        return (new Process(*this, name));
+    }
 
+protected:
+    virtual bool preUpdate();
 };
 
 } // namespace vtapi

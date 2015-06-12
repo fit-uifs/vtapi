@@ -5,6 +5,7 @@
 //#include "backends/vtapi_backendbase.h"
 
 #define DEF_CONNECT_ATTEMPTS    10
+#define DEF_SERVER_ALIVE_CHECK_PERIOD_S 2
 #define DEF_MAX_CLIENTS         15
 #define DEF_MAX_QUEUE_SIZE      100
 #define DEF_MAX_COMMAND_SIZE    128
@@ -37,14 +38,22 @@ command_map[] = {
 };
 
 static const std::string g_close      = "close";
-static const std::string g_quit       = "quit:";
 static const std::string g_connect    = "connect:";
 static const std::string g_disconnect = "disconnect:";
 static const std::string g_ack        = "ack:";
+static const std::string g_slot       = "slot";
+static const std::string g_pid        = "pid";
 
-ProcessControl::ProcessControl(const std::string& name)
-    : m_server(name), m_client(name)
+
+
+ProcessControl::ProcessControl(const std::string& processName)
+    : m_server(processName), m_client(processName)
+{ }
+
+ProcessControl::ProcessControl(const std::string& processName, const compat::ProcessInstance& serverInstance)
+    : m_server(processName), m_client(processName, serverInstance)
 {
+    
 }
 
 ProcessControl::~ProcessControl()
@@ -90,7 +99,13 @@ ProcessControl::ComBase::ComBase(const std::string& baseName)
 ProcessControl::ComBase::~ComBase()
 { }
 
-bool ProcessControl::ComBase::runThread()
+void ProcessControl::ComBase::send(boost::interprocess::message_queue& q, const std::string& msg, int priority)
+{
+    std::unique_lock<std::mutex> lk(m_mtxSend);
+    q.send(msg.c_str(), msg.length()+1, priority);
+}
+
+bool ProcessControl::ComBase::runThread(unsigned int timeout_ms)
 {
     bool ret = true;
 
@@ -102,7 +117,12 @@ bool ProcessControl::ComBase::runThread()
 
             std::unique_lock<std::mutex> lk(args.m_mtxReady);
             m_pThread = new thread(threadProc, &args);
-            args.m_cvReady.wait(lk);
+            if (timeout_ms == 0) {
+                args.m_cvReady.wait(lk);
+            }
+            else {
+                args.m_cvReady.wait_for(lk, std::chrono::milliseconds(timeout_ms));
+            }
             
             ret = args.m_bSuccess;
         }
@@ -158,19 +178,22 @@ ProcessControl::Server::~Server()
 bool ProcessControl::Server::create(fServerCallback callback, void* context)
 {
     bool ret = true;
-    
+
     do {
         m_callback = callback;
         m_pCallbackContext = context;
 
+        string qname = m_baseName + DEF_COMMAND_POSTFIX;
         try {
             m_pCommandQueue = new message_queue(
                 create_only,
-                (m_baseName + DEF_COMMAND_POSTFIX).c_str(),
+                qname.c_str(),
                 DEF_MAX_QUEUE_SIZE,
                 DEF_MAX_COMMAND_SIZE);
+            
         }
         catch (interprocess_exception &ex) {
+            cerr << qname << ':' << ex.what() << endl;
             ret = false;
             break;
         }
@@ -178,7 +201,8 @@ bool ProcessControl::Server::create(fServerCallback callback, void* context)
         m_vctNotifyQueues.resize(DEF_MAX_CLIENTS);
         memset(m_vctNotifyQueues.data(), 0, DEF_MAX_CLIENTS * sizeof(message_queue*));
 
-        ret = runThread();
+        ret = runThread(0);
+
     } while(0);
     
     if (!ret) close();
@@ -189,25 +213,28 @@ bool ProcessControl::Server::create(fServerCallback callback, void* context)
 void ProcessControl::Server::close()
 {
     if (m_pCommandQueue) {
-        m_mtxSend.lock();
-        try
-        {
-            m_pCommandQueue->send(
-                g_close.c_str(),
-                g_close.length() + 1,
-                DEF_QUIT_PRIORITY);
+        try {
+            send(*m_pCommandQueue, g_close, DEF_QUIT_PRIORITY);
         }
-        catch (interprocess_exception &ex) {}
-        m_mtxSend.unlock();
+        catch (interprocess_exception &ex) {
+            cerr << g_close << ':' << ex.what() << endl;
+        }
     }
-        
+
     waitForThread();
     
     if (m_pCommandQueue) {
         vt_destruct(m_pCommandQueue);
-        message_queue::remove((m_baseName + DEF_COMMAND_POSTFIX).c_str());
+        string qname = m_baseName + DEF_COMMAND_POSTFIX;
+        message_queue::remove(qname.c_str());
     }
     
+    for (int slot = 0; slot < m_vctNotifyQueues.size(); slot++) {
+        if (m_vctNotifyQueues[slot]) {
+            string qname = m_baseName + DEF_NOTIFY_POSTFIX + toString(slot);
+            message_queue::remove(qname.c_str());
+        }
+    }
     m_vctNotifyQueues.clear();
     
     m_callback = NULL;
@@ -217,25 +244,16 @@ void ProcessControl::Server::close()
 bool ProcessControl::Server::sendNotify(const ProcessState& state)
 {
     bool ret = true;
-    
-    {
-        std::unique_lock<std::mutex> lk(m_mtxSend);
-        
-        string notify = toString(state);
+    string notify = toString(state);
+
+    try {
         for (auto queue : m_vctNotifyQueues) {
-            try {
-                if (queue) {
-                    queue->send(
-                        notify.c_str(),
-                        notify.length() + 1,
-                        DEF_COMMAND_PRIORITY);
-                }
-            }
-            catch (interprocess_exception &ex) {
-                cerr << ex.what() << endl;
-                ret = false;
-            }
+            if (queue) send(*queue, notify, DEF_COMMAND_PRIORITY);
         }
+    }
+    catch (interprocess_exception &ex) {
+        cerr << notify << ':' << ex.what() << endl;
+        ret = false;
     }
     
     return ret;
@@ -243,7 +261,9 @@ bool ProcessControl::Server::sendNotify(const ProcessState& state)
 
 void ProcessControl::Server::threadMain(ThreadArgs &args)
 {
-    bool bQuit = false;
+    bool bQuitPending = false;
+    std::map<int,compat::ProcessInstance> mapActiveClients;
+
     char buffer[DEF_MAX_COMMAND_SIZE];
 
     args.setReady(true);
@@ -258,37 +278,65 @@ void ProcessControl::Server::threadMain(ThreadArgs &args)
             if (recv_size > 0) {
                 // close server signal
                 if (g_close.compare(buffer) == 0) {
-                    bQuit = true;
+                    if (!bQuitPending) {
+                        bQuitPending = true;
+
+                        // try to disconnect all clients
+                        for (size_t i = 0; i < m_vctNotifyQueues.size(); i++) {
+                            auto queue = m_vctNotifyQueues[i];
+                            if (queue) send(*queue, g_close, DEF_QUIT_PRIORITY);
+                        }
+                    }
                 }
                 // new client connected
                 else if (g_connect.compare(0, g_connect.length(), buffer, g_connect.length()) == 0) {
-                    int slot = atoi(&buffer[g_connect.length()]);
-                    if (slot >= 0 && slot < DEF_MAX_CLIENTS) {
+                    char *cSlot = strstr(&buffer[g_connect.length()-1], g_slot.c_str());
+                    char *cPid = strstr(&buffer[g_connect.length()-1], g_pid.c_str());
+                    if (!cSlot || !cPid) continue;
+                    
+                    int slot = atoi(cSlot + g_slot.length());
+                    int pid = atoi(cPid + g_pid.length());
+
+                    if (slot >= 0 && slot < DEF_MAX_CLIENTS && pid > 0) {
+                        // client slot should be empty
                         auto& queue = m_vctNotifyQueues[slot];
                         if (!queue) {
-                            queue = new message_queue(
-                                open_only,
-                                (m_baseName + DEF_NOTIFY_POSTFIX + toString(slot)).c_str());
-                            {
-                                std::unique_lock<std::mutex> lk(m_mtxSend);
+                            // open client notify queue and send ack:connect
+                            string qname = m_baseName + DEF_NOTIFY_POSTFIX + toString(slot);
+                            queue = new message_queue(open_only, qname.c_str());
+                            
+                            // save client instance for monitoring
+                            compat::ProcessInstance& client = mapActiveClients[slot];
+                            if (client.open(pid)) {
+                                // send connect ACK
                                 string ack = g_ack + buffer;
-                                queue->send(ack.c_str(), ack.length()+1, DEF_ACK_PRIORITY);
+                                send(*queue, ack, DEF_ACK_PRIORITY);
+
+                                // try to disconnect immediately if quit is pending
+                                if (bQuitPending) send(*queue, g_close, DEF_QUIT_PRIORITY);
                             }
                         }
                     }
                 }
                 // client disconnected
                 else if (g_disconnect.compare(0, g_disconnect.length(), buffer, g_disconnect.length()) == 0) {
-                    int slot = atoi(&buffer[g_disconnect.length()]);
+                    char *cSlot = strstr(&buffer[g_disconnect.length()-1], g_slot.c_str());
+                    if (!cSlot) continue;
+
+                    int slot = atoi(cSlot + g_slot.length());
+                    
                     if (slot >= 0 && slot < DEF_MAX_CLIENTS) {
+                        // client slot should be occupied
                         auto& queue = m_vctNotifyQueues[slot];
                         if (queue) {
-                            {
-                                std::unique_lock<std::mutex> lk(m_mtxSend);
-                                string ack = g_ack + buffer;
-                                queue->send(ack.c_str(), ack.length() + 1, DEF_ACK_PRIORITY);
-                            }
+                            string ack = g_ack + buffer;
+                            send(*queue, ack, DEF_ACK_PRIORITY);
                             vt_destruct(queue);
+
+                            string qname = m_baseName + DEF_NOTIFY_POSTFIX + toString(slot);
+                            message_queue::remove(qname.c_str());
+
+                            mapActiveClients.erase(slot);
                         }
                     }
                 }
@@ -301,59 +349,23 @@ void ProcessControl::Server::threadMain(ThreadArgs &args)
             }
         }
         catch (interprocess_exception &ex) {
-            cerr << ex.what() << endl;
-            bQuit = true;
-        }
-        
-    } while(!bQuit);
-    
-    // disconnect all clients
-    std::set<int> setPendingAcks;
-    {
-        std::unique_lock<std::mutex> lk(m_mtxSend);
-        
-        for (size_t i = 0; i < m_vctNotifyQueues.size(); i++) {
-            auto& queue = m_vctNotifyQueues[i];
-            if (queue) {
+            cerr << "ProcessControl::Server:" << ex.what() << endl;
+            if (bQuitPending) {
+                break;
+            }
+            else {
                 try {
-                    string quit = g_quit + toString(i);
-                    queue->send(quit.c_str(), quit.length()+1, DEF_QUIT_PRIORITY);
-                    setPendingAcks.insert(i);
+                    send(*m_pCommandQueue, g_close, DEF_QUIT_PRIORITY);
                 }
-                catch (interprocess_exception &ex) {
-                    cerr << ex.what() << endl;
+                catch(interprocess_exception &ex) {
+                    cerr << g_close << ':' << ex.what() << endl;
                     break;
                 }
             }
         }
-    }
-    
-    // collect disconnect ACKs
-    while (!setPendingAcks.empty()) {
-        string ack_quit = g_ack + g_quit;
-        try {
-            message_queue::size_type recv_size = 0;
-            unsigned int priority = 0;
-            
-            do {
-                m_pCommandQueue->receive(buffer, sizeof (buffer), recv_size, priority);
-            } while(priority != DEF_ACK_PRIORITY);
-            
-            if (recv_size > 0) {
-                if (ack_quit.compare(0, ack_quit.length(), buffer, ack_quit.length()) == 0) {
-                    int slot = atoi(&buffer[ack_quit.length()]);
-                    if (slot >= 0 && slot < DEF_MAX_CLIENTS) {
-                        vt_destruct(m_vctNotifyQueues[slot]);
-                        setPendingAcks.erase(slot);
-                    }
-                }
-            }
-        }
-        catch (interprocess_exception &ex) {
-            cerr << ex.what() << endl;
-            break;
-        }
-    }
+        
+    } while(!bQuitPending || !mapActiveClients.empty());
+
 }
 
 
@@ -365,6 +377,14 @@ ProcessControl::Client::Client(const std::string& baseName)
     m_pNotifyQueue(NULL), m_pCommandQueue(NULL),
     m_callback(NULL), m_pCallbackContext(NULL), m_slot(-1)
 { }
+
+ProcessControl::Client::Client(const std::string& baseName, const compat::ProcessInstance& serverInstance)
+    : ComBase(baseName),
+    m_pNotifyQueue(NULL), m_pCommandQueue(NULL),
+    m_callback(NULL), m_pCallbackContext(NULL), m_slot(-1),
+    m_serverInstance(serverInstance)
+{}
+
 
 ProcessControl::Client::~Client()
 {
@@ -379,42 +399,56 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
         m_callback = callback;
         m_pCallbackContext = context;
 
+        // if this should be client of specific instance, check it
+        if (m_serverInstance.isValid()) {
+            ret = m_serverInstance.isRunning();
+            if (!ret) break;
+        }
+        
         // try opening server command queue
+        string qname = m_baseName + DEF_COMMAND_POSTFIX;
+        std::stringstream ssError;
         for (int i = 0; i < DEF_CONNECT_ATTEMPTS; i++) {
             try {
-                m_pCommandQueue = new message_queue(
-                    open_only,
-                    (m_baseName + DEF_COMMAND_POSTFIX).c_str());
+                m_pCommandQueue = new message_queue(open_only, qname.c_str());
                 if (m_pCommandQueue) break;
             }
-            catch (interprocess_exception &ex) {}
+            catch (interprocess_exception &ex) {
+                ssError << qname << ':' << ex.what() << endl;
+            }
             
             std::this_thread::sleep_for(
                 std::chrono::milliseconds(connectTimeout / DEF_CONNECT_ATTEMPTS));
         }
         if (!m_pCommandQueue) {
+            cerr << ssError.str();
             ret = false;
             break;
         }
 
         // try to find free client slot
+        std::stringstream ssError2;
         for (m_slot = 0; m_slot < DEF_MAX_CLIENTS; m_slot++) {
+            string qname2 = m_baseName + DEF_NOTIFY_POSTFIX + toString(m_slot);
             try {
                 m_pNotifyQueue = new message_queue(
                     create_only,
-                    (m_baseName + DEF_NOTIFY_POSTFIX + toString(m_slot)).c_str(),
+                    qname2.c_str(),
                     DEF_MAX_QUEUE_SIZE,
                     DEF_MAX_NOTIFY_SIZE);
                 if (m_pNotifyQueue) break;
             }
-            catch (interprocess_exception &ex) {}
+            catch (interprocess_exception &ex) {
+                ssError2 << qname2 << ':' << ex.what() << endl;
+            }
         }
         if (!m_pNotifyQueue) {
+            cerr << ssError2.str();
             ret = false;
             break;
         }
 
-        ret = runThread();
+        ret = runThread(connectTimeout);
     } while (0);
 
     if (!ret) close();
@@ -425,27 +459,25 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
 void ProcessControl::Client::close()
 {
     if (m_pNotifyQueue) {
-        m_mtxSend.lock();
         try {
-            m_pNotifyQueue->send(
-                g_close.c_str(),
-                g_close.length() + 1,
-                DEF_QUIT_PRIORITY);
+            send(*m_pNotifyQueue, g_close, DEF_QUIT_PRIORITY);
         }
         catch (interprocess_exception &ex) {
-            cerr << ex.what() << endl;
+            cerr << g_close << ':' << ex.what() << endl;
         }
-        m_mtxSend.unlock();
     }
-
+    
     waitForThread();
 
     if (m_pNotifyQueue) {
         vt_destruct(m_pNotifyQueue);
-        message_queue::remove((m_baseName + DEF_NOTIFY_POSTFIX + toString(m_slot)).c_str());
+        string qname2 = m_baseName + DEF_NOTIFY_POSTFIX + toString(m_slot);
+        message_queue::remove(qname2.c_str());
     }
 
     vt_destruct(m_pCommandQueue);
+    string qname = m_baseName + DEF_COMMAND_POSTFIX;
+    message_queue::remove(qname.c_str());
 
     m_callback = NULL;
     m_pCallbackContext = NULL;
@@ -455,90 +487,14 @@ void ProcessControl::Client::close()
 bool ProcessControl::Client::sendCommand(COMMAND_T command)
 {
     bool ret = true;
-
-    {
-        std::unique_lock<std::mutex> lk(m_mtxSend);
-
-        string cmd = toCommandString(command);
-        try {
-            m_pCommandQueue->send(
-                cmd.c_str(),
-                cmd.length() + 1,
-                DEF_COMMAND_PRIORITY);
-        }
-        catch (interprocess_exception &ex) {
-            cerr << ex.what() << endl;
-            ret = false;
-        }
-    }
-
-    return ret;
-}
-
-bool ProcessControl::Client::sendConnect()
-{
-    bool ret = true;
+    string cmd = toCommandString(command);
     
-    {
-        std::unique_lock<std::mutex> lk(m_mtxSend);
-        
-        string connect = g_connect + toString(m_slot);
-        try {
-            m_pCommandQueue->send(
-                connect.c_str(),
-                connect.length() + 1,
-                DEF_COMMAND_PRIORITY);
-            
-            char buffer[DEF_MAX_NOTIFY_SIZE];
-            message_queue::size_type recv_size = 0;
-            unsigned int priority = 0;
-            m_pNotifyQueue->receive(buffer, sizeof(buffer), recv_size, priority);
-            
-            if (recv_size > 0) {
-                string ack = g_ack + connect;
-                ret = (ack.compare(buffer) == 0);
-            }
-        }
-        catch (interprocess_exception &ex) {
-            cerr << ex.what() << endl;
-            ret = false;
-        }
+    try {
+        send(*m_pCommandQueue, cmd, DEF_COMMAND_PRIORITY);
     }
-
-    return ret;
-}
-
-bool ProcessControl::Client::sendDisconnect()
-{
-    bool ret = true;
-
-    {
-        std::unique_lock<std::mutex> lk(m_mtxSend);
-
-        string disconnect = g_disconnect + toString(m_slot);
-        try {
-            m_pCommandQueue->send(
-                disconnect.c_str(),
-                disconnect.length() + 1,
-                DEF_COMMAND_PRIORITY);
-
-            char buffer[DEF_MAX_NOTIFY_SIZE];
-            message_queue::size_type recv_size = 0;
-            unsigned int priority = 0;
-            
-            do {
-                m_pNotifyQueue->receive(buffer, sizeof (buffer), recv_size, priority);
-            } while(priority != DEF_ACK_PRIORITY);
-
-            if (recv_size > 0) {
-                string ack = g_ack + disconnect;
-                ret = (ack.compare(buffer) == 0);
-            }
-        }
-        catch (interprocess_exception &ex) {
-            cerr << ex.what() << endl;
-            ret = false;
-        }
+    catch (interprocess_exception &ex) {
+        cerr << cmd << ':' << ex.what() << endl;
+        ret = false;
     }
 
     return ret;
@@ -546,28 +502,60 @@ bool ProcessControl::Client::sendDisconnect()
 
 void ProcessControl::Client::threadMain(ThreadArgs &args)
 {
+    using namespace boost::posix_time;
+    
     bool bQuit = false;
+    bool bConnectPending = false;
+    bool bDisconnectPending = false;
+    string connectAck;
+    string disconnectAck;
     char buffer[DEF_MAX_NOTIFY_SIZE];
 
-    args.setReady(sendConnect());
-    
+    string connect = g_connect + g_slot + toString(m_slot) + g_pid + toString(compat::pid());
+    try {
+        send(*m_pCommandQueue, connect, DEF_COMMAND_PRIORITY);
+        
+        connectAck = g_ack + connect;
+        bConnectPending = true;
+    }
+    catch(interprocess_exception &ex) {
+        cerr << connect << ':' << ex.what() << endl;
+        return;
+    }
+
+    ptime next_check = second_clock::universal_time() + seconds(DEF_SERVER_ALIVE_CHECK_PERIOD_S);
+
     do {
         try
         {
             message_queue::size_type recv_size = 0;
             unsigned int priority = 0;
-            m_pNotifyQueue->receive(buffer, sizeof(buffer), recv_size, priority);
-            //cout << "client: received " << buffer << endl;
+            
+            // check queue and if server is still running
+            if (!m_pNotifyQueue->timed_receive(buffer, sizeof(buffer), recv_size, priority, next_check)) {
+                if (m_serverInstance.isValid() && !m_serverInstance.isRunning())
+                    break;
+                next_check = second_clock::universal_time() + seconds(DEF_SERVER_ALIVE_CHECK_PERIOD_S);
+            }
+            else {
+                //cout << "client: received " << buffer << endl;
+            }
 
             if (recv_size > 0) {
                 if (g_close.compare(buffer) == 0) {
-                    sendDisconnect();
-                    bQuit = true;
+                    if (!bDisconnectPending) {
+                        string disconnect = g_disconnect + g_slot + toString(m_slot);
+                        send(*m_pCommandQueue, disconnect, DEF_COMMAND_PRIORITY);
+                        
+                        disconnectAck = g_ack + disconnect;
+                        bDisconnectPending = true;
+                    }
                 }
-                else if (g_quit.compare(0, g_quit.length(), buffer, g_quit.length()) == 0) {
-                    std::unique_lock<std::mutex> lk(m_mtxSend);
-                    string ack = g_ack + buffer;
-                    m_pCommandQueue->send(ack.c_str(), ack.length() + 1, DEF_ACK_PRIORITY);
+                else if (bConnectPending && connectAck.compare(buffer) == 0) {
+                    bConnectPending = false;
+                    args.setReady(true);
+                }
+                else if (bDisconnectPending && disconnectAck.compare(buffer) == 0) {
                     bQuit = true;
                 }
                 else {
@@ -578,12 +566,11 @@ void ProcessControl::Client::threadMain(ThreadArgs &args)
             }
         }
         catch (interprocess_exception &ex) {
-            cerr << ex.what() << endl;
+            cerr << "ProcessControl::Client:" << ex.what() << endl;
             bQuit = true;
         }
         
     } while(!bQuit);
-
 }
 
 

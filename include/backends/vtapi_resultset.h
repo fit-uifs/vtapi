@@ -99,7 +99,19 @@ public:
      * @return list of keys
      */
     virtual TKeys *getKeys() = 0;
-
+    /**
+     * Gets type of given column
+     * @param col column index
+     * @return type name
+     */
+    virtual std::string getKeyType(const int col) = 0;
+    /**
+     * Gets index of given column name
+     * @param key column name
+     * @return column index
+     */
+    virtual int getKeyIndex(const std::string& key) = 0;
+    
     // =============== GETTERS (Select) ========================================
 
      /**
@@ -587,36 +599,6 @@ public:
      * @return allocated data
      */
     virtual void *getBlob(const int col, int &size) = 0;
-
-    ////////////// Print support methods
-    /**
-     * This goes through resultset and retrieves metadata necessary for print.
-     * @note It needs to be done before every print.
-     * @param row if not set to -1, this indicates single row print
-     * @param get_widths whether column widths will be required
-     * @param arrayLimit limits length of printed array
-     * @return metadata for print, pair consisting of two vectors:
-     *  -# Tkeys - column types etc.
-     *  -# ints - column widths
-     * @todo @b Vojta [param arrayLimit] který popisek je správný (tento nebo "desired column widths" z .cpp)?
-     */
-    virtual std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row, bool get_widths, const int arrayLimit) = 0;
-
-protected:
-
-    /**
-     * Gets type of given column
-     * @param col column index
-     * @return type name
-     */
-    virtual std::string getKeyType(const int col) = 0;
-    /**
-     * Gets index of given column name
-     * @param key column name
-     * @return column index
-     */
-    virtual int getKeyIndex(const std::string& key) = 0;
-
 };
 
 
@@ -637,7 +619,9 @@ public:
 
     TKey getKey(int col);
     TKeys* getKeys();
-
+    std::string getKeyType(const int col);
+    int getKeyIndex(const std::string& key);
+    
     std::string getValue(const int col, const int arrayLimit = 0);
 
     char getChar(const int pos);
@@ -672,12 +656,8 @@ public:
 #endif
     void *getBlob(const int col, int &size);
 
-    std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
-
 protected:
-    std::string getKeyType(const int col);
     short getKeyTypeLength(const int col, const short def);
-    int getKeyIndex(const std::string& key);
 
     template<typename TDB, typename TOUT>
     TOUT getSingleValue(const int col, const char *def);
@@ -705,7 +685,9 @@ public:
 
     TKey getKey(int col);
     TKeys* getKeys();
-
+    std::string getKeyType(const int col);
+    int getKeyIndex(const std::string& key);
+    
     std::string getValue(const int col, const int arrayLimit = 0);
 
     char getChar(const int pos);
@@ -740,14 +722,6 @@ public:
     cv::Mat *getCvMat(const int col);
 #endif
     void *getBlob(const int col, int &size);
-    
-    std::pair< TKeys*,std::vector<int>* > getKeysWidths(const int row = -1, bool get_widths = 1, const int arrayLimit = 0);
-
-protected:
-
-    std::string getKeyType(const int col);
-    int getKeyIndex(const std::string& key);
-
 };
 #endif
 

@@ -156,7 +156,7 @@ std::string TKeyValue<T>::getValue() {
  */
 template <class T>
 std::string TKeyValue<T>::getValues(const int limit) {
-    std::string retString = "";
+    std::string retString;
     if (values && size > 0) {
         if (size > 1) retString += "[";
         for(int i = 0; (i < size) && (limit <= 0 || i < limit); ++i) {

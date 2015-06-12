@@ -57,6 +57,23 @@ public:
     bool next();
 
     /**
+     * Gets a sequence name
+     * @return string value with the name of the sequence
+     */
+    std::string getName();
+
+    /**
+     * Gets a sequence location
+     * @return string value with the location of the sequence
+     */
+    std::string getLocation();
+    /**
+     * Gets a sequence type
+     * @return string value [video|images|data]
+     */
+    std::string getType();
+    
+    /**
      * Adds a new sequence to a database table - minimal insert
      * @param name       name of the sequence
      * @param location   location of the sequence
@@ -74,48 +91,34 @@ public:
      * @param notes      optional description
      * @return success
      */
-    bool add(const std::string& name, const std::string& location, const std::string& type,
-    const std::string& userid, const std::string& notes);
+    bool add(
+        const std::string& name, const std::string& location, const std::string& type,
+        const std::string& userid, const std::string& notes);
 
-    /**
-     * Resets sequence to initial state
-     * @return success
-     */
-    bool preSet();
-    
-    /**
-     * Gets a sequence name
-     * @return string value with the name of the sequence
-     */
-    std::string getName();
-    
-    /**
-     * Gets a sequence location
-     * @return string value with the location of the sequence
-     */
-    std::string getLocation();
-    /**
-     * Gets a sequence type
-     * @return string value [video|images|data]
-     */
-    std::string getType();
     
     /**
      * Creates a new interval specified by a start time and an end time
-     * @param t1 start time
-     * @param t2 end time
      * @return pointer to the new interval
-     * @todo @b doc/code: parameters t1 and t2 are unused!
      */
-    Interval* newInterval(const int t1 = -1, const int t2 = -1);
+    Interval* newInterval()
+    {
+        return new Interval(*this);
+    }
 
     /**
      * Creates a new image specified by a name
      * @param name   name of the image
      * @return pointer to the new image
      */
-    Image* newImage(const std::string& name = "");
+    Image* newImage(const std::string& name = "")
+    {
+        return new Image(*this, name);
+    }
+    
+protected:
+    bool preUpdate();
 };
+
 
 /**
  * @brief ImageFolder class manages folders with static images
@@ -176,6 +179,8 @@ public:
      */
     Video(const KeyValues& orig, const std::string& name);
 
+    virtual ~Video();
+    
     /**
      * Adds a new video to the dataset
      * @param name       name of the video
@@ -234,7 +239,7 @@ public:
      * Sets video real-world start time
      * @return success
      */
-    bool setRealStartTime(const time_t& starttime);
+    bool updateRealStartTime(const time_t& starttime);
     
 #endif
 

@@ -35,7 +35,6 @@ Commons::Commons(const Commons& orig) {
     backend         = orig.backend;
     dbconn          = orig.dbconn;
     user            = orig.user;
-    format          = orig.format;
     input           = orig.input;
     output          = orig.output;
     baseLocation    = orig.baseLocation;
@@ -69,7 +68,6 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     selection       = args_info.selection_given ? string(args_info.selection_arg)   : string ("");
 
     user            = args_info.user_given      ? string(args_info.user_arg)        : string("");
-    format          = mapFormat(args_info.format_arg);
     input           = args_info.input_given     ? string(args_info.input_arg)       : string("");
     output          = args_info.output_given    ? string(args_info.output_arg)      : string("");
     queryLimit      = args_info.querylimit_given ? args_info.querylimit_arg         : 0;
@@ -196,11 +194,3 @@ bool Commons::dirExists(const string& dirpath)
     struct stat info;
     return (stat(dirpath.c_str(), &info) == 0 && info.st_mode & S_IFDIR);
 }
-
-format_t Commons::mapFormat(const string& format) {
-    if (format.compare("standard") == 0)    return STANDARD;
-    else if (format.compare("csv") == 0)    return CSV;
-    else if (format.compare("html") == 0)   return HTML;
-    else                                    return STANDARD;
-}
-

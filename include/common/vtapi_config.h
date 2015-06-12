@@ -35,7 +35,6 @@
 // boost
 #include <boost/interprocess/ipc/message_queue.hpp>
 
-
 // c++11
 #include <utility>
 #include <thread>

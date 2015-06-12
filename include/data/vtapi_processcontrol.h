@@ -13,6 +13,7 @@
 #ifndef VTAPI_PROCESSCONTROL_H
 #define	VTAPI_PROCESSCONTROL_H
 
+#include "../common/vtapi_compat.h"
 #include "vtapi_processstate.h"
 
 namespace vtapi {
@@ -50,6 +51,7 @@ public:
     
 public:
     ProcessControl(const std::string& processName);
+    ProcessControl(const std::string& processName, const compat::ProcessInstance& instance);
     virtual ~ProcessControl();
 
     /**
@@ -121,7 +123,8 @@ private:
             friend class ComBase;
         };
         
-        bool runThread();
+        void send(boost::interprocess::message_queue &q, const std::string& msg, int priority);
+        bool runThread(unsigned int timeout_ms);
         void waitForThread();
         static void threadProc(ThreadArgs *pArgs);
         virtual void threadMain(ThreadArgs &args) = 0;
@@ -158,6 +161,7 @@ private:
     {
     public:
         explicit Client(const std::string& baseName);
+        Client(const std::string& baseName, const compat::ProcessInstance& serverInstance);
         virtual ~Client();
 
         bool create(unsigned int connectTimeout, fClientCallback callback, void *context);
@@ -168,14 +172,12 @@ private:
         void threadMain(ThreadArgs &args);
         
     private:
-        bool sendConnect();
-        bool sendDisconnect();
-        
         int m_slot;
         boost::interprocess::message_queue *m_pCommandQueue;
         boost::interprocess::message_queue *m_pNotifyQueue;
         fClientCallback m_callback;
         void *m_pCallbackContext;
+        compat::ProcessInstance m_serverInstance;
     };
     
     

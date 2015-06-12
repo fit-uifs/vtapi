@@ -32,82 +32,74 @@ Method::Method(const KeyValues& orig, const string& name)
     this->method = name;
 }
 
-bool Method::next() {
-    KeyValues* kv = ((KeyValues*)this)->next();
-    if (kv) {
+bool Method::next()
+{
+    if (KeyValues::next()) {
         this->method = this->getName();
-        this->getMethodKeys();
+        return true;
     }
-
-    return kv;
+    else {
+        return false;
+    }
 }
 
-int Method::getId() {
+int Method::getId()
+{
     return this->getInt("id");
 }
 
-string Method::getName() {
+string Method::getName()
+{
     return this->getString("mtname");
 }
 
-Process* Method::newProcess(const string& name) {
-    return (new Process(*this, name));
-}
 
-Process* Method::addProcess()
+TKeys Method::getMethodKeys()
 {
-    Process *p = new Process(*this);
-    if (p) {
-        if (!p->add()) {
-            delete p;
-            p = NULL;
-        }
+    KeyValues kv(*this);
+    kv.select = new Select(*this);
+    kv.select->from("public.methods_keys", "keyname");
+    kv.select->from("public.methods_keys", "typname::text");
+    kv.select->from("public.methods_keys", "inout");
+    kv.select->whereString("mtname", this->method);
+
+    TKeys keys;
+    while (kv.next()) {
+        keys.push_back(
+            TKey(
+            kv.getString("typname"),
+            kv.getString("keyname"),
+            0,
+            kv.getString("inout")));
     }
-    return p;
-}
 
-
-TKeys Method::getMethodKeys() {
-    if (methodKeys.empty()) {
-        TKeyValues* parameters = NULL;
-        
-        KeyValues* kv = new KeyValues(*this);
-        kv->select = new Select(*this);
-        kv->select->from("public.methods_keys", "keyname");
-        kv->select->from("public.methods_keys", "typname::text");
-        kv->select->from("public.methods_keys", "inout");
-        kv->select->whereString("mtname", this->method);
-
-        while (kv->next()) {
-            TKey mk;
-            mk.key = kv->getString("keyname");
-            mk.type = kv->getString("typname");
-            mk.size = 0;   // 0 is for the definition
-            mk.from = kv->getString("inout");
-            methodKeys.push_back(mk);
-        }
-
-        delete (kv);
-    }
-    return methodKeys;
+    return keys;
 }
 
 void Method::printMethodKeys()
 {
-    KeyValues* kv = new KeyValues(*this);
-    kv->select = new Select(*this);
-    kv->select->from("public.methods_keys", "keyname");
-    kv->select->from("public.methods_keys", "typname::text");
-    kv->select->from("public.methods_keys", "inout");
-    kv->select->from("public.methods_keys", "default_num");
-    kv->select->from("public.methods_keys", "default_str");
-    kv->select->whereString("mtname", this->method);
+    KeyValues kv(*this);
+    kv.select = new Select(*this);
+    kv.select->from("public.methods_keys", "keyname");
+    kv.select->from("public.methods_keys", "typname::text");
+    kv.select->from("public.methods_keys", "inout");
+    kv.select->from("public.methods_keys", "default_num");
+    kv.select->from("public.methods_keys", "default_str");
+    kv.select->whereString("mtname", this->method);
 
-    if (kv->next()) {
-        kv->printAll();
+    if (kv.next()) {
+        kv.printAll();
+    }
+}
+
+bool Method::preUpdate()
+{
+    bool ret = KeyValues::preUpdate("public.methods");
+    if (ret) {
+        ret &= update->whereString("mtname", this->method);
     }
 
-    delete (kv);
+    return ret;
 }
 
 
@@ -201,7 +193,7 @@ void Method::printMethodKeys()
 //    Image* image = seq->newImage();
 //    while (image->next()) {
 //        int* color = colorLayout(image->getDataLocation());
-//        image->setIntA("color", color, 32);
+//        image->updateIntA("color", color, 32);
 //    }
 //    
 //    // retrieve Image(s) according to their similarity to "Q.jpg"
@@ -240,7 +232,7 @@ void Method::printMethodKeys()
 //        Mat sample;
 //        // ... read features and fill feature vector
 //        int cluster = (int) model.predict(sample); //get cluster label
-//        track->setInt("cluster", cluster); // store cluster label
+//        track->updateInt("cluster", cluster); // store cluster label
 //    }    
 //    
 //}

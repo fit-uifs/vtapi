@@ -44,10 +44,9 @@ class KeyValues : public Commons {
 public:
 
     Select* select; /**< Select for select queries (depending on child KeyValue object may be pre-filled by the constructor) */
-    Insert* insert; /**< Insert to insert new data */
+    Insert* insert; /**< Current insert to insert new data (= last in store)*/
     Update* update; /**< Update to update new data */
 
-    std::list<Insert*> store;  /**< insert queries stored for transactional execute */
 
 public:
     /**
@@ -98,12 +97,15 @@ public:
      */
     bool print();
     /**
-     * Prints all tuples of resultset
+     * Iterates over rest of the whole resultset and prints all rows + keys
      * @return success
      */
     bool printAll();
-
-
+    /**
+     * Prints table keys
+     * @return success
+     */
+    bool printKeys();
     
     // =============== GETTERS (Select) ========================================
 
@@ -393,79 +395,6 @@ public:
     std::vector<PGpoint>* getPointV(const int col);
 #endif
 
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a line segment specified by a column key
-//     * @param key   column key
-//     * @return Line segment
-//     */
-//    PGlseg getLineSegment(const std::string& key);
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a line segment specified by an index of a column
-//     * @param col   index of the column
-//     * @return Line segment
-//     */
-//    PGlseg getLineSegment(const int col);
-//
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a box specified by a column key
-//     * @param key   column key
-//     * @return Box
-//     */
-//    PGbox getBox(const std::string& key);
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a box specified by an index of a column
-//     * @param col   index of the column
-//     * @return Box
-//     */
-//    PGbox getBox(const int col);
-//
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a circle specified by a column key
-//     * @param key   column key
-//     * @return Circle
-//     */
-//    PGcircle getCircle(const std::string& key);
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a circle specified by an index of a column
-//     * @param col   index of the column
-//     * @return Circle
-//     */
-//    PGcircle getCircle(const int col);
-//
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a polygon specified by ta column key
-//     * @note polygon.pts must be copied out if needed after clearing resultset
-//     *          copy_points(polygon.npts, polygon.pts, ...);
-//     * @param key   column key
-//     * @return Polygon
-//     */
-//    PGpolygon getPolygon(const std::string& key);
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a polygon specified by an index of a column
-//     * @note polygon.pts must be copied out if needed after clearing resultset
-//     *          copy_points(polygon.npts, polygon.pts, ...);
-//     * @param col   index of the column
-//     * @return Polygon
-//     */
-//    PGpolygon getPolygon(const int col);
-//
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a path specified by a column key
-//     * @note path.pts must be copied out if needed after clearing resultset
-//     *          copy_points(path.npts, path.pts, ...);
-//     * @param key   column key
-//     * @return Path
-//     */
-//    PGpath getPath(const std::string& key);
-//    /* TODO: add "*" to complete and activate doxygen entry ( /<star><star> )
-//     * Gets a path specified by an index of a column
-//     * @note path.pts must be copied out if needed after clearing resultset
-//     *          copy_points(path.npts, path.pts, ...);
-//     * @param col   index of the column
-//     * @return Path
-//     */
-//    PGpath getPath(const int col);
-
 #if HAVE_POSTGIS
     /**
      * Gets a GEOS geometry type by a column key
@@ -536,112 +465,6 @@ public:
      */
     void *getBlob(const int col, int &size);
 
-    // =============== SETTERS (Update) ========================================
-    /**
-     * This is to support updates in derived classes
-     * (unimplemented error 3010 in this class)
-     * @return success (in derived classes)
-     */
-    virtual bool preSet();
-
-
-    /**
-     * Sets a new string value of a specified key
-     * @param key     column key to update
-     * @param value   new string value of the key
-     * @return success
-     */
-    bool setString(const std::string& key, const std::string& value);
-
-    /**
-     * Sets a new integer value of a specified key
-     * @note New integer value is casted from string value
-     * @param key     column key to update
-     * @param value   new integer value (in string representation) of the key
-     * @return success
-     * @unimplemented
-     */
-    bool setInt(const std::string& key, const std::string& value);
-    /**
-     * Sets a new integer value of a specified key
-     * @param key     column key to update
-     * @param value   new integer value of the key
-     * @return success
-     */
-    bool setInt(const std::string& key, int value);
-
-    /**
-     * Sets a new integer array of a specified key
-     * @param key      column key to update
-     * @param values   new integer array of the key
-     * @param size     size of the array of integer values
-     * @return success
-     */
-    bool setIntA(const std::string& key, int* values, int size);
-    /**
-     * Sets a new integer vector of a specified key
-     * @param key      column key to update
-     * @param values   new integer vector of the key
-     * @return success
-     * @unimplemented
-     */
-    bool setIntV(const std::string& key, const std::vector<int> values);
-
-    /**
-     * Sets a new float value of a specified key
-     * @note New flaot value is casted from string value
-     * @param key     column key to update
-     * @param value   new float value (in string representation) of the key
-     * @return success
-     * @unimplemented
-     */
-    bool setFloat(const std::string& key, const std::string& value);
-    /**
-     * Sets a new float value of a specified key
-     * @param key     column key to update
-     * @param value   new float value of the key
-     * @return success
-     */
-    bool setFloat(const std::string& key, float value);
-
-    /**
-     * Sets a new float array of a specified key
-     * @param key      column key to update
-     * @param values   new float array of the key
-     * @param size     size of the array of integer values
-     * @return success
-     */
-    bool setFloatA(const std::string& key, float* values, int size);
-    /**
-     * Sets a new float vector of a specified key
-     * @param key      column key to update
-     * @param values   new float vector of the key
-     * @return success
-     * @unimplemented
-     */
-    bool setFloatV(const std::string& key, const std::vector<float> values);
-    /**
-     * Sets a new timestamp of a specified key
-     * @param key   column key to update
-     * @param value timestamp value
-     * @return  success
-     */
-    bool setTimestamp(const std::string& key, const time_t& value);
-    /**
-     * Sets a new process status of a specified key
-     * @param key column key to update
-     * @param value status value
-     * @return success
-     */
-    bool setPStatus(const std::string& key, ProcessState::STATUS_T value);
-    /**
-     * Executes SQL UPDATE command
-     * @return success
-     */
-    bool setExecute();
-
-
-
     // =============== ADDERS (Insert) ========================================
 
     /**
@@ -651,7 +474,6 @@ public:
      * @return success
      */
     bool addString(const std::string& key, const std::string& value);
-    
     /**
      * Adds a new integer value to a specified key
      * @param key     column key to insert
@@ -667,7 +489,6 @@ public:
      * @return success
      */
     bool addIntA(const std::string& key, int* value, int size);
-    
     /**
      * Adds a new float value to a specified key
      * @param key     column key to insert
@@ -690,7 +511,6 @@ public:
      * @return success
      */
     bool addTimestamp(const std::string& key, const time_t& value);
-    
 #if HAVE_OPENCV
     /**
      * Adds a new OpenCV matrix (cv::Mat) to a specified key
@@ -700,70 +520,101 @@ public:
      */
     bool addCvMat(const std::string& key, cv::Mat& value);
 #endif
-    
     /**
      * Adds a new IntervalEvent value to a specied key
      * @param key     column key to insert
      * @param value   new IntervalEvent value of the key
      * @return success
      */
-    bool addIntervalEvent(const std::string& key, IntervalEvent& value);
-    
+    bool addIntervalEvent(const std::string& key, const IntervalEvent& value);
     /**
      * Executes SQL INSERT command
      * @return success
      */
-    bool addExecute();
+    virtual bool addExecute();
+    
+    // =============== SETTERS (Update) ========================================
 
     /**
-     * This is used to check whether the underlying dataset, sequence (directory / video) or interval (image) exists
-     * @return success of found
+     * Sets a new string value of a specified key
+     * @param key     column key to update
+     * @param value   new string value of the key
+     * @return success
      */
-    bool checkStorage();
-
+    bool updateString(const std::string& key, const std::string& value);
     /**
-     * This goes through resultset and retrieves metadata necessary for print
-     * @note It needs to be done before every print.
-     * @param row if       not set to -1, this indicates single row print
-     * @param get_widths   whether column widths will be required
-     * @return metadata for print, pair consisting of two vectors:
-     *  -#) Tkeys - column types etc.
-     *  -#) ints - column widths
-     * 
-     * @unimplemented Is this method needed? It seems that was implemented and afterwards was deleted (or renamed - prinRowOnly()? )...
-     * @todo Is this method needed? It seems that was implemented and afterwards was deleted (or renamed - printRowOnly()? )...
+     * Sets a new integer value of a specified key
+     * @param key     column key to update
+     * @param value   new integer value of the key
+     * @return success
      */
-    std::pair< TKeys*,std::vector<int>* > getFieldsInfo(const int row, int get_widths);
+    bool updateInt(const std::string& key, int value);
+    /**
+     * Sets a new integer array of a specified key
+     * @param key      column key to update
+     * @param values   new integer array of the key
+     * @param size     size of the array of integer values
+     * @return success
+     */
+    bool updateIntA(const std::string& key, int* values, int size);
+    /**
+     * Sets a new integer vector of a specified key
+     * @param key      column key to update
+     * @param values   new integer vector of the key
+     * @return success
+     * @unimplemented
+     */
+    bool updateIntV(const std::string& key, const std::vector<int> values);
+    /**
+     * Sets a new float value of a specified key
+     * @param key     column key to update
+     * @param value   new float value of the key
+     * @return success
+     */
+    bool updateFloat(const std::string& key, float value);
+    /**
+     * Sets a new float array of a specified key
+     * @param key      column key to update
+     * @param values   new float array of the key
+     * @param size     size of the array of integer values
+     * @return success
+     */
+    bool updateFloatA(const std::string& key, float* values, int size);
+    /**
+     * Sets a new float vector of a specified key
+     * @param key      column key to update
+     * @param values   new float vector of the key
+     * @return success
+     * @unimplemented
+     */
+    bool updateFloatV(const std::string& key, const std::vector<float> values);
+    /**
+     * Sets a new timestamp of a specified key
+     * @param key   column key to update
+     * @param value timestamp value
+     * @return  success
+     */
+    bool updateTimestamp(const std::string& key, const time_t& value);
+    /**
+     * Sets a new process status of a specified key
+     * @param key column key to update
+     * @param value status value
+     * @return success
+     */
+    bool updateProcessStatus(const std::string& key, ProcessState::STATUS_T value);
+    /**
+     * Executes SQL UPDATE command
+     * @return success
+     */
+    virtual bool updateExecute();
 
 protected:
-    std::string caption; /**< table caption */
-    std::string tableOpt; /**< custom table options (border, padding, whatever..) */
+    virtual bool preUpdate();
+    bool preAdd(const std::string& table);
+    bool preUpdate(const std::string& table);
 
-    ////////////// Print support methods
-
-    /**
-     * Prints table header
-     * @param fInfo   Metadata for print, pair consisting of two vectors:
-     *  -# Tkeys - column types etc.
-     *  -# ints - column widths
-     * @return success
-     */
-    bool printHeader(const std::pair< TKeys*,std::vector<int>* > &fInfo);
-
-    /**
-     * Prints one row of resultset
-     * @param row      Which row of resultset to print
-     * @param widths   Metadata - vector of column widths
-     * @return success
-     */
-    bool printRowOnly(const int row, const std::vector<int>* widths);
-
-    /**
-     * Prints table footer and info about printed rows
-     * @param count   How many rows were printed (0 = single row was printed)
-     * @return success
-     */
-    bool printFooter(const int count);
+private:
+    std::list<Insert*> store;  /**< insert queries stored for transactional execute */
 
 };
 

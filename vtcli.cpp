@@ -471,7 +471,7 @@ bool VTCli::selectCommand(VTCLI_KEYVALUE_LIST& params)
             else if (PVAL_OK(process)) {
                 Process *p = new Process(*(m_vtapi->commons), process);
                 if (p->next()) {
-                    in = new Interval(*(m_vtapi->commons), p->getOutputs());
+                    in = p->getOutputData();
                 }
                 else {
                     printError(string("process doesn't exist: ").append(process).c_str());
@@ -625,7 +625,7 @@ bool VTCli::insertCommand(VTCLI_KEYVALUE_LIST& params)
             if (PVAL_OK(process)) {
                 Process *p = new Process(*(m_vtapi->commons), process);
                 if (p->next()) {
-                    in = p->newInterval();
+                    in = p->getOutputData();
                 }
                 else {
                     printError(string("process doesn't exist: ").append(process).c_str());
@@ -710,7 +710,7 @@ bool VTCli::deleteCommand(VTCLI_KEYVALUE_LIST& params)
             
             Process *pr = new Process(*(m_vtapi->commons), name);
             if (pr->next()) {
-                pr->deleteOutputData();
+                pr->clearOutputData();
                 Query q(*(m_vtapi->commons), "DELETE FROM " + pr->getDataset() + ".processes WHERE prsname = '" + name + "';");
                 q.execute();
             }
@@ -1180,9 +1180,9 @@ bool VTCli::loadVideo(Dataset *ds, const std::string &name, const std::string &f
         printError(string("failed to open video: ").append(fullpath).c_str());
         bRet = false;
     }
-
-    delete vid;
     
+    delete vid;
+
     return bRet;
 }
 

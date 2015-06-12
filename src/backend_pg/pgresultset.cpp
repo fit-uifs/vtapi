@@ -65,7 +65,7 @@ TKey PGResultSet::getKey(int col)
 
 TKeys* PGResultSet::getKeys()
 {
-    TKeys* keys     = new TKeys;
+    TKeys* keys = new TKeys;
 
     int cols = pg.PQnfields(PGRES);
     for (int col = 0; col < cols; col++) {
@@ -1011,55 +1011,6 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
 //#endif        
 
 }
-
-
-
-pair< TKeys*, vector<int>* > PGResultSet::getKeysWidths(const int row, bool get_widths, const int arrayLimit) {
-    vector<int> *widths = get_widths ? new vector<int>() : NULL;
-    TKeys *keys         = getKeys();
-    int rows            = pg.PQntuples(PGRES);
-    int cols            = pg.PQnfields(PGRES);
-    int plen, flen, tlen, width;
-
-    if (!get_widths && keys) return std::make_pair(keys, widths);
-    else if (!widths || !keys || cols != keys->size() || cols == 0 || rows == 0) {
-        vt_destruct(widths);
-        vt_destruct(keys);
-        return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
-    }
-
-    // header and first row
-    for (int c = 0; c < cols; c++) {
-        // don't forget to save original value of pos beforehand!
-        this->pos = row < 0 ? 0 : row;
-        flen = (*keys)[c].key.length();  // field name length
-        tlen = (*keys)[c].type.length(); // data type string length
-        plen = getValue(c).length();     // field value string length
-        if (plen >= flen && plen >= tlen) width = plen;
-        else if (flen >= plen && flen >= tlen) width = flen;
-        else width = tlen;
-        widths->push_back(width);
-    }
-
-    // rest of the rows
-    if (row < 0) {
-        for (int r = 1; r < rows; r++) {
-            // very ugly manipulation with pos, it needs to be reset after print
-            this->pos = r;
-            for (int c = 0; c < cols; c++) {
-                plen = getValue(c).length();
-                if (plen > (*widths)[c]) (*widths)[c] = plen;
-            }
-        }
-    }
-    if (widths->size() != keys->size()) {
-        vt_destruct(widths);
-        vt_destruct(keys);
-        return std::make_pair((TKeys*)NULL, (vector<int>*)NULL);
-    }
-    else return std::make_pair(keys, widths);
-}
-
 
 
 

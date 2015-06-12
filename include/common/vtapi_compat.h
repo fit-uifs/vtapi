@@ -14,16 +14,40 @@
 #ifndef VTAPI_COMPAT_H
 #define	VTAPI_COMPAT_H
 
+#include <string>
 #include <list>
 
 
 namespace vtapi {
 namespace compat {
 
-typedef std::list<std::string> ARGS_LIST;
 
-bool launchProcess(const std::string& bin, const ARGS_LIST& args, bool wait);
+int pid();
 
+class ProcessInstance
+{
+public:
+    typedef std::list<std::string> Args;
+
+    ProcessInstance();
+    explicit ProcessInstance(const ProcessInstance& orig);
+    ~ProcessInstance();
+    
+    bool launch(const std::string& exec, const Args& args, bool wait);
+    bool open(int pid);
+    bool isRunning();
+    bool isValid();
+    void close(bool wait = false);
+    
+    ProcessInstance& operator=(const ProcessInstance& orig);
+    
+private:
+    union {
+        pid_t pid;
+        void *ptr;
+    } m_handle;
+    bool m_bChild;
+};
 
 
 }

@@ -22,7 +22,8 @@ using namespace vtapi;
 
 //================================= INTERVAL ===================================
 
-Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(orig) {
+Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(orig)
+{
     thisClass = "Interval";
 
     if (!selection.empty()) this->selection = selection;
@@ -33,36 +34,35 @@ Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(o
     if (!process.empty()) select->whereString("prsname", this->process);
 }
 
-int Interval::getId() {
+bool Interval::next()
+{
+    return KeyValues::next();
+}
+
+int Interval::getId()
+{
     return this->getInt("id");
 }
-
-string Interval::getSequenceName() {
-    return this->getString("seqname");
-}
-
-string Interval::getProcessName() {
+string Interval::getProcessName()
+{
     return this->getString("prsname");
 }
-
-Sequence* Interval::getParentSequence() {
-    return new Sequence(*this, this->getSequenceName());
+string Interval::getSequenceName()
+{
+    return this->getString("seqname");
 }
-
-
-
-int Interval::getStartTime() {
+int Interval::getStartTime()
+{
     return this->getInt("t1");
 }
-
-int Interval::getEndTime() {
+int Interval::getEndTime()
+{
     return this->getInt("t2");
 }
-
 bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
 {
     bool bRet = false;
-    Sequence *seq = this->getParentSequence();
+    Sequence *seq = new Sequence(*this, this->getSequenceName());
     
     if(seq) {
         if (seq->next() && seq->getType().compare("video") == 0) {
@@ -81,12 +81,22 @@ bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
     return bRet;
 }
 
-
-bool Interval::setStartEndTime(const int t1, const int t2)
+bool Interval::preUpdate()
 {
-    return (setInt("t1", t1) && setInt("t2", t2) && setExecute());
-}
+    bool ret = KeyValues::preUpdate(this->selection);
+    if (ret) {
+        ret &= update->whereString("seqname", this->sequence);
+        ret &= update->whereString("prsname", this->process);
+        ret &= update->whereInt("t1", this->getInt("t1"));
+        ret &= update->whereInt("t2", this->getInt("t2"));
+    }
 
+    return ret;
+}
+bool Interval::updateStartEndTime(const int t1, const int t2)
+{
+    return (updateInt("t1", t1) && updateInt("t2", t2) && updateExecute());
+}
 
 
 bool Interval::add(const string& sequence, const int t1, const int t2, const string& location)
@@ -100,8 +110,7 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
     bool retval = true;
     int te2 = (t2 < 0) ? t1 : t2;
 
-    if (insert) store.push_back(insert);
-    insert = new Insert(*this, this->selection);
+    retval &= KeyValues::preAdd(this->selection);
     retval &= insert->keyString("seqname", sequence);
     retval &= insert->keyString("prsname", this->process);
     retval &= insert->keyInt("t1", t1);
@@ -113,19 +122,6 @@ bool Interval::add(const string& sequence, const int t1, const int t2, const str
     return retval;
 }
 
-bool Interval::preSet()
-{
-    bool retval = true;
-
-    vt_destruct(update);
-    update = new Update(*this, this->selection);
-    retval &= update->whereString("seqname", this->sequence);
-    retval &= update->whereString("prsname", this->process);
-    retval &= update->whereInt("t1", this->getInt("t1"));
-    retval &= update->whereInt("t2", this->getInt("t2"));
-
-    return retval;
-}
 
 bool Interval::filterById(const int id)
 {
@@ -160,26 +156,11 @@ bool Interval::filterByRegion(const IntervalEvent::box& region)
 //=================================== IMAGE ====================================
 
 
-Image::Image(const KeyValues& orig, const string& selection) : Interval(orig, selection)
+Image::Image(const KeyValues& orig, const std::string& name, const string& selection) : Interval(orig, selection)
 {
     thisClass = "Image";
-}
 
-int Image::getTime()
-{
-    int t1 = this->getStartTime();
-    int t2 = this->getEndTime();
-
-    if (t1 != t2) {
-        logger->warning(3291, "This is not an Image (see output if verbose)", thisClass+"::getTime()");
-        // if (verbose) this->print();
-    }
-    return t1;
-}
-
-bool Image::add(const string& sequence, const int t, const string& location)
-{
-    return ((Interval*)this)->add(sequence, t, t, location);
+    if (!name.empty()) select->whereString("imglocation", name);
 }
 
 string Image::getImgLocation()
@@ -192,12 +173,23 @@ string Image::getDataLocation()
     return (this->getDataLocation() + this->getImgLocation());
 }
 
+int Image::getTime()
+{
+    return this->getStartTime();
+}
+
 #if HAVE_OPENCV
+
 cv::Mat Image::getData()
 {
     if (this->image.data) this->image.release();
-    
+
     this->image = cv::imread(this->getDataLocation().c_str(), CV_LOAD_IMAGE_COLOR);
-    return this->image;    
+    return this->image;
 }
 #endif
+
+bool Image::add(const string& sequence, const int t, const string& location)
+{
+    return ((Interval*)this)->add(sequence, t, t, location);
+}

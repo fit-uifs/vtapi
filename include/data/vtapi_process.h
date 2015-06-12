@@ -17,8 +17,10 @@
 #include "vtapi_keyvalues.h"
 #include "vtapi_sequence.h"
 #include "vtapi_interval.h"
+#include "../common/vtapi_compat.h"
 #include "vtapi_processstate.h"
 #include "vtapi_processcontrol.h"
+#include "vtapi_processparams.h"
 #include "../common/vtapi_tkeyvalue.h"
 
 namespace vtapi {
@@ -59,22 +61,106 @@ public:
     bool next();
 
     /**
+     * Launches process and waits for its finish (unless async is specified)
+     * @param async function returns immediately after launching process
+     * @param suspended start process in suspended state (use ProcessControl to unpause it)
+     * @param ctrl output pointer to new process control object (client)
+     * @return success
+     */
+    bool run(bool async = false, bool suspended = false, ProcessControl **ctrl = NULL);
+    
+    /**
+     * Constructs a process name from method name and input parameters
+     * @param params container
+     * @return process name
+     */
+    std::string constructName(const ProcessParams &params);
+    
+    //////////////////////////////////////////////////
+    // getters - SELECT
+    //////////////////////////////////////////////////
+    
+    /**
      * Gets a process name
      * @return string value with the name of the process
      */
     std::string getName();
-
-    /**
-     * Constructs a process name from method name and input parameters
-     * @return process name
-     */
-    std::string constructName();
-    
     /**
      * Gets detailed process state
      * @return process state object
      */
     ProcessState *getState();
+    /**
+     * Gets a process name which outputs are inputs for this process
+     * @return string value with the input data table name
+     * @todo @b doc: Check if it is correct
+     */
+    std::string getInputProcessName();
+    /**
+     * Gets a name of a table where output data for this process are stored
+     * @return string value with the output data table name
+     */
+    std::string getOutputTable();
+    /**
+     * Gets a process which outputs are inputs for this process
+     * @return process object
+     */
+    Process *getInputProcess();
+    /**
+     * Gets input intervals of this process
+     * @return input intervals
+     */
+    Interval *getInputData();
+    /**
+     * Gets output intervals of this process
+     * @return output intervals
+     */
+    Interval *getOutputData();
+    /**
+     * Gets object containing process parameters
+     * @return internals params map
+     */
+    ProcessParams *getParams();
+    
+    //////////////////////////////////////////////////
+    // adders - INSERT
+    //////////////////////////////////////////////////
+
+    /**
+     * Adds a new process instance into database, use Method->addProcess() instead
+     * @param outputs   output table
+     * @return success
+     */
+    bool add(const std::string& outputs = "");
+    /**
+     * Sets output data from another process as inputs for this one
+     * @param processName   input process name
+     * @return success
+     */
+    bool addInputProcessName(const std::string& processName);
+    /**
+     * Sets output table for this process
+     * @param table   output table name
+     * @return success
+     */
+    bool addOutputTable(const std::string& table);
+    /**
+     * Inserts full process parameters including input process name
+     * Uses move semantics
+     * @param params process params
+     * @return success
+     */
+    bool addParams(ProcessParams && params);
+    /**
+     * Execute INSERT specified by previously called add* methods
+     * @return success
+     */
+    virtual bool addExecute();
+    
+    //////////////////////////////////////////////////
+    // updaters - UPDATE
+    //////////////////////////////////////////////////
+
     /**
      * Sets custom process state
      * @param state process state
@@ -98,11 +184,10 @@ public:
     bool updateStateSuspended(ProcessControl *control = NULL);
     /**
      * Sets process status as FINISHED (without error)
-     * @param progress final percentage progress [0-100]
      * @param control ProcessControl object through which to send state update notification
      * @return success
      */
-    bool updateStateFinished(float progress, ProcessControl *control = NULL);
+    bool updateStateFinished(ProcessControl *control = NULL);
     /**
      * Sets process status as ERROR and sets last error message
      * @param errorMsg error message
@@ -111,6 +196,16 @@ public:
      */
     bool updateStateError(const std::string& lastError, ProcessControl *control = NULL);
     
+    //////////////////////////////////////////////////
+    // controls - commands to process instance
+    //////////////////////////////////////////////////
+
+    /**
+     * Get process control object to initialize server/client notifications
+     * between launcher and process
+     * @return process control object or NULL on failure
+     */
+    ProcessControl *getProcessControl();
     /**
      * Sends control message to process: resume.
      * @param control ProcessControl object through which to send command
@@ -129,156 +224,33 @@ public:
      * @return success
      */
     bool controlStop(ProcessControl *control);
+
+    //////////////////////////////////////////////////
+    // filters/utilities
+    //////////////////////////////////////////////////
     
     /**
-     * Gets a process name which outputs are inputs for this process
-     * @return string value with the input data table name
-     * @todo @b doc: Check if it is correct
+     * Filters iteration via next() for processes with specific input process
+     * @param processName   input process name
      */
-    std::string getInputs();
+    void filterByInputProcessName(const std::string& processName);
     /**
-     * Gets a name of a table where output data for this process are stored
-     * @return string value with the output data table name
+     * Filters iteration via next() for processes with specific output table
+     * @param table output table
      */
-    std::string getOutputs();
-    /**
-     * Gets a process which outputs are inputs for this process
-     * @return process object
-     */
-    Process *getInputProcess();
-    /**
-     * Gets input intervals of this process
-     * @return input intervals
-     */
-    Interval *getInputData();
-    /**
-     * Gets output intervals of this process
-     * @return output intervals
-     */
-    Interval *getOutputData();
+    void filterByOutputTable(const std::string& table);
     /**
      * Deletes output data for this process
+     * @return succesful clear
      */
-    void deleteOutputData();
-    /**
-     * Gets a numeric parameter of this process
-     * @param key   name of parameter
-     * @return value of parameter
-     */
-    int getParamInt(const std::string& key);
-    /**
-     * Gets a floating point numeric parameter of this process
-     * @param key   name of parameter
-     * @return value of parameter
-     */
-    double getParamDouble(const std::string& key);
-    /**
-     * Gets a string parameter of this process
-     * @param key   name of parameter
-     * @return value of parameter
-     */
-    std::string getParamString(const std::string& key);
-
-    /**
-     * Sets output data from another process as inputs for this one
-     * @param processName   input process name
-     */
-    void setInputs(const std::string& processName);
-    /**
-     * Sets output table for this process
-     * @param table   output table name
-     */
-    void setOutputs(const std::string& table);
-    /**
-     * Sets an integer parameter of this process
-     * @param key     name of parameter
-     * @param value   value of parameter
-     */
-    void setParamInt(const std::string& key, int value);
-    /**
-     * Sets a floating point numeric parameter of this process
-     * @param key     name of parameter
-     * @param value   value of parameter
-     */
-    void setParamDouble(const std::string& key, double value);
-    /**
-     * Sets a string parameter of this process
-     * @param key     name of parameter
-     * @param value   value of parameter
-     */
-    void setParamString(const std::string& key, const std::string& value);
-    
-    /**
-     * Represents processes with specific input process only. Use this before calling next()
-     * @param processName   input process name
-     */
-    void filterByInputs(const std::string& processName);
-    
-    /**
-     * Pre-update default setting
-     * @return success
-     */
-    virtual bool preSet();
-
-    /**
-     * Adds a new process instance into database, use Method->addProcess() instead
-     * @param outputs   output table
-     * @return success
-     */
-    bool add(const std::string& outputs="");
-
-    /**
-     * Creates a new interval for process
-     * @param t1   currently unused
-     * @param t2   currently unused
-     * @return new interval
-     * @todo @b code: parameters t1 and t2 are unused!
-     */
-    Interval* newInterval(const int t1 = -1, const int t2 = -1);
-    /**
-     * Creates a new sequence for process
-     * @param name   specific sequence name
-     * @return new sequence
-     * @unimplemented
-     */
-    Sequence* newSequence(const std::string& name = "");
-   
-    /**
-     * Launches process and waits for its finish (unless async is specified)
-     * @param async function returns immediately after launching process
-     * @param suspended start process in suspended state (use ProcessControl to unpause it)
-     * @return success
-     */
-    bool run(bool async = false, bool suspended = false);
-
-    /**
-     * Get process control object to initialize server/client notifications
-     * between launcher and process
-     * @return process control object or NULL on failure
-     */
-    ProcessControl *getProcessControl();
+    bool clearOutputData();
 
 protected:
-    std::string inputs;     /**< A process name which outputs are inputs for this process */
-    TKeyValues params;      /**< Vector of process parameters */
-    
-protected:
+    ProcessParams m_params;     /**< Vector of process parameters */
+    std::string m_inputProcess; /**< Input process name*/
+    compat::ProcessInstance m_instance;  /**< Newly launched instance via run() */
 
-    /**
-     * Performs a serialization of parameters
-     * @return serialized parameters
-     */
-    std::string serializeParams();
-    /**
-     * Performs a deserialization of parameters into params memeber
-     * @param paramString serialized parameters
-     * @return count of deserialized params, -1 on format error
-     */
-    int deserializeParams(const std::string& paramString);
-    /**
-     * Deallocates parameters
-     */
-    void destroyParams();
+    virtual bool preUpdate();
 };
 
 } // namespace vtapi
