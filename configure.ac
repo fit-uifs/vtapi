@@ -628,14 +628,6 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$HAVE_DOXYGEN"]) # prenese do Makefile.
 #####   Additional checks                                                 #####
 ###############################################################################
 
-### libxml++-2.6 or higher, optional
-XMLXX_CFLAGS=`"${PKG_CONFIG}" "libxml++-2.6" --cflags`
-XMLXX_LIBS=`"${PKG_CONFIG}" "libxml++-2.6" --libs`
-AC_DEFINE([HAVE_XMLXX], [1], [libxml++ is present])
-AC_SUBST(XMLXX_CFLAGS)
-AC_SUBST(XMLXX_LIBS)
-
-
 ### readproc => yum install procps-ng-devel (urpmi procps-devel)
 readproc_present="yes"
 AC_CHECK_HEADER(proc/readproc.h, [], [readproc_present="no"])
