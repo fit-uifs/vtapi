@@ -23,11 +23,14 @@ class ProcessParamBase
 public:
     virtual ~ProcessParamBase() { }
 
-    ProcessParamType type() { return m_type; }
+    ProcessParamType type()
+    { return m_type; }
+    
     virtual std::string toString() = 0;
 
 protected:
-    explicit ProcessParamBase(ProcessParamType type) : m_type(type) { }
+    explicit ProcessParamBase(ProcessParamType type)
+    : m_type(type) { }
 
 private:
     ProcessParamType m_type;
@@ -39,29 +42,36 @@ class ProcessParam : public ProcessParamBase
 {
 public:
     explicit ProcessParam(const T& value)
-        : ProcessParamBase(val_type(value)), m_value(value) { }
+    : ProcessParamBase(val_type(value)), m_value(value) { }
+    
     explicit ProcessParam(T&& value)
-        : ProcessParamBase(val_type(value)), m_value(std::move(value)) { }    
+    : ProcessParamBase(val_type(value)), m_value(std::move(value)) { }    
 
     virtual ~ProcessParam() { }
 
-    const T& value() const { return m_value; }
-    std::string toString() { return vtapi::toString<T>(m_value); }
+    const T& value() const
+    { return m_value; }
+    
+    std::string toString()
+    { return vtapi::toString<T>(m_value); }
 
 private:
     T m_value;
     
     ProcessParamType val_type(const std::string &val) const
     { val; return PARAMTYPE_STRING; }
+    
     ProcessParamType val_type(int val) const
     { val; return PARAMTYPE_INT; }
+    
     ProcessParamType val_type(double val) const
     { val; return PARAMTYPE_DOUBLE; }
+    
     ProcessParamType val_type(const std::vector<int> &val) const
     { val; return PARAMTYPE_INTVECTOR; }
+    
     ProcessParamType val_type(const std::vector<double> &val) const
     { val; return PARAMTYPE_DOUBLEVECTOR; }
-    
 };
 
 
@@ -69,14 +79,18 @@ class ProcessParams
 {
 public:
     ProcessParams() { }
-    ProcessParams(const std::string& serialized) { deserialize(serialized); }
+    
+    explicit ProcessParams(const std::string& serialized)
+    { deserialize(serialized); }
+    
     ProcessParams(ProcessParams && other)
     {
         m_inputProcessName = std::move(other.m_inputProcessName);
         m_data = std::move(other.m_data);
     }
 
-    virtual ~ProcessParams() { clear(); }
+    virtual ~ProcessParams()
+    { clear(); }
 
     ProcessParams& operator=(ProcessParams&& other)
     {
@@ -86,11 +100,40 @@ public:
         return *this;
     }
     
-    // param adders
-    
+    // input process name
+
+    bool getInputProcess(std::string& value) const
+    {
+        if (!m_inputProcessName.empty()) {
+            value = m_inputProcessName;
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
     void setInputProcessName(const std::string& value)
     {
         m_inputProcessName = value;
+    }
+    bool hasInputProcessName() const
+    {
+        return !m_inputProcessName.empty();
+    }
+    
+    // param adders
+
+    template <typename T>
+    void add(const std::string& key, const T& value)
+    {
+        const auto it = m_data.find(key);
+        if (it != m_data.end()) {
+            delete it->second;
+            it->second = new ProcessParam<T>(value);
+        }
+        else {
+            m_data[key] = new ProcessParam<T>(value);
+        }
     }
     void addString(const std::string& key, const std::string& value)
     {
@@ -123,15 +166,18 @@ public:
     
     // param getters
 
-    bool getInputProcess(std::string& value) const
+    template <typename T>
+    bool get(const std::string& key, T& value) const
     {
-        if (!m_inputProcessName.empty()) {
-            value = m_inputProcessName;
-            return true;
+        const auto it = m_data.find(key);
+        if (it != m_data.end()) {
+            auto param = dynamic_cast< ProcessParam<T>* > (it->second);
+            if (param) {
+                value = param->value();
+                return true;
+            }
         }
-        else {
-            return false;
-        }
+        return false;
     }
     bool getString(const std::string& key, std::string& value) const
     {
@@ -155,30 +201,34 @@ public:
     }
     
     // param existence queries
-   
-    bool hasInputProcessName() const
+
+    template <typename T>
+    bool keyExists(const std::string& key) const
     {
-        return !m_inputProcessName.empty();
+        const auto it = m_data.find(key);
+        return
+        it != m_data.end() &&
+        dynamic_cast< ProcessParam<T>* > (it->second);
     }
     bool keyExistsString(const std::string& key) const
     {
-        return keyExistsType<std::string>(key);
+        return keyExists<std::string>(key);
     }
     bool keyExistsInt(const std::string& key) const
     {
-        return keyExistsType<int>(key);
+        return keyExists<int>(key);
     }
     bool keyExistsDouble(const std::string& key) const
     {
-        return keyExistsType<double>(key);
+        return keyExists<double>(key);
     }
     bool keyExistsIntVector(const std::string& key) const
     {
-        return keyExistsType< std::vector<int> >(key);
+        return keyExists< std::vector<int> >(key);
     }
     bool keyExistsDoubleVector(const std::string& key) const
     {
-        return keyExistsType< std::vector<double> >(key);
+        return keyExists< std::vector<double> >(key);
     }
     
     // other utilites
@@ -282,44 +332,7 @@ private:
     std::map<std::string, ProcessParamBase *>  m_data;
     std::string m_inputProcessName;
     
-    // add new param of derived type
-    template <typename T>
-    void add(const std::string& key, const T& value)
-    {
-        const auto it = m_data.find(key);
-        if (it != m_data.end())
-        {
-            delete it->second;
-            it->second = new ProcessParam<T>(value);
-        }
-        else {
-            m_data[key] = new ProcessParam<T>(value);
-        }
-    }
-    
-    // get param of derived type
-    template <typename T>
-    bool get(const std::string& key, T& value) const
-    {
-        const auto it = m_data.find(key);
-        if (it != m_data.end()) {
-            auto param = dynamic_cast< ProcessParam<T>* > (it->second);
-            if (param) {
-                value = param->value();
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    template <typename T>
-    bool keyExistsType(const std::string& key) const
-    {
-        const auto it = m_data.find(key);
-        return
-            it != m_data.end() &&
-            dynamic_cast< ProcessParam<T>* > (it->second);
-    }
+
 
     void deserializeParam(std::string key, std::string type, std::string val)
     {
