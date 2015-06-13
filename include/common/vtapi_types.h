@@ -1,6 +1,5 @@
 
-#ifndef VTAPI_TYPES_H
-#define VTAPI_TYPES_H
+#pragma once
 
 namespace vtapi {
 
@@ -77,5 +76,3 @@ typedef std::pair<int, DBTYPE_DEFINITION_T> DBTYPES_PAIR;
 
 
 } // namespace
-
-#endif

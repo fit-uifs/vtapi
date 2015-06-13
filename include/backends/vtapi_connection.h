@@ -1,12 +1,4 @@
-/* 
- * File:   vtapi_connection.h
- * Author: vojca
- *
- * Created on May 7, 2013, 12:36 PM
- */
-
-#ifndef VTAPI_CONNECTION_H
-#define	VTAPI_CONNECTION_H
+#pragma once
 
 #include "vtapi_backendbase.h"
 #include "../common/vtapi_types.h"
@@ -179,6 +171,3 @@ private:
 #endif
 
 } // namespace vtapi
-
-#endif	/* VTAPI_CONNECTION_H */
-

@@ -11,8 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_DATASET_H
-#define	VTAPI_DATASET_H
+#pragma once
 
 #include "vtapi_keyvalues.h"
 #include "vtapi_sequence.h"
@@ -122,6 +121,3 @@ protected:
 };
 
 } // namespace vtapi
-
-#endif	/* VTAPI_DATASET_H */
-

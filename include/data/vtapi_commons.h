@@ -11,8 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_COMMONS_H
-#define	VTAPI_COMMONS_H
+#pragma once
 
 #include "../common/vtapi_config.h"
 #include "../common/vtapi_settings.h"
@@ -173,6 +172,3 @@ public:
 };
 
 } // namespace vtapi
-
-#endif	/* VTAPI_COMMONS_H */
-

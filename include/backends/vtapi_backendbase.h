@@ -1,5 +1,4 @@
-#ifndef VTAPI_BACKENDBASE_H
-#define	VTAPI_BACKENDBASE_H
+#pragma once
 
 #include "vtapi_backendinterfaces.h"
 #include "../common/vtapi_logger.h"
@@ -103,5 +102,3 @@ private:
 #endif
 
 } // namespace
-
-#endif

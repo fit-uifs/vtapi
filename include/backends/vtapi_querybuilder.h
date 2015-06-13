@@ -1,12 +1,4 @@
-/* 
- * File:   vtapi_querybuilder.h
- * Author: vojca
- *
- * Created on May 7, 2013, 12:40 PM
- */
-
-#ifndef VTAPI_QUERYBUILDER_H
-#define	VTAPI_QUERYBUILDER_H
+#pragma once
 
 #include "vtapi_backendbase.h"
 #include "../common/vtapi_tkeyvalue.h"
@@ -576,6 +568,3 @@ private:
 #endif
 
 } // namespace vtapi
-
-#endif	/* VTAPI_QUERYBUILDER_H */
-

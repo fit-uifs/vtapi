@@ -11,9 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_TIMEXER_H
-#define	VTAPI_TIMEXER_H
-
+#pragma once
 
 namespace vtapi {
 
@@ -106,6 +104,3 @@ public:
 };
 
 } // namespace vtapi
-
-#endif	/* VTAPI_TIMEXER_H */
-

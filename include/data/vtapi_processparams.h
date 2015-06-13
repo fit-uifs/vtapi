@@ -78,94 +78,129 @@ private:
 class ProcessParams
 {
 public:
-    ProcessParams() { }
-    
-    explicit ProcessParams(const std::string& serialized)
-    { deserialize(serialized); }
-    
-    ProcessParams(ProcessParams && other)
-    {
-        m_inputProcessName = std::move(other.m_inputProcessName);
-        m_data = std::move(other.m_data);
-    }
+    ProcessParams();
+    explicit ProcessParams(ProcessParams && other);
+    explicit ProcessParams(const std::string& serialized);
+    virtual ~ProcessParams();
 
-    virtual ~ProcessParams()
-    { clear(); }
-
-    ProcessParams& operator=(ProcessParams&& other)
-    {
-        clear();
-        m_inputProcessName = std::move(other.m_inputProcessName);
-        m_data = std::move(other.m_data);
-        return *this;
-    }
+    ProcessParams& operator=(ProcessParams&& other);
     
     // input process name
 
-    bool getInputProcess(std::string& value) const
-    {
-        if (!m_inputProcessName.empty()) {
-            value = m_inputProcessName;
-            return true;
-        }
-        else {
-            return false;
-        }
-    }
-    void setInputProcessName(const std::string& value)
-    {
-        m_inputProcessName = value;
-    }
-    bool hasInputProcessName() const
-    {
-        return !m_inputProcessName.empty();
-    }
-    
-    // param adders
+    bool hasInputProcessName() const;
+    bool getInputProcess(std::string& value) const;
+    void setInputProcessName(const std::string& value);
 
-    template <typename T>
-    void add(const std::string& key, const T& value)
-    {
-        const auto it = m_data.find(key);
-        if (it != m_data.end()) {
-            delete it->second;
-            it->second = new ProcessParam<T>(value);
-        }
-        else {
-            m_data[key] = new ProcessParam<T>(value);
-        }
-    }
-    void addString(const std::string& key, const std::string& value)
-    {
-        add<std::string>(key, value);
-    }
-    void addInt(const std::string& key, int value)
-    {
-        add<int>(key, value);
-    }
-    void addDouble(const std::string& key, double value)
-    {
-        add<double>(key, value);
-    }
-    void addIntVector(const std::string& key, const std::vector<int>& value)
-    {
-        add< std::vector<int> >(key, value);
-    }
-    void addIntVector(const std::string& key, const std::vector<int>&& value)
-    {
-        add< std::vector<int> >(key, std::move(value));
-    }
-    void addDoubleVector(const std::string& key, const std::vector<double>& value)
-    {
-        add< std::vector<double> >(key, value);
-    }
-    void addDoubleVector(const std::string& key, const std::vector<double>&& value)
-    {
-        add< std::vector<double> >(key, std::move(value));
-    }
+    // param existence queries
+
+    bool hasString(const std::string& key) const
+    { return has<std::string>(key); }
+
+    bool hasInt(const std::string& key) const
+    { return has<int>(key); }
+
+    bool hasDouble(const std::string& key) const
+    { return has<double>(key); }
+
+    bool hasIntVector(const std::string& key) const
+    { return has< std::vector<int> >(key); }
+
+    bool hasDoubleVector(const std::string& key) const
+    { return has< std::vector<double> >(key); }
     
     // param getters
 
+    bool getString(const std::string& key, std::string& value) const
+    { return get<std::string>(key, value); }
+    
+    bool getInt(const std::string& key, int& value) const
+    { return get<int>(key, value); }
+    
+    bool getDouble(const std::string& key, double& value) const
+    { return get<double>(key, value); }
+    
+    bool getIntVector(const std::string& key, std::vector<int>& value) const
+    { return get< std::vector<int> >(key, value); }
+    
+    bool getDoubleVector(const std::string& key, std::vector<double>& value) const
+    { return get< std::vector<double> >(key, value); }
+    
+    // param adders
+
+    void addString(const std::string& key, const std::string& value)
+    { add<std::string>(key, value); }
+    
+    void addString(const std::string& key, std::string&& value)
+    { add<std::string>(key, std::move(value)); }
+    
+    void addInt(const std::string& key, int value)
+    { add<int>(key, value); }
+    
+    void addDouble(const std::string& key, double value)
+    { add<double>(key, value); }
+    
+    void addIntVector(const std::string& key, const std::vector<int>& value)
+    { add< std::vector<int> >(key, value); }
+    
+    void addIntVector(const std::string& key, std::vector<int>&& value)
+    { add< std::vector<int> >(key, std::move(value)); }
+    
+    void addDoubleVector(const std::string& key, const std::vector<double>& value)
+    { add< std::vector<double> >(key, value); }
+    
+    void addDoubleVector(const std::string& key, std::vector<double>&& value)
+    { add< std::vector<double> >(key, std::move(value)); }
+
+    // other utilites
+    
+    /**
+     * Is map empty?
+     * @return boolean value
+     */
+    bool empty() const;
+    
+    /**
+     * Clear map
+     */
+    void clear();
+
+    /**
+     * Serializes params for input to DB (JSON-like format)
+     * Output string doesn't include input process name
+     * @return 
+     */
+    std::string serialize() const;
+
+    /**
+     * Serializes params as process name postfix, eg.: inputProcess_0.2_myval
+     * Includes input process name string
+     * @return 
+     */
+    std::string serializeAsName() const;
+
+
+    /**
+     * Deserializes params params from DB input (JSON-like format)
+     * Deletes all previously stored params
+     * @param serialized serialized input string
+     */
+    void deserialize(const std::string& serialized);
+    
+private:
+    std::map<std::string, ProcessParamBase *>  m_data;
+    std::string m_inputProcessName;
+
+    // templated stuff
+    
+    template <typename T>
+    bool has(const std::string& key) const
+    {
+        const auto it = m_data.find(key);
+        return
+            it != m_data.end() &&
+            dynamic_cast< ProcessParam<T>* > (it->second);
+    }
+    
     template <typename T>
     bool get(const std::string& key, T& value) const
     {
@@ -179,202 +214,24 @@ public:
         }
         return false;
     }
-    bool getString(const std::string& key, std::string& value) const
-    {
-        return get<std::string>(key, value);
-    }
-    bool getInt(const std::string& key, int& value) const
-    {
-        return get<int>(key, value);
-    }
-    bool getDouble(const std::string& key, double& value) const
-    {
-        return get<double>(key, value);
-    }
-    bool getIntVector(const std::string& key, std::vector<int>& value) const
-    {
-        return get< std::vector<int> >(key, value);
-    }
-    bool getDoubleVector(const std::string& key, std::vector<double>& value) const
-    {
-        return get< std::vector<double> >(key, value);
-    }
     
-    // param existence queries
-
     template <typename T>
-    bool keyExists(const std::string& key) const
+    void add(const std::string& key, const T& value)
     {
         const auto it = m_data.find(key);
-        return
-        it != m_data.end() &&
-        dynamic_cast< ProcessParam<T>* > (it->second);
-    }
-    bool keyExistsString(const std::string& key) const
-    {
-        return keyExists<std::string>(key);
-    }
-    bool keyExistsInt(const std::string& key) const
-    {
-        return keyExists<int>(key);
-    }
-    bool keyExistsDouble(const std::string& key) const
-    {
-        return keyExists<double>(key);
-    }
-    bool keyExistsIntVector(const std::string& key) const
-    {
-        return keyExists< std::vector<int> >(key);
-    }
-    bool keyExistsDoubleVector(const std::string& key) const
-    {
-        return keyExists< std::vector<double> >(key);
-    }
-    
-    // other utilites
-    
-    bool empty()
-    {
-        return m_data.empty();
-    }
-    void clear()
-    {
-        for (auto& kv : m_data) delete kv.second;
-        m_data.clear();
-        m_inputProcessName.clear();
-    }
-
-    // serialize params for input to DB
-    // skip process input params, which are supplied differently
-    std::string serialize() const
-    {
-        std::string ret;
-
-        ret += '{';
-
-        for (auto& kv : m_data) {
-            if (ret.length() > 1) ret += ',';
-            ret += kv.first;
-            ret += ':';
-            ret += toString(kv.second->type());
-            ret += ':';
-            ret += '\"';
-            ret += kv.second->toString();
-            ret += '\"';
+        if (it != m_data.end()) {
+            delete it->second;
+            it->second = new ProcessParam<T>(value);
         }
-
-        ret += '}';
-
-        return ret;
-    }
-    
-    std::string serializeAsName() const
-    {
-        std::string ret;
-        
-        if (!m_inputProcessName.empty()) {
-            ret = m_inputProcessName;
-        }
-        for (auto& kv : m_data) {
-            if (!ret.empty()) ret += '_';
-            ret += kv.second->toString();
-        }
-        
-        return ret;
-    }
-
-    // deserialize params from DB input
-    void deserialize(const std::string& serialized)
-    {
-        clear();
-
-        if (!serialized.empty() &&
-        serialized[0] == '{' &&
-        serialized[serialized.length() - 1] == '}') {
-            size_t keyPos = 1;
-            size_t maxPos = serialized.length() - 1;
-
-            do  {
-                // find value type, get key length
-                size_t typePos = serialized.find(':', keyPos);
-                if (typePos == std::string::npos) break;
-                size_t keyLen = typePos - keyPos;
-                typePos++;
-
-                // find value, get value type length
-                size_t valPos = serialized.find(':', typePos);
-                if (valPos == std::string::npos) break;
-                size_t typeLen = valPos - typePos;
-                valPos++;
-
-                // all values should be quoted
-                if (serialized[valPos] != '\"') break;
-                
-                // find value length and next key position
-                size_t valEndPos = serialized.find('\"', ++valPos);
-                if (valEndPos == std::string::npos) break;
-                size_t valLen = valEndPos - valPos;
-                
-                size_t nextKeyPos = valEndPos + 2;
-
-                deserializeParam(
-                    serialized.substr(keyPos, keyLen),
-                    serialized.substr(typePos, typeLen),
-                    serialized.substr(valPos, valLen));
-
-                keyPos = nextKeyPos;
-            }
-            while (keyPos < maxPos);
+        else {
+            m_data[key] = new ProcessParam<T>(value);
         }
     }
     
-private:
-    std::map<std::string, ProcessParamBase *>  m_data;
-    std::string m_inputProcessName;
-    
+    // internal stuff
 
+    void deserializeParam(std::string key, std::string type, std::string val);
 
-    void deserializeParam(std::string key, std::string type, std::string val)
-    {
-        try
-        {
-            switch((ProcessParamType)std::stoi(type))
-            {
-            case PARAMTYPE_NONE:
-                break;
-            case PARAMTYPE_STRING:
-                addString(key, val);
-                break;
-            case PARAMTYPE_INT:
-                addInt(key, std::stoi(val));
-                break;
-            case PARAMTYPE_DOUBLE:
-                addDouble(key, std::stod(val));
-                break;
-            case PARAMTYPE_INTVECTOR:
-            {
-                std::vector<int> *vals = vtapi::deserializeV<int>(val.c_str());
-                if (vals) {
-                    addIntVector(key, std::move(*vals));
-                    delete vals;
-                }
-                break;
-            }
-            case PARAMTYPE_DOUBLEVECTOR:
-            {
-                std::vector<double> *vals = vtapi::deserializeV<double>(val.c_str());
-                if (vals) {
-                    addDoubleVector(key, std::move(*vals));
-                    delete vals;
-                }
-                break;
-            }
-            }
-        }
-        catch (std::invalid_argument) {
-            std::cerr << "INVALID PARAM : key:" << key << ";type:" << type << ";val:" << val << std::endl;
-        }
-    }
 } ;
 
 }

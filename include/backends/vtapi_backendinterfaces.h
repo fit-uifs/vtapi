@@ -1,5 +1,4 @@
-#ifndef VTAPI_BACKENDLIBS_H
-#define	VTAPI_BACKENDLIBS_H
+#pragma once
 
 #include "../common/vtapi_config.h"
 
@@ -154,5 +153,3 @@ typedef struct _SQLITE_INTERFACE
 
 
 } // namespace vtapi
-
-#endif

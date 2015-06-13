@@ -11,8 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_SERIALIZE_H
-#define	VTAPI_SERIALIZE_H
+#pragma once
 
 #include "../data/vtapi_intervalevent.h"
 #include "../data/vtapi_processstate.h"
@@ -333,6 +332,3 @@ inline std::vector<T>* deserializeV(const char *buffer) {
     return ret;
 }
 }
-
-#endif	/* VTAPI_SERIALIZE_H */
-

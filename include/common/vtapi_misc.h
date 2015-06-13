@@ -36,8 +36,7 @@
  * 
  */
 
-#ifndef VTAPI_LIBPQ_H
-#define	VTAPI_LIBPQ_H
+#pragma once
 
 
 #include "vtapi_config.h"
@@ -131,8 +130,4 @@ void geos_notice (const char * fmt, ...);
 #ifdef	__cplusplus
 }
 #endif
-
-
-
-#endif	/* VTAPI_LIBPQ_H */
 

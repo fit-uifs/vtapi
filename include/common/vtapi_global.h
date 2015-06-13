@@ -11,8 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_GLOBAL_H
-#define	VTAPI_GLOBAL_H
+#pragma once
 
 #include "vtapi_config.h"
 
@@ -36,11 +35,4 @@
  * @brief VTApi wrong query error code
  */
 #define ER_WRONG_QUERY      -2
-
-
-// WARNINGS
-
-
-
-#endif	/* VTAPI_GLOBALS_H */
 

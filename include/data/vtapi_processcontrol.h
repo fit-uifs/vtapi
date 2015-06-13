@@ -10,8 +10,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_PROCESSCONTROL_H
-#define	VTAPI_PROCESSCONTROL_H
+#pragma once
 
 #include "../common/vtapi_compat.h"
 #include "vtapi_processstate.h"
@@ -186,5 +185,3 @@ private:
 } ;
 
 }
-
-#endif	/* VTAPI_PROCESSCONTROL_H */

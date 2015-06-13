@@ -11,14 +11,10 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_DATA_H
-#define	VTAPI_DATA_H
+#pragma once
 
 #include "data/vtapi_dataset.h"
 #include "data/vtapi_sequence.h"
 #include "data/vtapi_interval.h"
 #include "data/vtapi_method.h"
 #include "data/vtapi_process.h"
-
-#endif	/* VTAPI_DATA_H */
-

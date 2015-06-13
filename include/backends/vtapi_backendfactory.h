@@ -1,12 +1,4 @@
-/* 
- * File:   vtapi_backendfactory.h
- * Author: vojca
- *
- * Created on May 7, 2013, 1:02 PM
- */
-
-#ifndef VTAPI_BACKENDFACTORY_H
-#define	VTAPI_BACKENDFACTORY_H
+#pragma once
 
 #include "vtapi_backendbase.h"
 #include "vtapi_connection.h"
@@ -86,6 +78,3 @@ public:
 };
 
 } // namespace vtapi
-
-#endif	/* VTAPI_BACKENDFACTORY_H */
-

@@ -11,8 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_INSERT_H
-#define	VTAPI_INSERT_H
+#pragma once
 
 #include "vtapi_query.h"
 
@@ -171,6 +170,3 @@ public:
 };
 
 } // namespace vtapi
-
-#endif	/* VTAPI_INSERT_H */
-

@@ -11,8 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_COMPAT_H
-#define	VTAPI_COMPAT_H
+#pragma once
 
 #include <string>
 #include <list>
@@ -52,5 +51,3 @@ private:
 
 }
 }
-
-#endif

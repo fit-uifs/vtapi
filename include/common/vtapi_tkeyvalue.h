@@ -11,8 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_TKEYVALUE_H
-#define	VTAPI_TKEYVALUE_H
+#pragma once
 
 #include "vtapi_serialize.h"
 #include "vtapi_tkey.h"
@@ -170,6 +169,3 @@ std::string TKeyValue<T>::getValues(const int limit) {
 
 
 } // namespace vtapi
-
-#endif	/* VTAPI_TKEYVALUE_H */
-

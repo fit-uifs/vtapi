@@ -11,8 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_CONFIG_H
-#define VTAPI_CONFIG_H
+#pragma once
 
 // by configure script
 #include "vtapi_autoconfig.h"
@@ -106,7 +105,3 @@ extern "C" {
 #endif // __cplusplus
 
 #endif // HAVE_POSTGIS
-
-
-#endif	/* VTAPI_CONFIG_H */
-

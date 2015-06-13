@@ -11,9 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_TKEY_H
-#define	VTAPI_TKEY_H
-
+#pragma once
 
 namespace vtapi {
 
@@ -91,6 +89,3 @@ public:
 };
 
 } // namespace vtapi
-
-#endif	/* VTAPI_TKEY_H */
-

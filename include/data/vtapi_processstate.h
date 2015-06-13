@@ -10,8 +10,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#ifndef VTAPI_PROCESSSTATE_H
-#define	VTAPI_PROCESSSTATE_H
+#pragma once
 
 namespace vtapi {
 
@@ -65,5 +64,3 @@ public:
 };
 
 }
-
-#endif	/* VTAPI_PROCESSSTATE_H */

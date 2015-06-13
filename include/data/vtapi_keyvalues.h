@@ -11,9 +11,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-
-#ifndef VTAPI_KEYVALUES_H
-#define	VTAPI_KEYVALUES_H
+#pragma once
 
 #include "vtapi_commons.h"
 #include "vtapi_intervalevent.h"
@@ -619,5 +617,3 @@ private:
 };
 
 } // namespace vtapi
-
-#endif	/* VTAPI_KEYVALUES_H */

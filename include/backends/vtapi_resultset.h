@@ -1,12 +1,4 @@
-/* 
- * File:   vtapi_resultset.h
- * Author: vojca
- *
- * Created on May 7, 2013, 12:40 PM
- */
-
-#ifndef VTAPI_RESULTSET_H
-#define	VTAPI_RESULTSET_H
+#pragma once
 
 #include "vtapi_backendbase.h"
 #include "../common/vtapi_types.h"
@@ -726,6 +718,3 @@ public:
 #endif
 
 } // namespace vtapi
-
-#endif	/* VTAPI_RESULTSET_H */
-

@@ -12,8 +12,7 @@
  */
 
 
-#ifndef VTAPI_SEQUENCE_H
-#define	VTAPI_SEQUENCE_H
+#pragma once
 
 #include "vtapi_keyvalues.h"
 #include "vtapi_interval.h"
@@ -328,6 +327,3 @@ public:
 #endif
 
 } // namespace vtapi
-
-#endif	/* VTAPI_SEQUENCE_H */
-
