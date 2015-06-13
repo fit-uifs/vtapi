@@ -54,6 +54,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/method.o \
 	${OBJECTDIR}/process.o \
 	${OBJECTDIR}/processcontrol.o \
+	${OBJECTDIR}/processparams.o \
 	${OBJECTDIR}/processstate.o \
 	${OBJECTDIR}/query.o \
 	${OBJECTDIR}/sequence.o \
@@ -182,6 +183,11 @@ ${OBJECTDIR}/processcontrol.o: processcontrol.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/processcontrol.o processcontrol.cpp
+
+${OBJECTDIR}/processparams.o: processparams.cpp 
+	${MKDIR} -p ${OBJECTDIR}
+	${RM} "$@.d"
+	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/processparams.o processparams.cpp
 
 ${OBJECTDIR}/processstate.o: processstate.cpp 
 	${MKDIR} -p ${OBJECTDIR}

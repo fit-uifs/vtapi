@@ -1,10 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configurationDescriptor version="95">
   <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
-    <logicalFolder name="f2"
-                   displayName="Config Files"
-                   projectFiles="true"
-                   kind="ROOT">
+    <logicalFolder name="f2" displayName="Config Files" projectFiles="true">
       <itemPath>Makefile.am</itemPath>
       <itemPath>../configure.ac</itemPath>
       <itemPath>../vtapi.conf</itemPath>
@@ -90,6 +87,7 @@
       <itemPath>method.cpp</itemPath>
       <itemPath>process.cpp</itemPath>
       <itemPath>processcontrol.cpp</itemPath>
+      <itemPath>processparams.cpp</itemPath>
       <itemPath>processstate.cpp</itemPath>
       <itemPath>query.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>
@@ -341,6 +339,8 @@
       </item>
       <item path="processcontrol.cpp" ex="false" tool="1" flavor2="0">
       </item>
+      <item path="processparams.cpp" ex="false" tool="1" flavor2="0">
+      </item>
       <item path="processstate.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="query.cpp" ex="false" tool="1" flavor2="0">
@@ -542,6 +542,8 @@
       <item path="process.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="processcontrol.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="processparams.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="processstate.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -777,6 +779,8 @@
       <item path="process.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="processcontrol.cpp" ex="false" tool="1" flavor2="0">
+      </item>
+      <item path="processparams.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="processstate.cpp" ex="false" tool="1" flavor2="0">
       </item>
