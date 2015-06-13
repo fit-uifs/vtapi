@@ -198,7 +198,6 @@ public:
     
 #if HAVE_OPENCV
     cv::VideoCapture capture;   /**< Video file capture */
-    cv::Mat frame;              /**< Current video frame */
     
     /**
      * Opens a video capture (not necessary to call directly)

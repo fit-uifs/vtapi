@@ -206,16 +206,18 @@ bool Video::openVideo()
 
 void Video::closeVideo()
 {
-    if (this->frame.data) this->frame.release();
     if (this->capture.isOpened()) this->capture.release();
 }
 
 cv::Mat Video::getData()
 {
+    cv::Mat frame;
+
     if (this->capture.isOpened() || this->openVideo()) {
-        this->capture >> this->frame;
+        this->capture >> frame;
     }
-    return this->frame;
+    
+    return frame;
 }
 
 size_t Video::getLength()
