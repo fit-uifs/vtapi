@@ -34,6 +34,9 @@ Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(o
     if (!process.empty()) select->whereString("prsname", this->process);
 }
 
+Interval::~Interval()
+{}
+
 bool Interval::next()
 {
     return KeyValues::next();

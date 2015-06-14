@@ -33,6 +33,9 @@ Sequence::Sequence(const KeyValues& orig, const string& name) : KeyValues(orig)
     if (!sequence.empty()) select->whereString("seqname", sequence);
 }
 
+Sequence::~Sequence()
+{}
+
 bool Sequence::next()
 {
     if (KeyValues::next()) {
@@ -119,6 +122,11 @@ bool ImageFolder::add(const string& name, const string& location)
     } while(0);
 
     return bRet;
+}
+
+bool ImageFolder::next()
+{
+    return Sequence::next();
 }
 
 //================================= VIDEO ======================================

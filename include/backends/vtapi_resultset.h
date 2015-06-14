@@ -45,25 +45,25 @@ public:
     virtual void newResult(void *res) = 0;
 
     /**
-     * Increments row position within result set
-     */
-    void step()
-    { this->pos++; };
-    
-    /**
      * Gets current row position within result set
      * @return row position
      */
     int getPosition()
-    { return this->pos; };
+    { return this->pos; }
     
     /**
      * Sets row position within result set
      * @param pos row position
      */
     void setPosition(const int pos)
-    { this->pos = pos; };
+    { this->pos = pos; }
 
+    /**
+     * Increments row position within result set
+     */
+    void incPosition()
+    { this->pos++; }
+    
     /**
      * Gets number of rows within result set
      * @return number of rows

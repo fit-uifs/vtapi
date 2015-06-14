@@ -76,7 +76,7 @@ public:
 public:
     IntervalEvent();
     IntervalEvent(const IntervalEvent& orig);
-    virtual ~IntervalEvent();
+    ~IntervalEvent();
     
     void SetUserData(const void *data, size_t size);
 

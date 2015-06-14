@@ -72,9 +72,9 @@ public:
 
     /**
      * The most used function of the VTApi - next (row)
-     * @return this or null
+     * @return cursor succesfully set to next existing row
      */
-    KeyValues* next();
+    virtual bool next();
 
     /**
      * Count total number of represented objects

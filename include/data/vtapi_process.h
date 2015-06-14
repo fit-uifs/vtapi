@@ -55,10 +55,9 @@ public:
     virtual ~Process();
     
     /**
-     * Individual next() for processes, which stores current process
-     * and selection to commons
-     * @note Overloading next() from KeyValues
+     * Individual next() for processes, updates process and selection
      * @return success
+     * @note Overloading next() from KeyValues
      */
     bool next();
 

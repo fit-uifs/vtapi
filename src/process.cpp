@@ -51,10 +51,6 @@ bool Process::next()
 {
     m_instance.close();
     
-    if (insert && !addExecute()) {
-        return false;
-    }
-    
     bool ret = KeyValues::next();
     if (ret) {
         this->process   = this->getName();
@@ -69,40 +65,49 @@ bool Process::next()
 
 bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
 {
-    if (!this->select->resultSet->isOk() && !next()) {
-        return false;
-    }
+    bool ret = false;
+    
+    do {
+        // run newly added process and set Process object to represent it
+        if (this->insert) {
+            if (!addExecute()) break;
+            if (select->resultSet->isOk())
+                select->resultSet->setPosition(-1);
+            if (!next()) break;
+        }
 
-    if (suspended) {
-        updateStateSuspended();
-    }
+        if (suspended) {
+            updateStateSuspended();
+        }
+        
+        boost::filesystem::path cdir = boost::filesystem::current_path();
+        if (cdir.empty()) {
+            logger->error("failed to get current directory", thisClass + "::run()");
+            break;
+        }
 
-    boost::filesystem::path cdir = boost::filesystem::current_path();
-    if (cdir.empty()) {
-        logger->error("failed to get current directory", thisClass + "::run()");
-        return false;
-    }
+        boost::filesystem::path exec(cdir);
+        exec /= "modules";
+        exec /= this->method;
 
-    boost::filesystem::path exec(cdir);
-    exec /= "modules";
-    exec /= this->method;
+        boost::filesystem::path cfg = boost::filesystem::absolute(this->configfile, cdir);
 
-    boost::filesystem::path cfg = boost::filesystem::absolute(this->configfile, cdir);
+        compat::ProcessInstance::Args args;
+        args.push_back("--config=" + cfg.string());
+        args.push_back("--process=" + this->process);
+        args.push_back("--dataset=" + this->dataset);
 
-    compat::ProcessInstance::Args args;
-    args.push_back("--config=" + cfg.string());
-    args.push_back("--process=" + this->process);
-    args.push_back("--dataset=" + this->dataset);
-
-    bool ret = m_instance.launch(exec.string(), args, !async);
-    if (ret) {
-        if (ctrl) *ctrl = new ProcessControl(this->getName(), m_instance);
-    }
-    else {
-        logger->warning("error launching process " + this->getName()
-        + ": " + exec.string(), thisClass + "::run()");
-    }
-
+        ret = m_instance.launch(exec.string(), args, !async);
+        if (ret) {
+            if (ctrl) *ctrl = new ProcessControl(this->getName(), m_instance);
+        }
+        else {
+            logger->warning("error launching process " + this->getName()
+            + ": " + exec.string(), thisClass + "::run()");
+        }
+        
+    } while(0);
+    
     return ret;
 }
 

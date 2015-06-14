@@ -47,12 +47,17 @@ public:
      */
     Interval(const KeyValues& orig, const std::string& selection = "intervals");
 
+    /**
+     * Destructor
+     */
+    virtual ~Interval();
+    
     /*
      * Moves to next interval
      * @return success
      * @note Overloading next() from KeyValues
      */
-    bool next();
+    virtual bool next();
 
     /**
      * Gets interval ID

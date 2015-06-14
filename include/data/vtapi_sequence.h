@@ -47,11 +47,16 @@ public:
     explicit Sequence(const KeyValues& orig, const std::string& name = "");
 
     /**
+     * Destructor
+     */
+    virtual ~Sequence();
+    
+    /**
      * Moves to a next sequence and sets sequence name and location varibles
      * @return success
      * @note Overloading next() from KeyValues
      */
-    bool next();
+    virtual bool next();
 
     /**
      * Gets a sequence name
@@ -149,6 +154,12 @@ public:
      */
     bool add(const std::string& name, const std::string& location);
 
+    /**
+     * Individual next() for image folder
+     * @return success
+     * @note Overloading next() from KeyValues
+     */
+    bool next();
 };
 
 /**
@@ -179,7 +190,7 @@ public:
     /**
      * Destructor
      */
-    virtual ~Video();
+    ~Video();
     
     /**
      * Adds a new video to the dataset
@@ -190,7 +201,7 @@ public:
     bool add(const std::string& name, const std::string& location, const time_t& realtime = 0);
 
     /**
-     * Moves to a next video, releases capture/frame and sets sequence name and location varibles
+     * Moves to a next video, releases capture and sets sequence name and location varibles
      * @return success
      * @note Overloading next() from Sequence
      */

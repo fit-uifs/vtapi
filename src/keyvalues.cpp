@@ -53,53 +53,58 @@ KeyValues::~KeyValues()
     vt_destruct(select);
 }
 
-KeyValues* KeyValues::next()
+bool KeyValues::next()
 {
-    
-//    if (insert && !addExecute())
-//        return NULL;
-    
+    // INSERT data requires manual call of addExecute()
+    for (auto item : store) {
+        if (!item->executed)
+            logger->warning(313, "INSERT operation was not executed:\n" + item->getQuery(), thisClass + "~KeyValues()");
+        vt_destruct(item);
+    }
+    store.clear();
+    insert = NULL;
+
+    // UPDATE data is handled automatically here
     if (update && !updateExecute())
-        return NULL;
+        return false;
 
-    // select is executed here when position == -1
-    if (select->resultSet->getPosition() == -1) {                
-        if (!select->execute())
-            return NULL;
+    // SELECT data if result set is not valid
+    if (select->resultSet->getPosition() == -1) {
+        if (!select->execute() || select->resultSet->countRows() == 0) {
+            select->resultSet->setPosition(-1);
+            return false;
+        }
+        else {
+            select->resultSet->setPosition(0);
+            return true;
+        }
     }
-
-    // check if end of resultset has been reached
-    int rowCount = select->resultSet->countRows();
-    
-    // no rows
-    if (rowCount <= 0) {
-        return NULL;
-    }
+    // use previous resultset
     else {
-        // new resultset should be fetched
+        // check SELECT limit, should new resultset be fetched?
         int limit = select->getLimit();
         if (limit > 0 && select->resultSet->getPosition() + 1 >= limit) {
-            if (!select->executeNext()) {
+            if (!select->executeNext() || select->resultSet->countRows() == 0) {
                 select->resultSet->setPosition(-1);
-                return NULL;
+                return false;
+            }
+            else {
+                select->resultSet->setPosition(0);
+                return true;
+            }
+        }
+        // step through resultset
+        else {
+            if (select->resultSet->countRows() > select->resultSet->getPosition() + 1) {
+                select->resultSet->incPosition();
+                return true;
             }
             else {
                 select->resultSet->setPosition(-1);
-                rowCount = select->resultSet->countRows();
+                return false;
             }
         }
-        
-        // there is another row after this one
-        if (rowCount > select->resultSet->getPosition() + 1) {
-            select->resultSet->step();
-            return this;
-        }
-        // no more rows
-        else {
-            select->resultSet->setPosition(-1);
-            return NULL;
-        }
-    } 
+    }
 }
 
 int KeyValues::count()
@@ -116,7 +121,7 @@ int KeyValues::count()
     logger->debug("Count query: " + query);
     
     if (connection->fetch(query, paramDup, res) > 0) {
-        res->step();
+        res->incPosition();
         cnt = res->getInt8(0);
     }
     
@@ -523,6 +528,7 @@ bool KeyValues::addExecute()
         delete item;
     }
     store.clear();
+    insert = NULL;
     
     return ret;
 }
