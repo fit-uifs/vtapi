@@ -130,14 +130,6 @@ Process *VTApi::initProcess(ProcessState &initState)
 
 void VTApi::test() {
     cout << "BEGINNING testing..." << endl;
-    
-    cout << endl << "---------------------------------------------------------------" << endl;
-    TimExer* timex = new TimExer();
-#if HAVE_READPROC
-    cout << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory.";
-#else
-    cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes...";
-#endif
     cout << endl << "---------------------------------------------------------------" << endl << endl;    
 
     cout << "INITIALIZING dataset and sequence..." << endl << endl;
@@ -160,15 +152,6 @@ void VTApi::test() {
     vt_destruct(sequence);
     vt_destruct(dataset);
     cout << endl << "---------------------------------------------------------------" << endl;
-
-#if HAVE_READPROC
-    cout << "Process " << timex->getPID() << " consumes " << timex->getMemory() << " MB resident and " << timex->getVirtMemory() << " MB virtual memory." << endl;
-#else
-    cout << "WAAARNIING: You should have libproc_dev installed to know how much memory this process consumes...";
-#endif
-    cout << "This took " << timex->getClock() << " s of processor and " << timex->getTime()  << " s of real time.";
-    cout << endl << "---------------------------------------------------------------" << endl << endl;
-    vt_destruct(timex);
 
     cout << "DONE ALL ... see warnings." << endl;
 }
