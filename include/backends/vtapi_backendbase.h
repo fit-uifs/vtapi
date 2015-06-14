@@ -1,22 +1,24 @@
 #pragma once
 
+#include "../common/vtapi_config.h"
 #include "vtapi_backendinterfaces.h"
 #include "../common/vtapi_logger.h"
 
 namespace vtapi {
 
+class BackendBase;
+class PGBackendBase;
+class SLBackendBase;
 
 class BackendBase
 {
 public:
-    BackendBase(Logger *logger)
-    {
-        this->logger = logger;
-        bLibsLoaded = false;
-    }
+    explicit BackendBase(Logger *logger)
+    : logger(logger), m_libsLoaded(false) {}
+    
     virtual ~BackendBase()
     {
-        if (bLibsLoaded) {
+        if (m_libsLoaded) {
             base_unload_libs();
             lt_dlexit();
         }
@@ -24,15 +26,18 @@ public:
     
     bool base_init()
     {
-        return (bLibsLoaded = (lt_dlinit() == 0) && base_load_libs());
+        return (m_libsLoaded = (lt_dlinit() == 0) && base_load_libs());
     }
+    
     bool base_is_valid()
     {
-        return bLibsLoaded;
+        return m_libsLoaded;
     }
     
 protected:
-    virtual bool base_load_libs() { return true; };
+    virtual bool base_load_libs()
+    { return true; };
+    
     virtual void base_unload_libs() {};
     
 protected:
@@ -40,7 +45,7 @@ protected:
     Logger *logger;         /**< logger object for output messaging */
     
 private:
-    bool bLibsLoaded;
+    bool m_libsLoaded;
 };
 
 #if HAVE_POSTGRESQL
@@ -48,8 +53,8 @@ private:
 class PGBackendBase : public BackendBase
 {
 public:
-    PGBackendBase(const PGBackendBase &base);
-    PGBackendBase(Logger *logger);
+    explicit PGBackendBase(const PGBackendBase &base);
+    explicit PGBackendBase(Logger *logger);
     virtual ~PGBackendBase();
 
 protected:
@@ -81,8 +86,8 @@ typedef struct {
 
 class SLBackendBase : public BackendBase {
 public:
-    SLBackendBase(const SLBackendBase &base);
-    SLBackendBase(Logger *logger);
+    explicit SLBackendBase(const SLBackendBase &base);
+    explicit SLBackendBase(Logger *logger);
     virtual ~SLBackendBase();
 
     bool base_init();

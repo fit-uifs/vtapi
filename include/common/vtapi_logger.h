@@ -13,6 +13,11 @@
 
 #pragma once
 
+
+#include <string>
+#include <fstream>
+
+
 namespace vtapi {
 
 
@@ -39,23 +44,17 @@ namespace vtapi {
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  *
  *//***************************************************************************/
-class Logger {
-protected:
-
-    std::string     logFilename;    /**< Name of the file for storing logs */
-    std::ofstream   logStream;      /**< Stream of file for storing logs */
-    bool            m_verbose;      /**< Print warnings */
-    bool            m_debug;        /**< Print queries etc. */
-
+class Logger
+{
 public:
-
     /**
      * Constructor
      * @param filename   name of the file for storing logs
      * @param verbose verbosity
      * @param debug print debug
      */
-    Logger(const std::string& filename = "", bool verbose = false, bool debug = false);
+    Logger(const std::string& filename, bool verbose, bool debug);
+    
     /**
      * Destructor
      */
@@ -66,17 +65,20 @@ public:
      * @param message   log level message
      */
     void log(const std::string& message);
+    
     /**
      * This is to write to the standard error log
      * @param message   logged message
      */
     void write(const std::string& message);
+    
     /**
      * Gets a timestamp for logging
      * @return string value with timestamp
      * @note Timestamp format is "YYYY-MM-DD HH:NN:SS", where NN represents minutes
      */
     std::string timestamp();
+    
     /**
      * This causes a serious death
      * @param errnum       number of the error (error code)
@@ -84,6 +86,7 @@ public:
      * @param thisMethod   method in which error occurred
      */
     void error(int errnum, const std::string& logline, const std::string& thisMethod);
+    
     /**
      * This causes a serious death
      * @param message      error message to display
@@ -98,17 +101,25 @@ public:
      * @param thisMethod   method in which warning occurred
      */
     void warning(int errnum, const std::string& logline, const std::string& thisMethod);
+    
     /**
      * This is just a warning
      * @param message      warning message to display
      * @param thisMethod   method in which warning occurred
      */
     void warning(const std::string& message, const std::string& thisMethod);
+    
     /**
      * Debug function flushes a timestamp with a message immediately into a logstream
      * @param message   debug level message
      */
     void debug(const std::string& message);
+
+private:
+    std::string     logFilename;    /**< Name of the file for storing logs */
+    std::ofstream   logStream;      /**< Stream of file for storing logs */
+    bool            m_verbose;      /**< Print warnings */
+    bool            m_debug;        /**< Print queries etc. */
 };
 
 } // namespace vtapi

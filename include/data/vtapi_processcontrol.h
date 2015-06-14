@@ -12,6 +12,12 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <boost/interprocess/ipc/message_queue.hpp>
 #include "../common/vtapi_compat.h"
 #include "vtapi_processstate.h"
 
@@ -48,10 +54,24 @@ public:
     // Registerable callback type on client side, notifies on process state update
     typedef void (*fClientCallback)(const ProcessState& state, void *context);
     
-public:
-    ProcessControl(const std::string& processName);
+    /**
+     * Constructs inter-process communication object
+     * @param processName name of the connected process
+     */
+    explicit ProcessControl(const std::string& processName);
+    
+    /**
+     * Constructs inter-process communication object. Specifies server instance
+     * to which this client will try to connect.
+     * @param processName name of the connected process
+     * @param instance server instance which will be checked during communication if it's alive
+     */
     ProcessControl(const std::string& processName, const compat::ProcessInstance& instance);
-    virtual ~ProcessControl();
+    
+    /**
+     * Destructor
+     */
+    ~ProcessControl();
 
     /**
      * Starts server communication end.
@@ -182,6 +202,6 @@ private:
     
     Server m_server;
     Client m_client;
-} ;
+};
 
 }

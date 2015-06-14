@@ -302,7 +302,7 @@ int main(int argc, char *argv[])
         
         cout << demo1.getName() << " parameters:" << endl;
         for (size_t i = 0; i < keys.size(); i++) {
-            cout << keys[i].from << ": " << keys[i].type << ' ' << keys[i].key << endl;
+            cout << keys[i].m_from << ": " << keys[i].m_type << ' ' << keys[i].m_key << endl;
         }
         
     }

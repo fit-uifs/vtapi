@@ -4,36 +4,32 @@
 
 #if HAVE_POSTGRESQL
 
-using std::string;
+using namespace std;
 
-using namespace vtapi;
-
-PGConnection *PGConnection::glob = NULL;
+namespace vtapi {
 
 
-PGConnection::PGConnection(const PGBackendBase &base, const std::string& connectionInfo) :
+POSTGRES_INTERFACE *g_pg;
+
+PGConnection::PGConnection(const PGBackendBase &base, const string& connectionInfo) :
     Connection (connectionInfo),
     PGBackendBase(base)
 {
     thisClass   = "PGConnection";
     conn        = NULL;
-    glob        = this;
+    g_pg        = &pg;
 }
 
 PGConnection::~PGConnection() {
     disconnect();
     pqt.PQclearTypes(conn);
-    if (glob == this) glob == NULL;
+    if (g_pg == &pg) g_pg == NULL;
 }
 
-bool PGConnection::connect (const string& connectionInfo) {
+bool PGConnection::connect() {
     bool retval = true;
 
     do {
-        if (!connectionInfo.empty()) {
-            this->connInfo = connectionInfo;
-        }
-        
         conn = pg.PQconnectdb(this->connInfo.c_str());
         retval = isConnected();
         if (!retval) {
@@ -58,12 +54,6 @@ bool PGConnection::connect (const string& connectionInfo) {
 
     return retval;
 };
-
-bool PGConnection::reconnect (const string& connectionInfo) {
-    if (!connectionInfo.empty()) connInfo = connectionInfo;
-    disconnect();
-    return connect(connInfo);
-}
 
 void PGConnection::disconnect () {
     if (isConnected()) {
@@ -109,8 +99,8 @@ bool PGConnection::execute(const string& query, void *param)
 
 int PGConnection::fetch(const string& query, void *param, ResultSet *resultSet)
 {
-    int         retval  = ER_FAIL;
-    PGresult    *pgres  = NULL;
+    int retval  = -1;
+    PGresult *pgres  = NULL;
     
     errorMessage.clear();
     
@@ -125,7 +115,7 @@ int PGConnection::fetch(const string& query, void *param, ResultSet *resultSet)
 
     if (!pgres) {
         errorMessage = string(pg.PQerrorMessage(conn));
-        retval = ER_WRONG_QUERY;
+        retval = -1;
     }
     else {
         if (pg.PQresultStatus(pgres) == PGRES_TUPLES_OK) {
@@ -137,7 +127,7 @@ int PGConnection::fetch(const string& query, void *param, ResultSet *resultSet)
         else {
             logger->warning(2012, "Apocalypse warning", thisClass+"::fetch()");
             errorMessage = string(pg.PQerrorMessage(conn));
-            retval = ER_WRONG_QUERY;
+            retval = -1;
         }
     }
 
@@ -197,7 +187,7 @@ bool PGConnection::loadDBTypes()
         }
         
         // go through all types and fill dbtypes map
-        std::map<int,int> oid_array;    // oid of array -> oid of elem
+        map<int,int> oid_array;    // oid of array -> oid of elem
         int ntuples = pg.PQntuples(pgres);
         for (int i = 0; i < ntuples; i++) {
             DBTYPE_DEFINITION_T def;
@@ -218,7 +208,7 @@ bool PGConnection::loadDBTypes()
             if (catFlags) {
                 DBTYPE_SETFLAGS(def.type, catFlags);
                 if (DBTYPE_HASFLAG(catFlags, DBTYPE_FLAG_ARRAY)) {
-                    oid_array.insert(std::pair<int,int>(oid, oid_elem));
+                    oid_array.insert(pair<int,int>(oid, oid_elem));
                 }
                 else {
                     DBTYPE_SETCATEGORY(def.type, catFlags);
@@ -229,7 +219,7 @@ bool PGConnection::loadDBTypes()
         }
 
         // postprocess array types - set category/length of elements
-        for (std::map<int, int>::iterator it = oid_array.begin(); it != oid_array.end(); it++) {
+        for (map<int, int>::iterator it = oid_array.begin(); it != oid_array.end(); it++) {
             DBTYPES_MAP_IT itArr = dbtypes.find((*it).first);
             DBTYPES_MAP_IT itElem = dbtypes.find((*it).second);
             if (itArr != dbtypes.end() && itElem != dbtypes.end()) {
@@ -246,7 +236,7 @@ bool PGConnection::loadDBTypes()
     return retval;
 }
 
-short PGConnection::getTypeCategoryFlags(char c, const std::string &name)
+short PGConnection::getTypeCategoryFlags(char c, const string &name)
 {
     short ret = 0;
             
@@ -372,24 +362,14 @@ short PGConnection::getTypeCategoryFlags(char c, const std::string &name)
 
 int PGConnection::enum_get(PGtypeArgs *args)
 {
-    return glob ? glob->enum_get_helper(args) : -1;
-}
-
-int PGConnection::enum_put(PGtypeArgs *args)
-{
-    return glob ? glob->enum_put_helper(args) : -1;
-}
-
-int PGConnection::enum_get_helper(PGtypeArgs *args)
-{
-    char *val   = pg.PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
-    int len     = pg.PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
+    char *val   = g_pg->PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
+    int len     = g_pg->PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
 
     if (val) {
         char **result = va_arg(args->ap, char **);
-        *result = (char *) pg.PQresultAlloc((PGresult *) args->get.result, (len + 1) * sizeof (char));
+        *result = (char *) g_pg->PQresultAlloc((PGresult *) args->get.result, (len + 1) * sizeof (char));
         if (*result) {
-            std::copy(val, val + len, *result);
+            copy(val, val + len, *result);
             (*result)[len] = '\0';
         }
         else {
@@ -400,7 +380,7 @@ int PGConnection::enum_get_helper(PGtypeArgs *args)
     return len;
 }
 
-int PGConnection::enum_put_helper(PGtypeArgs *args)
+int PGConnection::enum_put(PGtypeArgs *args)
 {
     char *val   = va_arg(args->ap, char *);
     int len     = 0;
@@ -408,7 +388,7 @@ int PGConnection::enum_put_helper(PGtypeArgs *args)
     if (val) {
         len = strlen(val);
         if (args->put.expandBuffer(args, len) >= 0 -1) {
-            std::copy(val, val + len, args->put.out);
+            copy(val, val + len, args->put.out);
         }
         else {
             len = -1;
@@ -418,24 +398,7 @@ int PGConnection::enum_put_helper(PGtypeArgs *args)
     return len;
 }
 
-#if HAVE_POSTGIS
-int PGConnection::geometry_get(PGtypeArgs *args) {
-    return glob ? glob.geometry_get_helper(args) : -1;
-}
-
-int PGConnection::geometry_put(PGtypeArgs *args) {
-    return glob ? glob.geometry_put_helper(args) : -1;
-}
-
-int PGConnection::geometry_get_helper(PGtypeArgs *args) {
-    //TODO: unimplemented
-    return -1;
-}
-
-int PGConnection::geometry_put_helper(PGtypeArgs *args) {
-    //TODO: unimplemented
-    return -1;
-}
-#endif
 
 #endif
+
+}

@@ -30,12 +30,10 @@ namespace vtapi {
  *
  * @note Error codes 60*
  */ // ********************************************************************** //
-class VTApi {
+class VTApi
+{
 public:
-
     Commons*    commons;    /**< Commons are common objects to the project. */
-
-public:
 
     /**
      * Constructor recomended by any program
@@ -48,7 +46,7 @@ public:
      * Constructor
      * @param configFile   location of configuration file
      */
-    VTApi(const std::string& configFile = "./vtapi.conf");
+    explicit VTApi(const std::string& configFile = "./vtapi.conf");
 
     /**
      * Constructor
@@ -64,19 +62,18 @@ public:
      * Copy constructor
      * @param orig
      */
-    VTApi(const Commons& orig);
+    explicit VTApi(const Commons& orig);
 
     /**
      * Copy constructor
      * @param orig
      */
-    VTApi(const VTApi& orig);
+    explicit VTApi(const VTApi& orig);
 
     /**
      * Destructor
      */
     ~VTApi();
-
 
     /**
      * This might be a HOW-TO function for learning and testing purposes
@@ -85,24 +82,21 @@ public:
      */
     void test();
 
-
     /**
      * This is how to continue after creating the API class...
      * @param name   specific dataset name
      * @return new Dataset
      */
-    Dataset* newDataset(const std::string& name = "");
+    Dataset* newDataset(const std::string& name = "")
+    { return (new Dataset(*commons, name)); }
 
     /**
-     * Methodology shortcuts
-     * @param name   specific method name
-     * @return new Method
+     * Creates new Method object
+     * @param name   method name (no name = all methods)
+     * @return pointer to the new Method object
      */
-    Method* newMethod(const std::string& name = "");
-    /**
-     * @unimplemented
-     */
-    Method* addMethod(const Method& method);
+    Method* newMethod(const std::string& name = "")
+    { return (new Method(*commons, name)); }
     
     /**
      * Initializes app as vtapi Process instance
@@ -114,7 +108,6 @@ public:
     
 private:
 
-    void testGenericClasses();
     void testDataset();
     void testSequence(Dataset *);
     void testInterval(Sequence *);

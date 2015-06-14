@@ -25,14 +25,3 @@
  * @brief VTApi array of object dealocator
  */
 #define vt_destructall(v)      if (v) { delete[](v); (v) = NULL; }
-
-// ERRORS
-/**
- * @brief VTApi general failure error code
- */
-#define ER_FAIL             -1
-/**
- * @brief VTApi wrong query error code
- */
-#define ER_WRONG_QUERY      -2
-

@@ -14,18 +14,15 @@
 #include <common/vtapi_global.h>
 #include <common/vtapi_settings.h>
 #include <common/vtapi_timexer.h>
-
 #include <vtapi.h>
 
-using std::string;
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
-VTApi::VTApi(int argc, char** argv) {
+VTApi::VTApi(int argc, char** argv)
+{
     gengetopt_args_info args_info;
     struct cmdline_parser_params cli_params;
     bool warn = false;
@@ -51,9 +48,8 @@ VTApi::VTApi(int argc, char** argv) {
         cerr << "Aborting: Database connection info missing. Use \"-h\" for help. " << endl;
         cerr << "Use config file (--config=\"/path/to/somefile.conf\") or check help for command line option \"-c\"." << endl;
         cmdline_parser_free (&args_info);
-        throw new std::exception();
+        throw new exception;
     }
-    // TODO: user authentization here
 
     // Create commons class to store connection etc.
     commons = new Commons(args_info);
@@ -63,7 +59,8 @@ VTApi::VTApi(int argc, char** argv) {
     cmdline_parser_free (&args_info);
 }
 
-VTApi::VTApi(const string& configFile) {
+VTApi::VTApi(const string& configFile)
+{
     gengetopt_args_info args_info;
     bool warn = false;
 
@@ -80,17 +77,14 @@ VTApi::VTApi(const string& configFile) {
 }
 
 VTApi::VTApi(const VTApi& orig)
-        : commons((&orig)->commons) {
-}
+: commons((&orig)->commons)
+{}
 
-VTApi::~VTApi() {
+VTApi::~VTApi()
+{
     vt_destruct(commons);
 }
 
-
-Dataset* VTApi::newDataset(const string& name) {
-    return (new Dataset(*commons, name));
-}
 
 Process *VTApi::initProcess(ProcessState &initState)
 {
@@ -154,13 +148,12 @@ void VTApi::test() {
     cout << endl << "---------------------------------------------------------------" << endl << endl;
 
 //    this->testPerformance();
-    //this->testGenericClasses();
     this->testDataset();
     this->testSequence(dataset);
     this->testInterval(sequence);
 //    this->testImage(sequence);
     this->testVideo(dataset);
-    this->testMethod(dataset);
+    //this->testMethod(dataset);
     this->testProcess(dataset);
     
     cout << "** CLEANUP" << endl;
@@ -259,59 +252,6 @@ void VTApi::testPerformance() {
 
 }
 
-void VTApi::testGenericClasses() {
-    cout << "TESTING generic classes..." << endl << endl;
-
-    cout << "** NEW TKeyValue<float>" << endl;
-    TKeyValue<float> kvFloat ("float", "my_number", 32156.7, "test");
-    cout << "typeid: " << typeid(kvFloat).name() << endl;
-    kvFloat.print();
-
-    cout << "** NEW TKeyValue<string> (ptr)" << endl;
-    TKeyValue<string> *kvStringPt = new TKeyValue<string> ("varchar", "my_text", "ladidada");
-    cout << "typeid: " << typeid(kvStringPt).name() << endl;
-    kvStringPt->print();
-
-    cout << "** NEW TKeyValue<const char *>" << endl;
-    const char* chs[] = {"1", "2", "3", "ctyri", "5"};
-    TKeyValue<const char*> kvArray ("varchar[]", "my_array", chs, 5, "test");
-    cout << "typeid: " << typeid(kvArray).name() << endl;
-    kvArray.print();
-
-    cout << "** NEW TKeyValues with everything above" << endl;
-    TKeyValues kvAll;
-    kvAll.push_back(&kvFloat);
-    kvAll.push_back(kvStringPt);
-    kvAll.push_back(&kvArray);
-
-    cout << "** PRINT TKeyValues" << endl;
-    for (int i = 0; i < kvAll.size(); ++i) (kvAll[i])->print();
-
-    cout << "** TRY static cast of array" << endl;
-    TKeyValue<char*>* tkic = static_cast< TKeyValue<char*>* >(kvAll[2]);
-    tkic->print();
-
-    cout << "** TRY deserialization of [1.23,2,3.8,XYZ,5]" << endl;
-    const char serial[] = "[1.23,2,3.8,XYZ,5]\0";
-    int size             = 0;
-    char *arr_serial    = new char[30];
-    std::copy(serial, serial+19, arr_serial);    
-    int *int_deserial   = deserializeA<int>(arr_serial, size);
-    TKeyValue<int> kvIntA("integer[]", "my_ints", int_deserial, size);
-    float *fl_deserial  = deserializeA<float>(arr_serial, size);
-    TKeyValue<float> kvFloatA("float[]", "my_floats", fl_deserial, size);
-    kvIntA.print();
-    kvFloatA.print();
-
-    cout << "** CLEANUP" << endl;
-    vt_destructall(int_deserial);
-    vt_destructall(fl_deserial);
-    vt_destruct(arr_serial);
-    vt_destruct(kvStringPt);
-
-    cout << endl << "DONE testing generic classes.";
-    cout << endl << "---------------------------------------------------------------" << endl << endl;
-}
 
 void VTApi::testDataset()
 {
@@ -467,15 +407,6 @@ void VTApi::testVideo(Dataset *dataset) {
     video->next();
     video->print();
 
-#if HAVE_OPENCV
-    cout << "** PLAYING video " << video->getName() << " ... press any key to exit." << endl;
-    VideoPlayer* player = new VideoPlayer(*video);
-    player->play();
-    vt_destruct(player);
-#else
-    cout << "** CANNOT PLAY VIDEO " << video->getName() << endl;
-#endif
-
     string vn = "MCTTR0201a-XXXX";
     cout << "** ADDING video " << vn << " to the dataset" << endl;
     video->add(vn, "MCT_TR_02/MCTTR02a/MCTTR0201a.mov.deint.mpeg");
@@ -494,30 +425,30 @@ void VTApi::testVideo(Dataset *dataset) {
 }
 
 void VTApi::testMethod(Dataset *dataset) {
-    cout << "TESTING Method..." << endl <<  endl;
-
-    cout << "** SHOWING all methods" << endl;
-    Method* method = dataset->newMethod();
-    if (method->next()) {
-        method->printAll();
-
-        cout << "SHOWING method keys for method " << method->getName() << endl;
-        TKeys mk = method->getMethodKeys();
-        if (mk.empty()) {
-            cout << "(no keys)" << endl;
-        }
-        else {
-            for (int i = 0; i < mk.size(); i++) {
-                mk[i].print();
-            }
-        }
-    }
-
-    cout << "** CLEANUP" << endl;
-    vt_destruct(method);
-
-    cout << endl << "DONE testing method.";
-    cout << endl << "---------------------------------------------------------------" << endl << endl;
+//    cout << "TESTING Method..." << endl <<  endl;
+//
+//    cout << "** SHOWING all methods" << endl;
+//    Method* method = dataset->newMethod();
+//    if (method->next()) {
+//        method->printAll();
+//
+//        cout << "SHOWING method keys for method " << method->getName() << endl;
+//        TKeys mk = method->getMethodKeys();
+//        if (mk.empty()) {
+//            cout << "(no keys)" << endl;
+//        }
+//        else {
+//            for (int i = 0; i < mk.size(); i++) {
+//                mk[i].print();
+//            }
+//        }
+//    }
+//
+//    cout << "** CLEANUP" << endl;
+//    vt_destruct(method);
+//
+//    cout << endl << "DONE testing method.";
+//    cout << endl << "---------------------------------------------------------------" << endl << endl;
 }
 
 void VTApi::testProcess(Dataset *dataset) {
@@ -543,3 +474,4 @@ void VTApi::testProcess(Dataset *dataset) {
   * @endcode
   */
 
+}

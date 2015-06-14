@@ -13,12 +13,10 @@
 
 #include <common/vtapi_global.h>
 #include <data/vtapi_sequence.h>
-#include <data/vtapi_interval.h>
 
-using std::string;
-using std::vector;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
 //================================ SEQUENCE ====================================
@@ -240,58 +238,6 @@ bool Video::updateRealStartTime(const time_t& starttime)
     return (updateTimestamp("vid_time", starttime) && updateExecute());
 }
 
-VideoPlayer::VideoPlayer(Commons& orig) : Commons(orig) {
-    thisClass = "VideoPlayer(Commons&)";
-}
-
-VideoPlayer::VideoPlayer(Video& orig) : Commons(orig) {
-    thisClass = "VideoPlayer(Video&)";
-
-    videos.push_back(orig);
-}
-
-
-// TODO: point (), line, box, ellipse
-// TODO: play 1, 2, 4, 6, 9, 12 and 16 videos at once :)
-// TODO: P3k dodelat nacteni vice Video a Interval
-bool VideoPlayer::play() {
-    bool retval = true;
-    cv::VideoCapture cap;
-    int fps = 25;
-
-    if (!videos.empty()) {
-        cap = cv::VideoCapture(videos.front().getDataLocation());
-        fps = (int) cap.get(CV_CAP_PROP_FPS);
-    }
-    // TODO: images, ...
-    // frame = cv::imread("img.jpg");
-    // if there is no file to play, use the default video capture device (camera)
-    else {
-        cap = cv::VideoCapture(0);
-    }
-
-    // toz a jedem
-    if(cap.isOpened()) {
-        cv::namedWindow("video", CV_WINDOW_AUTOSIZE);
-        cv::Mat frame;
-        while(1)
-        {
-            cap >> frame;
-            if (frame.empty()) {
-                break;
-            }
-            cv::imshow("video", frame);
-            if(cv::waitKey(1000 / fps) >= 0) break; // correct the with real timer!
-        }
-        cap.release();
-        cv::destroyWindow("video");
-    }
-    else {
-        logger->warning(161, "Sorry, there is nothing to play, aborting :(", thisClass+"::play()");
-        retval = false;
-    }
-
-    return retval;
-}
-
 #endif
+
+}

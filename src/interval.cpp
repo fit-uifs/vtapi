@@ -15,9 +15,9 @@
 #include <data/vtapi_sequence.h>
 #include <data/vtapi_interval.h>
 
-using std::string;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
 //================================= INTERVAL ===================================
@@ -192,4 +192,6 @@ cv::Mat Image::getData()
 bool Image::add(const string& sequence, const int t, const string& location)
 {
     return ((Interval*)this)->add(sequence, t, t, location);
+}
+
 }

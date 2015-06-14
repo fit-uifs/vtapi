@@ -2,7 +2,8 @@
 #include <common/vtapi_global.h>
 #include <data/vtapi_intervalevent.h>
 
-using namespace vtapi;
+namespace vtapi {
+
 
 IntervalEvent::IntervalEvent() :
     group_id(-1),class_id(-1),is_root(false),
@@ -36,3 +37,6 @@ void IntervalEvent::SetUserData(const void *data, size_t size) {
         }
     }
 }
+
+}
+

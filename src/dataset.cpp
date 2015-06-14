@@ -12,16 +12,11 @@
  */
 
 #include <common/vtapi_global.h>
-#include <data/vtapi_sequence.h>
-#include <data/vtapi_interval.h>
-#include <data/vtapi_method.h>
-#include <data/vtapi_process.h>
 #include <data/vtapi_dataset.h>
 
+using namespace std;
 
-using std::string;
-
-using namespace vtapi;
+namespace vtapi {
 
 
 Dataset::Dataset(const KeyValues& orig, const string& name) : KeyValues(orig)
@@ -71,4 +66,6 @@ bool Dataset::preUpdate()
     }
     
     return ret;
+}
+
 }

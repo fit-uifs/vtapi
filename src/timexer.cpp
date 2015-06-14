@@ -14,7 +14,7 @@
 #include <common/vtapi_global.h>
 #include <common/vtapi_timexer.h>
 
-using namespace vtapi;
+namespace vtapi {
 
 
 TimExer::TimExer() {
@@ -80,3 +80,5 @@ double TimExer::getMemory() {
 }
 
 #endif
+
+}

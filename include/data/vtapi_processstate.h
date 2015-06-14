@@ -30,9 +30,6 @@ namespace vtapi {
 class ProcessState
 {
 public:
-    /**
-     * Current process status
-     */
     typedef enum _STATUS_T
     {
         STATUS_NONE,        /**< invalid status */
@@ -43,24 +40,20 @@ public:
         STATUS_ERROR        /**< process has finished with an error */
     } STATUS_T;
     
-public:
-    /**
-     * Public class members
-     */
+
+    ProcessState();
+    explicit ProcessState(const std::string& stateString);
+    explicit ProcessState(STATUS_T status, float progress = 0, const std::string& item = "");
+    virtual ~ProcessState();
+
+    static STATUS_T toStatusValue(const std::string& status_string);
+    static std::string toStatusString(STATUS_T status);
+
     
     STATUS_T status;            /**< current process status */
     float progress;             /**< process progress (0-100) */
     std::string currentItem;    /**< currently processed item */
     std::string lastError;      /**< last error message */
-    
-public:
-    ProcessState();
-    ProcessState(const std::string& stateString);
-    ProcessState(STATUS_T status, float progress = 0, const std::string& item = "");
-    virtual ~ProcessState();
-
-    static STATUS_T toStatusValue(const std::string& status_string);
-    static std::string toStatusString(STATUS_T status);
 };
 
 }

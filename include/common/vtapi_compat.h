@@ -31,18 +31,18 @@ public:
     ProcessInstance();
     explicit ProcessInstance(const ProcessInstance& orig);
     ~ProcessInstance();
-    
+
+    ProcessInstance& operator=(const ProcessInstance& orig);
+
     bool launch(const std::string& exec, const Args& args, bool wait);
     bool open(int pid);
     bool isRunning();
     bool isValid();
     void close(bool wait = false);
     
-    ProcessInstance& operator=(const ProcessInstance& orig);
-    
 private:
     union {
-        pid_t pid;
+        int pid;
         void *ptr;
     } m_handle;
     bool m_bChild;

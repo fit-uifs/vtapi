@@ -12,15 +12,14 @@
  */
 
 #pragma once
-
+ 
+#include <string>
 #include "vtapi_keyvalues.h"
-#include "vtapi_sequence.h"
 #include "vtapi_interval.h"
 #include "../common/vtapi_compat.h"
 #include "vtapi_processstate.h"
 #include "vtapi_processcontrol.h"
 #include "vtapi_processparams.h"
-#include "../common/vtapi_tkeyvalue.h"
 
 namespace vtapi {
 
@@ -50,7 +49,11 @@ public:
      */
     Process(const KeyValues& orig, const std::string& name = "");
 
+    /**
+     * Destructor
+     */
     virtual ~Process();
+    
     /**
      * Individual next() for processes, which stores current process
      * and selection to commons

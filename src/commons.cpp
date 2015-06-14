@@ -13,16 +13,13 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-
 #include <common/vtapi_global.h>
-#include <common/vtapi_misc.h>
-#include <backends/vtapi_backendfactory.h>
 #include <data/vtapi_commons.h>
 
-using std::string;
-using std::ifstream;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
+
 
 Commons::Commons(const Commons& orig) {
     thisClass       = "Commons(copy)";
@@ -193,4 +190,6 @@ bool Commons::dirExists(const string& dirpath)
 {
     struct stat info;
     return (stat(dirpath.c_str(), &info) == 0 && info.st_mode & S_IFDIR);
+}
+
 }

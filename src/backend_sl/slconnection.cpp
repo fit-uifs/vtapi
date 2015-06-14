@@ -4,9 +4,10 @@
 
 #if HAVE_SQLITE
 
-using std::string;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
+
 
 SLConnection::SLConnection(const SLBackendBase &base, const std::string& connectionInfo) :
     Connection(connectionInfo),
@@ -16,14 +17,15 @@ SLConnection::SLConnection(const SLBackendBase &base, const std::string& connect
     conn        = NULL;
 }
 
-SLConnection::~SLConnection() {
+SLConnection::~SLConnection()
+{
     disconnect();
 }
 
-bool SLConnection::connect (const string& connectionInfo) {
-    bool retval     = true;
+bool SLConnection::connect ()
+{
+    bool retval = true;
 
-    connInfo    = connectionInfo;
     fixSlashes(connInfo);
     string dbname = connInfo + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
     sl.sqlite3_open_v2(dbname.c_str(), &conn, SQLITE_OPEN_READWRITE, NULL);
@@ -35,15 +37,6 @@ bool SLConnection::connect (const string& connectionInfo) {
     }
 
     return retval;
-}
-
-bool SLConnection::reconnect (const string& connectionInfo) {
-    if (!connectionInfo.empty()) {
-        connInfo = connectionInfo;
-        fixSlashes(connInfo);
-    }
-    disconnect();
-    return connect(connInfo);
 }
 
 void SLConnection::disconnect () {
@@ -88,7 +81,7 @@ int SLConnection::fetch(const string& query, void *param, ResultSet *resultSet) 
     SLparam     *sl_param   = (SLparam *) param;
     SLres       *sl_res     = new SLres();
     char        *errmsg     = NULL;
-    int         retval      = ER_FAIL;
+    int         retval      = -1;
     int         retquery    = SQLITE_ERROR;
 
     errorMessage.clear();
@@ -156,3 +149,5 @@ bool SLConnection::attachDatabase(string& dbfile) {
 
 
 #endif
+
+}

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include <map>
 #include <utility>
 #include "../common/vtapi_serialize.h"

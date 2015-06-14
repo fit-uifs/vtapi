@@ -12,13 +12,12 @@
  */
 
 #include <common/vtapi_global.h>
-#include <common/vtapi_serialize.h>
 #include <backends/vtapi_backendfactory.h>
 
-using std::string;
+using namespace std;
 
-using namespace vtapi;
-    
+namespace vtapi {
+
 
 BackendFactory::BACKEND_T BackendFactory::type(const string& backendType) {
    if (backendType.compare("sqlite") == 0) {
@@ -109,3 +108,5 @@ ResultSet* BackendFactory::createResultSet(BACKEND_T backend, const BackendBase 
     }
     return resultSet;
 };
+
+}

@@ -13,6 +13,11 @@
 
 #pragma once
 
+#include <ctime>
+#include <string>
+#include <sstream>
+#include <vector>
+#include "vtapi_config.h"
 #include "../data/vtapi_intervalevent.h"
 #include "../data/vtapi_processstate.h"
 

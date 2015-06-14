@@ -11,17 +11,14 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <iostream>
 #include <common/vtapi_global.h>
-#include "common/vtapi_serialize.h"
+#include <common/vtapi_serialize.h>
 #include <common/vtapi_logger.h>
 
-using std::string;
-using std::ofstream;
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
 Logger::Logger(const string& filename, bool verbose, bool debug) {
@@ -103,4 +100,6 @@ void Logger::warning(int errnum, const string& logline, const string& thisMethod
 void Logger::debug(const string& logline)
 {
     if (m_debug) log(logline);
+}
+
 }

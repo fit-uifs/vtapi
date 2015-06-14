@@ -1,11 +1,17 @@
 #pragma once
 
+#include <string>
 #include "vtapi_backendbase.h"
-#include "../common/vtapi_types.h"
 #include "vtapi_resultset.h"
+#include "../common/vtapi_types.h"
 
 
 namespace vtapi {
+
+class Connection;
+class PGConnection;
+class SLConnection;
+
 
 /**
  * @brief Class encapsulating all database connection functionality including
@@ -16,41 +22,30 @@ namespace vtapi {
  */
 class Connection
 {
-protected:
-    std::string connInfo;       /**< connection string to access the database */
-    std::string errorMessage;   /**< error message string */
-    DBTYPES_MAP dbtypes;  /**< map of database types definitions */
-
 public:
     /**
      * Constructor
      * @param connectionInfo initial connection string @see vtapi.conf
      */
-    Connection(const std::string& connectionInfo)
-    {
-        this->connInfo  = connectionInfo;
-    };
+    explicit Connection(const std::string& connectionInfo)
+    : connInfo(connectionInfo) {}
+    
     /**
      * Virtual destructor
      */
-    virtual ~Connection() { };
+    virtual ~Connection() { }
 
     /**
      * Performs connection to database, may load dbtypes information
-     * @param connectionInfo connection string @see vtapi.conf
      * @return success
      */
-    virtual bool connect (const std::string& connectionInfo = "") = 0;
-    /**
-     * Reconnects to database
-     * @param connectionInfo connection string @see vtapi.conf
-     * @return success
-     */
-    virtual bool reconnect (const std::string& connectionInfo = "") = 0;
+    virtual bool connect() = 0;
+
     /**
      * Disconnects from database
      */
     virtual void disconnect () = 0;
+    
     /**
      * Checks database connection
      * @return success
@@ -64,6 +59,7 @@ public:
      * @return success
      */
     virtual bool execute(const std::string& query, void *param) = 0;
+    
     /**
      * Executes query and fetc hes new result set
      * @param query SQl query string
@@ -83,67 +79,57 @@ public:
      * Gets map of preloaded database types
      * @return reference to type map
      */
-    DBTYPES_MAP *getDBTypes() { return &this->dbtypes; }
+    DBTYPES_MAP *getDBTypes()
+    { return &this->dbtypes; }
     
     /**
      * Returns last error message
-     * @return
+     * @return error message
      */
-    std::string getErrorMessage() { return this->errorMessage; };
+    std::string getErrorMessage()
+    { return this->errorMessage; };
 
+protected:
+    std::string connInfo;       /**< connection string to access the database */
+    std::string errorMessage;   /**< error message string */
+    DBTYPES_MAP dbtypes;        /**< map of database types definitions */
 };
 
 #if HAVE_POSTGRESQL
 class PGConnection : public Connection, public PGBackendBase
 {
-protected:
-    PGconn *conn;     /**< handler of the current database connection */
-    
 public:
     PGConnection(const PGBackendBase &base, const std::string& connectionInfo);
     ~PGConnection();
 
-    bool connect (const std::string& connectionInfo);
-    bool reconnect (const std::string& connectionInfo);
-    void disconnect ();
-    bool isConnected ();
+    bool connect();
+    void disconnect();
+    bool isConnected();
 
     bool execute(const std::string& query, void *param);
     int fetch(const std::string& query, void *param, ResultSet *resultSet);
 
     void* getConnectionObject();
 
-protected:
+private:
+    PGconn *conn;
+    
     bool loadDBTypes();
     short getTypeCategoryFlags(char c, const std::string &name);
 
-    static PGConnection *glob;
     static int enum_get(PGtypeArgs *args);
     static int enum_put(PGtypeArgs *args);
-    int enum_get_helper(PGtypeArgs *args);
-    int enum_put_helper(PGtypeArgs *args);
-    
-#if HAVE_POSTGIS
-    static int geometry_get(PGtypeArgs *args);
-    static int geometry_put(PGtypeArgs *args);
-    int geometry_get_helper(PGtypeArgs *args);
-    int geometry_put_helper(PGtypeArgs *args);
-#endif
 };
 #endif
 
 #if HAVE_SQLITE
 class SLConnection : public Connection, public SLBackendBase
 {
-protected:
-    sqlite3 *conn;          /**< handler of the current database connection */
-
 public:
     SLConnection(const SLBackendBase &base, const std::string& connectionInfo);
     ~SLConnection();
 
-    bool connect (const std::string& connectionInfo);
-    bool reconnect (const std::string& connectionInfo);
+    bool connect();
     void disconnect ();
     bool isConnected ();
 
@@ -153,18 +139,9 @@ public:
     void* getConnectionObject();
 
 private:
+    sqlite3 *conn;
 
-    /**
-     * Corrects angle of slashes and removes all trailing slashes
-     * @param path input/output string
-     * @return success
-     */
     bool fixSlashes(std::string& path);
-    /**
-     * Attaches database vtapi_[dbfile].db
-     * @param db
-     * @return success
-     */
     bool attachDatabase(std::string& dbfile);
 
 };

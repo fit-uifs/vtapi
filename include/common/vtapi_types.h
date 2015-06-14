@@ -1,6 +1,9 @@
 
 #pragma once
 
+#include <string>
+
+
 namespace vtapi {
 
 // type definition:

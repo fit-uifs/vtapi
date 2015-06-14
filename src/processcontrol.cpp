@@ -1,8 +1,9 @@
 
+//#include <iostream>
 #include <common/vtapi_global.h>
 #include <common/vtapi_serialize.h>
 #include <data/vtapi_processcontrol.h>
-//#include "backends/vtapi_backendbase.h"
+
 
 #define DEF_CONNECT_ATTEMPTS    10
 #define DEF_SERVER_ALIVE_CHECK_PERIOD_S 2
@@ -16,14 +17,11 @@
 #define DEF_COMMAND_POSTFIX     "_cmd"
 #define DEF_NOTIFY_POSTFIX      "_not"
 
-using std::cout;
-using std::cerr;
-using std::endl;
-using std::string;
-using std::thread;
+using namespace std;
 using namespace boost::interprocess;
 
-using namespace vtapi;
+namespace vtapi {
+
 
 static const struct
 {
@@ -37,20 +35,20 @@ command_map[] = {
     { ProcessControl::COMMAND_NONE,     NULL },
 };
 
-static const std::string g_close      = "close";
-static const std::string g_connect    = "connect:";
-static const std::string g_disconnect = "disconnect:";
-static const std::string g_ack        = "ack:";
-static const std::string g_slot       = "slot";
-static const std::string g_pid        = "pid";
+static const string g_close      = "close";
+static const string g_connect    = "connect:";
+static const string g_disconnect = "disconnect:";
+static const string g_ack        = "ack:";
+static const string g_slot       = "slot";
+static const string g_pid        = "pid";
 
 
 
-ProcessControl::ProcessControl(const std::string& processName)
+ProcessControl::ProcessControl(const string& processName)
     : m_server(processName), m_client(processName)
 { }
 
-ProcessControl::ProcessControl(const std::string& processName, const compat::ProcessInstance& serverInstance)
+ProcessControl::ProcessControl(const string& processName, const compat::ProcessInstance& serverInstance)
     : m_server(processName), m_client(processName, serverInstance)
 {
     
@@ -92,16 +90,16 @@ void ProcessControl::close()
 ////////////////////////////////////////////////
 // internal client/server base class
 
-ProcessControl::ComBase::ComBase(const std::string& baseName)
+ProcessControl::ComBase::ComBase(const string& baseName)
     : m_baseName(baseName), m_pThread(NULL)
 { }
 
 ProcessControl::ComBase::~ComBase()
 { }
 
-void ProcessControl::ComBase::send(boost::interprocess::message_queue& q, const std::string& msg, int priority)
+void ProcessControl::ComBase::send(boost::interprocess::message_queue& q, const string& msg, int priority)
 {
-    std::unique_lock<std::mutex> lk(m_mtxSend);
+    unique_lock<mutex> lk(m_mtxSend);
     q.send(msg.c_str(), msg.length()+1, priority);
 }
 
@@ -115,18 +113,18 @@ bool ProcessControl::ComBase::runThread(unsigned int timeout_ms)
         try {
             ThreadArgs args(this);
 
-            std::unique_lock<std::mutex> lk(args.m_mtxReady);
+            unique_lock<mutex> lk(args.m_mtxReady);
             m_pThread = new thread(threadProc, &args);
             if (timeout_ms == 0) {
                 args.m_cvReady.wait(lk);
             }
             else {
-                args.m_cvReady.wait_for(lk, std::chrono::milliseconds(timeout_ms));
+                args.m_cvReady.wait_for(lk, chrono::milliseconds(timeout_ms));
             }
             
             ret = args.m_bSuccess;
         }
-        catch (std::exception) {
+        catch (exception) {
             ret = false;
             break;
         }
@@ -154,7 +152,7 @@ ProcessControl::ComBase::ThreadArgs::ThreadArgs(ComBase *pBase)
 
 void ProcessControl::ComBase::ThreadArgs::setReady(bool bSuccess)
 {
-    std::unique_lock<std::mutex> lk(m_mtxReady);
+    unique_lock<mutex> lk(m_mtxReady);
     m_bSuccess = bSuccess;
     lk.unlock();
     m_cvReady.notify_one();
@@ -164,7 +162,7 @@ void ProcessControl::ComBase::ThreadArgs::setReady(bool bSuccess)
 ////////////////////////////////////////////////
 // internal server class
 
-ProcessControl::Server::Server(const std::string& processName)
+ProcessControl::Server::Server(const string& processName)
     : ComBase(processName),
     m_pCommandQueue(NULL),
     m_callback(NULL), m_pCallbackContext(NULL)
@@ -262,7 +260,7 @@ bool ProcessControl::Server::sendNotify(const ProcessState& state)
 void ProcessControl::Server::threadMain(ThreadArgs &args)
 {
     bool bQuitPending = false;
-    std::map<int,compat::ProcessInstance> mapActiveClients;
+    map<int,compat::ProcessInstance> mapActiveClients;
 
     char buffer[DEF_MAX_COMMAND_SIZE];
 
@@ -372,13 +370,13 @@ void ProcessControl::Server::threadMain(ThreadArgs &args)
 ////////////////////////////////////////////////
 // internal client methods
 
-ProcessControl::Client::Client(const std::string& baseName)
+ProcessControl::Client::Client(const string& baseName)
     : ComBase(baseName),
     m_pNotifyQueue(NULL), m_pCommandQueue(NULL),
     m_callback(NULL), m_pCallbackContext(NULL), m_slot(-1)
 { }
 
-ProcessControl::Client::Client(const std::string& baseName, const compat::ProcessInstance& serverInstance)
+ProcessControl::Client::Client(const string& baseName, const compat::ProcessInstance& serverInstance)
     : ComBase(baseName),
     m_pNotifyQueue(NULL), m_pCommandQueue(NULL),
     m_callback(NULL), m_pCallbackContext(NULL), m_slot(-1),
@@ -407,7 +405,7 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
         
         // try opening server command queue
         string qname = m_baseName + DEF_COMMAND_POSTFIX;
-        std::stringstream ssError;
+        stringstream ssError;
         for (int i = 0; i < DEF_CONNECT_ATTEMPTS; i++) {
             try {
                 m_pCommandQueue = new message_queue(open_only, qname.c_str());
@@ -417,8 +415,8 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
                 ssError << qname << ':' << ex.what() << endl;
             }
             
-            std::this_thread::sleep_for(
-                std::chrono::milliseconds(connectTimeout / DEF_CONNECT_ATTEMPTS));
+            this_thread::sleep_for(
+                chrono::milliseconds(connectTimeout / DEF_CONNECT_ATTEMPTS));
         }
         if (!m_pCommandQueue) {
             cerr << ssError.str();
@@ -427,7 +425,7 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
         }
 
         // try to find free client slot
-        std::stringstream ssError2;
+        stringstream ssError2;
         for (m_slot = 0; m_slot < DEF_MAX_CLIENTS; m_slot++) {
             string qname2 = m_baseName + DEF_NOTIFY_POSTFIX + toString(m_slot);
             try {
@@ -577,7 +575,7 @@ void ProcessControl::Client::threadMain(ThreadArgs &args)
 //////////////////////////////
 // convert methods
 
-ProcessControl::COMMAND_T ProcessControl::toCommandValue(const std::string& command_string)
+ProcessControl::COMMAND_T ProcessControl::toCommandValue(const string& command_string)
 {
     COMMAND_T command = COMMAND_NONE;
 
@@ -591,7 +589,7 @@ ProcessControl::COMMAND_T ProcessControl::toCommandValue(const std::string& comm
     return command;
 }
 
-std::string ProcessControl::toCommandString(COMMAND_T command)
+string ProcessControl::toCommandString(COMMAND_T command)
 {
     string command_string;
 
@@ -603,4 +601,6 @@ std::string ProcessControl::toCommandString(COMMAND_T command)
     }
 
     return command_string;
+}
+
 }

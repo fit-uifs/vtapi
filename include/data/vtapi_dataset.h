@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <string>
 #include "vtapi_keyvalues.h"
 #include "vtapi_sequence.h"
 #include "vtapi_method.h"
@@ -35,7 +36,8 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Dataset : public KeyValues {
+class Dataset : public KeyValues
+{
 public:
 
     /**
@@ -49,7 +51,7 @@ public:
      * @param name   specific dataset name
      * @note Use rather "vtapi->newDataset()"
      */
-    explicit Dataset(const KeyValues& orig, const std::string& name = "");
+    Dataset(const KeyValues& orig, const std::string& name = "");
 
     /**
      * Moves to a next dataset and sets dataset name and location varibles
@@ -76,45 +78,31 @@ public:
      * @return pointer to the new Sequence object
      */
     Sequence* newSequence(const std::string& name = "")
-    {
-        return (new Sequence(*this, name));
-    }
+    { return (new Sequence(*this, name)); }
+
     /**
      * Creates new Video (Sequence) object for the current dataset
      * @param name   video (sequence) name (no name = all sequences)
      * @return pointer to the new Video object
      */
     Video* newVideo(const std::string& name = "")
-    {
-        return (new Video(*this, name));
-    }
+    { return (new Video(*this, name)); }
+
     /**
      * Creates new ImageFolder (Sequence) object for the current dataset
      * @param name image folder name (no name = all image folders)
      * @return pointer to the new ImageFolder object
      */
     ImageFolder* newImageFolder(const std::string& name = "")
-    {
-        return (new ImageFolder(*this, name));
-    }
-    /**
-     * Creates new Method object for the current dataset
-     * @param name   method name (no name = all methods)
-     * @return pointer to the new Method object
-     */
-    Method* newMethod(const std::string& name = "")
-    {
-        return (new Method(*this, name));
-    }
+    { return (new ImageFolder(*this, name)); }
+
     /**
      * Creates new Process object for the current dataset
      * @param name   process name (no name = all processes)
      * @return pointer to the new Process object
      */
     Process* newProcess(const std::string& name = "")
-    {
-        return (new Process(*this, name));
-    }
+    { return (new Process(*this, name)); }
 
 protected:
     virtual bool preUpdate();

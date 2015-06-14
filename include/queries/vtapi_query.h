@@ -13,6 +13,7 @@
 
 #pragma once
 
+#include <string>
 #include "../data/vtapi_commons.h"
 #include "../backends/vtapi_querybuilder.h"
 #include "../backends/vtapi_resultset.h"
@@ -34,14 +35,12 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Query : public Commons {
+class Query : public Commons
+{
 public:
-
     QueryBuilder        *queryBuilder;  /**< Object implementing interface for building queries */
     ResultSet           *resultSet;     /**< Object implementing result set interface */
     bool                executed;       /**< Flag, disable on any change to query, enable on execute */
-
-public:
 
     /**
      * Constructs a query object
@@ -53,22 +52,26 @@ public:
     /**
      * Destructor
      */
-    ~Query();
+    virtual ~Query();
+    
     /**
      * This expands the query, so you can check it before the execution
      * @return string value with the query
      */
     std::string getQuery();
+    
     /**
      * Begins transaction, executes will be stored
      * @return success
      */
     bool beginTransaction();
+    
     /**
      * Commits pending transaction
      * @return success
      */
     bool commitTransaction();
+    
     /**
      * Rolls back pending transaction
      * @return success
@@ -80,6 +83,7 @@ public:
      * @return success
      */
     bool execute();
+    
     /**
      * Clears the query object to its original state
      */

@@ -16,29 +16,6 @@
 // by configure script
 #include "vtapi_autoconfig.h"
 
-// standard library
-#include <cstdlib>
-#include <cstdio>
-#include <ctime>
-#include <string>
-#include <vector>
-#include <map>
-#include <set>
-#include <list>
-#include <iomanip>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <typeinfo>
-
-// boost
-#include <boost/interprocess/ipc/message_queue.hpp>
-
-// c++11
-#include <utility>
-#include <thread>
-#include <mutex>
-#include <condition_variable>
 
 /**
  * @brief TODO
@@ -54,7 +31,7 @@
 
 // libpqtypes + pq
 #if HAVE_POSTGRESQL
-    #include <libpqtypes.h> 
+    #include <libpqtypes.h>
 
     #define PG_FORMAT 1   // postgres data transfer format: 0=text, 1=binary
 #endif
@@ -76,19 +53,19 @@
   #include <proc/readproc.h>
 #endif
 
-#if HAVE_OPENCV
 // OpenCV header files
+#if HAVE_OPENCV
  #include <opencv2/opencv.hpp>
 #endif 
 
 #if HAVE_POSTGIS
 
-#if HAVE_GEOS
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
+#if HAVE_GEOS
 #ifdef	__cplusplus
 extern "C" {
 #endif
-#include <geos_c.h>
+    #include <geos_c.h>
 #ifdef	__cplusplus
 }
 #endif
@@ -98,8 +75,8 @@ extern "C" {
 #ifdef	__cplusplus
 extern "C" {
 #endif
-#include "../postgres/liblwgeom/liblwgeom.h"
-#include "../postgres/cube/cubedata.h"
+    #include "../postgres/liblwgeom/liblwgeom.h"
+    #include "../postgres/cube/cubedata.h"
 #ifdef	__cplusplus
 }
 #endif // __cplusplus

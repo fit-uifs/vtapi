@@ -2,7 +2,6 @@
 #include <common/vtapi_global.h>
 #include <backends/vtapi_querybuilder.h>
 
-
 #if HAVE_SQLITE
 
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"
@@ -11,11 +10,9 @@
 #define DEF_NO_VALUES   "!NO_VALUES!"
 #define DEF_NO_QUERY    "!NO_QUERY!"
 
+using namespace std;
 
-using std::string;
-using std::stringstream;
-
-using namespace vtapi;
+namespace vtapi {
 
 
 SLQueryBuilder::SLQueryBuilder(const SLBackendBase &base, void *connection, const string& initString) :
@@ -91,8 +88,8 @@ string SLQueryBuilder::getSelectQuery(const string& groupby, const string& order
 
     // go through keys
     for (int i = 0; i < key_values_main.size(); i++) {
-        string tmpTable  = !key_values_main[i]->from.empty() ? key_values_main[i]->from : defaultTable;
-        string tmpColumn = key_values_main[i]->key;
+        string tmpTable  = !key_values_main[i]->m_from.empty() ? key_values_main[i]->m_from : defaultTable;
+        string tmpColumn = key_values_main[i]->m_key;
         size_t dotPos    = tmpTable.find(".");
         bool addTable    = true;
 
@@ -111,8 +108,8 @@ string SLQueryBuilder::getSelectQuery(const string& groupby, const string& order
         }
         // check if table already exists
         for (int j = 0; j < i; j++) {
-            if (key_values_main[i]->from.compare(key_values_main[j]->from) == 0 ||
-               (key_values_main[i]->from.empty() && key_values_main[j]->from.empty())) {
+            if (key_values_main[i]->m_from.compare(key_values_main[j]->m_from) == 0 ||
+               (key_values_main[i]->m_from.empty() && key_values_main[j]->m_from.empty())) {
                 addTable = false;
                 break;
             }
@@ -134,7 +131,7 @@ string SLQueryBuilder::getSelectQuery(const string& groupby, const string& order
     // construct WHERE and the rest of it all
     for (int i = 0; i < key_values_where.size(); i++) {
         if (!whereStr.empty()) whereStr += " AND ";
-        whereStr += this->escapeColumn(key_values_where[i]->key, key_values_where[i]->from);
+        whereStr += this->escapeColumn(key_values_where[i]->m_key, key_values_where[i]->m_from);
         whereStr += opers[i];
         whereStr += escapeLiteral(key_values_where[i]->getValue());
     }
@@ -176,9 +173,9 @@ string SLQueryBuilder::getInsertQuery()
 
     // go through keys
     for (int i = 0; i < this->key_values_main.size(); ++i) {
-        if (dstTable.empty()) dstTable = this->key_values_main[i]->from;
-        intoStr     += escapeIdent(this->key_values_main[i]->key) + ", ";
-        valuesStr   += escapeLiteral(key_values_main[i]->getValues()) + ", ";
+        if (dstTable.empty()) dstTable = this->key_values_main[i]->m_from;
+        intoStr     += escapeIdent(this->key_values_main[i]->m_key) + ", ";
+        valuesStr   += escapeLiteral(key_values_main[i]->getValue()) + ", ";
     }
     // this is to remove ending separators
     intoStr.erase(intoStr.length()-2);
@@ -213,9 +210,9 @@ string SLQueryBuilder::getUpdateQuery()
 
     // go through keys
     for (int i = 0; i < this->key_values_main.size(); ++i) {
-        if (dstTable.empty()) dstTable = this->key_values_main[i]->from;
-        setStr  += escapeIdent(this->key_values_main[i]->key);
-        setStr  += "=" + escapeLiteral(key_values_main[i]->getValues()) + ", ";
+        if (dstTable.empty()) dstTable = this->key_values_main[i]->m_from;
+        setStr  += escapeIdent(this->key_values_main[i]->m_key);
+        setStr  += "=" + escapeLiteral(key_values_main[i]->getValue()) + ", ";
     }
     // this is to remove ending separators
     setStr.erase(setStr.length()-2);
@@ -233,7 +230,7 @@ string SLQueryBuilder::getUpdateQuery()
     // construct WHERE clause
     for (int i = 0; i < key_values_where.size(); i++) {
         if (!whereStr.empty()) whereStr += " AND ";
-        whereStr += this->escapeColumn(key_values_where[i]->key, key_values_where[i]->from);
+        whereStr += this->escapeColumn(key_values_where[i]->m_key, key_values_where[i]->m_from);
         whereStr += opers[i];
         whereStr += escapeLiteral(key_values_where[i]->getValue());
     }
@@ -500,3 +497,5 @@ string SLQueryBuilder::escapeLiteral(const string& ident) {
 }
 
 #endif
+
+}

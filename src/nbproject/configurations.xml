@@ -34,7 +34,6 @@
       </logicalFolder>
       <logicalFolder name="f3" displayName="data" projectFiles="true">
         <itemPath>../include/data/vtapi_commons.h</itemPath>
-        <itemPath>../include/data/vtapi_data.h</itemPath>
         <itemPath>../include/data/vtapi_dataset.h</itemPath>
         <itemPath>../include/data/vtapi_interval.h</itemPath>
         <itemPath>../include/data/vtapi_intervalevent.h</itemPath>
@@ -247,8 +246,6 @@
       </item>
       <item path="../include/data/vtapi_commons.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../include/data/vtapi_data.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../include/data/vtapi_dataset.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_interval.h" ex="false" tool="3" flavor2="0">
@@ -450,8 +447,6 @@
       <item path="../include/common/vtapi_types.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_commons.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../include/data/vtapi_data.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_dataset.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -687,8 +682,6 @@
       <item path="../include/common/vtapi_types.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_commons.h" ex="false" tool="3" flavor2="0">
-      </item>
-      <item path="../include/data/vtapi_data.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_dataset.h" ex="false" tool="3" flavor2="0">
       </item>

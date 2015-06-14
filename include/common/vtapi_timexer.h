@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <ctime>
+
 namespace vtapi {
 
 
@@ -31,7 +33,8 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class TimExer {
+class TimExer
+{
 private:
     time_t startTime;       /**< original time */
     time_t meanTime;        /**< time of last getTime() or getMeanTime() call */

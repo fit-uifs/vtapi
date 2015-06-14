@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
 #include "vtapi_serialize.h"
 #include "vtapi_tkey.h"
 
@@ -47,17 +49,16 @@ typedef std::vector<TKey *>     TKeyValues;
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 template <typename T>
-class TKeyValue : public TKey {
+class TKeyValue : public TKey
+{
 public:
+    T *values;    /**< values */
 
-    std::string typein;     /**< This attribute is there for validation */
-    T           *values;    /**< values */
-
-public:
     /**
      * Default constructor
      */
-    TKeyValue() : TKey(), values(NULL) {};
+    TKeyValue()
+    : TKey(), values(NULL) {}
 
     /**
      * Full constructor with single value
@@ -66,11 +67,15 @@ public:
      * @param value   single value
      * @param from    additional key specification (eg. table)
      */
-    TKeyValue(const std::string& type, const std::string& key, T value, const std::string& from = "")
-            : TKey(type, key, 1, from) {
+    TKeyValue(
+        const std::string& type,
+        const std::string& key,
+        T value,
+        const std::string& from)
+    : TKey(type, key, 1, from)
+    {
         this->values = new T[1];
         this->values[0] = value;
-        this->typein = typeid(this->values).name();
     }
     /**
      * Full constructor with multiple values
@@ -80,36 +85,31 @@ public:
      * @param size     size of array of values
      * @param from     additional key specification (eg. table)
      */
-    TKeyValue (const std::string& type, const std::string& key, T* values, const int size, const std::string& from = "")
-            : TKey(type, key, size, from) {
-        if (this->size > 0) {
-            this->values = new T[this->size];
-            std::copy(values, values+this->size, this->values);
+    TKeyValue (
+        const std::string& type,
+        const std::string& key, T* values,
+        const int size,
+        const std::string& from)
+    : TKey(type, key, size, from)
+    {
+        if (m_size > 0) {
+            this->values = new T[m_size];
+            std::copy(values, values+m_size, this->values);
         }
-        this->typein = typeid(values).name();
     }
 
-    // TODO: tady nekde by melo byt pretypovani na standardni C/databazove typy
-    
     /**
      * Destructor
      */
-    ~TKeyValue () {
-        vt_destructall(values);
-        
-    }
-
-    /**
-     * Prints values from TKey members
-     * @return string which contains a dump of TKey members
-     */
-    std::string print();
+    ~TKeyValue ()
+    { if (values) delete values; }
 
     /**
      * Gets string representation of the first value
      * @return representation of value(s)
      */
     std::string getValue();
+    
     /**
      * Gets string representation of first limit values
      * @param limit   how many values, 0 (or less) = unlimited
@@ -119,52 +119,30 @@ public:
 };
 
 
-/**
- * Prints string representation of Key-Value(s) pair
- * @return Key-Value string
- * @todo @b doc: not consistent with declaration in header
- */
 template <class T>
-std::string TKeyValue<T>::print() {
-    std::string retString = "TKeyValue<" + std::string(typeid(values).name()) + "> type=" + type +
-            ", key=" + key + ", from=" + from + ", size=" + toString(size) + ",\n  values=";
-    retString += this->getValues();
-    std::cout << retString << std::endl;
-    return (retString);
-}
-
-/**
- * Gets string representation of single value
- * @return value string
- * @todo @b doc: not consistent with declaration in header
- */
-template <class T>
-std::string TKeyValue<T>::getValue() {
-    if (values && size > 0) {
+std::string TKeyValue<T>::getValue()
+{
+    if (values && m_size > 0) {
         return toString(values[0]);
     }
     else {
-        return std::string("");
+        return "";
     }
 }
 
-/**
- * Gets string representation of values array
- * @param limit maximum limit of values (0 = no limit)
- * @return values string
- */
 template <class T>
-std::string TKeyValue<T>::getValues(const int limit) {
-    std::string retString;
-    if (values && size > 0) {
-        if (size > 1) retString += "[";
-        for(int i = 0; (i < size) && (limit <= 0 || i < limit); ++i) {
-            retString += toString(values[i]) + ",";
+std::string TKeyValue<T>::getValues(const int limit)
+{
+    std::string ret;
+    if (values && m_size > 0) {
+        if (m_size > 1) ret += "[";
+        for(int i = 0; (i < m_size) && (limit <= 0 || i < limit); ++i) {
+            ret += toString(values[i]) + ",";
         }
-        if (limit <= 0) retString = retString.erase(retString.length()-1);
-        if (size > 1) retString += "]";
+        if (limit <= 0) ret = ret.erase(ret.length()-1);
+        if (m_size > 1) ret += "]";
     }
-    return retString;
+    return ret;
 }
 
 

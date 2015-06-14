@@ -13,9 +13,14 @@
 
 #pragma once
 
+#include <ctime>
+#include <string>
+#include <vector>
+#include <list>
 #include "vtapi_commons.h"
 #include "vtapi_intervalevent.h"
 #include "vtapi_processstate.h"
+#include "../common/vtapi_tkey.h"
 #include "../queries/vtapi_select.h"
 #include "../queries/vtapi_insert.h"
 #include "../queries/vtapi_update.h"
@@ -38,15 +43,14 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class KeyValues : public Commons {
+class KeyValues : public Commons
+{
 public:
 
     Select* select; /**< Select for select queries (depending on child KeyValue object may be pre-filled by the constructor) */
     Insert* insert; /**< Current insert to insert new data (= last in store)*/
     Update* update; /**< Update to update new data */
 
-
-public:
     /**
      * KeyValue contructor from Commons object
      * @param orig   pointer of the existing Commons object
@@ -64,7 +68,7 @@ public:
      * This destroys the KeyValues
      * It raises warning when there was something left not-excecuted (some collaborants left)
      */
-    ~KeyValues();
+    virtual ~KeyValues();
 
     /**
      * The most used function of the VTApi - next (row)
@@ -77,12 +81,14 @@ public:
      * @return object count, -1 for error
      */
     int count();
+    
     /**
      * Gets key of a single table column
      * @param col   column index
      * @return Column key
      */
     TKey getKey(int col);
+    
     /**
      * Gets a list of all possible columns as TKeys
      * @return list of keys
@@ -94,11 +100,13 @@ public:
      * @return success
      */
     bool print();
+    
     /**
      * Iterates over rest of the whole resultset and prints all rows + keys
      * @return success
      */
     bool printAll();
+    
     /**
      * Prints table keys
      * @return success

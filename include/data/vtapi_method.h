@@ -13,6 +13,8 @@
 
 #pragma once
 
+#include <string>
+#include "../common/vtapi_tkey.h"
 #include "vtapi_keyvalues.h"
 #include "vtapi_process.h"
 
@@ -35,7 +37,8 @@ class Process;
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Method : public KeyValues {
+class Method : public KeyValues
+{
 public:
     
     /**
@@ -45,6 +48,11 @@ public:
      */
     Method(const KeyValues& orig, const std::string& name = "");
 
+    /**
+     * Destructor
+     */
+    virtual ~Method();
+    
     /**
      * Moves to a next method and set a method name and its methodkeys variables
      * @return success
@@ -57,28 +65,31 @@ public:
      * @return method ID
      */
     int getId();
+    
     /**
      * Gets a name of the current method
      * @return string value with the name of the method
      */
     std::string getName();
+    
     /**
      * This is used to refresh the methodKeys vector
      * @return TKeys
      */
     TKeys getMethodKeys();
+    
     /**
      * Prints method's keys
      */
     void printMethodKeys();
+    
     /**
      * Creates process object for access to existing processes
      * @return pointer to new process object
      */
     Process* newProcess(const std::string& name = "")
-    {
-        return (new Process(*this, name));
-    }
+    { return (new Process(*this, name)); }
+    
     /**
      * Creates process object for starting new process
      * @return new process object

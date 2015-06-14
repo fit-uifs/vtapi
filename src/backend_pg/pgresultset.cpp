@@ -3,18 +3,13 @@
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_resultset.h>
 
-#include "data/vtapi_processstate.h"
-
 #if HAVE_POSTGRESQL
 
-using std::string;
-using std::ostringstream;
-using std::vector;
-using std::pair;
-
-using namespace vtapi;
-
 #define PGRES ((PGresult *)this->res)
+
+using namespace std;
+
+namespace vtapi {
 
 
 PGResultSet::PGResultSet(const PGBackendBase &base, DBTYPES_MAP *dbtypes) :
@@ -60,7 +55,7 @@ TKey PGResultSet::getKey(int col)
     string name = pg.PQfname(PGRES, col);
     string type = getKeyType(col);
 
-    return TKey(type, name, 0);
+    return TKey(type, name, 0, "");
 }
 
 TKeys* PGResultSet::getKeys()
@@ -1016,3 +1011,4 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
 
 #endif // HAVE_POSTGRESQL
 
+}

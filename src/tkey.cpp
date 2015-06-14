@@ -15,15 +15,15 @@
 #include <common/vtapi_serialize.h>
 #include <common/vtapi_tkey.h>
 
-using std::string;
-using std::cout;
-using std::endl;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
 string TKey::print() {
-    string ret = "TKey type=" + type + ", key=" + key + ", size=" + toString(size) + ", from=" + from;
+    string ret = "TKey type=" + m_type + ", key=" + m_key + ", size=" + toString(m_size) + ", from=" + m_from;
     cout << ret << endl;
     return (ret);
+}
+
 }

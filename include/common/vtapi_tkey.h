@@ -13,7 +13,11 @@
 
 #pragma once
 
+#include <string>
+#include <vector>
+
 namespace vtapi {
+
 
 class TKey;
 
@@ -37,34 +41,35 @@ typedef std::vector<TKey> TKeys;
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class TKey {
+class TKey
+{
 public:
-    std::string type;    /**< Name of the data type */
-    std::string key;     /**< Name of the column */
-    int         size;    /**< Positive for array, 0 for single value, -1 for NULL */
-    std::string from;    /**< The source (table) */
+    std::string m_type;    /**< Name of the data type */
+    std::string m_key;     /**< Name of the column */
+    int         m_size;    /**< Positive for array, 0 for single value, -1 for NULL */
+    std::string m_from;    /**< The source (table) */
 
-public:
     /**
      * Default constructor
      */
-    TKey() : size(-1) {};
-    /**
-     * Copy constructor
-     * @param orig   TKey to copy
-     */
-    TKey(const TKey& orig) : type(orig.type), key(orig.key), from(orig.from), size(orig.size) {};
+    TKey()
+    : m_size(-1) {}
+    
     /**
      * Constructor with full specification of arguments
      * @param type   key data type
      * @param key    key name (column name)
      * @param size   negative value represents NULL, 1 represents single value, value grater than 1 represents vectors
      * @param from   additional key specification (eg. table)
-     * @todo comment for class member size and for parametr size of constructor are inconsistent (0 for single value and positive for array vs. 1 for single value and greater than 1 are vectors
      */
-    TKey(const std::string& type, const std::string& key, const int size, const std::string& from = "") : type(type), key(key), size(size), from(from) {};
+    TKey(
+        const std::string& type,
+        const std::string& key,
+        const int size,
+        const std::string& from)
+    : m_type(type), m_key(key), m_size(size), m_from(from) {}
 
-    virtual ~TKey() {};
+    virtual ~TKey() {}
 
     /**
      * Prints data
@@ -75,17 +80,18 @@ public:
     /**
      * Gets string representation of the first value
      * @return representation of value(s)
-     * @unimplemented
      */
-    virtual std::string getValue() { return ""; };
+    virtual std::string getValue()
+    { return ""; }
+    
     /**
      * Gets string representation of first limit values
      * @param limit how many values
      * @return representation of value(s)
-     * @unimplemented
      */
-    virtual std::string getValues(const int limit = 0) { return ""; };
+    virtual std::string getValues(const int limit = 0)
+    { return ""; }
 
 };
 
-} // namespace vtapi
+}

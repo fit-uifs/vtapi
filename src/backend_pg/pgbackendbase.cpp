@@ -2,12 +2,8 @@
 #include <common/vtapi_global.h>
 #include <backends/vtapi_backendbase.h>
 
+
 #if HAVE_POSTGRESQL
-
-using std::string;
-
-using namespace vtapi;
-
 
 #define PG_LOAD(F) \
 if ((pg.F = (PQ_ ## F)lt_dlsym(hLibpq, #F)) == NULL) { \
@@ -24,6 +20,11 @@ if ((pqt.F = (PQT_ ## F)lt_dlsym(hLibpqtypes, #F)) == NULL) { \
     retval = false;\
     break;\
 }
+
+using namespace std;
+
+namespace vtapi {
+
 
 PGBackendBase::PGBackendBase(const PGBackendBase &base) :
     BackendBase(base.logger)
@@ -151,3 +152,5 @@ void PGBackendBase::base_unload_libs()
 }
 
 #endif
+
+}

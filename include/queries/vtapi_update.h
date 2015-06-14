@@ -13,6 +13,9 @@
 
 #pragma once
 
+#include <ctime>
+#include <string>
+#include "../data/vtapi_processstate.h"
 #include "vtapi_query.h"
 
 namespace vtapi {
@@ -33,7 +36,8 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Update : public Query {
+class Update : public Query
+{
 public:
 
     /**
@@ -41,17 +45,20 @@ public:
      * @param commons      configuration object of Commons class
      * @param initString   initialization string (query/table or empty)
      */
-    Update(const Commons& commons, const std::string& initString = "");
+    explicit Update(const Commons& commons, const std::string& initString = "");
+    
     /**
      * Gets UPDATE query string
      * @return query string
      */
     std::string getQuery();
+    
     /**
      * Executes UPDATE query
      * @return success
      */
     bool execute();
+    
     /**
      * This is a persistent function to set string value to a key
      * @param key       key holding value to be set
@@ -61,6 +68,7 @@ public:
      * @note It may be called several times.
      */
     bool setString(const std::string& key, const std::string& value, const std::string& from = "");
+    
     /**
      * This is a persistent function to set string values (string array) to a key
      * @param key       key holding value to be set
@@ -71,6 +79,7 @@ public:
      * @note It may be called several times.
      */
     bool setStringA(const std::string& key, std::string* values, const int size, const std::string& from = "");
+    
     /**
      * This is a persistent function to set integer value to a key
      * @param key       key holding value to be set
@@ -80,6 +89,7 @@ public:
      * @note It may be called several times.
      */
     bool setInt(const std::string& key, int value, const std::string& from = "");
+    
     /**
      * This is a persistent function to set integer values (integer array) to a key
      * @param key       key holding value to be set
@@ -90,6 +100,7 @@ public:
      * @note It may be called several times.
      */
     bool setIntA(const std::string& key, int* values, const int size, const std::string& from = "");
+    
     /**
      * This is a persistent function to set float value to a key
      * @param key       key holding value to be set
@@ -99,6 +110,7 @@ public:
      * @note It may be called several times.
      */
     bool setFloat(const std::string& key, float value, const std::string& from = "");
+    
     /**
      * This is a persistent function to set float values (float array) to a key
      * @param key       key holding value to be set
@@ -109,6 +121,7 @@ public:
      * @note It may be called several times.
      */
     bool setFloatA(const std::string& key, float* values, const int size, const std::string& from = "");
+    
     /**
      * This is a persistent function to set seqtype value to a key
      * @param key       key holding value to be set
@@ -118,6 +131,7 @@ public:
      * @note It may be called several times.
      */
     bool setSeqtype(const std::string& key, const std::string& value, const std::string& from = "");
+    
     /**
      * This is a persistent function to set inouttype value to a key
      * @param key       key holding value to be set
@@ -127,6 +141,7 @@ public:
      * @note It may be called several times.
      */
     bool setInouttype(const std::string& key, const std::string& value, const std::string& from = "");
+    
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -136,6 +151,7 @@ public:
      * @return success
      */
     bool updateProcessStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from = "");
+    
     /**
      * This is a persistent function to set timestamp value to a key
      * @param key       key holding value to be set
@@ -156,6 +172,7 @@ public:
      * @note It may be called several times.
      */
     bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+    
     /**
      * This is a WHERE statement construction function for integers
      * @param key     key to compare with a value
@@ -166,6 +183,7 @@ public:
      * @note It may be called several times.
      */
     bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");
+    
     /**
      * This is a WHERE statement construction function for floats
      * @param key     key to compare with a value
@@ -176,6 +194,7 @@ public:
      * @note It may be called several times.
      */
     bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
+    
     /**
      * This is a WHERE statement construction function for seqtype
      * @param key key to compare with the value
@@ -186,6 +205,7 @@ public:
      * @note It may be called several times.
      */
      bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+     
     /**
      * This is a WHERE statement construction function for inouttype
      * @param key     key to compare with a value
@@ -196,6 +216,7 @@ public:
      * @note It may be called several times.
      */
      bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+     
     /**
      * This is a WHERE statement construction function for pstatus type
      * @param key     key to compare with a value
@@ -206,6 +227,7 @@ public:
      * @note It may be called several times.
      */
     bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper = "=", const std::string& from = "");
+    
     /**
      * This is a WHERE statement construction function for timestamp
      * @param key     key to compare with a value
@@ -216,6 +238,7 @@ public:
      * @note It may be called several times.
      */
      bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
+     
      /**
      * This is a WHERE statement construction function for filters by box
      * @param key  key to compare with a value
@@ -225,6 +248,7 @@ public:
      * @return success
      */
      bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "", const std::string& from = "");
+     
     /**
      * This is a WHERE statement construction function for custom expression
      * @param expression

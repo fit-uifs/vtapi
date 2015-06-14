@@ -1,9 +1,11 @@
 #pragma once
 
+#include <string>
 #include "vtapi_backendbase.h"
 #include "vtapi_connection.h"
 #include "vtapi_querybuilder.h"
 #include "vtapi_resultset.h"
+#include "../common/vtapi_types.h"
 
 namespace vtapi {
 
@@ -21,17 +23,15 @@ namespace vtapi {
  * - @ref LibLoader
  *      loading library functions
  */
-class BackendFactory {
+class BackendFactory
+{
 public:
-    
-// backend type
-typedef enum {
-    BACKEND_UNKNOWN = 0,
-    BACKEND_SQLITE,
-    BACKEND_POSTGRES
-} BACKEND_T;
-
-public:
+    // backend type
+    typedef enum {
+        BACKEND_UNKNOWN = 0,
+        BACKEND_SQLITE,
+        BACKEND_POSTGRES
+    } BACKEND_T;
 
     /**
      * Converts string to backend type
@@ -46,7 +46,9 @@ public:
      * @param logger message logging object
      * @return pointer to new backend base object
      */
-    static BackendBase* createBackendBase(BACKEND_T backend, Logger *logger);
+    static BackendBase* createBackendBase(
+        BACKEND_T backend,
+        Logger *logger);
 
     /**
      * Creates object of class @ref Connection
@@ -55,26 +57,38 @@ public:
      * @param connectionInfo connection string
      * @return pointer to new connection object
      */
-    static Connection* createConnection(BackendFactory::BACKEND_T backend, const BackendBase &base, const std::string& connectionInfo);
+    static Connection* createConnection(
+        BackendFactory::BACKEND_T backend,
+        const BackendBase &base,
+        const std::string& connectionInfo);
     
     /**
      * Creates object of class @ref QueryBuilder
      * @param backend backend type
      * @param base previously created backend base
      * @param connection connection object
-     * @param initString initializing string (query or table)
+     * @param initString initializing string
+     * (full query for INSERT; partial query for SELECT,UPDATE - without WHERE)
      * @see Query
      * @return pointer to new query building object
      */
-    static QueryBuilder* createQueryBuilder(BACKEND_T backend, const BackendBase &base, void *connection, const std::string& initString = "");
+    static QueryBuilder* createQueryBuilder(
+        BACKEND_T backend,
+        const BackendBase &base,
+        void *connection,
+        const std::string& initString);
 
     /**
+     * Creates object of class @ref ResultSet
      * @param backend backend type
      * @param base previously created backend base
      * @param dbtypes pre-filled map of database types definitions
      * @return pointer to new result set object
      */
-    static ResultSet* createResultSet(BACKEND_T backend, const BackendBase &base, DBTYPES_MAP *dbtypes = NULL);
+    static ResultSet* createResultSet(
+        BACKEND_T backend,
+        const BackendBase &base,
+        DBTYPES_MAP *dbtypes = NULL);
 };
 
 } // namespace vtapi

@@ -1,13 +1,16 @@
 #!/bin/sh
-cd ../src
+
+_DIR=$PWD
+
+cd $_DIR/../src
 make
 
-cd ../example
+cd $_DIR
 make
 
-cd mod_demo1
+cd $_DIR/mod_demo1
 make
 
-cd ../mod_demo2
+cd $_DIR/mod_demo2
 make
 

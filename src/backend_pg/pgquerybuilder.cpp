@@ -1,7 +1,7 @@
 
+#include <set>
 #include <common/vtapi_global.h>
 #include <backends/vtapi_querybuilder.h>
-
 
 #if HAVE_POSTGRESQL
 
@@ -14,10 +14,10 @@
 #define DEF_NO_VALUES   "!NO_VALUES!"
 #define DEF_NO_QUERY    "!NO_QUERY!"
 
-using std::string;
-using std::set;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
+
 
 PGQueryBuilder::PGQueryBuilder(const PGBackendBase &base, void *connection, const string& initString) :
     QueryBuilder (connection, initString),
@@ -92,17 +92,17 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
             TKey &key = (*it).key;
 
             // add column after SELECT
-            string col  = constructColumn(key.key, key.from);
+            string col  = constructColumn(key.m_key, key.m_from);
             if (!columnsStr.empty()) {
                 columnsStr += ',';
             }
             columnsStr += col;
-            if (key.key[0] != '*') {
-                columnsStr += " AS " + constructAlias(key.key);
+            if (key.m_key[0] != '*') {
+                columnsStr += " AS " + constructAlias(key.m_key);
             }
 
             // add table after FROM
-            string tab = constructTable(key.from);
+            string tab = constructTable(key.m_from);
             if (setTables.count(tab) == 0) {
                 if (!tablesStr.empty()) tablesStr += ',';
                 tablesStr += tab;
@@ -133,13 +133,13 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
 
             // bind key to PGparam value
             if ((*it).idParam > 0) {
-                whereStr += constructColumn(key.key, key.from);
+                whereStr += constructColumn(key.m_key, key.m_from);
                 whereStr += ' ' + (*it).oper + ' ';
                 whereStr += '$' + toString((*it).idParam);
             }
             // use key as custom expression
             else {
-                whereStr += (key.key);
+                whereStr += (key.m_key);
                 whereStr += ' ' + (*it).oper + ' ';
                 whereStr += (*it).value;
             }
@@ -183,10 +183,10 @@ string PGQueryBuilder::getInsertQuery()
         for (MAIN_LIST_IT it = m_listMain.begin(); it != m_listMain.end(); it++) {
             TKey &key = (*it).key;
             
-            if (!key.from.empty()) tab = key.from;
+            if (!key.m_from.empty()) tab = key.m_from;
             
             if (it != m_listMain.begin()) intoStr += ',';
-            intoStr     += escapeIdent(key.key);
+            intoStr     += escapeIdent(key.m_key);
             
             if (it != m_listMain.begin()) valuesStr += ',';
             valuesStr   += '$' + toString((*it).idParam);
@@ -233,10 +233,10 @@ string PGQueryBuilder::getUpdateQuery()
         for (MAIN_LIST_IT it = m_listMain.begin(); it != m_listMain.end(); it++) {
             TKey &key = (*it).key;
 
-            if (!key.from.empty()) tab = key.from;
+            if (!key.m_from.empty()) tab = key.m_from;
             
             if (!setStr.empty()) setStr += ',';
-            setStr += constructColumnNoTable(key.key) + "=$" + toString((*it).idParam);
+            setStr += constructColumnNoTable(key.m_key) + "=$" + toString((*it).idParam);
         }
 
         bool bError = tab.empty() || setStr.empty();
@@ -262,12 +262,12 @@ string PGQueryBuilder::getUpdateQuery()
             if (!whereStr.empty()) whereStr += " AND ";
 
             if ((*it).idParam > 0) {
-                whereStr += constructColumn(key.key, key.from);
+                whereStr += constructColumn(key.m_key, key.m_from);
                 whereStr += ' ' + (*it).oper + ' ';
                 whereStr += "$" + toString((*it).idParam);
             }
             else {
-                whereStr += (key.key);
+                whereStr += (key.m_key);
                 whereStr += ' ' + (*it).oper + ' ';
                 whereStr += (*it).value;
             }
@@ -762,3 +762,5 @@ string PGQueryBuilder::UnixTimeToTimestampString(const time_t& utime)
     return buffer;
 }
 #endif
+
+}

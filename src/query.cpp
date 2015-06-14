@@ -18,9 +18,9 @@
 #include <queries/vtapi_insert.h>
 #include <queries/vtapi_update.h>
 
-using std::string;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
 //================================== QUERY =====================================
@@ -30,16 +30,17 @@ Query::Query(const Commons& commons, const string& initString)
 : Commons(commons)
 {
     this->thisClass = "Query";
-    
+
     bool bIsQuery = (initString.find_first_of(" \t\n") != string::npos);
-    if (bIsQuery) {
-        queryBuilder = BackendFactory::createQueryBuilder(backend, *backendBase, connection->getConnectionObject(), initString);
-        if (!this->selection.empty()) queryBuilder->useDefaultTable(this->selection);
-    }
-    else {
-        queryBuilder = BackendFactory::createQueryBuilder(backend, *backendBase, connection->getConnectionObject());
-        if (!initString.empty()) queryBuilder->useDefaultTable(initString);
-    }
+    
+    queryBuilder = BackendFactory::createQueryBuilder(
+        backend,
+        *backendBase,
+        connection->getConnectionObject(),
+        bIsQuery ? initString : "");
+    
+    const string &defTable = bIsQuery ? this->selection : initString;
+    queryBuilder->useDefaultTable(defTable);
     queryBuilder->useDefaultSchema(this->dataset);
 
     resultSet = BackendFactory::createResultSet(backend, *backendBase, connection->getDBTypes());
@@ -120,11 +121,6 @@ string Select::getQuery()
     return queryBuilder->getSelectQuery(groupby, orderby, limit, offset);
 }
 
-bool Select::function(const string& funtext)
-{
-    // TODO: 
-}
-
 bool Select::execute()
 {
     int result = 0;
@@ -165,39 +161,48 @@ bool Select::from(const string& table, const string& column)
     return retval;
 }
 
-bool Select::whereString(const string& key, const string& value, const string& oper, const string& from) {
+bool Select::whereString(const string& key, const string& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereString(key, value, oper, from);
 }
-bool Select::whereInt(const string& key, const int value, const string& oper, const string& from) {
+bool Select::whereInt(const string& key, const int value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereInt(key, value, oper, from);
 }
-bool Select::whereFloat(const string& key, const float value, const string& oper, const string& from) {
+bool Select::whereFloat(const string& key, const float value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereFloat(key, value, oper, from);
 }
-bool Select::whereSeqtype(const string& key, const string& value, const string& oper, const string& from) {
+bool Select::whereSeqtype(const string& key, const string& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereSeqtype(key, value, oper, from);
 }
-bool Select::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
+bool Select::whereInouttype(const string& key, const string& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereInouttype(key, value, oper, from);
 }
-bool Select::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from) {
+bool Select::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->wherePStatus(key, value, oper, from);
 }
-bool Select::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
+bool Select::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereTimestamp(key, value, oper, from);
 }
-bool Select::whereTimeRange(const string& key_start, const string& key_length, const time_t& value_start, const uint value_length, const string& oper, const string& from) {
+bool Select::whereTimeRange(const string& key_start, const string& key_length, const time_t& value_start, const uint value_length, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereTimeRange(key_start, key_length, value_start, value_length, oper, from);
 }
-bool Select::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from) {
+bool Select::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereRegion(key, value, oper, from);
 }
@@ -240,50 +245,61 @@ bool Insert::execute()
     return retval;
 }
 
-bool Insert::keyString(const string& key, const string& value, const string& from) {
+bool Insert::keyString(const string& key, const string& value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyString(key, value, from);
 }
-bool Insert::keyStringA(const string& key, string* values, const int size, const string& from) {
+bool Insert::keyStringA(const string& key, string* values, const int size, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyStringA(key, values, size, from);
 }
-bool Insert::keyInt(const string& key, int value, const string& from) {
+bool Insert::keyInt(const string& key, int value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyInt(key, value, from);
 }
-bool Insert::keyIntA(const string& key, int* values, const int size, const string& from) {
+bool Insert::keyIntA(const string& key, int* values, const int size, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyIntA(key, values, size, from);
 }
-bool Insert::keyFloat(const string& key, float value, const string& from) {
+bool Insert::keyFloat(const string& key, float value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyFloat(key, value, from);
 }
-bool Insert::keyFloatA(const string& key, float* values, const int size, const string& from) {
+bool Insert::keyFloatA(const string& key, float* values, const int size, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyFloatA(key, values, size, from);
 }
-bool Insert::keySeqtype(const string& key, const string& value, const string& from) {
+bool Insert::keySeqtype(const string& key, const string& value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keySeqtype(key, value, from);
 }
-bool Insert::keyInouttype(const string& key, const string& value, const string& from) {
+bool Insert::keyInouttype(const string& key, const string& value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyInouttype(key, value, from);
 }
-bool Insert::keyTimestamp(const string& key, const time_t& value, const string& from) {
+bool Insert::keyTimestamp(const string& key, const time_t& value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyTimestamp(key, value, from);
 }
 #ifdef HAVE_OPENCV
-bool Insert::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) {
+bool Insert::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from)
+{
     executed = false;
     return this->queryBuilder->keyCvMat(key, value, from);
 }
 #endif
 
-bool Insert::keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from) {
+bool Insert::keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from)
+{
     executed = false;
     return this->queryBuilder->keyIntervalEvent(key, value, from);
 }
@@ -321,80 +337,100 @@ bool Update::execute()
     return retval;
 }
 
-bool Update::setString(const string& key, const string& value, const string& from) {
+bool Update::setString(const string& key, const string& value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyString(key, value, from);
 }
-bool Update::setStringA(const string& key, string* values, const int size, const string& from) {
+bool Update::setStringA(const string& key, string* values, const int size, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyStringA(key, values, size, from);
 }
-bool Update::setInt(const string& key, int value, const string& from) {
+bool Update::setInt(const string& key, int value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyInt(key, value, from);
 }
-bool Update::setIntA(const string& key, int* values, const int size, const string& from) {
+bool Update::setIntA(const string& key, int* values, const int size, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyIntA(key, values, size, from);
 }
-bool Update::setFloat(const string& key, float value, const string& from){
+bool Update::setFloat(const string& key, float value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyFloat(key, value, from);
 }
-bool Update::setFloatA(const string& key, float* values, const int size, const string& from){
+bool Update::setFloatA(const string& key, float* values, const int size, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyFloatA(key, values, size, from);
 }
-bool Update::setSeqtype(const string& key, const string& value, const string& from){
+bool Update::setSeqtype(const string& key, const string& value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keySeqtype(key, value, from);
 }
-bool Update::setInouttype(const string& key, const string& value, const string& from){
+bool Update::setInouttype(const string& key, const string& value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyInouttype(key, value, from);
 }
-bool Update::updateProcessStatus(const string& key, ProcessState::STATUS_T value, const string& from){
+bool Update::updateProcessStatus(const string& key, ProcessState::STATUS_T value, const string& from)
+{
     executed = false;
     return this->queryBuilder->keyPStatus(key, value, from);
 }
-bool Update::setTimestamp(const string& key, const time_t& value, const string& from){
+bool Update::setTimestamp(const string& key, const time_t& value, const string& from)
+{
     executed = false;
     this->queryBuilder->keyTimestamp(key, value, from);
 }
 
-bool Update::whereString(const string& key, const string& value, const string& oper, const string& from) {
+bool Update::whereString(const string& key, const string& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereString(key, value, oper, from);
 }
-bool Update::whereInt(const string& key, const int value, const string& oper, const string& from) {
+bool Update::whereInt(const string& key, const int value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereInt(key, value, oper, from);
 }
-bool Update::whereFloat(const string& key, const float value, const string& oper, const string& from) {
+bool Update::whereFloat(const string& key, const float value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereFloat(key, value, oper, from);
 }
-bool Update::whereSeqtype(const string& key, const string& value, const string& oper, const string& from) {
+bool Update::whereSeqtype(const string& key, const string& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereSeqtype(key, value, oper, from);
 }
-bool Update::whereInouttype(const string& key, const string& value, const string& oper, const string& from) {
+bool Update::whereInouttype(const string& key, const string& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereInouttype(key, value, oper, from);
 }
-bool Update::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from) {
+bool Update::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->wherePStatus(key, value, oper, from);
 }
-bool Update::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from) {
+bool Update::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereTimestamp(key, value, oper, from);
 }
-bool Update::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from) {
+bool Update::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from)
+{
     executed = false;
     return this->queryBuilder->whereRegion(key, value, oper, from);
 }
 bool Update::whereExpression(const string& expression, const std::string& value, const string& oper) {
     executed = false;
     return this->queryBuilder->whereExpression(expression, value, oper);
+}
+
 }

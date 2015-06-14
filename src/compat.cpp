@@ -26,11 +26,11 @@
 #error "VTApi is incompatible with this platform"
 #endif
 
-
-
+using namespace std;
 
 namespace vtapi {
 namespace compat {
+
 
 ///////////////////////////////////////////////////////////////
 #if defined(VTAPI_POSIX)
@@ -58,7 +58,7 @@ ProcessInstance::~ProcessInstance()
     close();
 }
 
-bool ProcessInstance::launch(const std::string& exec, const Args& args, bool wait)
+bool ProcessInstance::launch(const string& exec, const Args& args, bool wait)
 {
     if (isValid() || exec.empty())
         return false;
@@ -187,7 +187,7 @@ ProcessInstance::~ProcessInstance()
     close();
 }
 
-bool ProcessInstance::launch(const std::string& exec, const Args& args, bool wait)
+bool ProcessInstance::launch(const string& exec, const Args& args, bool wait)
 {
     //TODO: implement
     return false;
@@ -239,8 +239,5 @@ ProcessParams& operator=(const ProcessInstance& copy)
 
 #endif
 
-
 }
 }
-
-

@@ -13,12 +13,13 @@
 
 #pragma once
 
+#include <ctime>
+#include <string>
+#include "vtapi_intervalevent.h"
 #include "vtapi_keyvalues.h"
 
 namespace vtapi {
     
-class Sequence;
-
 
 /**
  * @brief Interval is equivalent to an interval of images
@@ -35,7 +36,8 @@ class Sequence;
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Interval : public KeyValues {
+class Interval : public KeyValues
+{
 public:
     
     /**
@@ -57,26 +59,31 @@ public:
      * @return interval ID
      */
     int getId();
+    
     /** 
      * Gets process name of associated process
      * @return process string
      */
     std::string getProcessName();
+    
     /**
      * Gets sequence name of parent sequence
      * @return sequence string
      */
     std::string getSequenceName();
+    
     /**
      * Gets a start frame of the current interval
      * @return start time
      */
     int getStartTime();
+    
     /**
      * Gets an end frame of the current interval
      * @return end time
      */
     int getEndTime();
+    
     /**
      * Gets real start and end time of the current interval
      * @param t1 start time
@@ -101,6 +108,7 @@ public:
      * @return success
      */
     bool add(const std::string& sequence, const int t1, const int t2 = -1, const std::string& location = "");
+    
     /**
      * Adds new interval to the table - full insert
      * @param sequence   interval name

@@ -2,9 +2,9 @@
 #include <common/vtapi_global.h>
 #include <data/vtapi_processparams.h>
 
-namespace vtapi {
-
 using namespace std;
+
+namespace vtapi {
 
 
 ProcessParams::ProcessParams()

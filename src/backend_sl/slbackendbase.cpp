@@ -4,11 +4,6 @@
 
 #if HAVE_SQLITE
 
-using std::string;
-
-using namespace vtapi;
-
-
 #define SL_LOAD(F) \
 if ((sl.F = (SL_ ## F)lt_dlsym(hLibsqlite, #F)) == NULL) { \
     string warning = string("Function ") + #F + " not loaded.";\
@@ -16,6 +11,11 @@ if ((sl.F = (SL_ ## F)lt_dlsym(hLibsqlite, #F)) == NULL) { \
     retval = false;\
     break;\
 };
+
+using namespace std;
+
+namespace vtapi {
+
 
 SLBackendBase::SLBackendBase(const SLBackendBase &base) :
     BackendBase(base.logger)
@@ -80,3 +80,5 @@ void SLBackendBase::base_unload_libs() {
 
 
 #endif
+
+}

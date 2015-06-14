@@ -1,4 +1,5 @@
 
+#include <sstream>
 #include <common/vtapi_global.h>
 #include <common/vtapi_misc.h>
 #include <common/vtapi_serialize.h>
@@ -6,12 +7,9 @@
 
 #if HAVE_SQLITE
 
-using std::string;
-using std::stringstream;
-using std::vector;
-using std::pair;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
 SLResultSet::SLResultSet(const SLBackendBase &base) :
@@ -49,7 +47,7 @@ void SLResultSet::clear() {
 
 TKey SLResultSet::getKey(int col) {
     SLres *sl_res = (SLres *) this->res;
-    return TKey("", sl_res->res[(col*this->pos)+col], 0);
+    return TKey("", sl_res->res[(col*this->pos)+col], 0, "");
 }
 
 TKeys* SLResultSet::getKeys() {
@@ -366,3 +364,4 @@ string SLResultSet::getValue(const int col, const int arrayLimit) {
 
 #endif // HAVE_POSTGRESQL
 
+}

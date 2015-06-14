@@ -11,20 +11,13 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <iostream>
 #include <common/vtapi_global.h>
-#include <common/vtapi_tkey.h>
 #include <data/vtapi_keyvalues.h>
 
-using std::string;
-using std::stringstream;
-using std::vector;
-using std::list;
-using std::pair;
-using std::cout;
-using std::cerr;
-using std::endl;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
 //================================ KEYVALUES ===================================
@@ -578,7 +571,7 @@ bool KeyValues::printKeys()
 
     for (int i = 0; i < cols; i++) {
         if (!header.empty()) header += ',';
-        header += select->resultSet->getKey(i).key;
+        header += select->resultSet->getKey(i).m_key;
     }
     
     if (!header.empty()) {
@@ -588,4 +581,6 @@ bool KeyValues::printKeys()
     else {
         return false;
     }
+}
+
 }

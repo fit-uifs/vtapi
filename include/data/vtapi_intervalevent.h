@@ -28,7 +28,8 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class IntervalEvent {
+class IntervalEvent
+{
 public:
     typedef struct _point
     {
@@ -73,10 +74,12 @@ public:
     } box;
 
 public:
-    /**
-     * Public class members
-     */
+    IntervalEvent();
+    IntervalEvent(const IntervalEvent& orig);
+    virtual ~IntervalEvent();
     
+    void SetUserData(const void *data, size_t size);
+
     int group_id;           /**< groups associate events together */
     int class_id;           /**< event class (user-defined) */
     bool is_root;           /**< is this event a meta-event (eg. trajectory envelope) */
@@ -84,13 +87,6 @@ public:
     double score;           /**< event score (user-defined) */
     size_t user_data_size;  /**< user_data size */
     void *user_data;        /**< additional custom user-defined data */
-    
-public:
-    IntervalEvent();
-    IntervalEvent(const IntervalEvent& orig);
-    virtual ~IntervalEvent();
-    
-    void SetUserData(const void *data, size_t size);
 };
 
 } // namespace vtapi

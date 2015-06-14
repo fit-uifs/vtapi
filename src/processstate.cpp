@@ -2,9 +2,10 @@
 #include <common/vtapi_global.h>
 #include <data/vtapi_processstate.h>
 
-using std::string;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
+
 
 static const struct
 {
@@ -89,4 +90,6 @@ string ProcessState::toStatusString(STATUS_T status)
     }
 
     return status_string;
+}
+
 }

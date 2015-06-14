@@ -11,16 +11,13 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <common/vtapi_global.h>
 #include <boost/filesystem.hpp>
-#include <data/vtapi_method.h>
+#include <common/vtapi_global.h>
 #include <data/vtapi_process.h>
 
-using std::string;
-using std::map;
-using std::pair;
+using namespace std;
 
-using namespace vtapi;
+namespace vtapi {
 
 
 Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig)
@@ -363,4 +360,4 @@ bool Process::clearOutputData()
     return q.execute();
 }
 
-
+}
