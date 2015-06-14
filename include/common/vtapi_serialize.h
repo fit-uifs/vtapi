@@ -18,13 +18,11 @@
 #include <sstream>
 #include <vector>
 #include "vtapi_config.h"
+#include "vtapi_misc.h"
 #include "../data/vtapi_intervalevent.h"
 #include "../data/vtapi_processstate.h"
 
 namespace vtapi {
-
-std::string base64_encode(const void *data, size_t data_size);
-std::vector<unsigned char> base64_decode(const std::string& encoded);
     
 /**
  * @brief A generic function to convert any numeric type to string

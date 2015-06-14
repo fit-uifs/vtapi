@@ -37,3 +37,13 @@
  */
 
 #pragma once
+
+#include <string>
+#include <vector>
+
+namespace vtapi {
+
+std::string base64_encode(const void *data, size_t data_size);
+std::vector<unsigned char> base64_decode(const std::string& encoded);
+
+}
