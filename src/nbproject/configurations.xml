@@ -20,6 +20,7 @@
       </logicalFolder>
       <logicalFolder name="f5" displayName="common" projectFiles="true">
         <itemPath>../include/common/vtapi_autoconfig.h</itemPath>
+        <itemPath>../include/common/vtapi_baseparams.h</itemPath>
         <itemPath>../include/common/vtapi_compat.h</itemPath>
         <itemPath>../include/common/vtapi_config.h</itemPath>
         <itemPath>../include/common/vtapi_global.h</itemPath>
@@ -38,6 +39,7 @@
         <itemPath>../include/data/vtapi_intervalevent.h</itemPath>
         <itemPath>../include/data/vtapi_keyvalues.h</itemPath>
         <itemPath>../include/data/vtapi_method.h</itemPath>
+        <itemPath>../include/data/vtapi_methodparams.h</itemPath>
         <itemPath>../include/data/vtapi_process.h</itemPath>
         <itemPath>../include/data/vtapi_processcontrol.h</itemPath>
         <itemPath>../include/data/vtapi_processparams.h</itemPath>
@@ -213,6 +215,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../include/common/vtapi_baseparams.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/common/vtapi_compat.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
@@ -253,6 +260,11 @@
       <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_methodparams.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -409,6 +421,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../include/common/vtapi_baseparams.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/common/vtapi_compat.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
@@ -449,6 +466,11 @@
       <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_methodparams.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
@@ -638,6 +660,11 @@
             tool="3"
             flavor2="0">
       </item>
+      <item path="../include/common/vtapi_baseparams.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
       <item path="../include/common/vtapi_compat.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_config.h" ex="false" tool="3" flavor2="0">
@@ -678,6 +705,11 @@
       <item path="../include/data/vtapi_keyvalues.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/data/vtapi_method.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="../include/data/vtapi_methodparams.h"
+            ex="false"
+            tool="3"
+            flavor2="0">
       </item>
       <item path="../include/data/vtapi_process.h" ex="false" tool="3" flavor2="0">
       </item>
