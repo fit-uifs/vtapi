@@ -1,22 +1,52 @@
 
 #include <common/vtapi_global.h>
+#include <common/vtapi_serialize.h>
 #include <data/vtapi_processparams.h>
 
 using namespace std;
 
 namespace vtapi {
 
+template <typename T>
+class ProcessParam : public BaseParam
+{
+public:
+
+    explicit ProcessParam(const T& value)
+        : BaseParam(toParamType(value)), m_value(value) { }
+
+    explicit ProcessParam(T&& value)
+        : BaseParam(toParamType(value)), m_value(std::move(value)) { }
+
+    virtual ~ProcessParam() { }
+
+    const T& value() const
+    {
+        return m_value;
+    }
+
+    std::string toString() const
+    {
+        return vtapi::toString<T>(m_value);
+    }
+
+private:
+    T m_value;
+} ;
+
 
 ProcessParams::ProcessParams()
+: BaseParams()
 { }
 
 ProcessParams::ProcessParams(ProcessParams && other)
+: BaseParams(), m_inputProcessName(std::move(other.m_inputProcessName))
 {
-    m_inputProcessName = move(other.m_inputProcessName);
-    m_data = move(other.m_data);
+    m_data = std::move(other.m_data);
 }
 
 ProcessParams::ProcessParams(const string& serialized)
+: BaseParams()
 {
     deserialize(serialized);
 }
@@ -29,8 +59,8 @@ ProcessParams::~ProcessParams()
 ProcessParams& ProcessParams::operator=(ProcessParams&& other)
 {
     clear();
-    m_inputProcessName = move(other.m_inputProcessName);
-    m_data = move(other.m_data);
+    m_inputProcessName = std::move(other.m_inputProcessName);
+    m_data = std::move(other.m_data);
     return *this;
 }
 
@@ -55,14 +85,101 @@ void ProcessParams::setInputProcessName(const string& value)
     m_inputProcessName = value;
 }
 
-bool ProcessParams::empty() const
+template <typename T>
+bool ProcessParams::get(const std::string& key, T& value) const
 {
-    return m_data.empty();
+    const auto it = m_data.find(key);
+    if (it != m_data.end()) {
+        auto param = dynamic_cast< ProcessParam<T>* > (it->second);
+        if (param) {
+            value = param->value();
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ProcessParams::getString(const std::string& key, std::string& value) const
+{
+    return get<std::string>(key, value);
+}
+
+bool ProcessParams::getInt(const std::string& key, int& value) const
+{
+    return get<int>(key, value);
+}
+
+bool ProcessParams::getDouble(const std::string& key, double& value) const
+{
+    return get<double>(key, value);
+}
+
+bool ProcessParams::getIntVector(const std::string& key, std::vector<int>& value) const
+{
+    return get< std::vector<int> >(key, value);
+}
+
+bool ProcessParams::getDoubleVector(const std::string& key, std::vector<double>& value) const
+{
+    return get< std::vector<double> >(key, value);
+}
+
+void ProcessParams::addString(const std::string& key, const std::string& value)
+{
+    add<std::string>(key, value);
+}
+
+void ProcessParams::addString(const std::string& key, std::string&& value)
+{
+    add<std::string>(key, std::move(value));
+}
+
+template <typename T>
+void ProcessParams::add(const std::string& key, const T& value)
+{
+    const auto it = m_data.find(key);
+    if (it != m_data.end()) {
+        delete it->second;
+        it->second = new ProcessParam<T>(value);
+    }
+    else {
+        m_data[key] = new ProcessParam<T>(value);
+    }
+}
+
+void ProcessParams::addInt(const std::string& key, int value)
+{
+    add<int>(key, value);
+}
+
+void ProcessParams::addDouble(const std::string& key, double value)
+{
+    add<double>(key, value);
+}
+
+void ProcessParams::addIntVector(const std::string& key, const std::vector<int>& value)
+{
+    add< std::vector<int> >(key, value);
+}
+
+void ProcessParams::addIntVector(const std::string& key, std::vector<int>&& value)
+{
+    add< std::vector<int> >(key, std::move(value));
+}
+
+void ProcessParams::addDoubleVector(const std::string& key, const std::vector<double>& value)
+{
+    add< std::vector<double> >(key, value);
+}
+
+void ProcessParams::addDoubleVector(const std::string& key, std::vector<double>&& value)
+{
+    add< std::vector<double> >(key, std::move(value));
 }
 
 void ProcessParams::clear()
 {
-    for (auto& kv : m_data) delete kv.second;
+    for (auto &item : m_data) delete item.second;
     m_data.clear();
     m_inputProcessName.clear();
 }
@@ -138,19 +255,22 @@ void ProcessParams::deserialize(const string& serialized)
             size_t nextKeyPos = valEndPos + 2;
 
             deserializeParam(
-            serialized.substr(keyPos, keyLen),
-            serialized.substr(typePos, typeLen),
-            serialized.substr(valPos, valLen));
+                serialized.substr(keyPos, keyLen),
+                serialized.substr(typePos, typeLen),
+                serialized.substr(valPos, valLen));
 
             keyPos = nextKeyPos;
         } while (keyPos < maxPos);
     }
 }
 
-void ProcessParams::deserializeParam(std::string key, std::string type, std::string val)
+void ProcessParams::deserializeParam(
+    const string& key,
+    const string& type,
+    const string& val)
 {
     try {
-        switch ((ProcessParamType) std::stoi(type))
+        switch ((ParamType) std::stoi(type))
         {
         case PARAMTYPE_NONE:
             break;
@@ -187,5 +307,12 @@ void ProcessParams::deserializeParam(std::string key, std::string type, std::str
         std::cerr << "INVALID PARAM : key:" << key << ";type:" << type << ";val:" << val << std::endl;
     }
 }
+
+bool ProcessParams::validate(const MethodParams& definitions)
+{
+    return true;
+}
+
+
 
 }
