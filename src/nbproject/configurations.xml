@@ -27,7 +27,6 @@
         <itemPath>../include/common/vtapi_misc.h</itemPath>
         <itemPath>../include/common/vtapi_serialize.h</itemPath>
         <itemPath>../include/common/vtapi_settings.h</itemPath>
-        <itemPath>../include/common/vtapi_timexer.h</itemPath>
         <itemPath>../include/common/vtapi_tkey.h</itemPath>
         <itemPath>../include/common/vtapi_tkeyvalue.h</itemPath>
         <itemPath>../include/common/vtapi_types.h</itemPath>
@@ -90,8 +89,6 @@
       <itemPath>processstate.cpp</itemPath>
       <itemPath>query.cpp</itemPath>
       <itemPath>sequence.cpp</itemPath>
-      <itemPath>timexer.cpp</itemPath>
-      <itemPath>tkey.cpp</itemPath>
       <itemPath>vtapi.cpp</itemPath>
       <itemPath>vtapi_misc.cpp</itemPath>
       <itemPath>vtapi_settings.cpp</itemPath>
@@ -233,8 +230,6 @@
       </item>
       <item path="../include/common/vtapi_settings.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../include/common/vtapi_timexer.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../include/common/vtapi_tkey.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_tkeyvalue.h"
@@ -343,10 +338,6 @@
       <item path="query.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="sequence.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="timexer.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="tkey.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="vtapi.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -435,8 +426,6 @@
       </item>
       <item path="../include/common/vtapi_settings.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../include/common/vtapi_timexer.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../include/common/vtapi_tkey.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_tkeyvalue.h"
@@ -545,10 +534,6 @@
       <item path="query.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="sequence.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="timexer.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="tkey.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="vtapi.cpp" ex="false" tool="1" flavor2="0">
       </item>
@@ -670,8 +655,6 @@
       </item>
       <item path="../include/common/vtapi_settings.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="../include/common/vtapi_timexer.h" ex="false" tool="3" flavor2="0">
-      </item>
       <item path="../include/common/vtapi_tkey.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="../include/common/vtapi_tkeyvalue.h"
@@ -780,10 +763,6 @@
       <item path="query.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="sequence.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="timexer.cpp" ex="false" tool="1" flavor2="0">
-      </item>
-      <item path="tkey.cpp" ex="false" tool="1" flavor2="0">
       </item>
       <item path="vtapi.cpp" ex="false" tool="1" flavor2="0">
       </item>

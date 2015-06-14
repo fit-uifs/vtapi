@@ -5,9 +5,6 @@
 
 #if HAVE_POSTGRESQL
 
-// postgres data transfer format: 0=text, 1=binary
-#define PG_FORMAT           1
-
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"
 #define DEF_NO_TABLE    "!NO_TABLE!"
 #define DEF_NO_COLUMN   "!NO_COLUMN!"

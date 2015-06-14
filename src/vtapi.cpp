@@ -13,7 +13,6 @@
 
 #include <common/vtapi_global.h>
 #include <common/vtapi_settings.h>
-#include <common/vtapi_timexer.h>
 #include <vtapi.h>
 
 using namespace std;
@@ -315,13 +314,15 @@ void VTApi::testInterval(Sequence *sequence) {
     cout << "Testing count(): " << interval->count() << endl;
 
     
-    cout << "** PRINTING interval TKeys" << endl;
-    TKeys* keys = interval->getKeys();
-    if (keys->empty()) cout << "(no keys)" << endl;
-    else for (int i = 0; i < keys->size(); ++i) (*keys)[i].print();
+//    cout << "** PRINTING interval TKeys" << endl;
+//    TKeys* keys = interval->getKeys();
+//    if (keys->empty())
+//        cout << "(no keys)" << endl;
+//    else for (int i = 0; i < keys->size(); ++i)
+//        (*keys)[i].print();
 
     cout << "** CLEANUP" << endl;
-    vt_destruct(keys);
+    //vt_destruct(keys);
     vt_destruct(interval);
     
     cout << endl << "DONE testing interval.";

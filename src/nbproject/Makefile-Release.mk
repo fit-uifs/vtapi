@@ -58,8 +58,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/processstate.o \
 	${OBJECTDIR}/query.o \
 	${OBJECTDIR}/sequence.o \
-	${OBJECTDIR}/timexer.o \
-	${OBJECTDIR}/tkey.o \
 	${OBJECTDIR}/vtapi.o \
 	${OBJECTDIR}/vtapi_misc.o \
 	${OBJECTDIR}/vtapi_settings.o
@@ -203,16 +201,6 @@ ${OBJECTDIR}/sequence.o: sequence.cpp
 	${MKDIR} -p ${OBJECTDIR}
 	${RM} "$@.d"
 	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/sequence.o sequence.cpp
-
-${OBJECTDIR}/timexer.o: timexer.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/timexer.o timexer.cpp
-
-${OBJECTDIR}/tkey.o: tkey.cpp 
-	${MKDIR} -p ${OBJECTDIR}
-	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/tkey.o tkey.cpp
 
 ${OBJECTDIR}/vtapi.o: vtapi.cpp 
 	${MKDIR} -p ${OBJECTDIR}

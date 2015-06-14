@@ -72,12 +72,6 @@ public:
     virtual ~TKey() {}
 
     /**
-     * Prints data
-     * @return string of TKey data
-     */
-    virtual std::string print();
-
-    /**
      * Gets string representation of the first value
      * @return representation of value(s)
      */
