@@ -16,6 +16,15 @@
 #include "vtapi_config.h"
 
 
+#define PG_FORMAT 1   // postgres data transfer format: 0=text, 1=binary
+
+// sqlite database files
+#define SL_DB_PREFIX "vtapi_"
+#define SL_DB_SUFFIX ".db"
+#define SL_DB_PUBLIC "public"
+
+
+
 // DESTRUCTORS (..be nice while destructing)
 /**
  * @brief VTApi object dealocator
