@@ -146,8 +146,7 @@ bool SLConnection::attachDatabase(string& dbfile) {
     }
 }
 
-
+}
 
 #endif
 
-}

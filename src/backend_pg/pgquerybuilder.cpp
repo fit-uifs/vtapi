@@ -758,6 +758,8 @@ string PGQueryBuilder::UnixTimeToTimestampString(const time_t& utime)
     
     return buffer;
 }
-#endif
 
 }
+
+#endif
+

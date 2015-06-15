@@ -154,6 +154,7 @@ bool PGConnection::loadDBTypes()
             {"public.seqtype", enum_put, enum_get},
             {"public.inouttype", enum_put, enum_get},
             {"public.pstatus", enum_put, enum_get}
+            //{"public.paramtype", enum_put, enum_get}
         };
         retval = pqt.PQregisterTypes(conn, PQT_USERDEFINED, types_userdef, sizeof (types_userdef) / sizeof (PGregisterType), 0);
         if (!retval) {

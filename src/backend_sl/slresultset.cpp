@@ -362,6 +362,7 @@ string SLResultSet::getValue(const int col, const int arrayLimit) {
 }
 
 
+}
+
 #endif // HAVE_POSTGRESQL
 
-}

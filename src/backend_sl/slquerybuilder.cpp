@@ -496,6 +496,8 @@ string SLQueryBuilder::escapeLiteral(const string& ident) {
     return "\'" + escaped + "\'";
 }
 
+}
+
+
 #endif
 
-}

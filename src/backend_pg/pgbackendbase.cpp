@@ -151,6 +151,7 @@ void PGBackendBase::base_unload_libs()
     memset(&pqt, 0, sizeof (pqt));
 }
 
-#endif
-
 }
+
+
+#endif
