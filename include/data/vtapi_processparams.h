@@ -88,6 +88,9 @@ private:
     template <class T>
     void add(const std::string& key, const T& value);
     
+    template <class T>
+    void add(const std::string& key, T&& value);
+    
     // internal stuff
 
     void deserializeParam(
