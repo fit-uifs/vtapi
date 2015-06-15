@@ -36,6 +36,10 @@ static ParamType toParamType(const T& val)
 { val; return PARAMTYPE_NONE; }
 
 template<>
+ParamType toParamType<std::string>(const std::string &val)
+{ val; return vtapi::PARAMTYPE_STRING; }
+
+template<>
 ParamType toParamType<int>(const int &val)
 { val; return vtapi::PARAMTYPE_INT; }
 

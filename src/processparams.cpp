@@ -124,16 +124,6 @@ bool ProcessParams::getDoubleVector(const std::string& key, std::vector<double>&
     return get< std::vector<double> >(key, value);
 }
 
-void ProcessParams::addString(const std::string& key, const std::string& value)
-{
-    add<std::string>(key, value);
-}
-
-void ProcessParams::addString(const std::string& key, std::string&& value)
-{
-    add<std::string>(key, std::move(value));
-}
-
 template <typename T>
 void ProcessParams::add(const std::string& key, const T& value)
 {
@@ -145,6 +135,29 @@ void ProcessParams::add(const std::string& key, const T& value)
     else {
         m_data[key] = new ProcessParam<T>(value);
     }
+}
+
+template <typename T>
+void ProcessParams::add(const std::string& key, T&& value)
+{
+    const auto it = m_data.find(key);
+    if (it != m_data.end()) {
+        delete it->second;
+        it->second = new ProcessParam<T>(std::move(value));
+    }
+    else {
+        m_data[key] = new ProcessParam<T>(std::move(value));
+    }
+}
+
+void ProcessParams::addString(const std::string& key, const std::string& value)
+{
+    add<std::string>(key, value);
+}
+
+void ProcessParams::addString(const std::string& key, std::string&& value)
+{
+    add<std::string>(key, std::move(value));
 }
 
 void ProcessParams::addInt(const std::string& key, int value)
