@@ -71,7 +71,7 @@ bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
         // run newly added process and set Process object to represent it
         if (this->insert) {
             if (!addExecute()) break;
-            if (select->resultSet->isOk())
+            if (select->resultSet->getPosition() >= 0)
                 select->resultSet->setPosition(-1);
             if (!next()) break;
         }
@@ -320,7 +320,7 @@ bool Process::updateStateError(const string& lastError, ProcessControl *control)
 
 ProcessControl *Process::getProcessControl()
 {
-    if (this->select->resultSet->isOk()) {
+    if (this->select->resultSet->getPosition() >= 0) {
         return new ProcessControl(this->getName(), m_instance);
     }
     else {
