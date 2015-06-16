@@ -367,6 +367,8 @@ then
       LIBPQTYPES_LIBS="-L${LIBPQTYPES_LIBDIR}"
       CPPFLAGS="${LIBPQTYPES_CPPFLAGS} ${CPPFLAGS}"
       LIBS="${LIBPQTYPES_LIBS} ${LIBS}"
+    else
+      LIBPQTYPES_LIBDIR="${PGSQL_LIBDIR}"
     fi
     AC_CHECK_HEADER(libpqtypes.h, [], [pgsql_present="no"])
     AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [pgsql_present="no"])
