@@ -560,7 +560,7 @@ bool KeyValues::print()
 bool KeyValues::printAll()
 {
     bool ret = printKeys();
-    if (ret) {
+    if (ret && select->resultSet->isOk()) {
         do {
             ret = print();
             if (!ret) break;
