@@ -160,10 +160,12 @@ Process *Process::getInputProcess()
 Interval *Process::getInputData()
 {
     string inputs = this->getInputProcessName();
+
     if (!inputs.empty()) {
         Process p(*this, inputs);
         p.next();
-        return new Interval(*this, p.getOutputTable());
+
+        return new Interval(p, p.getOutputTable());
     }
     else {
         return NULL;
