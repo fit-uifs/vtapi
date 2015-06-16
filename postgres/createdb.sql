@@ -41,7 +41,9 @@ DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
 DROP TYPE IF EXISTS public.pstate CASCADE;
 
-DROP FUNCTION IF EXISTS public.tsrange(timestamp without time zone, real) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_dataset_create(VARCHAR, VARCHAR, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, REAL) CASCADE;
 DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
 
 
@@ -215,9 +217,9 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
 
 -- DATASET: drop (delete)
 -- Function behavior:
---   * Successful creation of a dataset => returns TRUE
---   * Whole dataset structures already exist => returns FALSE
---   * There already exist some parts of dataset and some parts not exist => INTERRUPTED with INCONSISTENCY EXCEPTION
+--   * Successful removal of a dataset => returns TRUE
+--   * Whole dataset structures are no longer available => returns FALSE
+--   * There already exist some parts of dataset and some parts not exist => raises notice of INCONSISTENCY and continue
 --   * Some error in CREATE statement OR INSERT statement => INTERRUPTED with statement ERROR/EXCEPTION
 CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR) 
   RETURNS BOOLEAN AS 
@@ -236,7 +238,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
       INTO _schemacount;
 
     IF _dsnamecount <> _schemacount THEN
-      RAISE EXCEPTION 'Inconsistency was detected in datasets.';
+      RAISE NOTICE 'Inconsistency was detected in datasets.';
     ELSIF _dsnamecount = 0 THEN
       RETURN FALSE;
     END IF;
@@ -244,6 +246,8 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
     EXECUTE 'DELETE FROM public.datasets WHERE dsname = ' || quote_literal(_dsname);
     EXECUTE 'DROP SCHEMA ' || quote_ident(_dsname) || ' CASCADE';
     RETURN TRUE;
+  EXCEPTION WHEN OTHERS THEN
+    RAISE EXCEPTION 'Some problem occured during the removal of the desired dataset. (Details: ERROR %: %)', SQLSTATE, SQLERRM;
   END
   $VT_dataset_drop$
   LANGUAGE plpgsql STRICT;
@@ -253,8 +257,8 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
 -------------------------------------
 -- Functions to work with real time
 -------------------------------------
-CREATE OR REPLACE FUNCTION tsrange(_rt_start timestamp without time zone, _sec_length real)
-  RETURNS tsrange AS
+CREATE OR REPLACE FUNCTION tsrange(_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length REAL)
+  RETURNS TSRANGE AS
   $tsrange$
     SELECT CASE _rt_start
       WHEN NULL THEN NULL
