@@ -115,7 +115,7 @@ bool ProcessInstance::isRunning()
     if (isValid()) {
         if (m_bChild) {
             int status = 0;
-            return (waitpid(m_handle.pid, &status, WNOHANG) != m_handle.pid);
+            return (waitpid(m_handle.pid, &status, WNOHANG) == 0);
         }
         else {
             return (kill(m_handle.pid, 0) == 0);

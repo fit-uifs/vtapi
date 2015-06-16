@@ -183,6 +183,7 @@ bool ProcessControl::Server::create(fServerCallback callback, void* context)
 
         string qname = m_baseName + DEF_COMMAND_POSTFIX;
         try {
+            //message_queue::remove(qname.c_str());
             m_pCommandQueue = new message_queue(
                 create_only,
                 qname.c_str(),
@@ -429,6 +430,7 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
         for (m_slot = 0; m_slot < DEF_MAX_CLIENTS; m_slot++) {
             string qname2 = m_baseName + DEF_NOTIFY_POSTFIX + toString(m_slot);
             try {
+                message_queue::remove(qname2.c_str());
                 m_pNotifyQueue = new message_queue(
                     create_only,
                     qname2.c_str(),
@@ -531,8 +533,11 @@ void ProcessControl::Client::threadMain(ThreadArgs &args)
             
             // check queue and if server is still running
             if (!m_pNotifyQueue->timed_receive(buffer, sizeof(buffer), recv_size, priority, next_check)) {
-                if (m_serverInstance.isValid() && !m_serverInstance.isRunning())
+                if (m_serverInstance.isValid() && !m_serverInstance.isRunning()) {
+                    ProcessState state(ProcessState::STATUS_ERROR, 0, "Server exited unexpectedly");
+                    if (m_callback) m_callback(state, m_pCallbackContext);
                     break;
+                }
                 next_check = second_clock::universal_time() + seconds(DEF_SERVER_ALIVE_CHECK_PERIOD_S);
             }
             else {
