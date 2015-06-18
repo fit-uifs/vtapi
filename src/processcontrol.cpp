@@ -229,7 +229,10 @@ void ProcessControl::Server::close()
     }
     
     for (int slot = 0; slot < m_vctNotifyQueues.size(); slot++) {
-        if (m_vctNotifyQueues[slot]) {
+        auto queue = m_vctNotifyQueues[slot];
+        if (queue) {
+            vt_destruct(queue);
+
             string qname = m_baseName + DEF_NOTIFY_POSTFIX + toString(slot);
             message_queue::remove(qname.c_str());
         }
