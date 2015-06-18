@@ -61,7 +61,7 @@ bool PGBackendBase::base_load_libs() {
         lt_dladvise_global(&ldadvise);
 
         // load libpq
-        hLibpq = lt_dlopenadvise(PG_LIB_PATH "/libpq", ldadvise);
+        hLibpq = lt_dlopenadvise(VTAPI_PG_LIB_PATH "/libpq", ldadvise);
         if (!hLibpq) {
             logger->warning(556, "libpq library not found.", thisClass + "::base_load_libs()");
             retval = false;

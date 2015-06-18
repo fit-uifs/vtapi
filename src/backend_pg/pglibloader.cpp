@@ -109,7 +109,7 @@ bool PGLibLoader::load_libpq (fmap_t *fmap) {
     lt_dladvise_init (&libpq_advise);
     lt_dladvise_ext(&libpq_advise);
     lt_dladvise_global(&libpq_advise);
-    h_libpq = lt_dlopenadvise(PG_LIB_PATH "/libpq", libpq_advise);
+    h_libpq = lt_dlopenadvise(VTAPI_PG_LIB_PATH "/libpq", libpq_advise);
     lt_dladvise_destroy(&libpq_advise);
 
     if (h_libpq) {
