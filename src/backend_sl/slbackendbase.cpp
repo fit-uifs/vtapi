@@ -2,7 +2,7 @@
 #include <common/vtapi_global.h>
 #include <backends/vtapi_backendbase.h>
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 
 #define SL_LOAD(F) \
 if ((sl.F = (SL_ ## F)lt_dlsym(hLibsqlite, #F)) == NULL) { \

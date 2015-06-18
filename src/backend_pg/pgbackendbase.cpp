@@ -3,7 +3,7 @@
 #include <backends/vtapi_backendbase.h>
 
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 #define PG_LOAD(F) \
 if ((pg.F = (PQ_ ## F)lt_dlsym(hLibpq, #F)) == NULL) { \

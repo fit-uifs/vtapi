@@ -151,7 +151,7 @@ bool Video::add(const string& name, const string& location, const time_t& realti
     bool bRet = true;
 
     do {
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
         string fullpath = baseLocation + datasetLocation + location;
         
         if (!fileExists(fullpath)) {
@@ -182,7 +182,7 @@ bool Video::add(const string& name, const string& location, const time_t& realti
     
 #endif
         bRet = Sequence::add(name, location, "video");
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
         bRet &= addInt("vid_length", cnt_frames);
         bRet &= addFloat("vid_fps", fps);
         if (realtime > 0) bRet &= addTimestamp("vid_time", realtime);
@@ -194,14 +194,14 @@ bool Video::add(const string& name, const string& location, const time_t& realti
 
 bool Video::next()
 {
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     closeVideo();
 #endif
     
     return Sequence::next();
 }
 
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 
 bool Video::openVideo()
 {

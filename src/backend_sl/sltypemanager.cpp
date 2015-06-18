@@ -5,7 +5,7 @@
 #include <backends/vtapi_typemanager.h>
 
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 
 using std::string;
 using std::stringstream;

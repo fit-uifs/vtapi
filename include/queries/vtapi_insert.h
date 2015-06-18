@@ -153,7 +153,7 @@ public:
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
     
     
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     /**
      * This is a persistent function to add cv::Mat value to a key
      * @param key      key holding value to be inserted

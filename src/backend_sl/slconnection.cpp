@@ -2,7 +2,7 @@
 #include <common/vtapi_global.h>
 #include <backends/vtapi_connection.h>
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 
 using namespace std;
 

@@ -30,24 +30,24 @@
 #include <ltdl.h>
 
 // libpqtypes + pq
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
     #include <libpqtypes.h>
 #endif
 
 // sqlite
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
     #include <sqlite3.h>
 #endif
 
 // OpenCV header files
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
  #include <opencv2/opencv.hpp>
 #endif 
 
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
 
 // GEOS 3.3.3 (http://trac.osgeo.org/geos/) - C wrapper
-#if HAVE_GEOS
+#if VTAPI_HAVE_GEOS
 #ifdef	__cplusplus
 extern "C" {
 #endif
@@ -55,7 +55,7 @@ extern "C" {
 #ifdef	__cplusplus
 }
 #endif
-#endif // HAVE_GEOS
+#endif // VTAPI_HAVE_GEOS
 
 // postGIS 2.0
 #ifdef	__cplusplus
@@ -67,4 +67,4 @@ extern "C" {
 }
 #endif // __cplusplus
 
-#endif // HAVE_POSTGIS
+#endif // VTAPI_HAVE_POSTGIS

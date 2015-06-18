@@ -3,7 +3,7 @@
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_resultset.h>
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 #define PGRES ((PGresult *)this->res)
 
@@ -612,7 +612,7 @@ vector<double>* PGResultSet::getFloat8V(const int col)
     return values;
 }
 
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 
 cv::Mat *PGResultSet::getCvMat(const int col)
 {
@@ -666,7 +666,7 @@ cv::Mat *PGResultSet::getCvMat(const int col)
 #endif
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 PGpoint PGResultSet::getPoint(const int col)
 {
     return getSingleValue<PGpoint, PGpoint>(col, "%point");
@@ -683,7 +683,7 @@ vector<PGpoint>*  PGResultSet::getPointV(const int col)
 }
 #endif
 
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
 GEOSGeometry* PGResultSet::getGeometry(const int col) {
     GEOSGeometry *geo = NULL;
     if (! pqt.PQgetf(PGRES, this->pos, "%geometry", col, &geo)) {
@@ -898,7 +898,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
         }
         case DBTYPE_GEO_POINT:
         {
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
             GET_AND_SERIALIZE_VALUE_AND_ARRAY(PGpoint, getPoint);
 #endif
             break;
@@ -929,7 +929,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
         }
         case DBTYPE_GEO_GEOMETRY:
         {
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
             //TODO: handle PostGIS geometry
 #endif
             break;
@@ -951,7 +951,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
         }
         case DBTYPE_UD_CVMAT:
         {
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
             GET_AND_SERIALIZE_VALUE_ALLOC(cv::Mat, getCvMat);
 #endif
             break;
@@ -982,7 +982,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
     
     return ret;
     
-//#if HAVE_POSTGIS
+//#if VTAPI_HAVE_POSTGIS
 //                    // PostGIS generic geometry type
 //                    if (!keytype.compare("geometry")) {
 //                        GEOSGeometry *geo;
@@ -1011,5 +1011,5 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
 }
 
 
-#endif // HAVE_POSTGRESQL
+#endif // VTAPI_HAVE_POSTGRESQL
 

@@ -6,7 +6,7 @@ namespace vtapi
 {
 
 // ========================================= LIBPQTYPES ====================================================
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 typedef char *(*PQT_PQgeterror)(void);
 typedef void (*PQT_PQseterror)(const char *, ...);
@@ -123,7 +123,7 @@ typedef struct _POSTGRES_INTERFACE
 #endif
 
 // ================================================= SQLITE ==========================================================
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 
 typedef int (*SL_sqlite3_open_v2)(const char *, sqlite3 **, int, const char *);
 typedef int (*SL_sqlite3_close)(sqlite3 *);

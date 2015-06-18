@@ -290,7 +290,7 @@ bool Insert::keyTimestamp(const string& key, const time_t& value, const string& 
     executed = false;
     return this->queryBuilder->keyTimestamp(key, value, from);
 }
-#ifdef HAVE_OPENCV
+#ifdef VTAPI_HAVE_OPENCV
 bool Insert::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from)
 {
     executed = false;

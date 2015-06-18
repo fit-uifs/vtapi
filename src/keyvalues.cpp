@@ -285,7 +285,7 @@ vector<double>* KeyValues::getFloat8V(const int col)
 }
 
 // =============== GETTERS - OpenCV MATRICES ===============================
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 
 cv::Mat *KeyValues::getCvMat(const string& key)
 {
@@ -308,7 +308,7 @@ time_t KeyValues::getTimestamp(const int col)
 }
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 PGpoint KeyValues::getPoint(const string& key)
 {
     return select->resultSet->getPoint(key);
@@ -337,7 +337,7 @@ vector<PGpoint>*  KeyValues::getPointV(const int col)
 #endif
 
 
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
 GEOSGeometry *KeyValues::getGeometry(const string& key)
 {
     return select->resultSet->getGeometry(key);
@@ -486,7 +486,7 @@ bool KeyValues::addTimestamp(const std::string& key, const time_t& value)
 {
     return this->insert ? this->insert->keyTimestamp(key, value) : false;
 }
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 bool KeyValues::addCvMat(const std::string& key, cv::Mat& value)
 {
     return this->insert ? this->insert->keyCvMat(key, value) : false;

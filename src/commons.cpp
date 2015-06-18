@@ -98,7 +98,7 @@ Commons::Commons(const gengetopt_args_info& args_info) {
     
     doom            = true;             // destruct it with fire
 
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
     initGEOS(geos_notice, geos_notice); // initialize GEOS stuff
 #endif
 }
@@ -109,7 +109,7 @@ Commons::~Commons() {
         vt_destruct(backendBase);
         vt_destruct(logger);
         
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
         finishGEOS();
 #endif
     }

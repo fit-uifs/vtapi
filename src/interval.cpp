@@ -181,7 +181,7 @@ int Image::getTime()
     return this->getStartTime();
 }
 
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 
 cv::Mat Image::getData()
 {

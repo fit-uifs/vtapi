@@ -4,7 +4,7 @@
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_libloader.h>
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 // postgres data transfer format: 0=text, 1=binary
 #define PG_FORMAT           1

@@ -36,12 +36,12 @@ BackendBase* BackendFactory::createBackendBase(BackendFactory::BACKEND_T backend
     BackendBase *base = NULL;
     switch (backend) {
         case BACKEND_POSTGRES:
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
             base = new PGBackendBase(logger);
 #endif
             break;
         case BACKEND_SQLITE:
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
             base = new SLBackendBase(logger);
 #endif
             break;
@@ -56,12 +56,12 @@ Connection* BackendFactory::createConnection(BackendFactory::BACKEND_T backend, 
     switch (backend)
     {
         case BACKEND_POSTGRES:
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
             connection = new PGConnection((PGBackendBase &)base, connectionInfo);
 #endif
             break;
         case BACKEND_SQLITE:
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
             connection = new SLConnection((SLBackendBase &) base, connectionInfo);
 #endif
             break;
@@ -75,12 +75,12 @@ QueryBuilder* BackendFactory::createQueryBuilder(BackendFactory::BACKEND_T backe
     QueryBuilder *queryBuilder = NULL;
     switch (backend) {
         case BACKEND_POSTGRES:
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
             queryBuilder = new PGQueryBuilder((PGBackendBase &) base, connection, initString);
 #endif
           break;
         case BACKEND_SQLITE:
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
             queryBuilder = new SLQueryBuilder((SLBackendBase &) base, connection, initString);
 #endif
             break;
@@ -94,12 +94,12 @@ ResultSet* BackendFactory::createResultSet(BACKEND_T backend, const BackendBase 
     ResultSet *resultSet = NULL;
     switch (backend) {
         case BACKEND_POSTGRES:
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
             resultSet = new PGResultSet((PGBackendBase &) base, dbtypes);
 #endif
          break;
         case BACKEND_SQLITE:
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
             resultSet = new SLResultSet((SLBackendBase &) base);
 #endif
             break;

@@ -2,7 +2,7 @@
 #include <common/vtapi_global.h>
 #include <backends/vtapi_querybuilder.h>
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"
 #define DEF_NO_TABLE    "!NO_TABLE!"
@@ -369,7 +369,7 @@ bool SLQueryBuilder::keyTimestamp(const string& key, const time_t& value, const 
     }
 }
 
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 bool SLQueryBuilder::keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) {
     if (key.empty()) return false;
     else {
