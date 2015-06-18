@@ -689,6 +689,14 @@ AC_OUTPUT
 
 
 ###############################################################################
+#####   SMALL HACK on HAVE_XXX and XXX_LIB_PATH macros                    #####
+###############################################################################
+sed -i 's/ \(HAVE_\(OPENCV\|SQLITE\|POSTGRESQL\|GEOS\|POSTGIS\|XMLXX\|DOXYGEN\)\)/ VTAPI_\1/g' ./include/common/vtapi_autoconfig.h
+sed -i 's/ \(\(PG\|PQTYPES\|SQLITE\)_LIB_PATH \)/ VTAPI_\1/g' ./include/common/vtapi_autoconfig.h
+
+
+
+###############################################################################
 #####   VTAPI CONFIGURE SUMMARY                                           #####
 ###############################################################################
 
