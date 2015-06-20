@@ -43,6 +43,9 @@ DROP TYPE IF EXISTS public.pstate CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_dataset_create(VARCHAR, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_dataset_truncate(VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
+
 DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, REAL) CASCADE;
 DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
 
@@ -109,7 +112,7 @@ CREATE TABLE datasets (
     dslocation character varying NOT NULL,
     userid name,
     created timestamp without time zone DEFAULT now(),
-    notes text,
+    notes text DEFAULT NULL,
     CONSTRAINT dataset_pk PRIMARY KEY (dsname)
 );                    
 
@@ -143,28 +146,213 @@ CREATE TABLE methods_keys (
 -------------------------------------
 
 -- DATASET: create
--- Function behavior (proposed, partially implemented):
---   * Successful creation of a dataset => returns TRUE
---   * Whole dataset structures already exist => returns FALSE
+-- Function behavior:
+--   * Successful creation of a dataset => returns 1
+--   * Whole dataset structure already exists => returns 0
+--   * Dataset is already registered, but _dslocation or _dsnotes is different than in DB => returns -1
 --   * There already exist some parts of dataset and some parts not exist => INTERRUPTED with INCONSISTENCY EXCEPTION
---   * Some error in CREATE statement OR INSERT statement => INTERRUPTED with statement ERROR/EXCEPTION
+--   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
 CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCHAR, _dsnotes TEXT DEFAULT NULL) 
-  RETURNS BOOLEAN AS 
+  RETURNS INT AS 
   $VT_dataset_create$
+  DECLARE
+    _dsnamecount INT;
+    _dsidentical INT;
+    _stmt VARCHAR;
+    _schemacount INT;
+    _classescount INT;
   BEGIN
---    IF $1 IS NULL THEN  
---      RAISE EXCEPTION 'Dataset name can not be empty.'; 
---    END IF;
---    IF $2 IS NULL THEN  
---      RAISE EXCEPTION 'Dataset location can not be empty.'; 
---    END IF;
+    EXECUTE 'SELECT COUNT(*)
+             FROM public.datasets
+             WHERE dsname = ' || quote_literal(_dsname)
+      INTO _dsnamecount;
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
+      INTO _schemacount;
 
-    -- FUTURE TODO: check if exists schema && tables & datasets => FALSE
-    -- TODO: only some of schema && tables & datasets exists => INCONSISTENCY EXCEPTION (like in drop function)
+    _stmt := 'SELECT COUNT(*)
+               FROM public.datasets
+               WHERE dsname = ' || quote_literal(_dsname) || '
+                 AND dslocation = ' || quote_literal(_dslocation) || '
+                 AND notes ';
+    IF _dsnotes IS NULL THEN
+      _stmt := _stmt || ' IS NULL;';
+    ELSE 
+      _stmt := _stmt || ' = ' || quote_literal(_dsnotes);
+    END IF;
+    EXECUTE _stmt INTO _dsidentical;
+    
+    IF _dsnamecount <> _dsidentical THEN
+      RAISE WARNING 'Dataset "%" already exists, but has different value in "dslocation" or/and in "notes" property.', _dsname;
+      RETURN -1;
+    END IF;
+
+    -- check if schema already exists
+    IF _schemacount = 1 THEN
+      EXECUTE 'SELECT COUNT(*)
+               FROM pg_class
+               WHERE relname IN (''sequences'', ''processes'', ''sequences_pk'', ''sequences_seqtyp_idx'', ''processes_pk'', ''processes_mtname_idx'', ''processes_inputs_idx'', ''processes_status_idx'')
+               AND relnamespace = (
+                 SELECT oid
+                 FROM pg_namespace
+                 WHERE nspname = ' || quote_literal(_dsname) || '
+               );'
+        INTO _classescount;
+
+      -- check inconsistence || already existing dataset
+      IF _dsnamecount <> 1 OR _classescount <> 8 THEN
+        -- inconsistence
+        RAISE EXCEPTION 'Inconsistency was detected in dataset "%".', _dsname;
+      ELSE
+        -- already existing dataset
+        RAISE NOTICE 'Dataset "%" can not be created due to it already exists.', _dsname;
+        RETURN 0;
+      END IF;
+      
+    END IF;
 
     -- create schema (dataset)
-    EXECUTE 'CREATE SCHEMA ' || quote_ident(_dsname);
+    PERFORM public.VT_dataset_support_create(_dsname);
+
+    IF _dsnamecount = 0 THEN
+      -- register dataset
+      IF _dsnotes IS NOT NULL THEN
+        EXECUTE 'INSERT INTO public.datasets(dsname, dslocation, notes)
+                 VALUES (' || quote_literal(_dsname) || ', ' || quote_literal(_dslocation) || ', ' || quote_literal(_dsnotes) || ');';
+      ELSE 
+        EXECUTE 'INSERT INTO public.datasets(dsname, dslocation)
+                 VALUES (' || quote_literal(_dsname) || ', ' || quote_literal(_dslocation) || ');';
+      END IF;
+    ELSE
+      RAISE NOTICE 'Dataset inconsistency was repaired by creating dataset "%".', _dsname;
+    END IF;
+    
+    RETURN 1;
+    
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the creation of the dataset "%". (Details: ERROR %: %)', _dsname, SQLSTATE, SQLERRM;
+  END;
+  $VT_dataset_create$
+  LANGUAGE plpgsql CALLED ON NULL INPUT;
+
+
+
+-- DATASET: drop (delete)
+-- Function behavior:
+--   * Successful removal of a dataset => returns TRUE
+--   * Whole dataset structure is no longer available => returns FALSE
+--   * Dataset is not registered, but schema exists => INTERRUPTED with INCONSISTENCY EXCEPTION
+--   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
+CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR) 
+  RETURNS BOOLEAN AS 
+  $VT_dataset_drop$
+  DECLARE
+    _dsnamecount INT;
+    _schemacount INT;
+  BEGIN
+    EXECUTE 'SELECT COUNT(*)
+             FROM public.datasets
+             WHERE dsname = ' || quote_literal(_dsname)
+      INTO _dsnamecount;
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
+      INTO _schemacount;
+
+    IF _dsnamecount = 0 THEN
+      IF _schemacount = 0 THEN
+        RAISE NOTICE 'Dataset "%" can not be dropped due to it is no longer available.', _dsname;
+        RETURN FALSE;
+      ELSE
+        RAISE EXCEPTION 'Inconsistency was detected in dataset "%".', _dsname;
+      END IF;
+    END IF;
+
+    EXECUTE 'DELETE FROM public.datasets WHERE dsname = ' || quote_literal(_dsname);
+    IF _schemacount <> 0 THEN
+      EXECUTE 'DROP SCHEMA ' || quote_ident(_dsname) || ' CASCADE';
+    ELSE
+      RAISE NOTICE 'Dataset inconsistency was repaired by dropping dataset "%".', _dsname;
+    END IF;
+    
+    RETURN TRUE;
+    
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the removal of the dataset "%". (Details: ERROR %: %)', _dsname, SQLSTATE, SQLERRM;
+  END;
+  $VT_dataset_drop$
+  LANGUAGE plpgsql STRICT;
+
+
+
+-- DATASET: truncate
+-- Function behavior:
+--   * Successful truncation of a dataset => returns TRUE
+--   * Whole dataset structure is no longer available => returns FALSE
+--   * Dataset is not registered, but schema exists => INTERRUPTED with INCONSISTENCY EXCEPTION
+--   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
+CREATE OR REPLACE FUNCTION VT_dataset_truncate(_dsname VARCHAR)
+  RETURNS BOOLEAN AS
+  $VT_dataset_truncate$
+  DECLARE
+    _dsnamecount INT;
+    _schemacount INT;
+  BEGIN
+    EXECUTE 'SELECT COUNT(*)
+             FROM public.datasets
+             WHERE dsname = ' || quote_literal(_dsname)
+      INTO _dsnamecount;
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
+      INTO _schemacount;
+    
+    IF _dsnamecount = 0 THEN
+      IF _schemacount = 0 THEN
+        RAISE WARNING 'Dataset "%" can not be truncated due to it is no longer available. You need to call VT_dataset_create() function instead.', _dsname;
+        RETURN FALSE;
+      ELSE
+        RAISE EXCEPTION 'Inconsistency was detected in dataset "%".', _dsname;
+      END IF;
+    END IF;
+    
+    IF _schemacount = 1 THEN
+      EXECUTE 'DROP SCHEMA ' || quote_ident(_dsname) || ' CASCADE';
+    ELSE
+      RAISE NOTICE 'Dataset inconsistency was repaired by truncating dataset "%".', _dsname;
+    END IF;
+    
+    PERFORM public.VT_dataset_support_create(_dsname);
+    
+    RETURN TRUE;
+
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the truncation of the dataset "%". (Details: ERROR %: %)', _dsname, SQLSTATE, SQLERRM;
+  END;
+  $VT_dataset_truncate$
+  LANGUAGE plpgsql STRICT;
+
+
+
+-- Warning: DO NOT USE this function as standalone function!
+--          It is a support function for VT_dataset_create and VT_dataset_truncate only.
+CREATE OR REPLACE FUNCTION VT_dataset_support_create(_dsname VARCHAR)
+  RETURNS VOID AS
+  $VT_dataset_create_support$
+  DECLARE
+    _schemacount INT;
+  BEGIN
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
+      INTO _schemacount;
+
+    IF _schemacount = 0 THEN
+      EXECUTE 'CREATE SCHEMA ' || quote_ident(_dsname);
+    END IF;
     EXECUTE 'SET search_path=' || quote_ident(_dsname);
+    
     -- create sequences in schema (dataset)
     CREATE TABLE sequences (
       seqname name NOT NULL,
@@ -201,55 +389,9 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
     CREATE INDEX processes_mtname_idx ON processes(mtname);
     CREATE INDEX processes_inputs_idx ON processes(inputs);
     CREATE INDEX processes_status_idx ON processes(( (state).status ));
-
-    -- register dataset
-    IF _dsnotes IS NOT NULL THEN
-      INSERT INTO public.datasets(dsname, dslocation, notes) VALUES (_dsname, _dslocation, _dsnotes);
-    ELSE 
-      INSERT INTO public.datasets(dsname, dslocation) VALUES (_dsname, _dslocation);
-    END IF;
     
-    RETURN TRUE;
   END;
-  $VT_dataset_create$
-  LANGUAGE plpgsql CALLED ON NULL INPUT;
-
-
--- DATASET: drop (delete)
--- Function behavior:
---   * Successful removal of a dataset => returns TRUE
---   * Whole dataset structures are no longer available => returns FALSE
---   * There already exist some parts of dataset and some parts not exist => raises notice of INCONSISTENCY and continue
---   * Some error in CREATE statement OR INSERT statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR) 
-  RETURNS BOOLEAN AS 
-  $VT_dataset_drop$
-  DECLARE
-    _dsnamecount INT;
-    _schemacount INT;
-  BEGIN
-    EXECUTE 'SELECT COUNT(*)
-             FROM public.datasets
-             WHERE dsname = ' || quote_literal(_dsname)
-      INTO _dsnamecount;
-    EXECUTE 'SELECT COUNT(*)
-             FROM pg_namespace
-             WHERE nspname = ' || quote_literal(_dsname)
-      INTO _schemacount;
-
-    IF _dsnamecount <> _schemacount THEN
-      RAISE NOTICE 'Inconsistency was detected in datasets.';
-    ELSIF _dsnamecount = 0 THEN
-      RETURN FALSE;
-    END IF;
-
-    EXECUTE 'DELETE FROM public.datasets WHERE dsname = ' || quote_literal(_dsname);
-    EXECUTE 'DROP SCHEMA ' || quote_ident(_dsname) || ' CASCADE';
-    RETURN TRUE;
-  EXCEPTION WHEN OTHERS THEN
-    RAISE EXCEPTION 'Some problem occured during the removal of the desired dataset. (Details: ERROR %: %)', SQLSTATE, SQLERRM;
-  END
-  $VT_dataset_drop$
+  $VT_dataset_create_support$
   LANGUAGE plpgsql STRICT;
 
 
@@ -263,7 +405,7 @@ CREATE OR REPLACE FUNCTION tsrange(_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_l
     SELECT CASE _rt_start
       WHEN NULL THEN NULL
       ELSE tsrange(_rt_start, _rt_start + _sec_length * '1 second'::interval, '[]')
-    END
+    END;
   $tsrange$
   LANGUAGE SQL;
 
