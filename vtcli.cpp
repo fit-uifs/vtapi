@@ -8,6 +8,7 @@
  */
 
 #include <cstdlib>
+#include <cstring>
 #include <time.h>
 #include <dirent.h>
 #include <fstream>
@@ -710,8 +711,17 @@ bool VTCli::deleteCommand(VTCLI_KEYVALUE_LIST& params)
             
             Process *pr = new Process(*(m_vtapi->commons), name);
             if (pr->next()) {
+                Process *pi = pr->getInputProcess();
+                if (pi) {
+                    if (pi->next()) pi->clearOutputData();
+                    Query qi(*(m_vtapi->commons),
+                        "DELETE FROM " + pi->getDataset() + ".processes WHERE prsname = '" + pi->getName() + "';");
+                    qi.execute();
+                    delete pi;
+                } 
                 pr->clearOutputData();
-                Query q(*(m_vtapi->commons), "DELETE FROM " + pr->getDataset() + ".processes WHERE prsname = '" + name + "';");
+                Query q(*(m_vtapi->commons),
+                    "DELETE FROM " + pr->getDataset() + ".processes WHERE prsname = '" + name + "';");
                 q.execute();
             }
             else {
@@ -857,24 +867,38 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
                 memset(bmap, 0, lenAlloc);
                 while (outs->next()) {
                     int t1 = outs->getStartTime() - 1;
-                    int x1 = (t1 >> 3) << 3;
-                    int y1 = 7 - (t1 & 0x00000007);
-                    int bits = outs->getEndTime() - t1;
+                    int t2 = outs->getEndTime() - 1;
+                    int x1 = t1 >> 3;
+                    int x2 = t2 >> 3;
+                    int y1 = (x1 << 3) & t1;
+                    int y2 = (x2 << 3) & t2;
+                    int bits = t2 - t1 + 1;
                     
-                    for (int x = x1; bits; x++) {
-                        for (int y = 7; y >= y1 && bits; y--) {
-                            bmap[x] |= (1 << y);
-                            bits--;
-                        }
-                        y1 = 0;
+                    // first byte
+                    if (y1 > 0 && bits) {
+                        for (int y = 7 - y1; y >= 0 && bits; y--, bits--)
+                            bmap[x1] |= (1 << y);
+                        x1++;
                     }
+                    
+                    // last byte
+                    if (y2 > 0 && bits) {
+                        for (int y = 7; y >= y2 && bits; y--, bits--)
+                            bmap[x2] |= (1 << y);
+                        x2--;
+                    }
+                    
+                    // stuff in between
+                    if (bits) memset(bmap + x1, 0xFF, x2-x1);
                 }
                 
                 // calculate total coverage
-                size_t total = 0;
-                for (size_t x = 0; x < len; x += 8) {
-                    for (int y = 7; y >= 0; y--) {
-                        if (bmap[x] & (1 << y)) total++;
+                size_t x = 0, y = 7, total = 0;;
+                for (size_t i = 0; i < len; i++) {
+                    if (bmap[x] & (1 << y)) total++;
+                    if (y-- == 0) {
+                        x++;
+                        y = 7;
                     }
                 }
                 
