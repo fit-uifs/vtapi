@@ -3,7 +3,7 @@
 #include <backends/vtapi_backendbase.h>
 
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 #define PG_LOAD(F) \
 if ((pg.F = (PQ_ ## F)lt_dlsym(hLibpq, #F)) == NULL) { \
@@ -61,7 +61,7 @@ bool PGBackendBase::base_load_libs() {
         lt_dladvise_global(&ldadvise);
 
         // load libpq
-        hLibpq = lt_dlopenadvise(PG_LIB_PATH "/libpq", ldadvise);
+        hLibpq = lt_dlopenadvise(VTAPI_PG_LIB_PATH "/libpq", ldadvise);
         if (!hLibpq) {
             logger->warning(556, "libpq library not found.", thisClass + "::base_load_libs()");
             retval = false;

@@ -367,6 +367,8 @@ then
       LIBPQTYPES_LIBS="-L${LIBPQTYPES_LIBDIR}"
       CPPFLAGS="${LIBPQTYPES_CPPFLAGS} ${CPPFLAGS}"
       LIBS="${LIBPQTYPES_LIBS} ${LIBS}"
+    else
+      LIBPQTYPES_LIBDIR="${PGSQL_LIBDIR}"
     fi
     AC_CHECK_HEADER(libpqtypes.h, [], [pgsql_present="no"])
     AC_CHECK_LIB([pqtypes], [PQinitTypes], [], [pgsql_present="no"])
@@ -628,28 +630,6 @@ AM_CONDITIONAL([HAVE_DOXYGEN], [test -n "$HAVE_DOXYGEN"]) # prenese do Makefile.
 #####   Additional checks                                                 #####
 ###############################################################################
 
-### readproc => yum install procps-ng-devel (urpmi procps-devel)
-readproc_present="yes"
-AC_CHECK_HEADER(proc/readproc.h, [], [readproc_present="no"])
-AC_CHECK_LIB([procps], [readproctab], [READPROC_LIBS="-lprocps"])
-AC_CHECK_LIB([proc], [readproctab], [READPROC_LIBS="-lproc"])
-
-if test -z "${READPROC_LIBS}"
-then
-  readproc_present="no"
-fi
-
-if test "x${readproc_present}" = "xyes"
-then
-  AC_DEFINE([HAVE_READPROC], [1], [readproc is present])
-  
-  READPROC_CFLAGS=""
-  
-  AC_SUBST([READPROC_CFLAGS])
-  AC_SUBST([READPROC_LIBS])
-fi
-
-
 ### Checks for typedefs, structures, and compiler characteristics.
 # AC_CHECK_HEADER_STDBOOL
 # AC_TYPE_SIZE_T
@@ -683,6 +663,14 @@ AC_SUBST(WIN32_EXTRA_LDFLAGS)
 AC_CONFIG_FILES([src/Makefile include/Makefile Makefile])
 #AC_CONFIG_FILES([Makefile lib/Makefile src/Makefile])
 AC_OUTPUT
+
+
+
+###############################################################################
+#####   SMALL HACK on HAVE_XXX and XXX_LIB_PATH macros                    #####
+###############################################################################
+sed -i 's/ \(HAVE_\(OPENCV\|SQLITE\|POSTGRESQL\|GEOS\|POSTGIS\|XMLXX\|DOXYGEN\)\)/ VTAPI_\1/g' ./include/common/vtapi_autoconfig.h
+sed -i 's/ \(\(PG\|PQTYPES\|SQLITE\)_LIB_PATH \)/ VTAPI_\1/g' ./include/common/vtapi_autoconfig.h
 
 
 
@@ -736,7 +724,6 @@ then
 fi
 
 
-AC_MSG_RESULT([  proc/procps:    ${readproc_present}])
 AC_MSG_RESULT([  documentation:  ${DOC_SUMMARY}])
 AC_MSG_RESULT([  debug symbols:  ${enable_debug}])
 AC_MSG_RESULT()

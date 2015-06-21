@@ -3,7 +3,7 @@
 #include <common/vtapi_global.h>
 #include <backends/vtapi_querybuilder.h>
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"
 #define DEF_NO_TABLE    "!NO_TABLE!"
@@ -438,7 +438,7 @@ bool PGQueryBuilder::keyTimestamp(const string& key, const time_t& value, const 
     return keySingleValue(key, &ts, "%timestamp", from);
 }
 
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const string& from)
 {
     bool ret = true;

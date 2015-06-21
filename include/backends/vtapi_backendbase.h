@@ -48,7 +48,7 @@ private:
     bool m_libsLoaded;
 };
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 class PGBackendBase : public BackendBase
 {
@@ -72,7 +72,7 @@ private:
 
 #endif
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 
 typedef struct {
     std::string database;

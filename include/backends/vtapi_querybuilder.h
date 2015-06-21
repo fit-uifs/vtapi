@@ -260,7 +260,7 @@ public:
      */
     virtual bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from) = 0;
 
-#ifdef HAVE_OPENCV
+#ifdef VTAPI_HAVE_OPENCV
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.
@@ -419,7 +419,7 @@ protected:
     }
 };
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 class PGQueryBuilder : public QueryBuilder, public PGBackendBase
 {
 public:
@@ -453,7 +453,7 @@ public:
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from);
     bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from);
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from);
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from);
 #endif
     bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from);
@@ -526,7 +526,7 @@ private:
 };
 #endif
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 class SLQueryBuilder : public QueryBuilder, public SLBackendBase
 {
 private:
@@ -566,7 +566,7 @@ public:
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from);
     bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from);
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from);
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from);
 #endif
     bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from);

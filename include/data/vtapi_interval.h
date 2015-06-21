@@ -221,7 +221,7 @@ public:
      */
     bool add(const std::string& sequence, const int t, const std::string& location);
 
-#if HAVE_OPENCV  
+#if VTAPI_HAVE_OPENCV  
     cv::Mat image;   /**< Image file data */
     /**
      * Loads an image from a file (given by imgLocation of %VTApi)

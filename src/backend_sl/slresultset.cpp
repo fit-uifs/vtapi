@@ -5,7 +5,7 @@
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_resultset.h>
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 
 using namespace std;
 
@@ -211,7 +211,7 @@ vector<double>* SLResultSet::getFloat8V(const int col) {
     }
 }
 
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 
 cv::Mat *SLResultSet::getCvMat(const int col) {
     cv::Mat *mat = NULL;
@@ -289,7 +289,7 @@ cv::Mat *SLResultSet::getCvMat(const int col) {
 #endif
 
     // =============== GETTERS - GEOMETRIC TYPES ===============================
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 PGpoint SLResultSet::getPoint(const int col) {
     PGpoint point = { 0.0, 0.0 };
 //    memset(&point, 0, sizeof(PGpoint));
@@ -307,7 +307,7 @@ vector<PGpoint>*  SLResultSet::getPointV(const int col) {
 }
 #endif
 
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
 GEOSGeometry* SLResultSet::getGeometry(const int col) {
     return NULL;
 }
@@ -364,5 +364,5 @@ string SLResultSet::getValue(const int col, const int arrayLimit) {
 
 }
 
-#endif // HAVE_POSTGRESQL
+#endif // VTAPI_HAVE_POSTGRESQL
 

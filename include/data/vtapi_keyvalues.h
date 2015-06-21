@@ -343,7 +343,7 @@ public:
 
     
     // =============== GETTERS - OpenCV MATRICES ===============================
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     /**
      * Gets an OpenCV matrix (cv::Mat) specified by a column key
      * @param key   column key
@@ -361,7 +361,7 @@ public:
     
     // =============== GETTERS - GEOMETRIC TYPES ===============================
     // TODO: geometricke typy
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
     /**
      * Gets a 2D point specified by a column key
      * @param key   column key
@@ -401,7 +401,7 @@ public:
     std::vector<PGpoint>* getPointV(const int col);
 #endif
 
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
     /**
      * Gets a GEOS geometry type by a column key
      * @param key   column key
@@ -517,7 +517,7 @@ public:
      * @return success
      */
     bool addTimestamp(const std::string& key, const time_t& value);
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     /**
      * Adds a new OpenCV matrix (cv::Mat) to a specified key
      * @param key     column key to insert

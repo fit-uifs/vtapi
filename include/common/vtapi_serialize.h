@@ -140,7 +140,7 @@ inline std::string toString <IntervalEvent>(const IntervalEvent& value)
     return ostr.str();
 };
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 template <>
 inline std::string toString <PGpoint>(const PGpoint& value)
 {
@@ -166,7 +166,7 @@ inline std::string toString <ProcessState>(const ProcessState& value)
 };
 
 
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
 template <typename T>
 inline std::string toStringCvMat(const cv::Mat_<T>& value)
 {

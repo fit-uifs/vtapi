@@ -4,7 +4,7 @@
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_libloader.h>
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 // postgres data transfer format: 0=text, 1=binary
 #define PG_FORMAT           1
@@ -109,7 +109,7 @@ bool PGLibLoader::load_libpq (fmap_t *fmap) {
     lt_dladvise_init (&libpq_advise);
     lt_dladvise_ext(&libpq_advise);
     lt_dladvise_global(&libpq_advise);
-    h_libpq = lt_dlopenadvise(PG_LIB_PATH "/libpq", libpq_advise);
+    h_libpq = lt_dlopenadvise(VTAPI_PG_LIB_PATH "/libpq", libpq_advise);
     lt_dladvise_destroy(&libpq_advise);
 
     if (h_libpq) {

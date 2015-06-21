@@ -95,7 +95,7 @@ protected:
     DBTYPES_MAP dbtypes;        /**< map of database types definitions */
 };
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 class PGConnection : public Connection, public PGBackendBase
 {
 public:
@@ -122,7 +122,7 @@ private:
 };
 #endif
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 class SLConnection : public Connection, public SLBackendBase
 {
 public:

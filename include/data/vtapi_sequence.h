@@ -207,7 +207,7 @@ public:
      */
     bool next();
     
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     cv::VideoCapture capture;   /**< Video file capture */
     
     /**

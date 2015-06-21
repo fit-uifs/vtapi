@@ -4,7 +4,7 @@
 #include <common/vtapi_serialize.h>
 #include <backends/vtapi_libloader.h>
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 
 using std::string;
 using std::stringstream;

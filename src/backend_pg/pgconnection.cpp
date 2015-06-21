@@ -2,7 +2,7 @@
 #include <common/vtapi_global.h>
 #include <backends/vtapi_connection.h>
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 using namespace std;
 
@@ -148,7 +148,7 @@ bool PGConnection::loadDBTypes()
         
         // general types registered at all times
         PGregisterType types_userdef[] = {
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
             {"geometry", geometry_put, geometry_get},
 #endif
             {"public.seqtype", enum_put, enum_get},
@@ -165,7 +165,7 @@ bool PGConnection::loadDBTypes()
 
         // register composites
         PGregisterType types_comp[] = {
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
             {"public.cvmat", NULL, NULL},
 #endif
             {"public.vtevent", NULL, NULL},

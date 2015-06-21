@@ -378,7 +378,7 @@ public:
     virtual time_t getTimestamp(const int col) = 0;
 
     // =============== GETTERS - OpenCV MATRICES ===============================
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     /**
      * Get OpenCv matrix (cv::Mat) specified by the column key
      * @param key column key
@@ -397,7 +397,7 @@ public:
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
     
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
     /**
      * Get 2D point specified by the column key
      * @param key column key
@@ -444,7 +444,7 @@ public:
     virtual std::vector<PGpoint>*  getPointV(const int col) = 0;
 #endif
 
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
     /**
      * Get GEOS geometry type by the column key
      * @param key column key
@@ -534,7 +534,7 @@ protected:
 };
 
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 class PGResultSet : public ResultSet, public PGBackendBase
 {
 public:
@@ -573,16 +573,16 @@ public:
     time_t getTimestamp(const int col);
     IntervalEvent *getIntervalEvent(const int col);
     ProcessState *getProcessState(const int col);
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     PGpoint* getPointA(const int col, int& size);
     std::vector<PGpoint>*  getPointV(const int col);
 #endif
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
     GEOSGeometry* getGeometry(const int col);
     GEOSGeometry* getLineString(const int col);
 #endif
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     cv::Mat *getCvMat(const int col);
 #endif
     void *getBlob(const int col, int &size);
@@ -599,7 +599,7 @@ protected:
 };
 #endif
 
-#if HAVE_SQLITE
+#if VTAPI_HAVE_SQLITE
 class SLResultSet : public ResultSet, public SLBackendBase
 {
 public:
@@ -639,16 +639,16 @@ public:
     time_t getTimestamp(const int col);
     IntervalEvent *getIntervalEvent(const int col);
     ProcessState *getProcessState(const int col);
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
     PGpoint getPoint(const int col);
     PGpoint* getPointA(const int col, int& size);
     std::vector<PGpoint>*  getPointV(const int col);
 #endif
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
     GEOSGeometry* getGeometry(const int col);
     GEOSGeometry* getLineString(const int col);
 #endif
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     cv::Mat *getCvMat(const int col);
 #endif
     void *getBlob(const int col, int &size);

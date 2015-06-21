@@ -5,7 +5,7 @@
 #include <backends/vtapi_typemanager.h>
 
 
-#if HAVE_POSTGRESQL
+#if VTAPI_HAVE_POSTGRESQL
 
 // postgres data transfer format: 0=text, 1=binary
 #define PG_FORMAT           1
@@ -56,7 +56,7 @@ bool PGTypeManager::registerTypes () {
     }
 
     // PostGIS special types
-#if HAVE_POSTGIS
+#if VTAPI_HAVE_POSTGIS
     PGregisterType typespg_userdef[] = {
         {"geometry", geometry_put, geometry_get}
     };
@@ -68,7 +68,7 @@ bool PGTypeManager::registerTypes () {
 #endif
 
     // OpenCV special types
-#if HAVE_OPENCV
+#if VTAPI_HAVE_OPENCV
     PGregisterType typescv_comp[] = {
         {"public.cvmat", NULL, NULL},
         {"public.vtevent", NULL, NULL},
