@@ -711,12 +711,15 @@ bool VTCli::deleteCommand(VTCLI_KEYVALUE_LIST& params)
             
             Process *pr = new Process(*(m_vtapi->commons), name);
             if (pr->next()) {
-                Process *pi = pr->getInputProcess();
+                Process *pi = new Process(*(m_vtapi->commons));
                 if (pi) {
-                    if (pi->next()) pi->clearOutputData();
-                    Query qi(*(m_vtapi->commons),
-                        "DELETE FROM " + pi->getDataset() + ".processes WHERE prsname = '" + pi->getName() + "';");
-                    qi.execute();
+                    pi->filterByInputProcessName(name);
+                    while (pi->next()) {
+                        pi->clearOutputData();
+                        Query qi(*(m_vtapi->commons),
+                            "DELETE FROM " + pi->getDataset() + ".processes WHERE prsname = '" + pi->getName() + "';");
+                        qi.execute();
+                    }
                     delete pi;
                 } 
                 pr->clearOutputData();
