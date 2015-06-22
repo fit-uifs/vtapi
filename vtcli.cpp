@@ -869,37 +869,41 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
                 // go through outputs and fill bitmap
                 memset(bmap, 0, lenAlloc);
                 while (outs->next()) {
-                    int t1 = outs->getStartTime() - 1;
-                    int t2 = outs->getEndTime() - 1;
-                    int x1 = t1 >> 3;
-                    int x2 = t2 >> 3;
-                    int y1 = (x1 << 3) & t1;
-                    int y2 = (x2 << 3) & t2;
-                    int bits = t2 - t1 + 1;
+                    int t1 = outs->getStartTime() - 1;  // start time
+                    int t2 = outs->getEndTime() - 1;    // end time
+                    if (t1 < 0) t1 = 0;
+                    if (t2 > len-1) t2 = len - 1;
+                    if (t2 < t1) t2 = t1;
+                    
+                    int x1 = t1 >> 3;                   // first byte in map
+                    int x2 = t2 >> 3;                   // last byte in map
+                    int y1 = 7 & t1;                    // start bit in first byte
+                    int y2 = 7 & t2;                    // end bit in last byte
+                    int bits = t2 - t1 + 1;             // total bits to set
                     
                     // first byte
                     if (y1 > 0 && bits) {
-                        for (int y = 7 - y1; y >= 0 && bits; y--, bits--)
+                        for (int y = 7 - y1; (y >= 0) && bits; y--, bits--)
                             bmap[x1] |= (1 << y);
                         x1++;
                     }
                     
                     // last byte
-                    if (y2 > 0 && bits) {
-                        for (int y = 7; y >= y2 && bits; y--, bits--)
+                    if (bits) {
+                        for (int y = 7; (y >= 7-y2) && bits; y--, bits--)
                             bmap[x2] |= (1 << y);
                         x2--;
                     }
-                    
+
                     // stuff in between
-                    if (bits) memset(bmap + x1, 0xFF, x2-x1);
+                    if (bits) memset(bmap + x1, 0xFF, x2-x1+1);
                 }
                 
                 // calculate total coverage
-                size_t x = 0, y = 7, total = 0;;
-                for (size_t i = 0; i < len; i++) {
-                    if (bmap[x] & (1 << y)) total++;
-                    if (y-- == 0) {
+                int x = 0, y = 7, total = 0;;
+                for (int i = 0; i < len; i++) {
+                    if ((bmap[x]) & (1 << y)) total++;
+                    if (--y < 0) {
                         x++;
                         y = 7;
                     }
@@ -909,7 +913,7 @@ bool VTCli::statsCommand(VTCLI_KEYVALUE_LIST& params)
                 cout << "length,coverage";
                 if (do_bitmap) cout << ",bitmap";
                 cout << endl;
-                cout << len << ',' << (double)total/len;
+                cout << len << ',' << ((double)total)/len;
                 if (do_bitmap) cout << ',' << base64_encode(bmap, lenAlloc);
                 cout << endl;
                 
