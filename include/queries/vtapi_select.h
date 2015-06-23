@@ -89,6 +89,12 @@ public:
     bool from(const std::string& table, const std::string& column);
     
     /**
+     * Order result set by key (possibly including ASC/DESC)
+     * @param key key to order resultset by
+     */
+    void orderBy(const std::string& key);
+    
+    /**
      * This is a WHERE statement construction function for strings
      * @param key     key to compare with a value
      * @param value   requested value for key
