@@ -15,8 +15,8 @@ SET check_function_bodies = false;
 SET client_min_messages = warning;
 
 
-SELECT VT_dataset_drop('demo');
-SELECT VT_dataset_create('demo', 'demo/', 'auto-generated demo');
+SELECT public.VT_dataset_drop('demo');
+SELECT public.VT_dataset_create('demo', 'demo/', 'auto-generated demo');
 
 SET search_path = demo, pg_catalog;
 
@@ -96,19 +96,13 @@ CREATE TRIGGER demo2out_provide_realtime
 -------------------------------------
 
 -- insert demo1 modules metadata into public schema
-DELETE FROM public.methods WHERE mtname = 'demo1';
-INSERT INTO public.methods (mtname, userid, notes) VALUES
-    ('demo1', 'demouser', 'auto-generated');
-INSERT INTO public.methods_keys (mtname, keyname, typname, inout, default_num, default_str) VALUES
-    ('demo1', 'param1', 'integer', 'in_param', '{50}', NULL),
-    ('demo1', 'param2', 'real', 'in_param', '{720.4}', NULL),
-    ('demo1', 'features_array', 'real[]', 'out', NULL, NULL),
-    ('demo1', 'features_mat', 'public.cvmat', 'out', NULL, NULL);
+SELECT public.VT_method_delete('demo1');
+SELECT public.VT_method_add('demo1', '{"(param1,int,in_param,{50},)", "(param2,real,in_param,{720.4},)", "(features_array,real[],out,,)", "(features_mat,public.cvmat,out,,)"}', 'auto-generated');
 
 -- insert demo2 modules metadata into public schema
-DELETE FROM public.methods WHERE mtname = 'demo2';
-INSERT INTO public.methods (mtname, userid, notes) VALUES
-    ('demo2', 'demouser', 'auto-generated');
+SELECT public.VT_method_delete('demo2');
+SELECT public.VT_method_add('demo2', '{"(video,varchar,in_param,,)", "(features_array,real[],in,,)", "(features_mat,public.cvmat,in,,)", "(event,public.vtevent,out,,)"}', 'auto-generated');
+
 INSERT INTO public.methods_keys (mtname, keyname, typname, inout, default_num, default_str) VALUES
     ('demo2', 'video', 'varchar', 'in_param', NULL, NULL),
     ('demo2', 'features_array', 'real[]', 'in', NULL, NULL),
