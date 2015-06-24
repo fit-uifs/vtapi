@@ -11,6 +11,8 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <sstream>
+#include <functional>
 #include <boost/filesystem.hpp>
 #include <common/vtapi_global.h>
 #include <data/vtapi_process.h>
@@ -113,18 +115,22 @@ bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
 
 string Process::constructName(const ProcessParams & params)
 {
-    string ret;
+    string input;
 
-    ret += this->method;
-    ret += 'p';
+    input += this->method;
+    input += 'p';
 
     string par = params.serializeAsName();
     if (!par.empty()) {
-        ret += '_';
-        ret += par;
+        input += '_';
+        input += par;
     }
-
-    return ret;
+    
+    hash<string> hash_fn;
+    stringstream ss;
+    ss << hex << hash_fn(input);
+    
+    return ss.str();
 }
 
 //////////////////////////////////////////////////
@@ -189,7 +195,7 @@ ProcessParams *Process::getParams()
 // adders - INSERT
 //////////////////////////////////////////////////
 
-bool Process::add(const std::string& outputs)
+bool Process::add(const string& outputs)
 {
     bool retval = true;
 
@@ -200,20 +206,20 @@ bool Process::add(const std::string& outputs)
     return retval;
 }
 
-bool Process::addInputProcessName(const std::string& processName)
+bool Process::addInputProcessName(const string& processName)
 {
     m_inputProcess = processName;
     return true;
 }
 
-bool Process::addOutputTable(const std::string& table)
+bool Process::addOutputTable(const string& table)
 {
     return addString("outputs", this->getDataset() + "." + table);
 }
 
 bool Process::addParams(ProcessParams && params)
 {
-    m_params = std::move(params);
+    m_params = move(params);
     return true;
 }
 
@@ -349,12 +355,12 @@ bool Process::controlStop(ProcessControl *control)
 // filters/utilities
 //////////////////////////////////////////////////
 
-void Process::filterByInputProcessName(const std::string& processName)
+void Process::filterByInputProcessName(const string& processName)
 {
     this->select->whereString("inputs", processName);
 }
 
-void Process::filterByOutputTable(const std::string& table)
+void Process::filterByOutputTable(const string& table)
 {
     this->select->whereString("outputs", table);
 }
