@@ -161,6 +161,12 @@ bool Select::from(const string& table, const string& column)
     return retval;
 }
 
+void Select::orderBy(const string& key)
+{
+    this->orderby = key;
+}
+
+
 bool Select::whereString(const string& key, const string& value, const string& oper, const string& from)
 {
     executed = false;

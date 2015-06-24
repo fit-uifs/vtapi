@@ -183,7 +183,7 @@ bool ProcessControl::Server::create(fServerCallback callback, void* context)
 
         string qname = m_baseName + DEF_COMMAND_POSTFIX;
         try {
-            //message_queue::remove(qname.c_str());
+            message_queue::remove(qname.c_str());
             m_pCommandQueue = new message_queue(
                 create_only,
                 qname.c_str(),
@@ -409,31 +409,31 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
         
         // try opening server command queue
         string qname = m_baseName + DEF_COMMAND_POSTFIX;
-        stringstream ssError;
+        string errmsg;
         for (int i = 0; i < DEF_CONNECT_ATTEMPTS; i++) {
             try {
                 m_pCommandQueue = new message_queue(open_only, qname.c_str());
                 if (m_pCommandQueue) break;
             }
             catch (interprocess_exception &ex) {
-                ssError << qname << ':' << ex.what() << endl;
+                errmsg = qname + ':' + ex.what();
             }
             
             this_thread::sleep_for(
                 chrono::milliseconds(connectTimeout / DEF_CONNECT_ATTEMPTS));
         }
         if (!m_pCommandQueue) {
-            cerr << ssError.str();
+            cerr << errmsg << endl;
             ret = false;
             break;
         }
 
         // try to find free client slot
-        stringstream ssError2;
+        bool remove = false;
         for (m_slot = 0; m_slot < DEF_MAX_CLIENTS; m_slot++) {
             string qname2 = m_baseName + DEF_NOTIFY_POSTFIX + toString(m_slot);
             try {
-                message_queue::remove(qname2.c_str());
+                if (remove) message_queue::remove(qname2.c_str());
                 m_pNotifyQueue = new message_queue(
                     create_only,
                     qname2.c_str(),
@@ -442,11 +442,17 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
                 if (m_pNotifyQueue) break;
             }
             catch (interprocess_exception &ex) {
-                ssError2 << qname2 << ':' << ex.what() << endl;
+                errmsg = qname2 + ':' + ex.what();
+            }
+            if (m_slot == DEF_MAX_CLIENTS - 1) {
+                if (!remove) {
+                    remove = true;
+                    m_slot = -1;
+                }
             }
         }
         if (!m_pNotifyQueue) {
-            cerr << ssError2.str();
+            cerr << errmsg << endl;
             ret = false;
             break;
         }
@@ -480,7 +486,7 @@ void ProcessControl::Client::close()
 
     vt_destruct(m_pCommandQueue);
     string qname = m_baseName + DEF_COMMAND_POSTFIX;
-    message_queue::remove(qname.c_str());
+    //message_queue::remove(qname.c_str());
 
     m_callback = NULL;
     m_pCallbackContext = NULL;
