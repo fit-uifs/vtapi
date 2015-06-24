@@ -30,6 +30,8 @@ CREATE SCHEMA IF NOT EXISTS public;
 -------------------------------------
 -- DROP all VTApi objects
 -------------------------------------
+SELECT VT_dataset_drop_all();
+
 DROP TABLE IF EXISTS public.methods_keys CASCADE;
 DROP TABLE IF EXISTS public.methods CASCADE;
 DROP TABLE IF EXISTS public.datasets CASCADE;
@@ -126,7 +128,7 @@ CREATE TABLE datasets (
     created timestamp without time zone DEFAULT now(),
     notes text DEFAULT NULL,
     CONSTRAINT dataset_pk PRIMARY KEY (dsname)
-);                    
+);
 
 -- method list
 CREATE TABLE methods (
@@ -300,13 +302,35 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
 
 
 
+CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
+  RETURNS BOOLEAN AS
+  $VT_dataset_drop_all$
+  DECLARE
+    _dsname public.datasets.dsname%TYPE;
+  BEGIN
+    FOR _dsname IN SELECT dsname FROM public.datasets LOOP
+      EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(_dsname) || ' CASCADE;';
+    END LOOP;
+    
+    TRUNCATE TABLE public.datasets;
+    
+    RETURN TRUE;
+    
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the removal of all datasets. (Details: ERROR %: %)', SQLSTATE, SQLERRM;
+  END;
+  $VT_dataset_drop_all$
+  LANGUAGE plpgsql STRICT;
+
+
+
 -- DATASET: truncate
 -- Function behavior:
 --   * Successful truncation of a dataset => returns TRUE
 --   * Whole dataset structure is no longer available => returns FALSE
 --   * Dataset is not registered, but schema exists => INTERRUPTED with INCONSISTENCY EXCEPTION
 --   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_dataset_truncate(_dsname VARCHAR)
+CREATE OR REPLACE FUNCTION VT_dataset_truncate (_dsname VARCHAR)
   RETURNS BOOLEAN AS
   $VT_dataset_truncate$
   DECLARE
@@ -351,7 +375,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_truncate(_dsname VARCHAR)
 
 -- Warning: DO NOT USE this function as standalone function!
 --          It is a support function for VT_dataset_create and VT_dataset_truncate only.
-CREATE OR REPLACE FUNCTION VT_dataset_support_create(_dsname VARCHAR)
+CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
   RETURNS VOID AS
   $VT_dataset_create_support$
   DECLARE
@@ -421,7 +445,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create(_dsname VARCHAR)
 --   * Successful addition of a method => returns TRUE
 --   * Method with the same name is already available => returns FALSE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_method_add(_mtname VARCHAR, _mkeys METHODKEY[], _notes TEXT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEY[], _notes TEXT DEFAULT NULL)
   RETURNS BOOLEAN AS
   $VT_method_add$
   DECLARE
@@ -498,7 +522,7 @@ CREATE OR REPLACE FUNCTION VT_method_add(_mtname VARCHAR, _mkeys METHODKEY[], _n
 --   * Successful deletion of a method => returns TRUE
 --   * Method with the same name is no longer available => returns FALSE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_method_delete(_mtname VARCHAR)
+CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR)
   RETURNS BOOLEAN AS
   $VT_method_delete$
   DECLARE
@@ -527,7 +551,7 @@ CREATE OR REPLACE FUNCTION VT_method_delete(_mtname VARCHAR)
 -------------------------------------
 -- Functions to work with real time
 -------------------------------------
-CREATE OR REPLACE FUNCTION tsrange(_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length REAL)
+CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length REAL)
   RETURNS TSRANGE AS
   $tsrange$
     SELECT CASE _rt_start
@@ -538,7 +562,7 @@ CREATE OR REPLACE FUNCTION tsrange(_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_l
   LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION trg_interval_provide_realtime()
+CREATE OR REPLACE FUNCTION trg_interval_provide_realtime ()
   RETURNS TRIGGER AS
   $trg_interval_provide_realtime$
     DECLARE

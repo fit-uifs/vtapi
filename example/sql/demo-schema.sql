@@ -103,12 +103,6 @@ SELECT public.VT_method_add('demo1', '{"(param1,int,in_param,{50},)", "(param2,r
 SELECT public.VT_method_delete('demo2');
 SELECT public.VT_method_add('demo2', '{"(video,varchar,in_param,,)", "(features_array,real[],in,,)", "(features_mat,public.cvmat,in,,)", "(event,public.vtevent,out,,)"}', 'auto-generated');
 
-INSERT INTO public.methods_keys (mtname, keyname, typname, inout, default_num, default_str) VALUES
-    ('demo2', 'video', 'varchar', 'in_param', NULL, NULL),
-    ('demo2', 'features_array', 'real[]', 'in', NULL, NULL),
-    ('demo2', 'features_mat', 'public.cvmat', 'in', NULL, NULL),
-    ('demo2', 'event', 'public.vtevent', 'out', NULL, NULL);
-
 -- insert videos
 INSERT INTO sequences (seqname, seqlocation, seqtyp, vid_length, vid_fps, vid_speed, vid_time, userid, notes) VALUES
     ('video1', 'video1.mpg', 'video', 5207, 29.97, 1, '2015-04-01 04:05:06', 'demouser', 'pre-generated'),
