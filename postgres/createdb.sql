@@ -30,12 +30,15 @@ CREATE SCHEMA IF NOT EXISTS public;
 -------------------------------------
 -- DROP all VTApi objects
 -------------------------------------
+SELECT VT_dataset_drop_all();
+
 DROP TABLE IF EXISTS public.methods_keys CASCADE;
 DROP TABLE IF EXISTS public.methods CASCADE;
 DROP TABLE IF EXISTS public.datasets CASCADE;
 
 DROP TYPE IF EXISTS public.seqtype CASCADE;
 DROP TYPE IF EXISTS public.inouttype CASCADE;
+DROP TYPE IF EXISTS public.METHODKEY CASCADE;
 DROP TYPE IF EXISTS public.pstatus CASCADE;
 DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
@@ -45,6 +48,9 @@ DROP FUNCTION IF EXISTS public.VT_dataset_create(VARCHAR, VARCHAR, TEXT) CASCADE
 DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_truncate(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
+
+DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, METHODKEY, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR) CASCADE;
 
 DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, REAL) CASCADE;
 DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
@@ -66,6 +72,14 @@ CREATE TYPE inouttype AS ENUM (
     'in_param',     -- input parameter (numeric/string)
     'in',           -- input = column from other method's processes' output table
     'out'           -- output = column from this method's processes' output table
+);
+
+CREATE TYPE METHODKEY AS (
+    keyname       NAME,      -- variable name
+    typname       REGTYPE,   -- variable data type
+    inout         INOUTTYPE, -- variable scope - determines which kind variable is: common input, input from other process' output table or output in current process' output table
+    default_num   DOUBLE PRECISION[], -- default numeric value
+    default_str   VARCHAR[]  -- default character value
 );
 
 -- process state enum
@@ -110,18 +124,18 @@ CREATE TYPE pstate AS (
 CREATE TABLE datasets (
     dsname name NOT NULL,
     dslocation character varying NOT NULL,
-    userid name,
+    userid name DEFAULT NULL,
     created timestamp without time zone DEFAULT now(),
     notes text DEFAULT NULL,
     CONSTRAINT dataset_pk PRIMARY KEY (dsname)
-);                    
+);
 
 -- method list
 CREATE TABLE methods (
     mtname name NOT NULL,
-    userid name,
+    userid name DEFAULT NULL,
     created timestamp without time zone DEFAULT now(),
-    notes text,
+    notes text DEFAULT NULL,
     CONSTRAINT methods_pk PRIMARY KEY (mtname)
 );
 
@@ -137,6 +151,7 @@ CREATE TABLE methods_keys (
     CONSTRAINT mtname_fk FOREIGN KEY (mtname)
       REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
 );
+
 
 
 
@@ -158,9 +173,10 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
   DECLARE
     _dsnamecount INT;
     _dsidentical INT;
-    _stmt VARCHAR;
     _schemacount INT;
     _classescount INT;
+    
+    _stmt VARCHAR;
   BEGIN
     EXECUTE 'SELECT COUNT(*)
              FROM public.datasets
@@ -286,13 +302,35 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
 
 
 
+CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
+  RETURNS BOOLEAN AS
+  $VT_dataset_drop_all$
+  DECLARE
+    _dsname public.datasets.dsname%TYPE;
+  BEGIN
+    FOR _dsname IN SELECT dsname FROM public.datasets LOOP
+      EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(_dsname) || ' CASCADE;';
+    END LOOP;
+    
+    TRUNCATE TABLE public.datasets;
+    
+    RETURN TRUE;
+    
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the removal of all datasets. (Details: ERROR %: %)', SQLSTATE, SQLERRM;
+  END;
+  $VT_dataset_drop_all$
+  LANGUAGE plpgsql STRICT;
+
+
+
 -- DATASET: truncate
 -- Function behavior:
 --   * Successful truncation of a dataset => returns TRUE
 --   * Whole dataset structure is no longer available => returns FALSE
 --   * Dataset is not registered, but schema exists => INTERRUPTED with INCONSISTENCY EXCEPTION
 --   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_dataset_truncate(_dsname VARCHAR)
+CREATE OR REPLACE FUNCTION VT_dataset_truncate (_dsname VARCHAR)
   RETURNS BOOLEAN AS
   $VT_dataset_truncate$
   DECLARE
@@ -337,7 +375,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_truncate(_dsname VARCHAR)
 
 -- Warning: DO NOT USE this function as standalone function!
 --          It is a support function for VT_dataset_create and VT_dataset_truncate only.
-CREATE OR REPLACE FUNCTION VT_dataset_support_create(_dsname VARCHAR)
+CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
   RETURNS VOID AS
   $VT_dataset_create_support$
   DECLARE
@@ -362,9 +400,9 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create(_dsname VARCHAR)
       vid_fps real,
       vid_speed  real  DEFAULT 1,
       vid_time timestamp without time zone,
-      userid name,
+      userid name DEFAULT NULL,
       created timestamp without time zone DEFAULT now(),
-      notes text,
+      notes text DEFAULT NULL,
       CONSTRAINT sequences_pk PRIMARY KEY (seqname)
     );
     CREATE INDEX sequences_seqtyp_idx ON sequences(seqtyp);
@@ -377,9 +415,9 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create(_dsname VARCHAR)
       outputs regclass,
       params character varying,
       state public.pstate DEFAULT '(created,0,,)',
-      userid name,
+      userid name DEFAULT NULL,
       created timestamp without time zone DEFAULT now(),
-      notes text,
+      notes text DEFAULT NULL,
       CONSTRAINT processes_pk PRIMARY KEY (prsname),
       CONSTRAINT mtname_fk FOREIGN KEY (mtname)
           REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -396,10 +434,124 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create(_dsname VARCHAR)
 
 
 
+
+
+-------------------------------------
+-- VTApi CORE UNDERLYING functions for METHODS
+-------------------------------------
+
+-- METHOD: add
+-- Function behavior:
+--   * Successful addition of a method => returns TRUE
+--   * Method with the same name is already available => returns FALSE
+--   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
+CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEY[], _notes TEXT DEFAULT NULL)
+  RETURNS BOOLEAN AS
+  $VT_method_add$
+  DECLARE
+    _mtcount INT;
+    
+    _stmt VARCHAR;
+    _inscols VARCHAR DEFAULT '';
+    _insvals VARCHAR DEFAULT '';
+  BEGIN
+    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _mtcount;
+    IF _mtcount <> 0 THEN
+      RETURN FALSE;
+    END IF;
+
+    IF _notes IS NOT NULL THEN
+      _inscols := ', notes';
+      _insvals := ', ' || quote_literal(_notes);
+    END IF;
+    _stmt := 'INSERT INTO public.methods (mtname' || _inscols || ') VALUES (' || quote_literal(_mtname) || _insvals || ');';
+    EXECUTE _stmt;
+    
+    _insvals := '';
+    FOR i IN 1 .. array_upper(_mkeys, 1) LOOP
+      IF _mkeys[i].keyname IS NULL
+      THEN
+        RAISE EXCEPTION 'Method key name ("keyname" property) can not be NULL!';
+      END IF;
+      
+      IF _mkeys[i].typname IS NULL
+      THEN
+        RAISE EXCEPTION 'Method key type ("typname" property) can not be NULL!';
+      END IF;
+      
+      IF _mkeys[i].inout IS NULL
+      THEN
+        RAISE EXCEPTION 'Method scope ("inout" property) can not be NULL!';
+      END IF;
+      
+      
+      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[i].keyname) || ', ' || quote_literal(_mkeys[i].typname) || ', ' || quote_literal(_mkeys[i].inout) || ', ';
+      
+      IF _mkeys[i].default_num IS NULL THEN
+        _insvals := _insvals || 'NULL';
+      ELSE
+        _insvals := _insvals || quote_literal(_mkeys[i].default_num);
+      END IF;
+      
+      _insvals := _insvals || ', ';
+      
+      IF _mkeys[i].default_str IS NULL THEN
+        _insvals := _insvals || 'NULL';
+      ELSE
+        _insvals := _insvals || quote_literal(_mkeys[i].default_str);
+      END IF;
+      
+      _insvals := _insvals || '), ';
+    END LOOP;
+    
+    _stmt := 'INSERT INTO public.methods_keys(mtname, keyname, typname, inout, default_num, default_str) VALUES ' || rtrim(_insvals, ', ');
+    EXECUTE _stmt;
+    
+    RETURN TRUE;
+
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the addition of the method "%". (Details: ERROR %: %)', _mtname, SQLSTATE, SQLERRM;
+  END;
+  $VT_method_add$
+  LANGUAGE plpgsql CALLED ON NULL INPUT;
+
+
+
+-- METHOD: delete
+-- Function behavior:
+--   * Successful deletion of a method => returns TRUE
+--   * Method with the same name is no longer available => returns FALSE
+--   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
+CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR)
+  RETURNS BOOLEAN AS
+  $VT_method_delete$
+  DECLARE
+    _mtcount INT;
+  BEGIN
+    -- TODO: what if processes block the deletion??? :(
+  
+    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _mtcount;
+    IF _mtcount <> 1 THEN
+      RETURN FALSE;
+    END IF;
+    EXECUTE 'DELETE FROM public.methods WHERE mtname = ' || quote_literal(_mtname);
+--    EXECUTE 'DELETE FROM public.methods_keys WHERE mtname = ' || quote_literal(_mtname); -- is not necessary if the "ON DELETE CASCADE" is defined
+    RETURN TRUE;
+    
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the deletion of the method "%". (Details: ERROR %: %)', _mtname, SQLSTATE, SQLERRM;
+  END;
+  $VT_method_delete$
+  LANGUAGE plpgsql STRICT;
+
+
+
+
+
 -------------------------------------
 -- Functions to work with real time
 -------------------------------------
-CREATE OR REPLACE FUNCTION tsrange(_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length REAL)
+CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length REAL)
   RETURNS TSRANGE AS
   $tsrange$
     SELECT CASE _rt_start
@@ -410,7 +562,7 @@ CREATE OR REPLACE FUNCTION tsrange(_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_l
   LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION trg_interval_provide_realtime()
+CREATE OR REPLACE FUNCTION trg_interval_provide_realtime ()
   RETURNS TRIGGER AS
   $trg_interval_provide_realtime$
     DECLARE
