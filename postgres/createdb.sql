@@ -133,6 +133,7 @@ CREATE TABLE datasets (
 -- method list
 CREATE TABLE methods (
     mtname name NOT NULL,
+    usert   BOOLEAN   DEFAULT FALSE,
     userid name DEFAULT NULL,
     created timestamp without time zone DEFAULT now(),
     notes text DEFAULT NULL,
@@ -147,6 +148,8 @@ CREATE TABLE methods_keys (
     inout inouttype NOT NULL,
     default_num double precision[],
     default_str varchar[],
+    indexedkey     BOOLEAN   DEFAULT FALSE,
+    indexedparts   INT[]     DEFAULT NULL,
     CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
     CONSTRAINT mtname_fk FOREIGN KEY (mtname)
       REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
