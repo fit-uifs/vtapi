@@ -43,6 +43,7 @@ DROP TYPE IF EXISTS public.pstatus CASCADE;
 DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
 DROP TYPE IF EXISTS public.pstate CASCADE;
+DROP TYPE IF EXISTS public.VT_TBLCOLDEF CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_dataset_create(VARCHAR, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
@@ -51,6 +52,8 @@ DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, METHODKEY, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR) CASCADE;
+
+DROP FUNCTION IF EXISTS public.VT_process_output_create(VARCHAR, VARCHAR, VARCHAR) CASCADE;
 
 DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, REAL) CASCADE;
 DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
@@ -116,6 +119,12 @@ CREATE TYPE pstate AS (
     last_error varchar      -- error message
 );
 
+
+CREATE TYPE VT_TBLCOLDEF AS (
+    attname    NAME,
+    atttypid   REGTYPE,
+    attio      VARCHAR
+);
 -------------------------------------
 -- CREATE tables
 -------------------------------------
@@ -133,6 +142,7 @@ CREATE TABLE datasets (
 -- method list
 CREATE TABLE methods (
     mtname name NOT NULL,
+    usert   BOOLEAN   DEFAULT FALSE,
     userid name DEFAULT NULL,
     created timestamp without time zone DEFAULT now(),
     notes text DEFAULT NULL,
@@ -147,6 +157,8 @@ CREATE TABLE methods_keys (
     inout inouttype NOT NULL,
     default_num double precision[],
     default_str varchar[],
+    indexedkey     BOOLEAN   DEFAULT FALSE,
+    indexedparts   INT[]     DEFAULT NULL,
     CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
     CONSTRAINT mtname_fk FOREIGN KEY (mtname)
       REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
@@ -468,37 +480,37 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEY[], _
     EXECUTE _stmt;
     
     _insvals := '';
-    FOR i IN 1 .. array_upper(_mkeys, 1) LOOP
-      IF _mkeys[i].keyname IS NULL
+    FOR _i IN 1 .. array_upper(_mkeys, 1) LOOP
+      IF _mkeys[_i].keyname IS NULL
       THEN
         RAISE EXCEPTION 'Method key name ("keyname" property) can not be NULL!';
       END IF;
       
-      IF _mkeys[i].typname IS NULL
+      IF _mkeys[_i].typname IS NULL
       THEN
         RAISE EXCEPTION 'Method key type ("typname" property) can not be NULL!';
       END IF;
       
-      IF _mkeys[i].inout IS NULL
+      IF _mkeys[_i].inout IS NULL
       THEN
         RAISE EXCEPTION 'Method scope ("inout" property) can not be NULL!';
       END IF;
       
       
-      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[i].keyname) || ', ' || quote_literal(_mkeys[i].typname) || ', ' || quote_literal(_mkeys[i].inout) || ', ';
+      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout) || ', ';
       
-      IF _mkeys[i].default_num IS NULL THEN
+      IF _mkeys[_i].default_num IS NULL THEN
         _insvals := _insvals || 'NULL';
       ELSE
-        _insvals := _insvals || quote_literal(_mkeys[i].default_num);
+        _insvals := _insvals || quote_literal(_mkeys[_i].default_num);
       END IF;
       
       _insvals := _insvals || ', ';
       
-      IF _mkeys[i].default_str IS NULL THEN
+      IF _mkeys[_i].default_str IS NULL THEN
         _insvals := _insvals || 'NULL';
       ELSE
-        _insvals := _insvals || quote_literal(_mkeys[i].default_str);
+        _insvals := _insvals || quote_literal(_mkeys[_i].default_str);
       END IF;
       
       _insvals := _insvals || '), ';
@@ -545,6 +557,312 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR)
   LANGUAGE plpgsql STRICT;
 
 
+
+
+
+-------------------------------------
+-- VTApi CORE UNDERLYING functions for PROCESS' OUTPUT of given method
+-------------------------------------
+
+-- PROCESS' OUTPUT: CREATE
+-- args:
+--   * _mtname - name of method for which will be created process' output table
+--   * _dsname - name of dataset where will be created process' output table (optional)
+--   * _reqoutname - process' ouput table according to user requirements (optional)
+CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _dsname VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL)
+  RETURNS BOOLEAN AS
+  $VT_method_output_create$
+  DECLARE
+    _keyname        public.methods_keys.keyname%TYPE;
+    _typname        public.methods_keys.typname%TYPE;
+    _typname2       public.methods_keys.typname%TYPE;
+    _indexedkey     public.methods_keys.indexedkey%TYPE;
+    _indexedparts   public.methods_keys.indexedparts%TYPE;
+  
+    _stmt           VARCHAR   DEFAULT '';
+    _tmpstmt        VARCHAR   DEFAULT '';
+    _idxstmt        VARCHAR   DEFAULT '';
+    
+    _controlcount   INT;
+    _i              INT;
+    _usert          BOOLEAN;
+    _keyio          VARCHAR;
+    _namespaceoid   OID;
+    _tblcoldefs     public.VT_TBLCOLDEF;
+    _idxnames       VARCHAR[];
+    _idxprefix      VARCHAR   DEFAULT '';
+    
+    __schema        VARCHAR   DEFAULT '';
+    __outname       VARCHAR   DEFAULT '';
+  BEGIN
+    -- check if method exists
+    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
+    IF _controlcount <> 1 THEN
+      RAISE EXCEPTION 'Method "%" does not exist.', _mtname;
+    END IF;
+  
+    IF _reqoutname IS NULL THEN
+      _reqoutname := _mtname || '_out';
+    ELSE
+      -- check if requested process' output name is not reserved to other infrastructure tables
+      IF _reqoutname IN ('processes', 'sequences') THEN
+        RAISE EXCEPTION 'Usage of the name "%" for process'' output is not allowed!', _reqoutname;
+      END IF;
+    END IF;
+    
+    IF _dsname IS NULL THEN
+      _dsname := current_schema();
+    ELSE
+      _idxprefix := _dsname || '.';
+    END IF;
+    
+    __schema := quote_ident(_dsname) || '.';
+    __outname := __schema || quote_ident(_reqoutname);
+
+    -- check if dataset (schema) exists
+    EXECUTE 'SELECT oid
+             FROM pg_catalog.pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
+        INTO _namespaceoid;
+    
+    IF _namespaceoid IS NULL THEN
+      RAISE EXCEPTION 'Dataset "%" does not exist.', _dsname;
+    END IF;
+    
+    -- check if process' output table exists
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_catalog.pg_class
+             WHERE relname = ' || quote_literal(_reqoutname) || '
+               AND relnamespace = ' || _namespaceoid || '
+               AND relkind = ''r'';'
+        INTO _controlcount;
+        
+    EXECUTE 'SELECT usert FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _usert;
+
+
+    IF _controlcount = 0 THEN
+      _stmt := 'id        SERIAL   NOT NULL,
+                seqname   NAME     NOT NULL,
+                prsname   NAME,
+                t1        INT      NOT NULL,
+                t2        INT      NOT NULL,';
+
+      IF _usert = TRUE THEN
+        _stmt := _stmt || 'rt_start      TIMESTAMP WITHOUT TIME ZONE   DEFAULT NULL, -- trigger supplied';
+      END IF;
+
+      _stmt := _stmt || 'sec_length    REAL,   -- trigger supplied
+                         imglocation   VARCHAR, ';
+
+      FOR _keyname, _typname, _indexedkey, _indexedparts IN EXECUTE 'SELECT keyname, typname, indexedkey, indexedparts FROM public.methods_keys WHERE mtname = ' || quote_literal(_mtname) || ' AND inout = ''out''' LOOP
+        _stmt := _stmt || ' ' || quote_ident(_keyname) || ' ' || _typname::regtype || ', ';
+
+        IF _indexedkey THEN
+          _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, NULL, _dsname);
+        END IF;
+
+        IF _indexedparts IS NOT NULL THEN
+          FOREACH _i IN ARRAY _indexedparts LOOP
+            _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, _i, _dsname);
+          END LOOP;
+        END IF;
+
+      END LOOP;
+
+      _stmt := 'CREATE TABLE ' || __outname || '('
+                  || _stmt ||
+               '  created       TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
+                  CONSTRAINT ' || quote_ident(_reqoutname || '_pk') || ' PRIMARY KEY (id),
+                  CONSTRAINT seqname_fk FOREIGN KEY (seqname)
+                    REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT,
+                  CONSTRAINT prsname_fk FOREIGN KEY (prsname)
+                    REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
+                );
+                CREATE INDEX ' || quote_ident(_reqoutname || '_seqname_idx') || ' ON ' || __outname || '(seqname);
+                CREATE INDEX ' || quote_ident(_reqoutname || '_prsname_idx') || ' ON ' || __outname || '(prsname);
+                CREATE INDEX ' || quote_ident(_reqoutname || '_sec_length_idx') || ' ON ' || __outname || '(sec_length);
+                CREATE INDEX ' || quote_ident(_reqoutname || '_imglocation_idx') || ' ON ' || __outname || '(imglocation);';
+
+      IF _usert = TRUE THEN
+        _stmt := _stmt || 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
+      END IF;
+      
+      _stmt := _stmt || 'CREATE TRIGGER ' || quote_ident(_reqoutname || '_provide_realtime') ||
+               '  BEFORE INSERT OR UPDATE
+                  ON ' || __outname ||
+               '  FOR EACH ROW
+                  EXECUTE PROCEDURE public.trg_interval_provide_realtime();';
+
+
+    ELSE
+    
+      -- check if sequence exists
+      EXECUTE 'SELECT COUNT(*)
+               FROM pg_catalog.pg_class
+               WHERE relname = ' || quote_literal(_reqoutname || '_id_seq') ||
+              '  AND relkind = ''S'';'
+          INTO _controlcount;
+
+      IF _controlcount = 0 THEN
+        RAISE EXCEPTION 'Column named "id" also defined as a sequence is missing.';
+      END IF;
+    
+      EXECUTE 'SELECT (t.c).attname, (t.c).atttypid
+               FROM (
+                 SELECT UNNEST(
+                          ARRAY[
+                            ROW(''seqname'', ''NAME'', ''NOT NULL''),
+                            ROW(''prsname'', ''NAME'', ''''),
+                            ROW(''t1'', ''INT'', ''NOT NULL''),
+                            ROW(''t2'', ''INT'', ''NOT NULL''),
+                            ROW(''sec_length'', ''REAL'', ''''), --trigger supplied
+                            ROW(''imglocation'', ''VARCHAR'', '''')
+                          ]::public.VT_TBLCOLDEF[]
+                        ) AS c
+               ) AS t
+               EXCEPT
+               SELECT attname, atttypid
+               FROM pg_catalog.pg_attribute
+               WHERE attrelid = ' || quote_literal(_dsname || '.' || _reqoutname) || '::regclass::oid
+                 AND attstattarget = -1'
+          INTO _keyname, _typname;
+      
+      IF _keyname IS NOT NULL THEN
+        RAISE EXCEPTION 'Column named "%" of "%" data type is missing.', _keyname, _typname;
+      END IF;
+
+      EXECUTE 'SELECT COUNT(*)
+               FROM pg_catalog.pg_constraint
+               WHERE conindid::regclass::varchar IN (' ||
+                 quote_literal(_idxprefix || _reqoutname || '_pk') || ', ' ||
+                 quote_literal(_idxprefix || 'sequences_pk') || ', ' ||
+                 quote_literal(_idxprefix || 'processes_pk') || '
+               )
+                 AND conrelid::regclass::varchar = ' || quote_literal(_idxprefix || _reqoutname) || ';'
+          INTO _controlcount;
+
+      IF _controlcount <> 3 THEN
+        RAISE EXCEPTION 'Corrupted format of process'' output table - some (%) CONSTRAINT is missing.', (3 - _controlcount);
+      END IF;
+      -- TODO: check of indexes 4 seqname, prsname, imglocation & sec_length?
+      
+      EXECUTE 'SELECT array_agg(indexrelid::regclass::varchar)
+               FROM pg_catalog.pg_index
+               WHERE indrelid = ' || quote_literal(__outname) || '::regclass;'
+          INTO _idxnames;
+      
+      IF _usert = TRUE THEN
+        _tmpstmt := 'SELECT ''rt_start'', ''TIMESTAMP WITHOUT TIME ZONE'', ''DEFAULT NULL'', FALSE, NULL  -- trigger supplied
+                  UNION ';
+        -- TODO: maybe special solo processing?
+        
+        IF EXECUTE 'SELECT TRUE WHERE ' || quote_literal(_idxprefix || _reqoutname || '_tsrange_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' THEN
+          _idxstmt := 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
+        END IF;
+      END IF;
+
+      FOR _keyname, _typname, _keyio, _indexedkey, _indexedparts IN EXECUTE _tmpstmt || ' SELECT keyname, typname, '''', indexedkey, indexedparts FROM public.methods_keys WHERE inout = ''out'' AND mtname = ' || quote_literal(_mtname) || ' ORDER BY 3 DESC;' LOOP
+        EXECUTE 'SELECT atttypid
+                 FROM pg_catalog.pg_attribute
+                 WHERE attrelid = ' || quote_literal(_dsname || '.' || _reqoutname) || '::regclass::oid
+                   AND attname = ' || quote_literal(_keyname) || '
+                   AND attstattarget = -1'
+            INTO _typname2;
+
+        IF _typname2 IS NULL THEN
+         _stmt := _stmt || ' ADD ' || quote_ident(_keyname) || '   ' || _typname || ' ' || _keyio || ', ';
+        ELSIF _typname <> _typname2 THEN
+          RAISE EXCEPTION 'Column named "%" already exists, but is of different data type (existing: "%", requested: "%").', _keyname, _typname, _typname2;
+        END IF;
+
+        IF _indexedkey = TRUE THEN
+          EXECUTE 'SELECT COUNT(*) WHERE ' || quote_literal(_idxprefix || _reqoutname || '_' || _keyname || '_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' INTO _controlcount;
+          IF _controlcount = 0 THEN
+            _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, NULL, _dsname);
+          END IF;
+        END IF;
+
+        IF _indexedparts IS NOT NULL THEN
+          FOREACH _i IN ARRAY _indexedparts LOOP
+            EXECUTE 'SELECT attname FROM pg_catalog.pg_attribute WHERE attrelid = (SELECT oid FROM pg_catalog.pg_class WHERE reltype = ' || quote_literal(_typname) || '::regtype AND relkind = ''c'') AND attnum = ' || _i INTO _tmpstmt;
+            EXECUTE 'SELECT COUNT(*) WHERE ' || quote_literal(_idxprefix || _reqoutname || '_' || _keyname || '_' || _tmpstmt || '_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' INTO _controlcount;
+            IF _controlcount = 0 THEN
+              _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, _i, _dsname);
+            END IF;
+          END LOOP;
+        END IF;
+      END LOOP;
+
+      IF _stmt <> '' THEN
+        _stmt := 'ALTER TABLE ' || __outname || rtrim(_stmt, ', ');
+      END IF;
+
+    END IF;
+
+    EXECUTE _stmt;
+    EXECUTE _idxstmt;
+    
+    RETURN TRUE;
+  END;
+  $VT_method_output_create$
+  LANGUAGE plpgsql CALLED ON NULL INPUT;
+
+-- METHOD OUTPUTS: DROP
+-- args:
+--   * method name
+--   * dataset name
+--   * outname
+CREATE OR REPLACE FUNCTION VT_process_output_drop (_mtname VARCHAR, _dsname VARCHAR, _outname VARCHAR)
+  RETURNS BOOLEAN AS
+  $VT_method_output_drop$
+  DECLARE
+  BEGIN
+    
+  END;
+  $VT_method_output_drop$
+  LANGUAGE plpgsql CALLED ON NULL INPUT;
+
+
+
+CREATE OR REPLACE FUNCTION VT_process_output_idxquery(_tblname VARCHAR, _keyname NAME, _typname REGTYPE, _keypart INT DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
+  RETURNS VARCHAR AS
+  $VT_process_output_idxquery$
+  DECLARE
+    _stmt      VARCHAR   DEFAULT '';
+    _goid      OID;
+    _idxname   VARCHAR   DEFAULT '';
+    __idxcol    VARCHAR   DEFAULT '';
+  BEGIN
+    IF _dsname IS NULL THEN
+      _dsname := current_schema();
+    END IF;
+
+    __idxcol := quote_ident(_keyname);
+    
+    IF _keypart IS NOT NULL THEN
+      EXECUTE 'SELECT attname, atttypid::regtype FROM pg_catalog.pg_attribute WHERE attrelid = (SELECT oid FROM pg_catalog.pg_class WHERE reltype = ' || quote_literal(_typname) || '::regtype AND relkind = ''c'') AND attnum = ' || _keypart INTO __idxcol, _typname;
+      _idxname := '_' || __idxcol;
+      __idxcol := '( (' || quote_ident(_keyname) || ').' || quote_ident(__idxcol) || ' )';
+    END IF;
+
+    _idxname := _tblname || '_' || _keyname || _idxname || '_idx';
+    
+    -- TODO complex index
+    _goid := oid FROM pg_type WHERE typname = 'geometry';
+    IF _typname = 'box'::regtype OR (_goid IS NOT NULL AND _typname = _goid) THEN
+      _stmt := 'USING GIST';
+    END IF;
+    
+    -- TODO GIST index 4 3D geometry?
+    -- TODO _idxtype & _idxops - is it needed & useful?
+    RETURN 'CREATE INDEX ' || quote_ident(_idxname) || ' ON ' || quote_ident(_dsname) || '.' || quote_ident(_tblname) || ' ' || _stmt || ' (' || __idxcol || ');';
+    
+    EXCEPTION WHEN OTHERS THEN
+      RAISE WARNING 'It seems, that indexing of "%" type (above key "%") is not supported by VTApi at this moment. If you would like to index this key, try to contact VTApi team. (Details: ERROR %: %)', _typname, _keyname, SQLSTATE, SQLERRM;
+      RETURN '';
+  END;
+  $VT_process_output_idxquery$
+  LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
 
