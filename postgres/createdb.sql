@@ -91,10 +91,13 @@ CREATE TYPE paramtype AS ENUM (
 
 -- definition of input/output column for method's processes (used when creating method)
 CREATE TYPE methodkeytype AS (
-    keyname       NAME,      -- column name
-    typname       REGTYPE,   -- column data type
-    inout         INOUTTYPE, -- is column a process input/output?
-    description   VARCHAR    -- key description
+    keyname        NAME,      -- column name
+    typname        REGTYPE,   -- column data type
+    inout          INOUTTYPE, -- is column a process input/output?
+    required       BOOLEAN,   -- is value in column required (must not be NULL) or not?
+    indexedkey     BOOLEAN,   -- is column indexed?
+    indexedparts   INT[],     -- which parts of composite type is indexed?
+    description    VARCHAR    -- key description
 );
 
 -- definition of input params for method's processes (used when creating method)
@@ -174,10 +177,11 @@ CREATE TABLE methods (
 
 -- methods in/out columns definitions
 CREATE TABLE methods_keys (
-    mtname    NAME        NOT NULL,
-    keyname   NAME        NOT NULL,
-    typname   REGTYPE     NOT NULL,
-    inout     INOUTTYPE   NOT NULL,
+    mtname     NAME        NOT NULL,
+    keyname    NAME        NOT NULL,
+    typname    REGTYPE     NOT NULL,
+    inout      INOUTTYPE   NOT NULL,
+    required   BOOLEAN     DEFAULT FALSE,
     indexedkey     BOOLEAN   DEFAULT FALSE,
     indexedparts   INT[]     DEFAULT NULL,
     CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
