@@ -97,11 +97,11 @@ CREATE TRIGGER demo2out_provide_realtime
 
 -- insert demo1 modules metadata into public schema
 SELECT public.VT_method_delete('demo1');
-SELECT public.VT_method_add('demo1', '{"(param1,int,in_param,{50},)", "(param2,real,in_param,{720.4},)", "(features_array,real[],out,,)", "(features_mat,public.cvmat,out,,)"}', 'auto-generated');
+SELECT public.VT_method_add('demo1', '{"(features_array,real[],out,)", "(features_mat,public.cvmat,out,)"}', '{"(param1,int,true,50,[-100\\,100],)", "(param2,double,true,0.5,[-1.0\\,1.0],)"}', 'auto-generated');
 
 -- insert demo2 modules metadata into public schema
 SELECT public.VT_method_delete('demo2');
-SELECT public.VT_method_add('demo2', '{"(video,varchar,in_param,,)", "(features_array,real[],in,,)", "(features_mat,public.cvmat,in,,)", "(event,public.vtevent,out,,)"}', 'auto-generated');
+SELECT public.VT_method_add('demo2', '{"(features_array,real[],in,)", "(features_mat,public.cvmat,in,)", "(event,public.vtevent,out,)"}', '{"(video,string,true,,)"}', 'auto-generated');
 
 -- insert videos
 INSERT INTO sequences (seqname, seqlocation, seqtyp, vid_length, vid_fps, vid_speed, vid_time, userid, notes) VALUES
