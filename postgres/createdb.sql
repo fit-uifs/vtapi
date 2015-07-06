@@ -97,7 +97,7 @@ CREATE TYPE methodkeytype AS (
     required       BOOLEAN,   -- is value in column required (must not be NULL) or not?
     indexedkey     BOOLEAN,   -- is column indexed?
     indexedparts   INT[],     -- which parts of composite type is indexed?
-    description    VARCHAR    -- key description
+    description    VARCHAR    -- key description      !!!  TODO: is it needed?  !!!
 );
 
 -- definition of input params for method's processes (used when creating method)
@@ -184,6 +184,7 @@ CREATE TABLE methods_keys (
     required   BOOLEAN     DEFAULT FALSE,
     indexedkey     BOOLEAN   DEFAULT FALSE,
     indexedparts   INT[]     DEFAULT NULL,
+    description    VARCHAR   DEFAULT NULL,
     CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
     CONSTRAINT mtname_fk FOREIGN KEY (mtname)
       REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
@@ -531,14 +532,44 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
       END IF;
       
       
-      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout);
+      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout) || ', ';
 
-      IF _mkeys[_i].inout IS NOT NULL THEN
-        _insvals := _insvals || ', ' || quote_literal(_mkeys[_i].description);
+      IF _mkeys[_i].inout = 'out' THEN
+      RAISE NOTICE 'out param';
+        IF _mkeys[_i].required IS NOT NULL THEN
+          _insvals := _insvals || quote_literal(_mkeys[_i].required) || ', ';
+        ELSE
+          _insvals := _insvals || 'NULL, ';
+        END IF;
+      
+        IF _mkeys[_i].indexedkey IS NOT NULL THEN
+          _insvals := _insvals || quote_literal(_mkeys[_i].indexedkey) || ', ';
+        ELSE
+          _insvals := _insvals || 'NULL, ';
+        END IF;
+
+        IF _mkeys[_i].indexedparts IS NOT NULL THEN
+          _insvals := _insvals || quote_literal(_mkeys[_i].indexedparts) || ', ';
+        ELSE
+          _insvals := _insvals || 'NULL, ';
+        END IF;
+      ELSE
+        _insvals := _insvals || 'NULL, NULL, NULL, ';
+      END IF;
+      
+
+      IF _mkeys[_i].description IS NOT NULL THEN
+        _insvals := _insvals || quote_literal(_mkeys[_i].description);
+      ELSE
+        _insvals := _insvals || 'NULL';
       END IF;
 
       _insvals := _insvals || '), ';
+      RAISE NOTICE '%', _insvals;
     END LOOP;
+    
+    _stmt := 'INSERT INTO public.methods_keys(mtname, keyname, typname, inout, required, indexedkey, indexedparts, description) VALUES ' || rtrim(_insvals, ', ');
+    EXECUTE _stmt;
 
 /*
   -- TODO: from METHODPARAMTYPE[] instead of old METHODKEY[]
@@ -560,9 +591,6 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
       _insvals := _insvals || ', ';
   END LOOP <METHODPARAMTYPE>
 */
-    
-    _stmt := 'INSERT INTO public.methods_keys(mtname, keyname, typname, inout, default_num, default_str) VALUES ' || rtrim(_insvals, ', ');
-    EXECUTE _stmt;
     
     RETURN TRUE;
 
