@@ -32,13 +32,17 @@ CREATE SCHEMA IF NOT EXISTS public;
 -------------------------------------
 SELECT VT_dataset_drop_all();
 
+
+DROP TABLE IF EXISTS public.methods_params CASCADE;
 DROP TABLE IF EXISTS public.methods_keys CASCADE;
 DROP TABLE IF EXISTS public.methods CASCADE;
 DROP TABLE IF EXISTS public.datasets CASCADE;
 
 DROP TYPE IF EXISTS public.seqtype CASCADE;
 DROP TYPE IF EXISTS public.inouttype CASCADE;
-DROP TYPE IF EXISTS public.METHODKEY CASCADE;
+DROP TYPE IF EXISTS public.paramtype CASCADE;
+DROP TYPE IF EXISTS public.methodkeytype CASCADE;
+DROP TYPE IF EXISTS public.methodparamtype CASCADE;
 DROP TYPE IF EXISTS public.pstatus CASCADE;
 DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
@@ -50,7 +54,7 @@ DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_truncate(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 
-DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, METHODKEY, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR) CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_process_output_create(VARCHAR, VARCHAR, VARCHAR) CASCADE;
@@ -70,20 +74,39 @@ CREATE TYPE seqtype AS ENUM (
     'data'      -- unspecified
 );    
 
--- method parameter type
+-- method key type - does column contain input or output data?
 CREATE TYPE inouttype AS ENUM (
-    'in_param',     -- input parameter (numeric/string)
     'in',           -- input = column from other method's processes' output table
     'out'           -- output = column from this method's processes' output table
 );
 
-CREATE TYPE METHODKEY AS (
-    keyname       NAME,      -- variable name
-    typname       REGTYPE,   -- variable data type
-    inout         INOUTTYPE, -- variable scope - determines which kind variable is: common input, input from other process' output table or output in current process' output table
-    default_num   DOUBLE PRECISION[], -- default numeric value
-    default_str   VARCHAR[]  -- default character value
+-- supported data types for method params
+CREATE TYPE paramtype AS ENUM (
+    'string',       -- characeter string
+    'int',          -- 4-byte integer
+    'double',       -- double precision float
+    'int[]',        -- integer vector
+    'double[]'      -- double vector
 );
+
+-- definition of input/output column for method's processes (used when creating method)
+CREATE TYPE methodkeytype AS (
+    keyname       NAME,      -- column name
+    typname       REGTYPE,   -- column data type
+    inout         INOUTTYPE, -- is column a process input/output?
+    description   VARCHAR    -- key description
+);
+
+-- definition of input params for method's processes (used when creating method)
+CREATE TYPE methodparamtype AS (
+    paramname     NAME,      -- param name
+    type          PARAMTYPE, -- param type (enum)
+    required      BOOLEAN,   -- is param required?
+    default_val   VARCHAR,   -- param default value (used when param is required and not given)
+    valid_range   VARCHAR,   -- range definition for numeric types (custom format)
+    description   VARCHAR    -- param description
+);
+
 
 -- process state enum
 CREATE TYPE pstatus AS ENUM (
@@ -149,14 +172,12 @@ CREATE TABLE methods (
     CONSTRAINT methods_pk PRIMARY KEY (mtname)
 );
 
--- methods parameters definition
+-- methods in/out columns definitions
 CREATE TABLE methods_keys (
-    mtname name NOT NULL,
-    keyname name NOT NULL,
-    typname regtype NOT NULL,
-    inout inouttype NOT NULL,
-    default_num double precision[],
-    default_str varchar[],
+    mtname    NAME        NOT NULL,
+    keyname   NAME        NOT NULL,
+    typname   REGTYPE     NOT NULL,
+    inout     INOUTTYPE   NOT NULL,
     indexedkey     BOOLEAN   DEFAULT FALSE,
     indexedparts   INT[]     DEFAULT NULL,
     CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
@@ -164,7 +185,18 @@ CREATE TABLE methods_keys (
       REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-
+-- methods input parameters definitions
+CREATE TABLE methods_params (
+    mtname        NAME        NOT NULL,
+    paramname     NAME        NOT NULL,
+    type          PARAMTYPE   NOT NULL,
+    required      BOOLEAN     NOT NULL DEFAULT FALSE,
+    default_val   VARCHAR,
+    valid_range   VARCHAR,
+    CONSTRAINT methods_params_pk PRIMARY KEY (mtname, paramname),
+    CONSTRAINT mtname_fk FOREIGN KEY (mtname)
+      REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
+);
 
 
 
@@ -457,7 +489,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
 --   * Successful addition of a method => returns TRUE
 --   * Method with the same name is already available => returns FALSE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEY[], _notes TEXT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[], _mparams METHODPARAMTYPE[], _notes TEXT DEFAULT NULL)
   RETURNS BOOLEAN AS
   $VT_method_add$
   DECLARE
@@ -467,6 +499,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEY[], _
     _inscols VARCHAR DEFAULT '';
     _insvals VARCHAR DEFAULT '';
   BEGIN
+  -- TODO: implement METHODPARAMTYPE && TEST METHODKEYTYPE changes also!!!
     EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _mtcount;
     IF _mtcount <> 0 THEN
       RETURN FALSE;
@@ -481,24 +514,31 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEY[], _
     
     _insvals := '';
     FOR _i IN 1 .. array_upper(_mkeys, 1) LOOP
-      IF _mkeys[_i].keyname IS NULL
-      THEN
+      IF _mkeys[_i].keyname IS NULL THEN
         RAISE EXCEPTION 'Method key name ("keyname" property) can not be NULL!';
       END IF;
       
-      IF _mkeys[_i].typname IS NULL
-      THEN
+      IF _mkeys[_i].typname IS NULL THEN
         RAISE EXCEPTION 'Method key type ("typname" property) can not be NULL!';
       END IF;
       
-      IF _mkeys[_i].inout IS NULL
-      THEN
+      IF _mkeys[_i].inout IS NULL THEN
         RAISE EXCEPTION 'Method scope ("inout" property) can not be NULL!';
       END IF;
       
       
-      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout) || ', ';
-      
+      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout);
+
+      IF _mkeys[_i].inout IS NOT NULL THEN
+        _insvals := _insvals || ', ' || quote_literal(_mkeys[_i].description);
+      END IF;
+
+      _insvals := _insvals || '), ';
+    END LOOP;
+
+/*
+  -- TODO: from METHODPARAMTYPE[] instead of old METHODKEY[]
+  LOOP <METHODPARAMTYPE>
       IF _mkeys[_i].default_num IS NULL THEN
         _insvals := _insvals || 'NULL';
       ELSE
@@ -513,8 +553,9 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEY[], _
         _insvals := _insvals || quote_literal(_mkeys[_i].default_str);
       END IF;
       
-      _insvals := _insvals || '), ';
-    END LOOP;
+      _insvals := _insvals || ', ';
+  END LOOP <METHODPARAMTYPE>
+*/
     
     _stmt := 'INSERT INTO public.methods_keys(mtname, keyname, typname, inout, default_num, default_str) VALUES ' || rtrim(_insvals, ', ');
     EXECUTE _stmt;
