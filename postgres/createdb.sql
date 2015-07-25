@@ -518,101 +518,104 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
     _stmt := 'INSERT INTO public.methods (mtname' || _inscols || ') VALUES (' || quote_literal(_mtname) || _insvals || ');';
     EXECUTE _stmt;
 
+    IF _mkeys IS NOT NULL THEN
+      _insvals := '';
+      FOR _i IN 1 .. array_upper(_mkeys, 1) LOOP
+        IF _mkeys[_i].keyname IS NULL THEN
+          RAISE EXCEPTION 'Method key name ("keyname" property) can not be NULL!';
+        END IF;
 
-    _insvals := '';
-    FOR _i IN 1 .. array_upper(_mkeys, 1) LOOP
-      IF _mkeys[_i].keyname IS NULL THEN
-        RAISE EXCEPTION 'Method key name ("keyname" property) can not be NULL!';
-      END IF;
-      
-      IF _mkeys[_i].typname IS NULL THEN
-        RAISE EXCEPTION 'Method key type ("typname" property) can not be NULL!';
-      END IF;
-      
-      IF _mkeys[_i].inout IS NULL THEN
-        RAISE EXCEPTION 'Method scope ("inout" property) can not be NULL!';
-      END IF;      
-      
-      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout) || ', ';
+        IF _mkeys[_i].typname IS NULL THEN
+          RAISE EXCEPTION 'Method key type ("typname" property) can not be NULL!';
+        END IF;
 
-      IF _mkeys[_i].inout = 'out' THEN
-        IF _mkeys[_i].required IS NOT NULL THEN
-          _insvals := _insvals || quote_literal(_mkeys[_i].required) || ', ';
+        IF _mkeys[_i].inout IS NULL THEN
+          RAISE EXCEPTION 'Method scope ("inout" property) can not be NULL!';
+        END IF;      
+
+        _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout) || ', ';
+
+        IF _mkeys[_i].inout = 'out' THEN
+          IF _mkeys[_i].required IS NOT NULL THEN
+            _insvals := _insvals || quote_literal(_mkeys[_i].required) || ', ';
+          ELSE
+            _insvals := _insvals || 'NULL, ';
+          END IF;
+
+          IF _mkeys[_i].indexedkey IS NOT NULL THEN
+            _insvals := _insvals || quote_literal(_mkeys[_i].indexedkey) || ', ';
+          ELSE
+            _insvals := _insvals || 'NULL, ';
+          END IF;
+
+          IF _mkeys[_i].indexedparts IS NOT NULL THEN
+            _insvals := _insvals || quote_literal(_mkeys[_i].indexedparts) || ', ';
+          ELSE
+            _insvals := _insvals || 'NULL, ';
+          END IF;
+        ELSE
+          _insvals := _insvals || 'NULL, NULL, NULL, ';
+        END IF;
+
+        IF _mkeys[_i].description IS NOT NULL THEN
+          _insvals := _insvals || quote_literal(_mkeys[_i].description);
+        ELSE
+          _insvals := _insvals || 'NULL';
+        END IF;
+
+        _insvals := _insvals || '), ';
+      END LOOP;
+
+      _stmt := 'INSERT INTO public.methods_keys(mtname, keyname, typname, inout, required, indexedkey, indexedparts, description) VALUES ' || rtrim(_insvals, ', ');
+      EXECUTE _stmt;
+    END IF;
+
+    
+    IF _mparams IS NOT NULL THEN
+      _insvals := '';
+      FOR _i IN 1 .. array_upper(_mparams, 1) LOOP
+        IF _mparams[_i].paramname IS NULL THEN
+          RAISE EXCEPTION 'Method parameter name ("paramname" property) can not be NULL!';
+        END IF;
+
+        IF _mparams[_i].type IS NULL THEN
+          RAISE EXCEPTION 'Method parameter type ("type" property) can not be NULL!';
+        END IF;
+
+
+        _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mparams[_i].paramname) || ', ' || quote_literal(_mparams[_i].type) || ', ';
+
+        IF _mparams[_i].required IS NOT NULL THEN
+          _insvals := _insvals || quote_literal(_mparams[_i].required) || ', ';
         ELSE
           _insvals := _insvals || 'NULL, ';
         END IF;
-      
-        IF _mkeys[_i].indexedkey IS NOT NULL THEN
-          _insvals := _insvals || quote_literal(_mkeys[_i].indexedkey) || ', ';
+
+        IF _mparams[_i].default_val IS NOT NULL THEN
+          _insvals := _insvals || quote_literal(_mparams[_i].default_val) || ', ';
         ELSE
           _insvals := _insvals || 'NULL, ';
         END IF;
 
-        IF _mkeys[_i].indexedparts IS NOT NULL THEN
-          _insvals := _insvals || quote_literal(_mkeys[_i].indexedparts) || ', ';
+        IF _mparams[_i].valid_range IS NOT NULL THEN
+          _insvals := _insvals || quote_literal(_mparams[_i].valid_range) || ', ';
         ELSE
           _insvals := _insvals || 'NULL, ';
         END IF;
-      ELSE
-        _insvals := _insvals || 'NULL, NULL, NULL, ';
-      END IF;
 
-      IF _mkeys[_i].description IS NOT NULL THEN
-        _insvals := _insvals || quote_literal(_mkeys[_i].description);
-      ELSE
-        _insvals := _insvals || 'NULL';
-      END IF;
+        IF _mparams[_i].description IS NOT NULL THEN
+          _insvals := _insvals || quote_literal(_mparams[_i].description);
+        ELSE
+          _insvals := _insvals || 'NULL';
+        END IF;
 
-      _insvals := _insvals || '), ';
-    END LOOP;
-    
-    _stmt := 'INSERT INTO public.methods_keys(mtname, keyname, typname, inout, required, indexedkey, indexedparts, description) VALUES ' || rtrim(_insvals, ', ');
-    EXECUTE _stmt;
+        _insvals := _insvals || '), ';
+        RAISE NOTICE '%: %', _i, _insvals;
+      END LOOP;
 
-    
-    _insvals := '';
-    FOR _i IN 1 .. array_upper(_mparams, 1) LOOP
-      IF _mparams[_i].paramname IS NULL THEN
-        RAISE EXCEPTION 'Method parameter name ("paramname" property) can not be NULL!';
-      END IF;
-      
-      IF _mparams[_i].type IS NULL THEN
-        RAISE EXCEPTION 'Method parameter type ("type" property) can not be NULL!';
-      END IF;
-      
-      
-      _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mparams[_i].paramname) || ', ' || quote_literal(_mparams[_i].type) || ', ';
-
-      IF _mparams[_i].required IS NOT NULL THEN
-        _insvals := _insvals || quote_literal(_mparams[_i].required) || ', ';
-      ELSE
-        _insvals := _insvals || 'NULL, ';
-      END IF;
-      
-      IF _mparams[_i].default_val IS NOT NULL THEN
-        _insvals := _insvals || quote_literal(_mparams[_i].default_val) || ', ';
-      ELSE
-        _insvals := _insvals || 'NULL, ';
-      END IF;
-
-      IF _mparams[_i].valid_range IS NOT NULL THEN
-        _insvals := _insvals || quote_literal(_mparams[_i].valid_range) || ', ';
-      ELSE
-        _insvals := _insvals || 'NULL, ';
-      END IF;
-
-      IF _mparams[_i].description IS NOT NULL THEN
-        _insvals := _insvals || quote_literal(_mparams[_i].description);
-      ELSE
-        _insvals := _insvals || 'NULL';
-      END IF;
-
-      _insvals := _insvals || '), ';
-      RAISE NOTICE '%: %', _i, _insvals;
-    END LOOP;
-    
-    _stmt := 'INSERT INTO public.methods_params(mtname, paramname, type, required, default_val, valid_range, description) VALUES ' || rtrim(_insvals, ', ');
-    EXECUTE _stmt;
+      _stmt := 'INSERT INTO public.methods_params(mtname, paramname, type, required, default_val, valid_range, description) VALUES ' || rtrim(_insvals, ', ');
+      EXECUTE _stmt;
+    END IF;
     
     RETURN TRUE;
 
