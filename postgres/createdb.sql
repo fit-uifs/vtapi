@@ -221,10 +221,10 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
   RETURNS INT AS 
   $VT_dataset_create$
   DECLARE
-    _dsnamecount INT;
-    _dsidentical INT;
-    _schemacount INT;
-    _classescount INT;
+    _dsnamecount    INT;
+    _dsidentical    INT;
+    _schemacount    INT;
+    _classescount   INT;
     
     _stmt VARCHAR;
   BEGIN
@@ -314,8 +314,8 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
   RETURNS BOOLEAN AS 
   $VT_dataset_drop$
   DECLARE
-    _dsnamecount INT;
-    _schemacount INT;
+    _dsnamecount   INT;
+    _schemacount   INT;
   BEGIN
     EXECUTE 'SELECT COUNT(*)
              FROM public.datasets
@@ -356,7 +356,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
   RETURNS BOOLEAN AS
   $VT_dataset_drop_all$
   DECLARE
-    _dsname public.datasets.dsname%TYPE;
+    _dsname   public.datasets.dsname%TYPE;
   BEGIN
     FOR _dsname IN SELECT dsname FROM public.datasets LOOP
       EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(_dsname) || ' CASCADE;';
@@ -384,8 +384,8 @@ CREATE OR REPLACE FUNCTION VT_dataset_truncate (_dsname VARCHAR)
   RETURNS BOOLEAN AS
   $VT_dataset_truncate$
   DECLARE
-    _dsnamecount INT;
-    _schemacount INT;
+    _dsnamecount   INT;
+    _schemacount   INT;
   BEGIN
     EXECUTE 'SELECT COUNT(*)
              FROM public.datasets
@@ -429,7 +429,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
   RETURNS VOID AS
   $VT_dataset_create_support$
   DECLARE
-    _schemacount INT;
+    _schemacount   INT;
   BEGIN
     EXECUTE 'SELECT COUNT(*)
              FROM pg_namespace
@@ -470,7 +470,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       notes text DEFAULT NULL,
       CONSTRAINT processes_pk PRIMARY KEY (prsname),
       CONSTRAINT mtname_fk FOREIGN KEY (mtname)
-          REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE RESTRICT,
+          REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE,
       CONSTRAINT inputs_fk FOREIGN KEY (inputs)
           REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
     );
@@ -499,11 +499,11 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
   RETURNS BOOLEAN AS
   $VT_method_add$
   DECLARE
-    _mtcount INT;
+    _mtcount   INT;
     
-    _stmt VARCHAR;
-    _inscols VARCHAR DEFAULT '';
-    _insvals VARCHAR DEFAULT '';
+    _stmt      VARCHAR;
+    _inscols   VARCHAR   DEFAULT '';
+    _insvals   VARCHAR   DEFAULT '';
   BEGIN
   -- TODO: implement METHODPARAMTYPE && TEST METHODKEYTYPE changes also!!!
     EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _mtcount;
@@ -628,28 +628,38 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
 -- Function behavior:
 --   * Successful deletion of a method => returns TRUE
 --   * Method with the same name is no longer available => returns FALSE
+--   * If deletion is not forced and methods' dependencies exist => INTERRUPTED with EXCEPTION
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR)
+CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEFAULT FALSE)
   RETURNS BOOLEAN AS
   $VT_method_delete$
   DECLARE
-    _mtcount INT;
+    _controlcount   INT;
+    _tblname        VARCHAR;
   BEGIN
-    -- TODO: what if processes block the deletion??? :(
-  
-    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _mtcount;
-    IF _mtcount <> 1 THEN
+    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
+    IF _controlcount <> 1 THEN
       RETURN FALSE;
     END IF;
+    
+    -- pokud je _force false, SELECT procesů kde je method name - IF TRUE - exception 
+    IF _force = FALSE THEN
+      FOR _tblname IN SELECT tgconstrrelid::regclass::varchar FROM pg_catalog.pg_trigger WHERE tgrelid = 'public.methods'::regclass AND tgconstrrelid::regclass::varchar LIKE '%.processes' AND tgfoid::regproc::varchar = '"RI_FKey_cascade_del"' LOOP
+        EXECUTE 'SELECT COUNT(*) FROM ' || _tblname || ' WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
+        IF _controlcount > 0 THEN
+          RAISE EXCEPTION 'Can not delete method "%" due to dependent processes in dataset "%".', _mtname, regexp_replace(_tblname, '.processes$', '');
+        END IF;
+      END LOOP;
+    END IF;
+    
     EXECUTE 'DELETE FROM public.methods WHERE mtname = ' || quote_literal(_mtname);
---    EXECUTE 'DELETE FROM public.methods_keys WHERE mtname = ' || quote_literal(_mtname); -- is not necessary if the "ON DELETE CASCADE" is defined
     RETURN TRUE;
     
-    EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during the deletion of the method "%". (Details: ERROR %: %)', _mtname, SQLSTATE, SQLERRM;
+--    EXCEPTION WHEN OTHERS THEN
+--      RAISE EXCEPTION 'Some problem occured during the deletion of the method "%". (Details: ERROR %: %)', _mtname, SQLSTATE, SQLERRM;
   END;
   $VT_method_delete$
-  LANGUAGE plpgsql STRICT;
+  LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
 
