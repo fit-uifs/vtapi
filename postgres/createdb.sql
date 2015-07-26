@@ -496,7 +496,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
 --   * Successful addition of a method => returns TRUE
 --   * Method with the same name is already available => returns FALSE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[], _mparams METHODPARAMTYPE[], _notes TEXT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[], _mparams METHODPARAMTYPE[], _usert BOOLEAN DEFAULT FALSE, _notes TEXT DEFAULT NULL)
   RETURNS BOOLEAN AS
   $VT_method_add$
   DECLARE
@@ -506,16 +506,21 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
     _inscols   VARCHAR   DEFAULT '';
     _insvals   VARCHAR   DEFAULT '';
   BEGIN
-  -- TODO: implement METHODPARAMTYPE && TEST METHODKEYTYPE changes also!!!
     EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _mtcount;
     IF _mtcount <> 0 THEN
       RETURN FALSE;
     END IF;
 
-    IF _notes IS NOT NULL THEN
-      _inscols := ', notes';
-      _insvals := ', ' || quote_literal(_notes);
+    IF _usert = TRUE THEN
+      _inscols := ', usert';
+      _insvals := ', TRUE';
     END IF;
+    
+    IF _notes IS NOT NULL THEN
+      _inscols := _inscols || ', notes';
+      _insvals := _insvals || ', ' || quote_literal(_notes);
+    END IF;
+    
     _stmt := 'INSERT INTO public.methods (mtname' || _inscols || ') VALUES (' || quote_literal(_mtname) || _insvals || ');';
     EXECUTE _stmt;
 
@@ -678,7 +683,7 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEF
 --   * _mtname - name of method for which will be created process' output table
 --   * _dsname - name of dataset where will be created process' output table (optional)
 --   * _reqoutname - process' ouput table according to user requirements (optional)
-CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _dsname VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _dsname VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL, _notes TEXT DEFAULT NULL)
   RETURNS BOOLEAN AS
   $VT_method_output_create$
   DECLARE
@@ -762,7 +767,7 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
                 t2        INT      NOT NULL,';
 
       IF _usert = TRUE THEN
-        _stmt := _stmt || 'rt_start      TIMESTAMP WITHOUT TIME ZONE   DEFAULT NULL, -- trigger supplied';
+        _stmt := _stmt || 'rt_start      TIMESTAMP WITHOUT TIME ZONE   DEFAULT NULL,'; -- trigger supplied
       END IF;
 
       _stmt := _stmt || 'sec_length    REAL,   -- trigger supplied
@@ -826,12 +831,13 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
         RAISE EXCEPTION 'Column named "id" also defined as a sequence is missing.';
       END IF;
     
-      EXECUTE 'SELECT ''seqname'' AS attname, ''name''::regtype AS attypid
-               UNION SELECT ''prsname'', ''name''::regtype
-               UNION SELECT ''t1'', ''int''::regtype
-               UNION SELECT ''t2'', ''int''::regtype
-               UNION SELECT ''sec_length'', ''real''::regtype --trigger supplied
-               UNION SELECT ''imglocation'', ''varchar''::regtype
+      EXECUTE 'SELECT ''seqname'' AS attname, ''NAME''::regtype AS attypid
+               UNION SELECT ''prsname'', ''NAME''::regtype
+               UNION SELECT ''t1'', ''INT''::regtype
+               UNION SELECT ''t2'', ''INT''::regtype
+               UNION SELECT ''sec_length'', ''REAL''::regtype --trigger supplied
+               UNION SELECT ''imglocation'', ''VARCHAR''::regtype
+               UNION SELECT ''created'', ''TIMESTAMP WITHOUT TIME ZONE''::regtype
                EXCEPT
                SELECT attname, atttypid
                FROM pg_catalog.pg_attribute
