@@ -229,6 +229,10 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
     
     _stmt VARCHAR;
   BEGIN
+    IF _dsname IN ('public', 'pg_catalog') THEN
+      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
+    END IF;
+
     EXECUTE 'SELECT COUNT(*)
              FROM public.datasets
              WHERE dsname = ' || quote_literal(_dsname)
@@ -318,6 +322,10 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
     _dsnamecount   INT;
     _schemacount   INT;
   BEGIN
+    IF _dsname IN ('public', 'pg_catalog') THEN
+      RAISE EXCEPTION 'Can not drop dataset "%" due to it is not valid VTApi dataset (reserved name whose use for dataset name is not allowed!).', _dsname; 
+    END IF;
+
     EXECUTE 'SELECT COUNT(*)
              FROM public.datasets
              WHERE dsname = ' || quote_literal(_dsname)
@@ -999,7 +1007,7 @@ CREATE OR REPLACE FUNCTION trg_interval_provide_realtime ()
       _rt_start timestamp without time zone := NULL;
       _tabname name := NULL;
     BEGIN
-      IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2)) THEN  
+      IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2 OR OLD.rt_start <> NEW.rt_start OR OLD.sec_length <> NEW.sec_length)) THEN  
         _tabname := quote_ident(TG_TABLE_SCHEMA) || '.sequences';
         EXECUTE 'SELECT vid_fps, vid_speed, vid_time
                    FROM '
