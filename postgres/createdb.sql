@@ -145,12 +145,13 @@ CREATE TYPE pstate AS (
     last_error varchar      -- error message
 );
 
-
+/*
 CREATE TYPE VT_TBLCOLDEF AS (
     attname    NAME,
     atttypid   REGTYPE,
     attio      VARCHAR
 );
+*/
 -------------------------------------
 -- CREATE tables
 -------------------------------------
@@ -683,9 +684,11 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
   DECLARE
     _keyname        public.methods_keys.keyname%TYPE;
     _typname        public.methods_keys.typname%TYPE;
-    _typname2       public.methods_keys.typname%TYPE;
+    _required       public.methods_keys.required%TYPE;
     _indexedkey     public.methods_keys.indexedkey%TYPE;
     _indexedparts   public.methods_keys.indexedparts%TYPE;
+    _typname2       pg_catalog.pg_attribute.atttypid%TYPE;
+    _required2      pg_catalog.pg_attribute.attnotnull%TYPE;
   
     _stmt           VARCHAR   DEFAULT '';
     _tmpstmt        VARCHAR   DEFAULT '';
@@ -696,7 +699,6 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
     _usert          BOOLEAN;
     _keyio          VARCHAR;
     _namespaceoid   OID;
-    _tblcoldefs     public.VT_TBLCOLDEF;
     _idxnames       VARCHAR[];
     _idxprefix      VARCHAR   DEFAULT '';
     
@@ -708,13 +710,17 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
     IF _controlcount <> 1 THEN
       RAISE EXCEPTION 'Method "%" does not exist.', _mtname;
     END IF;
-  
+
+    IF _dsname IN ('public', 'pg_catalog') THEN
+      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
+    END IF;
+
     IF _reqoutname IS NULL THEN
       _reqoutname := _mtname || '_out';
     ELSE
       -- check if requested process' output name is not reserved to other infrastructure tables
       IF _reqoutname IN ('processes', 'sequences') THEN
-        RAISE EXCEPTION 'Usage of the name "%" for process'' output is not allowed!', _reqoutname;
+        RAISE EXCEPTION 'Usage of the name "%" for process output is not allowed!', _reqoutname;
       END IF;
     END IF;
     
@@ -762,8 +768,12 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
       _stmt := _stmt || 'sec_length    REAL,   -- trigger supplied
                          imglocation   VARCHAR, ';
 
-      FOR _keyname, _typname, _indexedkey, _indexedparts IN EXECUTE 'SELECT keyname, typname, indexedkey, indexedparts FROM public.methods_keys WHERE mtname = ' || quote_literal(_mtname) || ' AND inout = ''out''' LOOP
-        _stmt := _stmt || ' ' || quote_ident(_keyname) || ' ' || _typname::regtype || ', ';
+      FOR _keyname, _typname, _required, _indexedkey, _indexedparts IN EXECUTE 'SELECT keyname, typname, required, indexedkey, indexedparts FROM public.methods_keys WHERE mtname = ' || quote_literal(_mtname) || ' AND inout = ''out''' LOOP
+        _stmt := _stmt || ' ' || quote_ident(_keyname) || ' ' || _typname::regtype;
+        IF _required = TRUE THEN
+          _stmt := _stmt || ' NOT NULL';
+        END IF;
+        _stmt := _stmt || ', ';
 
         IF _indexedkey THEN
           _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, NULL, _dsname);
@@ -784,7 +794,7 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
                   CONSTRAINT seqname_fk FOREIGN KEY (seqname)
                     REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT,
                   CONSTRAINT prsname_fk FOREIGN KEY (prsname)
-                    REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE RESTRICT
+                    REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE CASCADE
                 );
                 CREATE INDEX ' || quote_ident(_reqoutname || '_seqname_idx') || ' ON ' || __outname || '(seqname);
                 CREATE INDEX ' || quote_ident(_reqoutname || '_prsname_idx') || ' ON ' || __outname || '(prsname);
@@ -802,6 +812,7 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
                   EXECUTE PROCEDURE public.trg_interval_provide_realtime();';
 
 
+    -- process output table doesn't exist
     ELSE
     
       -- check if sequence exists
@@ -815,19 +826,12 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
         RAISE EXCEPTION 'Column named "id" also defined as a sequence is missing.';
       END IF;
     
-      EXECUTE 'SELECT (t.c).attname, (t.c).atttypid
-               FROM (
-                 SELECT UNNEST(
-                          ARRAY[
-                            ROW(''seqname'', ''NAME'', ''NOT NULL''),
-                            ROW(''prsname'', ''NAME'', ''''),
-                            ROW(''t1'', ''INT'', ''NOT NULL''),
-                            ROW(''t2'', ''INT'', ''NOT NULL''),
-                            ROW(''sec_length'', ''REAL'', ''''), --trigger supplied
-                            ROW(''imglocation'', ''VARCHAR'', '''')
-                          ]::public.VT_TBLCOLDEF[]
-                        ) AS c
-               ) AS t
+      EXECUTE 'SELECT ''seqname'' AS attname, ''name''::regtype AS attypid
+               UNION SELECT ''prsname'', ''name''::regtype
+               UNION SELECT ''t1'', ''int''::regtype
+               UNION SELECT ''t2'', ''int''::regtype
+               UNION SELECT ''sec_length'', ''real''::regtype --trigger supplied
+               UNION SELECT ''imglocation'', ''varchar''::regtype
                EXCEPT
                SELECT attname, atttypid
                FROM pg_catalog.pg_attribute
@@ -836,23 +840,8 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
           INTO _keyname, _typname;
       
       IF _keyname IS NOT NULL THEN
-        RAISE EXCEPTION 'Column named "%" of "%" data type is missing.', _keyname, _typname;
+        RAISE EXCEPTION 'It seems, that "%" is not a process'' output table (column named "%" of "%" data type is missing).', _dsname || '.' || _reqoutname, _keyname, _typname;
       END IF;
-
-      EXECUTE 'SELECT COUNT(*)
-               FROM pg_catalog.pg_constraint
-               WHERE conindid::regclass::varchar IN (' ||
-                 quote_literal(_idxprefix || _reqoutname || '_pk') || ', ' ||
-                 quote_literal(_idxprefix || 'sequences_pk') || ', ' ||
-                 quote_literal(_idxprefix || 'processes_pk') || '
-               )
-                 AND conrelid::regclass::varchar = ' || quote_literal(_idxprefix || _reqoutname) || ';'
-          INTO _controlcount;
-
-      IF _controlcount <> 3 THEN
-        RAISE EXCEPTION 'Corrupted format of process'' output table - some (%) CONSTRAINT is missing.', (3 - _controlcount);
-      END IF;
-      -- TODO: check of indexes 4 seqname, prsname, imglocation & sec_length?
       
       EXECUTE 'SELECT array_agg(indexrelid::regclass::varchar)
                FROM pg_catalog.pg_index
@@ -860,27 +849,32 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
           INTO _idxnames;
       
       IF _usert = TRUE THEN
-        _tmpstmt := 'SELECT ''rt_start'', ''TIMESTAMP WITHOUT TIME ZONE'', ''DEFAULT NULL'', FALSE, NULL  -- trigger supplied
-                  UNION ';
-        -- TODO: maybe special solo processing?
+        _tmpstmt := 'SELECT ''rt_start'', ''TIMESTAMP WITHOUT TIME ZONE'', FALSE, FALSE, NULL  -- trigger supplied
+                     UNION ';
         
         IF EXECUTE 'SELECT TRUE WHERE ' || quote_literal(_idxprefix || _reqoutname || '_tsrange_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' THEN
           _idxstmt := 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
         END IF;
       END IF;
 
-      FOR _keyname, _typname, _keyio, _indexedkey, _indexedparts IN EXECUTE _tmpstmt || ' SELECT keyname, typname, '''', indexedkey, indexedparts FROM public.methods_keys WHERE inout = ''out'' AND mtname = ' || quote_literal(_mtname) || ' ORDER BY 3 DESC;' LOOP
-        EXECUTE 'SELECT atttypid
+      FOR _keyname, _typname, _required, _indexedkey, _indexedparts IN EXECUTE _tmpstmt || ' SELECT keyname, typname, required, indexedkey, indexedparts FROM public.methods_keys WHERE inout = ''out'' AND mtname = ' || quote_literal(_mtname) || ' ORDER BY 3 DESC;' LOOP
+        EXECUTE 'SELECT atttypid, attnotnull
                  FROM pg_catalog.pg_attribute
                  WHERE attrelid = ' || quote_literal(_dsname || '.' || _reqoutname) || '::regclass::oid
                    AND attname = ' || quote_literal(_keyname) || '
                    AND attstattarget = -1'
-            INTO _typname2;
+            INTO _typname2, _required2;
 
         IF _typname2 IS NULL THEN
-         _stmt := _stmt || ' ADD ' || quote_ident(_keyname) || '   ' || _typname || ' ' || _keyio || ', ';
+          _stmt := _stmt || ' ADD ' || quote_ident(_keyname) || '   ' || _typname;
+          IF _required = TRUE THEN
+            _stmt := _stmt || ' NOT NULL';
+          END IF;
+          _stmt := _stmt || ', ';
         ELSIF _typname <> _typname2 THEN
           RAISE EXCEPTION 'Column named "%" already exists, but is of different data type (existing: "%", requested: "%").', _keyname, _typname, _typname2;
+        ELSIF _required <> required2 THEN
+          _stmt := _stmt || ' ALTER COLUMN ' || quote_ident(_keyname) || ' SET NOT NULL, ';
         END IF;
 
         IF _indexedkey = TRUE THEN
@@ -914,6 +908,8 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
   END;
   $VT_method_output_create$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
+
+
 
 -- METHOD OUTPUTS: DROP
 -- args:
