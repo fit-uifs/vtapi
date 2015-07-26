@@ -160,7 +160,6 @@ CREATE TYPE VT_TBLCOLDEF AS (
 CREATE TABLE datasets (
     dsname name NOT NULL,
     dslocation character varying NOT NULL,
-    userid name DEFAULT NULL,
     created timestamp without time zone DEFAULT now(),
     notes text DEFAULT NULL,
     CONSTRAINT dataset_pk PRIMARY KEY (dsname)
@@ -170,7 +169,6 @@ CREATE TABLE datasets (
 CREATE TABLE methods (
     mtname name NOT NULL,
     usert   BOOLEAN   DEFAULT FALSE,
-    userid name DEFAULT NULL,
     created timestamp without time zone DEFAULT now(),
     notes text DEFAULT NULL,
     CONSTRAINT methods_pk PRIMARY KEY (mtname)
@@ -459,7 +457,6 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       vid_fps real,
       vid_speed  real  DEFAULT 1,
       vid_time timestamp without time zone,
-      userid name DEFAULT NULL,
       created timestamp without time zone DEFAULT now(),
       notes text DEFAULT NULL,
       CONSTRAINT sequences_pk PRIMARY KEY (seqname)
@@ -474,7 +471,6 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       outputs regclass,
       params character varying,
       state public.pstate DEFAULT '(created,0,,)',
-      userid name DEFAULT NULL,
       created timestamp without time zone DEFAULT now(),
       notes text DEFAULT NULL,
       CONSTRAINT processes_pk PRIMARY KEY (prsname),

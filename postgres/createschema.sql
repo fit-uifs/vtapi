@@ -39,7 +39,6 @@ CREATE TABLE test1out (
     out_features_array real[],
     out_features_mat public.cvmat,
     out_event public.vtevent NOT NULL,
-    userid name,
     created timestamp without time zone DEFAULT now(),
     notes text,
     CONSTRAINT test1out_pk PRIMARY KEY (id),
