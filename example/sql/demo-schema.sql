@@ -36,6 +36,10 @@ INSERT INTO sequences (seqname, seqlocation, seqtyp, vid_length, vid_fps, vid_sp
     ('video2', 'video2.mpg', 'video', 6499, 29.97, 1, '2015-04-01 05:06:07', 'pre-generated'),
     ('video3', 'video3.mpg', 'video', 1648, 25, 1, '2015-04-01 06:07:08', 'pre-generated');
 
+-- drop process' output tables
+SELECT public.VT_process_output_drop('demo1');
+SELECT public.VT_process_output_drop('demo2');
+
 -- create process' output tables
 SELECT public.VT_process_output_create('demo1');
 SELECT public.VT_process_output_create('demo2');
