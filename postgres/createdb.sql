@@ -236,7 +236,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
              WHERE dsname = ' || quote_literal(_dsname)
       INTO _dsnamecount;
     EXECUTE 'SELECT COUNT(*)
-             FROM pg_namespace
+             FROM pg_catalog.pg_namespace
              WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
 
@@ -260,11 +260,11 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
     -- check if schema already exists
     IF _schemacount = 1 THEN
       EXECUTE 'SELECT COUNT(*)
-               FROM pg_class
+               FROM pg_catalog.pg_class
                WHERE relname IN (''sequences'', ''processes'', ''sequences_pk'', ''sequences_seqtyp_idx'', ''processes_pk'', ''processes_mtname_idx'', ''processes_inputs_idx'', ''processes_status_idx'')
                AND relnamespace = (
                  SELECT oid
-                 FROM pg_namespace
+                 FROM pg_catalog.pg_namespace
                  WHERE nspname = ' || quote_literal(_dsname) || '
                );'
         INTO _classescount;
@@ -329,7 +329,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
              WHERE dsname = ' || quote_literal(_dsname)
       INTO _dsnamecount;
     EXECUTE 'SELECT COUNT(*)
-             FROM pg_namespace
+             FROM pg_catalog.pg_namespace
              WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
 
@@ -399,7 +399,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_truncate (_dsname VARCHAR)
              WHERE dsname = ' || quote_literal(_dsname)
       INTO _dsnamecount;
     EXECUTE 'SELECT COUNT(*)
-             FROM pg_namespace
+             FROM pg_catalog.pg_namespace
              WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
     
@@ -439,7 +439,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
     _schemacount   INT;
   BEGIN
     EXECUTE 'SELECT COUNT(*)
-             FROM pg_namespace
+             FROM pg_catalog.pg_namespace
              WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
 
@@ -668,8 +668,8 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEF
     EXECUTE 'DELETE FROM public.methods WHERE mtname = ' || quote_literal(_mtname);
     RETURN TRUE;
     
---    EXCEPTION WHEN OTHERS THEN
---      RAISE EXCEPTION 'Some problem occured during the deletion of the method "%". (Details: ERROR %: %)', _mtname, SQLSTATE, SQLERRM;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the deletion of the method "%". (Details: ERROR %: %)', _mtname, SQLSTATE, SQLERRM;
   END;
   $VT_method_delete$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
@@ -682,11 +682,14 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEF
 -- VTApi CORE UNDERLYING functions for PROCESS' OUTPUT of given method
 -------------------------------------
 
--- PROCESS' OUTPUT: CREATE
--- args:
+-- PROCESS OUTPUT: CREATE
+-- Function args:
 --   * _mtname - name of method for which will be created process' output table
 --   * _dsname - name of dataset where will be created process' output table (optional)
 --   * _reqoutname - process' ouput table according to user requirements (optional)
+-- Function behavior:
+--   * Process' output table succesfully created => returns TRUE
+--   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
 CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _dsname VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL, _notes TEXT DEFAULT NULL)
   RETURNS BOOLEAN AS
   $VT_method_output_create$
@@ -710,16 +713,9 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
     _namespaceoid   OID;
     _idxnames       VARCHAR[];
     _idxprefix      VARCHAR   DEFAULT '';
-    
-    __schema        VARCHAR   DEFAULT '';
+
     __outname       VARCHAR   DEFAULT '';
   BEGIN
-    -- check if method exists
-    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
-    IF _controlcount <> 1 THEN
-      RAISE EXCEPTION 'Method "%" does not exist.', _mtname;
-    END IF;
-
     IF _dsname IN ('public', 'pg_catalog') THEN
       RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
     END IF;
@@ -732,15 +728,20 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
         RAISE EXCEPTION 'Usage of the name "%" for process output is not allowed!', _reqoutname;
       END IF;
     END IF;
+
+    -- check if method exists
+    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
+    IF _controlcount <> 1 THEN
+      RAISE EXCEPTION 'Method "%" does not exist.', _mtname;
+    END IF;
     
     IF _dsname IS NULL THEN
       _dsname := current_schema();
     ELSE
       _idxprefix := _dsname || '.';
     END IF;
-    
-    __schema := quote_ident(_dsname) || '.';
-    __outname := __schema || quote_ident(_reqoutname);
+
+    __outname := quote_ident(_dsname) || '.' || quote_ident(_reqoutname);
 
     -- check if dataset (schema) exists
     EXECUTE 'SELECT oid
@@ -915,29 +916,74 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
     EXECUTE _idxstmt;
     
     RETURN TRUE;
+
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the creation of the process'' output table "%". (Details: ERROR %: %)', __outname, SQLSTATE, SQLERRM;
   END;
   $VT_method_output_create$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
 
--- METHOD OUTPUTS: DROP
--- args:
---   * method name
---   * dataset name
---   * outname
-CREATE OR REPLACE FUNCTION VT_process_output_drop (_mtname VARCHAR, _dsname VARCHAR, _outname VARCHAR)
+-- PROCESS OUTPUT: DROP
+-- Function args:
+--   * _name - name of method or directly process' output table name
+--   * _isnamedbymethod - determines if "_name" is method name or directly process' output table name (default TRUE => _name is method name)
+--   * _dsname - name of dataset where will be dropped process' output table (optional)
+-- Function behavior:
+--   * Successful deletion of a process' output table => returns TRUE
+--   * Process'output table with the given name (or derived from method name) is no longer available => returns FALSE
+--   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
+CREATE OR REPLACE FUNCTION VT_process_output_drop (_name VARCHAR, _isnamebymethod BOOLEAN DEFAULT TRUE, _dsname VARCHAR DEFAULT NULL)
   RETURNS BOOLEAN AS
   $VT_method_output_drop$
   DECLARE
+    _controlcount   INT;
+    __outname       VARCHAR;
   BEGIN
+    IF _dsname IN ('public', 'pg_catalog') THEN
+      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
+    END IF;
+
+    IF _isnamebymethod = TRUE THEN
+      _name := _name || '_out';
+    END IF;
     
+    IF _dsname IS NULL THEN
+      _dsname := current_schema();
+    END IF;
+    
+    __outname := quote_ident(_dsname) || '.' || quote_ident(_name);
+    
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_catalog.pg_class
+             WHERE relname = ' || quote_literal(_name) || '
+               AND relnamespace = (
+                 SELECT oid
+                 FROM pg_catalog.pg_namespace
+                 WHERE nspname = ' || quote_literal(_dsname) || '
+               )
+               AND relkind = ''r''; '
+        INTO _controlcount; 
+    IF _controlcount <> 1 THEN
+      RAISE NOTICE 'Process'' output table "%" can not be dropped due to it is no longer available.', __outname;
+      RETURN FALSE;
+    END IF;
+    
+    EXECUTE 'DROP TABLE ' || __outname || ' CASCADE; ';
+    RETURN TRUE;
+
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the removal of the process'' output table "%.%". (Details: ERROR %: %)', __outname, SQLSTATE, SQLERRM;    
   END;
   $VT_method_output_drop$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
 
+-- PROCESS OUTPUT: support for index creation
+-- Function behavior:
+--   * Returns SQL command for index creation
 CREATE OR REPLACE FUNCTION VT_process_output_idxquery(_tblname VARCHAR, _keyname NAME, _typname REGTYPE, _keypart INT DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
   RETURNS VARCHAR AS
   $VT_process_output_idxquery$
@@ -962,7 +1008,7 @@ CREATE OR REPLACE FUNCTION VT_process_output_idxquery(_tblname VARCHAR, _keyname
     _idxname := _tblname || '_' || _keyname || _idxname || '_idx';
     
     -- TODO complex index
-    _goid := oid FROM pg_type WHERE typname = 'geometry';
+    _goid := oid FROM pg_catalog.pg_type WHERE typname = 'geometry';
     IF _typname = 'box'::regtype OR (_goid IS NOT NULL AND _typname = _goid) THEN
       _stmt := 'USING GIST';
     END IF;
