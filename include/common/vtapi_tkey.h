@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of TKey class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -33,7 +32,6 @@ typedef std::vector<TKey> TKeys;
  *
  * @note You can use size = -1 for NULL
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 

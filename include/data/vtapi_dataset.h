@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Dataset class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -14,9 +13,10 @@
 #pragma once
 
 #include <string>
+#include <list>
 #include "vtapi_keyvalues.h"
 #include "vtapi_sequence.h"
-#include "vtapi_method.h"
+#include "vtapi_task.h"
 #include "vtapi_process.h"
 
 namespace vtapi {
@@ -28,7 +28,6 @@ namespace vtapi {
  *
  * @note Error codes 31*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -39,19 +38,21 @@ namespace vtapi {
 class Dataset : public KeyValues
 {
 public:
+    /**
+     * Construct dataset object for iterating through VTApi datasets
+     * If a specific name is set, object will represent one dataset only
+     * @param commons base Commons object
+     * @param name dataset name, empty for all datasets
+     */
+    Dataset(const Commons& commons, const std::string& name = std::string());
 
     /**
-     * This is the recommended constructor.
-     *
-     * @warning you can ommit the \a name only in these cases:
-     *    -# Don't know the name -> use next
-     *    -# The dataset is in your vtapi.conf
-     *
-     * @param orig   pointer to the parent KeyValues object (in this case usually Commons object)
-     * @param name   specific dataset name
-     * @note Use rather "vtapi->newDataset()"
+     * Construct dataset object for iterating through VTApi datasets
+     * Object will represent set of datasets specified by their names
+     * @param commons base Commons object
+     * @param names list of dataset names
      */
-    Dataset(const KeyValues& orig, const std::string& name = "");
+    Dataset(const Commons& commons, const std::list<std::string>& names);
 
     /**
      * Moves to a next dataset and sets dataset name and location varibles
@@ -67,45 +68,119 @@ public:
     std::string getName();
 
     /**
-     * Gets location of the current dataset
+     * Gets full dataset location
      * @return location of the current dataset
      */
     std::string getLocation();
+    
+    /**
+     * Gets friendly name of the current dataset
+     * @return friendly name of the current dataset
+     */
+    std::string getFriendlyName();
 
     /**
-     * Creates new Sequence object for the current dataset
+     * Gets description of the current dataset
+     * @return description of the current dataset
+     */
+    std::string getDescription();
+    
+    /**
+     * Sets dataset's friendly name
+     * @param friendly_name new friendly name
+     * @return success
+     */
+    bool updateFriendlyName(const std::string& friendly_name);
+    
+    /**
+     * Sets dataset's description
+     * @param description new description
+     * @return success
+     */
+    bool updateDescription(const std::string& description);
+    
+    /**
+     * Creates new sequence in dataset and returns its object for iteration
+     * @param name sequence name (unique)
+     * @param location location in dataset
+     * @param type 'video', 'imagefolder' or 'data'
+     * @param comment optional comment
+     * @return sequence object, NULL on error
+     */
+    Sequence* createSequence(
+        const std::string& name,
+        const std::string& location,
+        const std::string& type,
+        const std::string& comment = std::string());
+
+    /**
+     * Creates new video in dataset and returns its object for iteration
+     * @param name video name (unique)
+     * @param location location in dataset
+     * @param realtime UNIX timestamp of start of the video
+     * @param comment optional comment
+     * @return video object, NULL on error
+     */
+    Video* createVideo(
+        const std::string& name,
+        const std::string& location,
+        const time_t& realtime,
+        const std::string& comment = std::string());
+
+    /**
+     * Creates new image folder in dataset and returns its object for iteration
+     * @param name image folder name (unique)
+     * @param location location in dataset
+     * @param comment optional comment
+     * @return image folder object, NULL on error
+     */
+    ImageFolder* createImageFolder(
+        const std::string& name,
+        const std::string& location,
+        const std::string& comment = std::string());
+    
+    /**
+     * Loads dataset's sequences for iteration
      * @param name   sequence name (no name = all sequences)
-     * @return pointer to the new Sequence object
+     * @return pointer to the new Sequence object, NULL on error
      */
-    Sequence* newSequence(const std::string& name = "")
-    { return (new Sequence(*this, name)); }
+    Sequence* loadSequences(const std::string& name = std::string());
 
     /**
-     * Creates new Video (Sequence) object for the current dataset
+     * Loads dataset's videos (= sequences) for iteration
      * @param name   video (sequence) name (no name = all sequences)
-     * @return pointer to the new Video object
+     * @return pointer to the new Video object, NULL on error
      */
-    Video* newVideo(const std::string& name = "")
-    { return (new Video(*this, name)); }
+    Video* loadVideos(const std::string& name = std::string());
 
     /**
-     * Creates new ImageFolder (Sequence) object for the current dataset
+     * Loads dataset's image folders (= sequences) for iteration
      * @param name image folder name (no name = all image folders)
-     * @return pointer to the new ImageFolder object
+     * @return pointer to the new ImageFolder object, NULL on error
      */
-    ImageFolder* newImageFolder(const std::string& name = "")
-    { return (new ImageFolder(*this, name)); }
+    ImageFolder* loadImageFolders(const std::string& name = std::string());
 
     /**
-     * Creates new Process object for the current dataset
-     * @param name   process name (no name = all processes)
-     * @return pointer to the new Process object
+     * Loads method's processing tasks for iteration
+     * @param name task name (no name = all tasks)
+     * @return pointer to the new Task object, NULL on error
      */
-    Process* newProcess(const std::string& name = "")
-    { return (new Process(*this, name)); }
-
+    Task* loadTasks(const std::string& name = std::string());
+    
+    /**
+     * Loads method's processes for iteration
+     * @param id   process ID (0 = all processes)
+     * @return pointer to the new Process object, NULL on error
+     */
+    Process* loadProcesses(int id = 0);
+    
 protected:
     virtual bool preUpdate();
+    
+private:
+    Dataset() = delete;
+    Dataset(const Dataset&) = delete;
+    Dataset& operator=(const Dataset&) = delete;
 };
 
 } // namespace vtapi

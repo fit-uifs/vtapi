@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of IntervalEvent class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -20,7 +19,6 @@ namespace vtapi {
  * 
  * Class representing universal event in video interval
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -77,6 +75,8 @@ public:
     IntervalEvent();
     IntervalEvent(const IntervalEvent& orig);
     ~IntervalEvent();
+    
+    IntervalEvent& operator=(const IntervalEvent& orig);
     
     void SetUserData(const void *data, size_t size);
 

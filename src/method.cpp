@@ -2,7 +2,6 @@
  * @file
  * @brief   Methods of Method class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -11,7 +10,9 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <functional>
 #include <common/vtapi_global.h>
+#include <queries/vtapi_predefined_queries.h>
 #include <data/vtapi_method.h>
 
 using namespace std;
@@ -19,16 +20,24 @@ using namespace std;
 namespace vtapi {
 
 
-Method::Method(const KeyValues& orig, const string& name)
-    : KeyValues(orig)
+Method::Method(const Commons& commons, const string& name)
+    : KeyValues(commons)
 {
-    thisClass = "Method";
+    if (!name.empty())
+        _context.method = name;
     
-    select = new Select(orig);
-    select->from("public.methods", "*");
-    if (!name.empty()) select->whereString("mtname", name);
+    _select.from(def_tab_methods, def_col_all);
     
-    this->method = name;
+    if (!_context.method.empty())
+        _select.whereString(def_col_mt_name, _context.method);
+}
+
+Method::Method(const Commons& commons, const list<string>& names)
+    : KeyValues(commons)
+{
+    _select.from(def_tab_methods, def_col_all);
+
+    _select.whereStringInList(def_col_mt_name, names);
 }
 
 Method::~Method()
@@ -38,7 +47,7 @@ Method::~Method()
 bool Method::next()
 {
     if (KeyValues::next()) {
-        this->method = this->getName();
+        _context.method = this->getName();
         return true;
     }
     else {
@@ -46,60 +55,100 @@ bool Method::next()
     }
 }
 
-int Method::getId()
-{
-    return this->getInt("id");
-}
-
 string Method::getName()
 {
-    return this->getString("mtname");
+    return this->getString(def_col_mt_name);
 }
 
-
-TKeys Method::getMethodKeys()
+string Method::getDescription()
 {
-    KeyValues kv(*this);
-    kv.select = new Select(*this);
-    kv.select->from("public.methods_keys", "keyname");
-    kv.select->from("public.methods_keys", "typname::text");
-    kv.select->from("public.methods_keys", "inout");
-    kv.select->whereString("mtname", this->method);
-
-    TKeys keys;
-    while (kv.next()) {
-        keys.push_back(
-            TKey(
-            kv.getString("typname"),
-            kv.getString("keyname"),
-            0,
-            kv.getString("inout")));
-    }
-
-    return keys;
+    return this->getString(def_col_mt_description);
 }
 
-void Method::printMethodKeys()
+bool Method::updateDescription(const string& description)
 {
-    KeyValues kv(*this);
-    kv.select = new Select(*this);
-    kv.select->from("public.methods_keys", "keyname");
-    kv.select->from("public.methods_keys", "typname::text");
-    kv.select->from("public.methods_keys", "inout");
-    kv.select->from("public.methods_keys", "default_num");
-    kv.select->from("public.methods_keys", "default_str");
-    kv.select->whereString("mtname", this->method);
+    return this->updateString(def_col_mt_description, description);
+}
 
-    if (kv.next()) {
-        kv.printAll();
+Task* Method::createTask(
+    const TaskParams& params,
+    const list<string>& tasknames_prereq,
+    const string& outputTable)
+{
+    Task *ts = NULL;
+    bool retval = true;
+
+    //TODO: validace parametru
+
+    string name = constructTaskName(params);
+
+    QueryBeginTransaction(*this).execute();
+    
+    {
+        Insert insert(*this, def_tab_tasks);
+        retval &= insert.keyString(def_col_task_name, name);
+        retval &= insert.keyString(def_col_task_mtname, _context.method);
+        retval &= insert.keyString(def_col_task_params, params.serialize());
+        if (!outputTable.empty())
+            retval &= insert.keyString(def_col_task_outputs, outputTable);
+
+        if (retval && (retval = insert.execute())) {
+            for (auto & item : tasknames_prereq) {
+                Insert insert2(*this, def_tab_tasks_prereq);
+                retval &= insert.keyString(def_col_tprq_taskname, name);
+                retval &= insert.keyString(def_col_tprq_taskprereq, item);
+                if (retval && (retval = insert2.execute())) {
+                }
+                else {
+                    break;
+                }
+            }
+        }
     }
+    
+    if (retval) {
+        QueryCommitTransaction(*this).execute();
+
+        ts = loadTasks(name);
+        if (!ts->next()) vt_destruct(ts);
+    }
+    else {
+        QueryRollbackTransaction(*this).execute();
+    }
+
+    return ts;
+}
+
+Task* Method::loadTasks(const string& name)
+{
+    return (new Task(*this, name));
+}
+
+string Method::constructTaskName(const TaskParams & params)
+{
+    string input;
+
+    input += _context.method;
+    input += 'p';
+
+    string par = params.serializeAsName();
+    if (!par.empty()) {
+        input += '_';
+        input += par;
+    }
+
+    hash<string> hash_fn;
+    stringstream ss;
+    ss << hex << hash_fn(input);
+
+    return ss.str();
 }
 
 bool Method::preUpdate()
 {
-    bool ret = KeyValues::preUpdate("public.methods");
+    bool ret = KeyValues::preUpdate(def_tab_methods);
     if (ret) {
-        ret &= update->whereString("mtname", this->method);
+        ret &= _update->whereString(def_col_mt_name, _context.method);
     }
 
     return ret;

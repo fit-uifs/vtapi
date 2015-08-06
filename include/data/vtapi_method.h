@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Method class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -14,13 +13,12 @@
 #pragma once
 
 #include <string>
-#include "../common/vtapi_tkey.h"
+#include <list>
 #include "vtapi_keyvalues.h"
+#include "vtapi_task.h"
 #include "vtapi_process.h"
 
 namespace vtapi {
-
-class Process;
 
 /**
  * @brief A class which represents methods and gets also their keys
@@ -29,7 +27,6 @@ class Process;
  *
  * @note Error codes 35*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -40,13 +37,22 @@ class Process;
 class Method : public KeyValues
 {
 public:
-    
+
     /**
-     * Constructor for methods
-     * @param orig   pointer to the parrent KeyValues object
-     * @param name   specific name of method, which we can construct
+     * Construct method object for iterating through VTApi methods
+     * If a specific name is set, object will represent one method only
+     * @param commons base Commons object
+     * @param name method name, empty for all methods
      */
-    Method(const KeyValues& orig, const std::string& name = "");
+    Method(const Commons& commons, const std::string& name = std::string());
+
+    /**
+     * Construct method object for iterating through VTApi methods
+     * Object will represent set of methods specified by their names
+     * @param commons base Commons object
+     * @param names list of method names
+     */
+    Method(const Commons& commons, const std::list<std::string>& names);
 
     /**
      * Destructor
@@ -59,12 +65,6 @@ public:
      * @note Overloading next() from KeyValues
      */
     bool next();
-
-    /**
-     * Gets method ID
-     * @return method ID
-     */
-    int getId();
     
     /**
      * Gets a name of the current method
@@ -73,41 +73,51 @@ public:
     std::string getName();
     
     /**
-     * This is used to refresh the methodKeys vector
-     * @return TKeys
+     * Gets description of the current method
+     * @return description of the current dataset
      */
-    TKeys getMethodKeys();
-    
-    /**
-     * Prints method's keys
-     */
-    void printMethodKeys();
-    
-    /**
-     * Creates process object for access to existing processes
-     * @return pointer to new process object
-     */
-    Process* newProcess(const std::string& name = "")
-    { return (new Process(*this, name)); }
-    
-    /**
-     * Creates process object for starting new process
-     * @return new process object
-     */
-    Process* addProcess()
-    {
-        Process *p = new Process(*this);
-        if (p) {
-            if (!p->add()) {
-                delete p;
-                p = NULL;
-            }
-        }
-        return p;
-    }
+    std::string getDescription();
 
+    /**
+     * Sets method's description
+     * @param description new description
+     * @return success
+     */
+    bool updateDescription(const std::string& description);
+    
+    /**
+     * Creates new task for this method
+     * @param params task parameters list
+     * @param tasknames_prereq which tasks are prerequisities to the new task
+     * @param outputTable destination table for task outputs (empty => <methodname>_out)
+     * @return pointer to the new Task object, NULL on error
+     */
+    Task* createTask(
+        const TaskParams& params,
+        const std::list<std::string>& tasknames_prereq,
+        const std::string& outputTable = std::string());
+    
+    /**
+     * Loads method's processing tasks for iteration
+     * @param name task name (no name = all tasks)
+     * @return pointer to the new Task object, NULL on error
+     */
+    Task* loadTasks(const std::string& name = std::string());
+
+    /**
+     * Constructs a task name from input parameters
+     * @param params container
+     * @return process name
+     */
+    std::string constructTaskName(const TaskParams &params);
+    
 protected:
     virtual bool preUpdate();
+    
+private:
+    Method() = delete;
+    Method(const Method&) = delete;
+    Method& operator=(const Method&) = delete;
 };
 
 } // namespace vtapi

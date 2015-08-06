@@ -2,7 +2,6 @@
  * @file
  * @brief   %VTApi configuration header for includes based on vtapi_autoconfig.h header.
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -15,16 +14,6 @@
 
 // by configure script
 #include "vtapi_autoconfig.h"
-
-
-/**
- * @brief TODO
- * 
- * @todo @b doc: put together a few letters..
- * 
- * @note comment this under compilers with no copyfmt/rdbuf capabilities (GCC4.6 @ merlin)
- */
-#define COPYRDBUF
 
 // platform independent library loading
 #include <ltdl.h>

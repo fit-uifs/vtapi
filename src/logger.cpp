@@ -2,7 +2,6 @@
  * @file
  * @brief   Methods of Logger class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -21,48 +20,76 @@ using namespace std;
 namespace vtapi {
 
 
-Logger::Logger(const string& filename, bool verbose, bool debug) {
-    logFilename = filename;
-    m_verbose   = verbose;
-    m_debug     = debug;
+Logger& Logger::instance()
+{
+    static Logger instance;
+    
+    return instance;
+}
 
-    if (!logFilename.empty()) {
-        logStream.open(filename.c_str());
-        // FIXME: logStream.setf nolock, nolockbuf
+bool Logger::config(const string& filepath, bool verbose, bool debug)
+{
+    bool ret = true;
 
-        if (logStream.fail()) {
-            logFilename.clear(); // just cerr??? logger failures cannot be logged :)
-            cerr << endl << timestamp() << ": ERROR 101! Logger cannot open the file specified, trying stderr instead." << endl;
+    if (_log.is_open())
+        _log.close();
+
+    if (!filepath.empty()) {
+        _log.open(filepath);
+        ret = _log.is_open();
+    }
+    
+    _verbose = verbose;
+    _debug = debug;
+    
+    return ret;
+}
+
+void Logger::message(const string& line)
+{
+    output(cout, line);
+}
+
+void Logger::warning(const string& line, const string& where)
+{
+    if (_verbose) {
+        string message(timestamp());
+        message += " WARNING: ";
+        message += line;
+        if (!where.empty()) {
+            message += " @ ";
+            message += where;
         }
-    }
-    if (logFilename.empty()) {
-#ifdef COPYRDBUF
-        // http://stdcxx.apache.org/doc/stdlibug/34-2.html
-        logStream.copyfmt(cerr);
-        logStream.clear(cerr.rdstate());
-        logStream.basic_ios<char>::rdbuf(cerr.rdbuf());
-        // FIXME: if this is screwed, we won't log - there are no exceptions necessary :)
-#else
-        cerr << timestamp() << ": ERROR 102! Logger cannot open the file specified, NO LOGGING ENABLED." << endl;
-#endif
+        
+        output(cerr, message);
     }
 }
 
-Logger::~Logger() {
-    if (!logFilename.empty() && !logStream.fail()) logStream.close();
-}
-
-void Logger::write(const string& logline) {
-    if (logStream.good()) {
-        logStream << logline;
-        logStream.flush();
+void Logger::error(const string& line, const string& where)
+{
+    string message(timestamp());
+    message += " ERROR: ";
+    message += line;
+    if (!where.empty()) {
+        message += " @ ";
+        message += where;
     }
+
+    output(cerr, message);
 }
 
-void Logger::log(const string& logline) {
-    if (logStream.good()) {
-        logStream << timestamp() << ": " << logline << endl;
-        logStream.flush();
+void Logger::debug(const string& line, const string& where)
+{
+    if (_debug) {
+        string message(timestamp());
+        message += " DEBUG: ";
+        message += line;
+        if (!where.empty()) {
+            message += " @ ";
+            message += where;
+        }
+
+        output(cout, message);
     }
 }
 
@@ -75,31 +102,13 @@ string Logger::timestamp()
     return string(timeBuffer);
 }
 
-void Logger::error(const string& logline, const string& thisMethod)
+void Logger::output(std::ostream & stream, const std::string& line)
 {
-    log(string("ERROR at ") + thisMethod + ":\n" + logline);
-    exit(1);
+    if (_log.is_open())
+        _log << line << endl;
+    else
+        stream << line << endl;
 }
 
-void Logger::error(int errnum, const string& logline, const string& thisMethod)
-{
-    log(string("ERROR ") + toString(errnum) + " at " + thisMethod + ": " + logline);
-    exit(1);
-}
-
-void Logger::warning(const string& logline, const string& thisMethod)
-{
-    if (m_verbose) log(string("WARNING at ") + thisMethod + ": " + logline);
-}
-
-void Logger::warning(int errnum, const string& logline, const string& thisMethod)
-{
-    if (m_verbose) log(string("WARNING ") + toString(errnum) + " at " + thisMethod + ": " + logline);
-}
-
-void Logger::debug(const string& logline)
-{
-    if (m_debug) log(logline);
-}
 
 }

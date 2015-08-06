@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Insert class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -29,7 +28,6 @@ namespace vtapi {
  * 
  * @note Error codes 22*
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -45,19 +43,13 @@ public:
      * @param commons      configuration object of Commons class
      * @param initString   default table into which to insert / full SQL query
      */
-    explicit Insert(const Commons& commons, const std::string& initString = "");
+    Insert(const Commons& commons, const std::string& initString = std::string());
     
     /**
      * Gets INSERT query string
      * @return query string
      */
     std::string getQuery();
-    
-    /**
-     * Executes INSERT query
-     * @return success
-     */
-    bool execute();
     
     /**
      * This is a persistent function to add string value to a key
@@ -67,7 +59,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyString(const std::string& key, const std::string& value, const std::string& from = "");
+    bool keyString(const std::string& key, const std::string& value, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add string values (string array) to a key
@@ -78,7 +70,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyStringA(const std::string& key, std::string* values, const int size, const std::string& from = "");
+    bool keyStringA(const std::string& key, std::string* values, const int size, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add integer value to a key
@@ -88,7 +80,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyInt(const std::string& key, int value, const std::string& from = "");
+    bool keyInt(const std::string& key, int value, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add integer values (integer array) to a key
@@ -99,7 +91,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyIntA(const std::string& key, int* values, const int size, const std::string& from = "");
+    bool keyIntA(const std::string& key, int* values, const int size, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add float value to a key
@@ -109,7 +101,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyFloat(const std::string& key, float value, const std::string& from = "");
+    bool keyFloat(const std::string& key, float value, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add float values (float array) to a key
@@ -120,7 +112,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = "");
+    bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add seqtype value to a key
@@ -130,7 +122,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keySeqtype(const std::string& key, const std::string& value, const std::string& from = "");
+    bool keySeqtype(const std::string& key, const std::string& value, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add inouttype value to a key
@@ -140,7 +132,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = "");
+    bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add timestamp value to a key
@@ -150,7 +142,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = "");
+    bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = std::string());
     
     
 #if VTAPI_HAVE_OPENCV
@@ -162,7 +154,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = "");
+    bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = std::string());
 #endif
     
     /**
@@ -173,7 +165,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = "");
+    bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add ProcessState value to a key
@@ -183,8 +175,12 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyProcessState(const std::string& key, const ProcessState& value, const std::string& from = "");
-    
+    bool keyProcessState(const std::string& key, const ProcessState& value, const std::string& from = std::string());
+
+private:
+    Insert() = delete;
+    Insert(const Insert&) = delete;
+    Insert& operator=(const Insert&) = delete;
 };
 
 } // namespace vtapi

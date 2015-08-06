@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Keyvalues class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -16,7 +15,6 @@
 #include <ctime>
 #include <string>
 #include <vector>
-#include <list>
 #include "vtapi_commons.h"
 #include "vtapi_intervalevent.h"
 #include "vtapi_processstate.h"
@@ -27,6 +25,14 @@
 
 namespace vtapi {
 
+// forward declarations
+class Dataset;
+class Method;
+class Sequence;
+class Interval;
+class Task;
+class Process;
+
 // ************************************************************************** //
 /**
  * @brief KeyValues storage class
@@ -35,7 +41,6 @@ namespace vtapi {
  *
  * @note Error codes 30*
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -47,22 +52,15 @@ class KeyValues : public Commons
 {
 public:
 
-    Select* select; /**< Select for select queries (depending on child KeyValue object may be pre-filled by the constructor) */
-    Insert* insert; /**< Current insert to insert new data (= last in store)*/
-    Update* update; /**< Update to update new data */
+    Select _select; /**< Select for select queries (usually pre-filled by the constructor) */
+    Update* _update; /**< Update to update new data */
 
     /**
-     * KeyValue contructor from Commons object
-     * @param orig   pointer of the existing Commons object
+     * Constructor of base KeyValues object representing generic DB tuples
+     * @param orig base Commons object
+     * @param selection specific DB table
      */
-    KeyValues(const Commons& orig);
-
-    /**
-     * KeyValue constructor from another KeyValues object
-     * @param orig        pointer to the parent KeyValues object
-     * @param selection   specific selection name
-     */
-    KeyValues(const KeyValues& orig, const std::string& selection = "");
+    KeyValues(const Commons& orig, const std::string& selection = std::string());
 
     /**
      * This destroys the KeyValues
@@ -473,71 +471,71 @@ public:
 
     // =============== ADDERS (Insert) ========================================
 
-    /**
-     * Adds a new string to a specified key
-     * @param key     column key to insert
-     * @param value   new string value of the key
-     * @return success
-     */
-    bool addString(const std::string& key, const std::string& value);
-    /**
-     * Adds a new integer value to a specified key
-     * @param key     column key to insert
-     * @param value   new integer value of the key
-     * @return success
-     */
-    bool addInt(const std::string& key, int value);
-    /**
-     * Adds a new integer array to a specified key
-     * @param key     column key to insert
-     * @param value   new integer array of the key
-     * @param size    size of the array of integer values
-     * @return success
-     */
-    bool addIntA(const std::string& key, int* value, int size);
-    /**
-     * Adds a new float value to a specified key
-     * @param key     column key to insert
-     * @param value   new float value of the key
-     * @return success
-     */
-    bool addFloat(const std::string& key, float value);
-    /**
-     * Adds a new float array to a specified key
-     * @param key     column key to insert
-     * @param value   new float array of the key
-     * @param size    size of the array of float values
-     * @return success
-     */
-    bool addFloatA(const std::string& key, float* value, int size);
-    /**
-     * Adds a new timestamp to a specified key
-     * @param key       column key to insert
-     * @param value     new timestamp
-     * @return success
-     */
-    bool addTimestamp(const std::string& key, const time_t& value);
-#if VTAPI_HAVE_OPENCV
-    /**
-     * Adds a new OpenCV matrix (cv::Mat) to a specified key
-     * @param key     column key to insert
-     * @param value   new OpenCV matrix (cv::Mat) of the key
-     * @return success
-     */
-    bool addCvMat(const std::string& key, cv::Mat& value);
-#endif
-    /**
-     * Adds a new IntervalEvent value to a specied key
-     * @param key     column key to insert
-     * @param value   new IntervalEvent value of the key
-     * @return success
-     */
-    bool addIntervalEvent(const std::string& key, const IntervalEvent& value);
-    /**
-     * Executes SQL INSERT command
-     * @return success
-     */
-    virtual bool addExecute();
+//    /**
+//     * Adds a new string to a specified key
+//     * @param key     column key to insert
+//     * @param value   new string value of the key
+//     * @return success
+//     */
+//    bool addString(const std::string& key, const std::string& value);
+//    /**
+//     * Adds a new integer value to a specified key
+//     * @param key     column key to insert
+//     * @param value   new integer value of the key
+//     * @return success
+//     */
+//    bool addInt(const std::string& key, int value);
+//    /**
+//     * Adds a new integer array to a specified key
+//     * @param key     column key to insert
+//     * @param value   new integer array of the key
+//     * @param size    size of the array of integer values
+//     * @return success
+//     */
+//    bool addIntA(const std::string& key, int* value, int size);
+//    /**
+//     * Adds a new float value to a specified key
+//     * @param key     column key to insert
+//     * @param value   new float value of the key
+//     * @return success
+//     */
+//    bool addFloat(const std::string& key, float value);
+//    /**
+//     * Adds a new float array to a specified key
+//     * @param key     column key to insert
+//     * @param value   new float array of the key
+//     * @param size    size of the array of float values
+//     * @return success
+//     */
+//    bool addFloatA(const std::string& key, float* value, int size);
+//    /**
+//     * Adds a new timestamp to a specified key
+//     * @param key       column key to insert
+//     * @param value     new timestamp
+//     * @return success
+//     */
+//    bool addTimestamp(const std::string& key, const time_t& value);
+//#if VTAPI_HAVE_OPENCV
+//    /**
+//     * Adds a new OpenCV matrix (cv::Mat) to a specified key
+//     * @param key     column key to insert
+//     * @param value   new OpenCV matrix (cv::Mat) of the key
+//     * @return success
+//     */
+//    bool addCvMat(const std::string& key, cv::Mat& value);
+//#endif
+//    /**
+//     * Adds a new IntervalEvent value to a specied key
+//     * @param key     column key to insert
+//     * @param value   new IntervalEvent value of the key
+//     * @return success
+//     */
+//    bool addIntervalEvent(const std::string& key, const IntervalEvent& value);
+//    /**
+//     * Executes SQL INSERT command
+//     * @return success
+//     */
+//    virtual bool addExecute();
     
     // =============== SETTERS (Update) ========================================
 
@@ -616,12 +614,12 @@ public:
 
 protected:
     virtual bool preUpdate();
-    bool preAdd(const std::string& table);
     bool preUpdate(const std::string& table);
 
 private:
-    std::list<Insert*> store;  /**< insert queries stored for transactional execute */
-
+    KeyValues() = delete;
+    KeyValues(const KeyValues&) = delete;
+    KeyValues& operator=(const KeyValues&) = delete;
 };
 
 } // namespace vtapi

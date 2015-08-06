@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Process class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -14,12 +13,13 @@
 #pragma once
  
 #include <string>
+#include <list>
 #include "vtapi_keyvalues.h"
-#include "vtapi_interval.h"
-#include "../common/vtapi_compat.h"
+#include "vtapi_sequence.h"
+#include "vtapi_task.h"
 #include "vtapi_processstate.h"
 #include "vtapi_processcontrol.h"
-#include "vtapi_processparams.h"
+#include "../common/vtapi_compat.h"
 
 namespace vtapi {
 
@@ -28,9 +28,6 @@ namespace vtapi {
  * 
  * @see Basic definition on page @ref BASICDEFS
  *
- * @note Error codes 36*
- * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -43,11 +40,20 @@ class Process : public KeyValues
 public:
 
     /**
-     * Constructor for processes
-     * @param orig   pointer to the parent KeyValues object
-     * @param name   specific name of process, which we can construct
+     * Construct process object for iterating through VTApi processes
+     * If a specific name is set, object will represent one process only
+     * @param commons base Commons object
+     * @param id process id, 0 for all processes
      */
-    Process(const KeyValues& orig, const std::string& name = "");
+    Process(const Commons& commons, int id = 0);
+
+    /**
+     * Construct process object for iterating through VTApi processes
+     * Object will represent set of processes specified by their names
+     * @param commons base Commons object
+     * @param names list of method processes
+     */
+    Process(const Commons& commons, const std::list<int>& ids);
 
     /**
      * Destructor
@@ -70,93 +76,20 @@ public:
      */
     bool run(bool async = false, bool suspended = false, ProcessControl **ctrl = NULL);
     
-    /**
-     * Constructs a process name from method name and input parameters
-     * @param params container
-     * @return process name
-     */
-    std::string constructName(const ProcessParams &params);
-    
     //////////////////////////////////////////////////
     // getters - SELECT
     //////////////////////////////////////////////////
     
     /**
-     * Gets a process name
-     * @return string value with the name of the process
+     * Gets a process ID
+     * @return process ID
      */
-    std::string getName();
+    int getId();
     /**
      * Gets detailed process state
      * @return process state object
      */
     ProcessState *getState();
-    /**
-     * Gets a process name which outputs are inputs for this process
-     * @return string value with the input data table name
-     * @todo @b doc: Check if it is correct
-     */
-    std::string getInputProcessName();
-    /**
-     * Gets a name of a table where output data for this process are stored
-     * @return string value with the output data table name
-     */
-    std::string getOutputTable();
-    /**
-     * Gets a process which outputs are inputs for this process
-     * @return process object
-     */
-    Process *getInputProcess();
-    /**
-     * Gets input intervals of this process
-     * @return input intervals
-     */
-    Interval *getInputData();
-    /**
-     * Gets output intervals of this process
-     * @return output intervals
-     */
-    Interval *getOutputData();
-    /**
-     * Gets object containing process parameters
-     * @return internals params map
-     */
-    ProcessParams *getParams();
-    
-    //////////////////////////////////////////////////
-    // adders - INSERT
-    //////////////////////////////////////////////////
-
-    /**
-     * Adds a new process instance into database, use Method->addProcess() instead
-     * @param outputs   output table
-     * @return success
-     */
-    bool add(const std::string& outputs = "");
-    /**
-     * Sets output data from another process as inputs for this one
-     * @param processName   input process name
-     * @return success
-     */
-    bool addInputProcessName(const std::string& processName);
-    /**
-     * Sets output table for this process
-     * @param table   output table name
-     * @return success
-     */
-    bool addOutputTable(const std::string& table);
-    /**
-     * Inserts full process parameters including input process name
-     * Uses move semantics
-     * @param params process params
-     * @return success
-     */
-    bool addParams(ProcessParams && params);
-    /**
-     * Execute INSERT specified by previously called add* methods
-     * @return success
-     */
-    virtual bool addExecute();
     
     //////////////////////////////////////////////////
     // updaters - UPDATE
@@ -229,29 +162,21 @@ public:
     //////////////////////////////////////////////////
     // filters/utilities
     //////////////////////////////////////////////////
-    
+   
     /**
-     * Filters iteration via next() for processes with specific input process
-     * @param processName   input process name
+     * Filters iteration via next() by task
      */
-    void filterByInputProcessName(const std::string& processName);
-    /**
-     * Filters iteration via next() for processes with specific output table
-     * @param table output table
-     */
-    void filterByOutputTable(const std::string& table);
-    /**
-     * Deletes output data for this process
-     * @return succesful clear
-     */
-    bool clearOutputData();
+    void filterByTask(const std::string& taskname);
 
 protected:
-    ProcessParams m_params;     /**< Vector of process parameters */
-    std::string m_inputProcess; /**< Input process name*/
-    compat::ProcessInstance m_instance;  /**< Newly launched instance via run() */
+    compat::ProcessInstance _instance;  /**< Newly launched instance via run() */
 
     virtual bool preUpdate();
+
+private:
+    Process() = delete;
+    Process(const Process&) = delete;
+    Process& operator=(const Process&) = delete;
 };
 
 } // namespace vtapi

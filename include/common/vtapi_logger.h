@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Logger class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -13,13 +12,17 @@
 
 #pragma once
 
-
 #include <string>
 #include <fstream>
+#include <boost/current_function.hpp>
+
+#define VTLOG_MESSAGE(line) Logger::instance().message(line)
+#define VTLOG_WARNING(line) Logger::instance().warning(line, BOOST_CURRENT_FUNCTION)
+#define VTLOG_ERROR(line)   Logger::instance().error(line, BOOST_CURRENT_FUNCTION)
+#define VTLOG_DEBUG(line)   Logger::instance().debug(line, BOOST_CURRENT_FUNCTION)
 
 
 namespace vtapi {
-
 
 /**
  * @brief Standard logger
@@ -35,7 +38,6 @@ namespace vtapi {
  * 
  * @todo @b doc: lack of clarity sentence: "Programmers may use also write (just it) and a conditional debug log." - what the autor wanted to say?
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -48,78 +50,71 @@ class Logger
 {
 public:
     /**
-     * Constructor
-     * @param filename   name of the file for storing logs
-     * @param verbose verbosity
-     * @param debug print debug
+     * Access singleton instance
+     * @return logger singleton
      */
-    Logger(const std::string& filename, bool verbose, bool debug);
-    
-    /**
-     * Destructor
-     */
-    ~Logger();
+    static Logger& instance();
 
     /**
-     * Log function puts a timestamp with a message into a logstream
-     * @param message   log level message
+     * Configures logger instance
+     * @param file set file as log output
+     * @param verbose set verbose mode on/off
+     * @param debug set debug mode on/off
+     * @return succesful config
      */
-    void log(const std::string& message);
+    bool config(const std::string& filepath, bool verbose, bool debug);
     
     /**
-     * This is to write to the standard error log
-     * @param message   logged message
+     * Log custom message (happens always)
+     * @param line printed line
      */
-    void write(const std::string& message);
+    void message(const std::string& line);
+
+    /**
+     * Log warning (happens only if verbose mode is activated)
+     * @param line warning line
+     * @param where warning location
+     */
+    void warning(const std::string& line, const std::string& where = std::string());
     
+    /**
+     * Log error (happens always)
+     * @param line error line
+     * @param where error location
+     */
+    void error(const std::string& line, const std::string& where = std::string());
+    
+    /**
+     * Log debug message (happens where debug mode is activated)
+     * @param line debug line
+     * @param where debug message location
+     */
+    void debug(const std::string& line, const std::string& where = std::string());
+
+private:
+    std::ofstream   _log;          /**< File stream for logging */
+    bool            _verbose;      /**< Print warnings */
+    bool            _debug;        /**< Print queries etc. */
+    
+
     /**
      * Gets a timestamp for logging
      * @return string value with timestamp
-     * @note Timestamp format is "YYYY-MM-DD HH:NN:SS", where NN represents minutes
      */
     std::string timestamp();
     
     /**
-     * This causes a serious death
-     * @param errnum       number of the error (error code)
-     * @param logline      error message to display
-     * @param thisMethod   method in which error occurred
+     * Outputs line to specified stream
+     * @param stream output
+     * @param line write this
      */
-    void error(int errnum, const std::string& logline, const std::string& thisMethod);
+    void output(std::ostream & stream, const std::string& line);
     
-    /**
-     * This causes a serious death
-     * @param message      error message to display
-     * @param thisMethod   method in which error occurred
-     */
-    void error(const std::string& message, const std::string& thisMethod);
-
-    /**
-     * This is just a warning
-     * @param errnum       number of the warning (warning code)
-     * @param logline      warning message to display
-     * @param thisMethod   method in which warning occurred
-     */
-    void warning(int errnum, const std::string& logline, const std::string& thisMethod);
+    // forbidden stuff
     
-    /**
-     * This is just a warning
-     * @param message      warning message to display
-     * @param thisMethod   method in which warning occurred
-     */
-    void warning(const std::string& message, const std::string& thisMethod);
-    
-    /**
-     * Debug function flushes a timestamp with a message immediately into a logstream
-     * @param message   debug level message
-     */
-    void debug(const std::string& message);
-
-private:
-    std::string     logFilename;    /**< Name of the file for storing logs */
-    std::ofstream   logStream;      /**< Stream of file for storing logs */
-    bool            m_verbose;      /**< Print warnings */
-    bool            m_debug;        /**< Print queries etc. */
+    Logger() {}
+    Logger (const Logger&) = delete;
+    void operator=(const Logger&) = delete;
 };
 
 } // namespace vtapi

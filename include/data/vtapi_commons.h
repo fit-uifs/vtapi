@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Common class and definition of format_t
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -16,7 +15,6 @@
 #include <string>
 #include "../common/vtapi_config.h"
 #include "../common/vtapi_settings.h"
-#include "../common/vtapi_logger.h"
 #include "../backends/vtapi_connection.h"
 #include "../backends/vtapi_backendfactory.h"
 
@@ -33,7 +31,6 @@ namespace vtapi {
  *
  * @note Error codes 15*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -44,104 +41,78 @@ namespace vtapi {
 class Commons
 {
 public:
-    /**
-     * Full copy constructor from existing Commons class
-     * @note The default constructor Commons() should never exist
-     * @param orig   previously created Commons class
-     */
-    Commons(const Commons& orig);
-    
+    // global configuration (shared by pointer between all objects)
+    typedef struct _CONFIG
+    {
+        std::string     configfile;         /**< VTApi config file */
+        BackendFactory::BACKEND_T backend;  /**< Used backend type */
+        std::string     connection;         /**< Connection string */
+        std::string     dbfolder;           /**< Databases folder */
+        std::string     input;              /**< A filename from which we read an input */
+        std::string     output;             /**< A filename into which we write an output */
+        std::string     baseLocation;       /**< Base path location */
+        int             queryLimit;         /**< Limit number of rows fetched at once */
+        int             arrayLimit;         /**< Limit amount of printed array elements */
+        std::string     logfile;            /**< Log file */
+        bool            verbose;            /**< Verbose mode */
+        bool            debug;              /**< Debug mode */
+
+        _CONFIG();
+    } CONFIG;
+
+    // local context (each object owns its copy)
+    typedef struct _CONTEXT
+    {
+        std::string     datasetLocation;    /**< Current dataset location */
+        std::string     sequenceLocation;   /**< Current sequence location */
+        std::string     dataset;            /**< Current dataset name */
+        std::string     sequence;           /**< Current sequence name */
+        std::string     selection;          /**< Current selection name */
+        std::string     method;             /**< Current method name */
+        int             process;            /**< Current process ID */
+        std::string     task;               /**< Current task name */
+
+        _CONTEXT();
+    } CONTEXT;
+
+    CONFIG          *_config;       /**< Global configuration */
+    CONTEXT         _context;       /**< Local context for VTApi objects */
+    BackendBase     *_backendBase;  /**< base backend object, will be copied across backend-specific objects */
+    Connection      *_connection;   /**< Connection object */
+
     /**
      * Recommended constructor. All arguments are loaded from gengetopt structure.
-     * @note The default constructor Commons() should never exist
      * @param args_info   gengetopt structure of command line/configuration file arguments
      */
     explicit Commons(const gengetopt_args_info& args_info);
     
     /**
+     * Copy constructor
+     * @param orig orignal object
+     * @param new_copy full copy including configuration
+     */
+    Commons(const Commons& orig, bool new_copy);
+    
+    /**
      * Destructor
      */
-    ~Commons();
+    virtual ~Commons();
 
     /**
-     * Gets current connector
-     * @return connector
+     * Initialize
+     * @param args_info
+     * @return 
      */
-    Connection* getConnection();
-    
-    /**
-     * Gets current logger
-     * @return logger
-     */
-    Logger* getLogger();
+    bool init(const gengetopt_args_info& args_info);
 
-    /**
-     * Gets name of current dataset
-     * @return dataset name
-     */
-    std::string getDataset();
-    
-    /**
-     * Gets name of current sequence
-     * @return sequence name
-     */
-    std::string getSequence();
-    
-    /**
-     * Gets name of current selection
-     * @return selection name
-     */
-    std::string getSelection();
-    
-    /**
-     * Gets name of current process
-     * @return process name
-     */
-    std::string getProcess();
-    
-    /**
-     * Gets base location path
-     * @return base location
-     */
-    std::string getBaseLocation();
-    
-    /**
-     * Gets dataset location path
-     * @return dataset location
-     */
-    std::string getDatasetLocation();
-    
-    /**
-     * Gets sequence location path
-     * @return sequence location
-     */
-    std::string getSequenceLocation();
-    
-    /**
-     * Gets data location path
-     * @return data location
-     */
-    std::string getDataLocation();
-    
-    /**
-     * Gets user name
-     * @return user name
-     */
-    std::string getUser();
 
-    /**
-     * Checks commons object for validity (connection etc.)
-     * @return success
-     */
-    bool checkCommonsObject();
-    
     /**
      * This is to check whether a file exists or not
      * @param filepath file path
      * @return success exists
      */
     static bool fileExists(const std::string& filepath);
-    
+
     /**
      * This is to check whether a directory exists or not
      * @param dirpath directory path
@@ -149,35 +120,12 @@ public:
      */
     static bool dirExists(const std::string& dirpath);
 
-protected:
-    std::string thisClass;   /**< This should be filled in each constructor of a derived class */
-
-    BackendFactory::BACKEND_T backend;  /**< Used backend type */
-    BackendBase     *backendBase;       /**< base backend object, will be copied across backend-specific objects */
-    Connection      *connection;        /**< Connection object */
-    Logger          *logger;            /**< Logger object */
-
-    std::string     configfile;         /**< VTApi config file */
-    std::string     dbconn;             /**< Connection string / databases folder */
-    std::string     input;              /**< A filename from which we read an input */
-    std::string     output;             /**< A filename into which we write an output */
-    std::string     user;               /**< Current user */
-    std::string     baseLocation;       /**< Base path location */
-    int             queryLimit;         /**< Limit number of rows fetched at once */
-    int             arrayLimit;         /**< Limit amount of printed array elements */
-
-    // THESE ARE USED IN THE UNDERLYING CLASSES HIERARCHY FOR ANYTHING NECESSARY
-    std::string     dataset;            /**< Current dataset name */
-    std::string     datasetLocation;    /**< Current dataset location */
-    std::string     sequence;           /**< Current sequence name */
-    std::string     sequenceLocation;   /**< Current sequence location */
-    std::string     selection;          /**< Current selection name */
-
-    // NOT YET IMPLEMENTED
-    std::string     method;             /**< Current method name */
-    std::string     process;            /**< Current process name */
-
-    bool            doom;               /**< For destructor purposes */
+private:
+    bool _is_owner; /**< owns its resources */
+    
+    Commons() = delete;
+    Commons(const Commons&) = delete;
+    Commons& operator=(const Commons&) = delete;
 
 };
 

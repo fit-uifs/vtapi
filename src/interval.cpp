@@ -2,7 +2,6 @@
  * @file
  * @brief   Methods of Interval and Image classes
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -22,17 +21,21 @@ namespace vtapi {
 
 //================================= INTERVAL ===================================
 
-Interval::Interval(const KeyValues& orig, const string& selection) : KeyValues(orig)
+Interval::Interval(const Commons& commons, const string& selection)
+    : KeyValues(commons)
 {
-    thisClass = "Interval";
+    if (_context.dataset.empty())
+        VTLOG_WARNING("Dataset is not specified");
 
-    if (!selection.empty()) this->selection = selection;
+    if (!selection.empty())
+        _context.selection = selection;
 
-    this->select = new Select(orig);
-    this->select->from(this->selection, "*");
-    this->select->orderBy("id");
-    if (!sequence.empty()) select->whereString("seqname", this->sequence);
-    if (!process.empty()) select->whereString("prsname", this->process);
+    _select.from(_context.selection , def_col_all);
+    _select.orderBy(def_col_int_id);
+    if (!_context.sequence.empty())
+        _select.whereString(def_col_int_seqname, _context.sequence);
+    if (!_context.task.empty())
+        _select.whereString(def_col_int_taskname, _context.task);
 }
 
 Interval::~Interval()
@@ -45,136 +48,134 @@ bool Interval::next()
 
 int Interval::getId()
 {
-    return this->getInt("id");
+    return this->getInt(def_col_int_id);
 }
-string Interval::getProcessName()
+string Interval::getTaskName()
 {
-    return this->getString("prsname");
+    return this->getString(def_col_int_taskname);
 }
 string Interval::getSequenceName()
 {
-    return this->getString("seqname");
+    return this->getString(def_col_int_seqname);
 }
 int Interval::getStartTime()
 {
-    return this->getInt("t1");
+    return this->getInt(def_col_int_t1);
 }
 int Interval::getEndTime()
 {
-    return this->getInt("t2");
+    return this->getInt(def_col_int_t2);
 }
 bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
 {
     bool bRet = false;
-    Sequence *seq = new Sequence(*this, this->getSequenceName());
+    Sequence seq(*this, this->getSequenceName());
     
-    if(seq) {
-        if (seq->next() && seq->getType().compare("video") == 0) {
-            time_t start = seq->getTimestamp("vid_time");
-            float fps = seq->getFloat("vid_fps");
-            
-            if (start && fps) {
-                *t1 = start + (time_t)(getStartTime() / fps);
-                *t2 = start + (time_t) (getEndTime() / fps);
-                bRet = true;
-            }
-        } 
-        delete seq;
-    }
+    if (seq.next() && seq.getType().compare(def_val_video) == 0) {
+        time_t start = seq.getTimestamp(def_col_seq_vidtime);
+        float fps = seq.getFloat(def_col_seq_vidfps);
+
+        if (start && fps) {
+            *t1 = start + (time_t)(this->getStartTime() / fps);
+            *t2 = start + (time_t) (this->getEndTime() / fps);
+            bRet = true;
+        }
+    } 
     
     return bRet;
 }
 
 bool Interval::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(this->selection);
+    bool ret = KeyValues::preUpdate(_context.selection);
     if (ret) {
-        ret &= update->whereString("seqname", this->sequence);
-        ret &= update->whereString("prsname", this->process);
-        ret &= update->whereInt("t1", this->getInt("t1"));
-        ret &= update->whereInt("t2", this->getInt("t2"));
+        ret &= _update->whereInt(def_col_int_id, this->getId());
     }
 
     return ret;
 }
 bool Interval::updateStartEndTime(const int t1, const int t2)
 {
-    return (updateInt("t1", t1) && updateInt("t2", t2) && updateExecute());
+    return (updateInt(def_col_int_t1, t1) && updateInt(def_col_int_t2, t2) && updateExecute());
 }
 
 
-bool Interval::add(const string& sequence, const int t1, const int t2, const string& location)
-{
-    return add(sequence, t1, t2, location, getUser(), "");
-}
-
-bool Interval::add(const string& sequence, const int t1, const int t2, const string& location,
-    const string& userid, const string& notes)
-{
-    bool retval = true;
-    int te2 = (t2 < 0) ? t1 : t2;
-
-    retval &= KeyValues::preAdd(this->selection);
-    retval &= insert->keyString("seqname", sequence);
-    retval &= insert->keyString("prsname", this->process);
-    retval &= insert->keyInt("t1", t1);
-    retval &= insert->keyInt("t2", te2);
-    retval &= insert->keyString("imglocation", location);
-    if (!userid.empty()) retval &= insert->keyString("userid", userid);
-    if (!notes.empty()) retval &= insert->keyString("notes", notes);
-    
-    return retval;
-}
+//bool Interval::add(const string& sequence, const int t1, const int t2, const string& location)
+//{
+//    return add(sequence, t1, t2, location, getUser(), "");
+//}
+//
+//bool Interval::add(const string& sequence, const int t1, const int t2, const string& location,
+//    const string& userid, const string& notes)
+//{
+//    bool retval = true;
+//    int te2 = (t2 < 0) ? t1 : t2;
+//
+//    retval &= KeyValues::preAdd(this->selection);
+//    retval &= insert->keyString("seqname", sequence);
+//    retval &= insert->keyString("prsname", this->process);
+//    retval &= insert->keyInt("t1", t1);
+//    retval &= insert->keyInt("t2", te2);
+//    retval &= insert->keyString("imglocation", location);
+//    if (!userid.empty()) retval &= insert->keyString("userid", userid);
+//    if (!notes.empty()) retval &= insert->keyString("notes", notes);
+//    
+//    return retval;
+//}
 
 
 bool Interval::filterById(const int id)
 {
-    return select->whereInt("id", id);
+    return _select.whereInt(def_col_int_id, id);
 }
 bool Interval::filterBySequence(const string& seqname)
 {
-    return select->whereString("seqname", seqname);
+    return _select.whereString(def_col_int_seqname, seqname);
 }
-bool Interval::filterByProcess(const string& prsname)
+bool Interval::filterByTask(const string& taskname)
 {
-    return select->whereString("prsname", prsname);
+    return _select.whereString(def_col_int_taskname, taskname);
 }
 
 bool Interval::filterByDuration(const float t_low, const float t_high)
 {
     return
-        select->whereFloat("sec_length", t_low, ">=") &&
-        select->whereFloat("sec_length", t_high, "<=");
+        _select.whereFloat(def_col_int_seclength, t_low, ">=") &&
+        _select.whereFloat(def_col_int_seclength, t_high, "<=");
 }
 
 bool Interval::filterByTimeRange(const time_t t_low, const time_t t_high)
 {
-    return select->whereTimeRange("rt_start", "sec_length", t_low, t_high - t_low, "&&");
+    return _select.whereTimeRange(def_col_int_rtstart, def_col_int_seclength, t_low, t_high - t_low, "&&");
 }
 
 bool Interval::filterByRegion(const IntervalEvent::box& region)
 {
-    return select->whereRegion("event,region", region, "&&");
+    //TODO: wtf
+    return _select.whereRegion("event,region", region, "&&");
 }
 
 //=================================== IMAGE ====================================
 
-
-Image::Image(const KeyValues& orig, const std::string& name, const string& selection) : Interval(orig, selection)
+Image::Image(const Commons& commons, const string& name, const string& selection)
+    : Interval(commons, selection)
 {
-    thisClass = "Image";
-
-    if (!name.empty()) select->whereString("imglocation", name);
+    if (!name.empty())
+        _select.whereString(def_col_int_imglocation, name);
+    
 }
 
-string Image::getImgLocation()
+bool Image::next()
 {
-    return this->getString("imglocation");
+    if (_image.data) _image.release();
+    
+    return Interval::next();
 }
 
 string Image::getDataLocation()
 {
-    return (this->getDataLocation() + this->getImgLocation());
+    return _config->baseLocation + _context.datasetLocation +
+        _context.sequenceLocation  + this->getString(def_col_int_imglocation);
 }
 
 int Image::getTime()
@@ -184,18 +185,18 @@ int Image::getTime()
 
 #if VTAPI_HAVE_OPENCV
 
-cv::Mat Image::getData()
+cv::Mat& Image::getImageData()
 {
-    if (this->image.data) this->image.release();
+    if (_image.data) _image.release();
 
-    this->image = cv::imread(this->getDataLocation().c_str(), CV_LOAD_IMAGE_COLOR);
-    return this->image;
+    _image = cv::imread(this->getDataLocation().c_str(), CV_LOAD_IMAGE_COLOR);
+    return _image;
 }
 #endif
 
-bool Image::add(const string& sequence, const int t, const string& location)
-{
-    return ((Interval*)this)->add(sequence, t, t, location);
-}
+////bool Image::add(const string& sequence, const int t, const string& location)
+////{
+////    return ((Interval*)this)->add(sequence, t, t, location);
+////}
 
 }

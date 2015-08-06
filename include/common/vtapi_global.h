@@ -2,7 +2,6 @@
  * @file
  * @brief   Definition of %VTApi core return codes, errors and destructors
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -14,6 +13,11 @@
 #pragma once
 
 #include "vtapi_config.h"
+#include "vtapi_defs.h"
+
+
+// for global logging
+#include <common/vtapi_logger.h>
 
 
 #define PG_FORMAT 1   // postgres data transfer format: 0=text, 1=binary

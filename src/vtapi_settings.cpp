@@ -43,20 +43,16 @@ const char *gengetopt_args_info_help[] = {
   "  -b, --backend=STRING     Database backend  (possible values=\"postgres\",\n                             \"sqlite\")",
   "  -c, --connection=STRING  Connection string \"host=.. port=.. dbname=..\n                             user=.. password=..\"",
   "  -d, --dbfolder=FILENAME  SQlite databases folder  (default=`./sqlite')",
-  "  -u, --user=STRING        User name",
-  "  -p, --password=STRING    User password",
-  "  -f, --format=STRING      Input/output format  (possible values=\"standard\",\n                             \"csv\", \"html\", \"binary\", \"sparse\",\n                             \"html\" default=`standard')",
-  "  -i, --input=FILENAME     Read from specific input",
-  "  -o, --output=FILENAME    Write to specific output",
   "      --querylimit=INT     Limit number of rows fetched at once (0 - unlimited)",
   "      --arraylimit=INT     Limit amount of printed array elements",
   "      --debug              Don't try this",
   "\nContext specification",
   "  -D, --dataset=STRING     Set dataset to use",
   "  -S, --sequence=STRING    Set sequence to use",
-  "  -M, --method=STRING      Set method to use",
-  "  -P, --process=STRING     Set process to use",
   "  -E, --selection=STRING   Set selection to use",
+  "  -M, --method=STRING      Set method to use",
+  "  -P, --process=INT        Set process ID to use",
+  "  -T, --task=STRING        Set task to use",
     0
 };
 
@@ -102,7 +98,6 @@ free_cmd_list(void)
 
 
 const char *cmdline_parser_backend_values[] = {"postgres", "sqlite", 0}; /*< Possible values for backend. */
-const char *cmdline_parser_format_values[] = {"standard", "csv", "html", "binary", "sparse", "html", 0}; /*< Possible values for format. */
 
 static char *
 gengetopt_strdup (const char *s);
@@ -119,19 +114,15 @@ void clear_given (struct gengetopt_args_info *args_info)
   args_info->backend_given = 0 ;
   args_info->connection_given = 0 ;
   args_info->dbfolder_given = 0 ;
-  args_info->user_given = 0 ;
-  args_info->password_given = 0 ;
-  args_info->format_given = 0 ;
-  args_info->input_given = 0 ;
-  args_info->output_given = 0 ;
   args_info->querylimit_given = 0 ;
   args_info->arraylimit_given = 0 ;
   args_info->debug_given = 0 ;
   args_info->dataset_given = 0 ;
   args_info->sequence_given = 0 ;
+  args_info->selection_given = 0 ;
   args_info->method_given = 0 ;
   args_info->process_given = 0 ;
-  args_info->selection_given = 0 ;
+  args_info->task_given = 0 ;
 }
 
 static
@@ -150,28 +141,19 @@ void clear_args (struct gengetopt_args_info *args_info)
   args_info->connection_orig = NULL;
   args_info->dbfolder_arg = gengetopt_strdup ("./sqlite");
   args_info->dbfolder_orig = NULL;
-  args_info->user_arg = NULL;
-  args_info->user_orig = NULL;
-  args_info->password_arg = NULL;
-  args_info->password_orig = NULL;
-  args_info->format_arg = gengetopt_strdup ("standard");
-  args_info->format_orig = NULL;
-  args_info->input_arg = NULL;
-  args_info->input_orig = NULL;
-  args_info->output_arg = NULL;
-  args_info->output_orig = NULL;
   args_info->querylimit_orig = NULL;
   args_info->arraylimit_orig = NULL;
   args_info->dataset_arg = NULL;
   args_info->dataset_orig = NULL;
   args_info->sequence_arg = NULL;
   args_info->sequence_orig = NULL;
-  args_info->method_arg = NULL;
-  args_info->method_orig = NULL;
-  args_info->process_arg = NULL;
-  args_info->process_orig = NULL;
   args_info->selection_arg = NULL;
   args_info->selection_orig = NULL;
+  args_info->method_arg = NULL;
+  args_info->method_orig = NULL;
+  args_info->process_orig = NULL;
+  args_info->task_arg = NULL;
+  args_info->task_orig = NULL;
   
 }
 
@@ -189,19 +171,15 @@ void init_args_info(struct gengetopt_args_info *args_info)
   args_info->backend_help = gengetopt_args_info_help[6] ;
   args_info->connection_help = gengetopt_args_info_help[7] ;
   args_info->dbfolder_help = gengetopt_args_info_help[8] ;
-  args_info->user_help = gengetopt_args_info_help[9] ;
-  args_info->password_help = gengetopt_args_info_help[10] ;
-  args_info->format_help = gengetopt_args_info_help[11] ;
-  args_info->input_help = gengetopt_args_info_help[12] ;
-  args_info->output_help = gengetopt_args_info_help[13] ;
-  args_info->querylimit_help = gengetopt_args_info_help[14] ;
-  args_info->arraylimit_help = gengetopt_args_info_help[15] ;
-  args_info->debug_help = gengetopt_args_info_help[16] ;
-  args_info->dataset_help = gengetopt_args_info_help[18] ;
-  args_info->sequence_help = gengetopt_args_info_help[19] ;
-  args_info->method_help = gengetopt_args_info_help[20] ;
-  args_info->process_help = gengetopt_args_info_help[21] ;
-  args_info->selection_help = gengetopt_args_info_help[22] ;
+  args_info->querylimit_help = gengetopt_args_info_help[9] ;
+  args_info->arraylimit_help = gengetopt_args_info_help[10] ;
+  args_info->debug_help = gengetopt_args_info_help[11] ;
+  args_info->dataset_help = gengetopt_args_info_help[13] ;
+  args_info->sequence_help = gengetopt_args_info_help[14] ;
+  args_info->selection_help = gengetopt_args_info_help[15] ;
+  args_info->method_help = gengetopt_args_info_help[16] ;
+  args_info->process_help = gengetopt_args_info_help[17] ;
+  args_info->task_help = gengetopt_args_info_help[18] ;
   
 }
 
@@ -300,28 +278,19 @@ cmdline_parser_release (struct gengetopt_args_info *args_info)
   free_string_field (&(args_info->connection_orig));
   free_string_field (&(args_info->dbfolder_arg));
   free_string_field (&(args_info->dbfolder_orig));
-  free_string_field (&(args_info->user_arg));
-  free_string_field (&(args_info->user_orig));
-  free_string_field (&(args_info->password_arg));
-  free_string_field (&(args_info->password_orig));
-  free_string_field (&(args_info->format_arg));
-  free_string_field (&(args_info->format_orig));
-  free_string_field (&(args_info->input_arg));
-  free_string_field (&(args_info->input_orig));
-  free_string_field (&(args_info->output_arg));
-  free_string_field (&(args_info->output_orig));
   free_string_field (&(args_info->querylimit_orig));
   free_string_field (&(args_info->arraylimit_orig));
   free_string_field (&(args_info->dataset_arg));
   free_string_field (&(args_info->dataset_orig));
   free_string_field (&(args_info->sequence_arg));
   free_string_field (&(args_info->sequence_orig));
-  free_string_field (&(args_info->method_arg));
-  free_string_field (&(args_info->method_orig));
-  free_string_field (&(args_info->process_arg));
-  free_string_field (&(args_info->process_orig));
   free_string_field (&(args_info->selection_arg));
   free_string_field (&(args_info->selection_orig));
+  free_string_field (&(args_info->method_arg));
+  free_string_field (&(args_info->method_orig));
+  free_string_field (&(args_info->process_orig));
+  free_string_field (&(args_info->task_arg));
+  free_string_field (&(args_info->task_orig));
   
   
   for (i = 0; i < args_info->inputs_num; ++i)
@@ -416,16 +385,6 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "connection", args_info->connection_orig, 0);
   if (args_info->dbfolder_given)
     write_into_file(outfile, "dbfolder", args_info->dbfolder_orig, 0);
-  if (args_info->user_given)
-    write_into_file(outfile, "user", args_info->user_orig, 0);
-  if (args_info->password_given)
-    write_into_file(outfile, "password", args_info->password_orig, 0);
-  if (args_info->format_given)
-    write_into_file(outfile, "format", args_info->format_orig, cmdline_parser_format_values);
-  if (args_info->input_given)
-    write_into_file(outfile, "input", args_info->input_orig, 0);
-  if (args_info->output_given)
-    write_into_file(outfile, "output", args_info->output_orig, 0);
   if (args_info->querylimit_given)
     write_into_file(outfile, "querylimit", args_info->querylimit_orig, 0);
   if (args_info->arraylimit_given)
@@ -436,12 +395,14 @@ cmdline_parser_dump(FILE *outfile, struct gengetopt_args_info *args_info)
     write_into_file(outfile, "dataset", args_info->dataset_orig, 0);
   if (args_info->sequence_given)
     write_into_file(outfile, "sequence", args_info->sequence_orig, 0);
+  if (args_info->selection_given)
+    write_into_file(outfile, "selection", args_info->selection_orig, 0);
   if (args_info->method_given)
     write_into_file(outfile, "method", args_info->method_orig, 0);
   if (args_info->process_given)
     write_into_file(outfile, "process", args_info->process_orig, 0);
-  if (args_info->selection_given)
-    write_into_file(outfile, "selection", args_info->selection_orig, 0);
+  if (args_info->task_given)
+    write_into_file(outfile, "task", args_info->task_orig, 0);
   
 
   i = EXIT_SUCCESS;
@@ -548,11 +509,6 @@ cmdline_parser_required2 (struct gengetopt_args_info *args_info, const char *pro
   
   
   /* checks for dependences among options */
-  if (args_info->password_given && ! args_info->user_given)
-    {
-      fprintf (stderr, "%s: '--password' ('-p') option depends on option 'user'%s\n", prog_name, (additional_error ? additional_error : ""));
-      error_occurred = 1;
-    }
 
   return error_occurred;
 }
@@ -727,23 +683,19 @@ cmdline_parser_internal (
         { "backend",	1, NULL, 'b' },
         { "connection",	1, NULL, 'c' },
         { "dbfolder",	1, NULL, 'd' },
-        { "user",	1, NULL, 'u' },
-        { "password",	1, NULL, 'p' },
-        { "format",	1, NULL, 'f' },
-        { "input",	1, NULL, 'i' },
-        { "output",	1, NULL, 'o' },
         { "querylimit",	1, NULL, 0 },
         { "arraylimit",	1, NULL, 0 },
         { "debug",	0, NULL, 0 },
         { "dataset",	1, NULL, 'D' },
         { "sequence",	1, NULL, 'S' },
+        { "selection",	1, NULL, 'E' },
         { "method",	1, NULL, 'M' },
         { "process",	1, NULL, 'P' },
-        { "selection",	1, NULL, 'E' },
+        { "task",	1, NULL, 'T' },
         { 0,  0, 0, 0 }
       };
 
-      c = getopt_long (argc, argv, "hVvl:b:c:d:u:p:f:i:o:D:S:M:P:E:", long_options, &option_index);
+      c = getopt_long (argc, argv, "hVvl:b:c:d:D:S:E:M:P:T:", long_options, &option_index);
 
       if (c == -1) break;	/* Exit from `while (1)' loop.  */
 
@@ -819,66 +771,6 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'u':	/* User name.  */
-        
-        
-          if (update_arg( (void *)&(args_info->user_arg), 
-               &(args_info->user_orig), &(args_info->user_given),
-              &(local_args_info.user_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "user", 'u',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'p':	/* User password.  */
-        
-        
-          if (update_arg( (void *)&(args_info->password_arg), 
-               &(args_info->password_orig), &(args_info->password_given),
-              &(local_args_info.password_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "password", 'p',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'f':	/* Input/output format.  */
-        
-        
-          if (update_arg( (void *)&(args_info->format_arg), 
-               &(args_info->format_orig), &(args_info->format_given),
-              &(local_args_info.format_given), optarg, cmdline_parser_format_values, "standard", ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "format", 'f',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'i':	/* Read from specific input.  */
-        
-        
-          if (update_arg( (void *)&(args_info->input_arg), 
-               &(args_info->input_orig), &(args_info->input_given),
-              &(local_args_info.input_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "input", 'i',
-              additional_error))
-            goto failure;
-        
-          break;
-        case 'o':	/* Write to specific output.  */
-        
-        
-          if (update_arg( (void *)&(args_info->output_arg), 
-               &(args_info->output_orig), &(args_info->output_given),
-              &(local_args_info.output_given), optarg, 0, 0, ARG_STRING,
-              check_ambiguity, override, 0, 0,
-              "output", 'o',
-              additional_error))
-            goto failure;
-        
-          break;
         case 'D':	/* Set dataset to use.  */
         
         
@@ -903,6 +795,18 @@ cmdline_parser_internal (
             goto failure;
         
           break;
+        case 'E':	/* Set selection to use.  */
+        
+        
+          if (update_arg( (void *)&(args_info->selection_arg), 
+               &(args_info->selection_orig), &(args_info->selection_given),
+              &(local_args_info.selection_given), optarg, 0, 0, ARG_STRING,
+              check_ambiguity, override, 0, 0,
+              "selection", 'E',
+              additional_error))
+            goto failure;
+        
+          break;
         case 'M':	/* Set method to use.  */
         
         
@@ -915,26 +819,26 @@ cmdline_parser_internal (
             goto failure;
         
           break;
-        case 'P':	/* Set process to use.  */
+        case 'P':	/* Set process ID to use.  */
         
         
           if (update_arg( (void *)&(args_info->process_arg), 
                &(args_info->process_orig), &(args_info->process_given),
-              &(local_args_info.process_given), optarg, 0, 0, ARG_STRING,
+              &(local_args_info.process_given), optarg, 0, 0, ARG_INT,
               check_ambiguity, override, 0, 0,
               "process", 'P',
               additional_error))
             goto failure;
         
           break;
-        case 'E':	/* Set selection to use.  */
+        case 'T':	/* Set task to use.  */
         
         
-          if (update_arg( (void *)&(args_info->selection_arg), 
-               &(args_info->selection_orig), &(args_info->selection_given),
-              &(local_args_info.selection_given), optarg, 0, 0, ARG_STRING,
+          if (update_arg( (void *)&(args_info->task_arg), 
+               &(args_info->task_orig), &(args_info->task_given),
+              &(local_args_info.task_given), optarg, 0, 0, ARG_STRING,
               check_ambiguity, override, 0, 0,
-              "selection", 'E',
+              "task", 'T',
               additional_error))
             goto failure;
         

@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration and also defition of TKeyValue class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -40,7 +39,6 @@ typedef std::vector<TKey *>     TKeyValues;
  * @see http://stackoverflow.com/questions/2627223/c-template-class-constructor-with-variable-arguments
  * @see http://www.cplusplus.com/reference/std/typeinfo/type_info/
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 

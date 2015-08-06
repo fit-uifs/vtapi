@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Select class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -29,7 +28,6 @@ namespace vtapi {
  * 
  * @note Error codes 21*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -45,7 +43,7 @@ public:
      * @param commons      configuration object of Commons class
      * @param initString   initialization string (partial or full query)
      */
-    explicit Select(const Commons& commons, const std::string& initString = "");
+    Select(const Commons& commons, const std::string& initString = std::string());
     
     /**
      * Gets SELECT query string
@@ -70,14 +68,14 @@ public:
      * @return number of rows specified in LIMIT section
      */
     int getLimit()
-    { return this->limit; };
+    { return _limit; };
     
     /**
      * Sets number of rows to be fetched by LIMIT section of query
      * @param limit   number of rows to be fetched
      */
     void setLimit(const int limit)
-    { this->limit = limit; };
+    { _limit = limit; };
     
     /**
      * This is used to specify a table for FROM statement and a column list for SELECT statement
@@ -103,7 +101,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+    bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = std::string());
     
     /**
      * This is a WHERE statement construction function for integers
@@ -114,7 +112,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = "");
+    bool whereInt(const std::string& key, const int value, const std::string& oper = "=", const std::string& from = std::string());
     
     /**
      * This is a WHERE statement construction function for floats
@@ -125,7 +123,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = "");
+    bool whereFloat(const std::string& key, const float value, const std::string& oper = "=", const std::string& from = std::string());
     
     /**
      * This is a WHERE statement construction function for seqtype
@@ -136,7 +134,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = std::string());
      
     /**
      * This is a WHERE statement construction function for inouttype
@@ -147,7 +145,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = "");
+     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = std::string());
      
     /**
      * This is a WHERE statement construction function for pstate type
@@ -158,7 +156,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-     bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper = "=", const std::string& from = "");
+     bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper = "=", const std::string& from = std::string());
      
     /**
      * This is a WHERE statement construction function for timestamp
@@ -169,7 +167,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = "");
+     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper = "=", const std::string& from = std::string());
      
      /**
       * This is a WHERE statement construction function for filters by overlapping time ranges
@@ -181,7 +179,7 @@ public:
       * @param from table where keys are situated
       * @return success
       */
-     bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper = "&&", const std::string& from = "");
+     bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper = "&&", const std::string& from = std::string());
      
      /**
      * This is a WHERE statement construction function for filters by geometric box region
@@ -191,7 +189,7 @@ public:
      * @param from    table where the key is situated
      * @return success
      */
-     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = "");
+     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper = "&&", const std::string& from = std::string());
      
     /**
      * This is a WHERE statement construction function for custom expression
@@ -202,12 +200,19 @@ public:
      */
      bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper = "=");
 
-private:
-    std::string                     groupby;    /**< String used for the GROUP BY statement */
-    std::string                     orderby;    /**< String used for the ORDER BY statement */
+     bool whereStringInList(const std::string& key, const std::list<std::string>& values);
+     bool whereIntInList(const std::string& key, const std::list<int>& values);
 
-    int                             limit;      /**< Specify a size (a number of rows) of the resultset */
-    int                             offset;     /**< Specify an index of row, where the resultset starts */
+private:
+    std::string _groupby;    /**< String used for the GROUP BY statement */
+    std::string _orderby;    /**< String used for the ORDER BY statement */
+
+    int _limit;      /**< Specify a size (a number of rows) of the resultset */
+    int _offset;     /**< Specify an index of row, where the resultset starts */
+    
+    Select() = delete;
+    Select(const Select&) = delete;
+    Select& operator=(const Select&) = delete;
 };
 
 } // namespace vtapi

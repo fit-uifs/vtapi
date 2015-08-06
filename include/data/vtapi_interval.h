@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Interval and Image classes
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -28,7 +27,6 @@ namespace vtapi {
  *
  * @note Error codes 33*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -39,13 +37,12 @@ namespace vtapi {
 class Interval : public KeyValues
 {
 public:
-    
     /**
      * Constructor for intervals
-     * @param orig        pointer to the parrent KeyValues object
+     * @param commons     shared Commons object
      * @param selection   specific name of a selection table
      */
-    Interval(const KeyValues& orig, const std::string& selection = "intervals");
+    Interval(const Commons& commons, const std::string& selection = def_tab_intervals);
 
     /**
      * Destructor
@@ -66,10 +63,10 @@ public:
     int getId();
     
     /** 
-     * Gets process name of associated process
-     * @return process string
+     * Gets task name of associated task
+     * @return task name
      */
-    std::string getProcessName();
+    std::string getTaskName();
     
     /**
      * Gets sequence name of parent sequence
@@ -104,28 +101,28 @@ public:
      */
     bool updateStartEndTime(const int t1, const int t2 = -1);
 
-    /**
-     * Adds new interval to the table - minimal insert
-     * @param sequence   interval name
-     * @param t1         start time
-     * @param t2         end time
-     * @param location   location of an image
-     * @return success
-     */
-    bool add(const std::string& sequence, const int t1, const int t2 = -1, const std::string& location = "");
-    
-    /**
-     * Adds new interval to the table - full insert
-     * @param sequence   interval name
-     * @param t1         start time
-     * @param t2         end time
-     * @param location   location of an image
-     * @param userid     name of an owner
-     * @param notes      optional description
-     * @return success
-     */
-    bool add(const std::string& sequence, const int t1, const int t2, const std::string& location,
-    const std::string& userid, const std::string& notes);
+//    /**
+//     * Adds new interval to the table - minimal insert
+//     * @param sequence   interval name
+//     * @param t1         start time
+//     * @param t2         end time
+//     * @param location   location of an image
+//     * @return success
+//     */
+//    bool add(const std::string& sequence, const int t1, const int t2 = -1, const std::string& location = "");
+//    
+//    /**
+//     * Adds new interval to the table - full insert
+//     * @param sequence   interval name
+//     * @param t1         start time
+//     * @param t2         end time
+//     * @param location   location of an image
+//     * @param userid     name of an owner
+//     * @param notes      optional description
+//     * @return success
+//     */
+//    bool add(const std::string& sequence, const int t1, const int t2, const std::string& location,
+//    const std::string& userid, const std::string& notes);
 
     /**
      * Sets filter for intervals by ID before calling next()
@@ -140,11 +137,11 @@ public:
      */
     bool filterBySequence(const std::string& seqname);
     /**
-     * Sets filter for intervals by process before calling next()
-     * @param prsname process name
+     * Sets filter for intervals by task before calling next()
+     * @param taskname task name
      * @return success
      */
-    bool filterByProcess(const std::string& prsname);
+    bool filterByTask(const std::string& taskname);
     /**
      * Sets filter for intervals by duration(real seconds) before calling next()
      * @param t_low min duration in real seconds
@@ -168,6 +165,11 @@ public:
     
 protected:
     bool preUpdate();
+
+private:
+    Interval() = delete;
+    Interval(const Interval&) = delete;
+    Interval& operator=(const Interval&) = delete;
 };
 
 
@@ -181,7 +183,6 @@ protected:
  *
  * @note Error codes 339*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -194,11 +195,20 @@ public:
 
     /**
      * Constructor for Images
-     * @param orig        pointer to the parrent KeyValues object
+     * @param commons     shared Commons object
      * @param name        image name
      * @param selection   specific name of a selection table
      */
-    explicit Image(const KeyValues& orig, const std::string& name = "", const std::string& selection = "intervals");
+    Image(const Commons& commons,
+          const std::string& name = std::string(),
+          const std::string& selection = def_tab_intervals);
+
+    /*
+     * Moves to next image
+     * @return success
+     * @note Overloading next() from Interval
+     */
+    bool next();
 
     /**
      * Gets a sequence (order) number of the current image (interval)
@@ -209,35 +219,31 @@ public:
     /**
      * This is most probably what you always wanted...
      * @return string value with the location of the data
-     * @note overloading getDataLocation from Commons
      */
     std::string getDataLocation();
-    /**
-     * Simply adds an image (interval) to the sequence table (no checking)
-     * @param sequence   interval name
-     * @param t          time (start time is the same as the end time)
-     * @param location   location of the image
-     * @return success
-     */
-    bool add(const std::string& sequence, const int t, const std::string& location);
+    
+//    /**
+//     * Simply adds an image (interval) to the sequence table (no checking)
+//     * @param sequence   interval name
+//     * @param t          time (start time is the same as the end time)
+//     * @param location   location of the image
+//     * @return success
+//     */
+//    bool add(const std::string& sequence, const int t, const std::string& location);
 
 #if VTAPI_HAVE_OPENCV  
-    cv::Mat image;   /**< Image file data */
+    cv::Mat _image;   /**< Image file data */
     /**
      * Loads an image from a file (given by imgLocation of %VTApi)
      * @return image file data
      */
-    cv::Mat getData();
+    cv::Mat& getImageData();
 #endif
-    
-protected:
-    
-    /**
-     * This is here just for image name
-     * @return string value with the location of the image
-     */
-    std::string getImgLocation();
 
+private:
+    Image() = delete;
+    Image(const Image&) = delete;
+    Image& operator=(const Image&) = delete;
 };
 
 } // namespace vtapi

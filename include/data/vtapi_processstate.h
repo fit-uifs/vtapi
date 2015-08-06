@@ -19,7 +19,6 @@ namespace vtapi {
  * 
  * Class representing current process state
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -43,7 +42,7 @@ public:
 
     ProcessState();
     explicit ProcessState(const std::string& stateString);
-    explicit ProcessState(STATUS_T status, float progress = 0, const std::string& item = "");
+    explicit ProcessState(STATUS_T status, float progress = 0, const std::string& item = std::string());
     virtual ~ProcessState();
 
     static STATUS_T toStatusValue(const std::string& status_string);

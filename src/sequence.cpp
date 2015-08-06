@@ -2,7 +2,6 @@
  * @file
  * @brief   Methods of Sequence, Video and VideoPlayer classes
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -22,15 +21,30 @@ namespace vtapi {
 //================================ SEQUENCE ====================================
 
 
-Sequence::Sequence(const KeyValues& orig, const string& name) : KeyValues(orig)
+Sequence::Sequence(const Commons& commons, const string& name)
+    : KeyValues(commons)
 {
-    thisClass = "Sequence";
+    if (_context.dataset.empty())
+        VTLOG_WARNING("Dataset is not specified");
+    
+    if (!name.empty())
+        _context.sequence = name;
 
-    if (!name.empty()) sequence = name;
+    _select.from(def_tab_sequences, def_col_all);
+    
+    if (!_context.sequence.empty())
+        _select.whereString(def_col_seq_name, _context.sequence);
+}
 
-    select = new Select(orig);
-    select->from("sequences", "*");
-    if (!sequence.empty()) select->whereString("seqname", sequence);
+Sequence::Sequence(const Commons& commons, const list<string>& names)
+    : KeyValues(commons)
+{
+    if (_context.dataset.empty())
+        VTLOG_WARNING("Dataset is not specified");
+    
+    _select.from(def_tab_sequences, def_col_all);
+
+    _select.whereStringInList(def_col_seq_name, names);
 }
 
 Sequence::~Sequence()
@@ -39,8 +53,8 @@ Sequence::~Sequence()
 bool Sequence::next()
 {
     if (KeyValues::next()) {
-        this->sequence = this->getName();
-        this->sequenceLocation = this->getLocation();
+        _context.sequence = this->getName();
+        _context.sequenceLocation = this->getString(def_col_seq_location);
         return true;
     }
     else {
@@ -50,43 +64,38 @@ bool Sequence::next()
 
 string Sequence::getName()
 {
-    return this->getString("seqname");
+    return this->getString(def_col_seq_name);
 }
-string Sequence::getLocation()
-{
-    return this->getString("seqlocation");
-}
+
 string Sequence::getType()
 {
-    return this->getString("seqtype");
+    return this->getString(def_col_seq_type);
+}
+
+string Sequence::getComment()
+{
+    return this->getString(def_col_seq_comment);
+}
+
+std::string Sequence::getDataLocation()
+{
+    if (_context.sequenceLocation.empty())
+        VTLOG_WARNING("Sequence location is unknown");
+    
+    return _config->baseLocation + _context.datasetLocation + _context.sequenceLocation;
 }
 
 
-bool Sequence::add(const string& name, const string& location, const string& type)
+bool Sequence::updateComment(const std::string& comment)
 {
-    return add(name, location, type, getUser(), std::string());
-}
-
-bool Sequence::add(const string& name, const string& location, const string& type,
-    const string& userid, const string& notes)
-{
-    bool retval = true;
-
-    retval &= KeyValues::preAdd(this->getDataset() + ".sequences");
-    retval &= insert->keyString("seqname", name);
-    retval &= insert->keyString("seqlocation", location);
-    retval &= insert->keySeqtype("seqtyp", type);
-    if (!userid.empty()) retval &= insert->keyString("userid", userid);
-    if (!notes.empty()) retval &= insert->keyString("notes", notes);
-
-    return retval;
+    return this->updateString(def_col_seq_comment, comment);
 }
 
 bool Sequence::preUpdate()
 {
-    bool ret = KeyValues::preUpdate("sequences");
+    bool ret = KeyValues::preUpdate(def_tab_sequences);
     if (ret) {
-        ret &= update->whereString("seqname", this->sequence);
+        ret &= _update->whereString(def_col_seq_name, _context.sequence);
     }
 
     return ret;
@@ -94,34 +103,16 @@ bool Sequence::preUpdate()
 
 //============================== IMAGE FOLDER ===================================
 
-ImageFolder::ImageFolder(const KeyValues& orig, const string& name) : Sequence(orig, name)
+ImageFolder::ImageFolder(const Commons& commons, const string& name)
+    : Sequence(commons, name)
 {
-    thisClass = "ImageFolder";
-
-    select->whereSeqtype("seqtyp", "images");
+    _select.whereSeqtype(def_col_seq_type, def_val_images);
 }
 
-bool ImageFolder::add(const string& name, const string& location)
+ImageFolder::ImageFolder(const Commons& commons, const list<string>& names)
+    : Sequence(commons, names)
 {
-    bool bRet = true;
-
-    do {
-        string fullpath = baseLocation + datasetLocation + location;
-
-        if (!dirExists(fullpath)) {
-            logger->warning(3210, "Cannot open folder " + fullpath, thisClass + "::add()");
-            bRet = false;
-            break;
-        }
-
-        this->sequence = name;
-        this->sequenceLocation = location;
-
-        bRet = Sequence::add(name, location, "images");
-
-    } while(0);
-
-    return bRet;
+    _select.whereSeqtype(def_col_seq_type, def_val_images);
 }
 
 bool ImageFolder::next()
@@ -131,65 +122,21 @@ bool ImageFolder::next()
 
 //================================= VIDEO ======================================
 
-
-
-Video::Video(const KeyValues& orig, const string& name) : Sequence(orig, name)
+Video::Video(const Commons& commons, const string& name)
+    : Sequence(commons, name)
 {
-    thisClass = "Video";
+    _select.whereSeqtype(def_col_seq_type, def_val_video);
+}
 
-    select->whereSeqtype("seqtyp", "video");
+Video::Video(const Commons& commons, const list<string>& names)
+    : Sequence(commons, names)
+{
+    _select.whereSeqtype(def_col_seq_type, def_val_video);
 }
 
 Video::~Video()
 {
     closeVideo();
-}
-
-
-bool Video::add(const string& name, const string& location, const time_t& realtime)
-{
-    bool bRet = true;
-
-    do {
-#if VTAPI_HAVE_OPENCV
-        string fullpath = baseLocation + datasetLocation + location;
-        
-        if (!fileExists(fullpath)) {
-            logger->warning(3210, "Cannot open file " + fullpath, thisClass + "::add()");
-            bRet = false;
-            break;
-        }
-
-        this->sequence = name;
-        this->sequenceLocation = location;
-
-        bRet = openVideo();
-        if (!bRet) {
-            logger->warning(3210, "Cannot open video " + location, thisClass + "::add()");
-            bRet = false;
-            break;
-        }
-        
-        size_t cnt_frames = (size_t)this->capture.get(CV_CAP_PROP_FRAME_COUNT);
-        double fps = this->capture.get(CV_CAP_PROP_FPS);
-        if ((cnt_frames == 0) || (fps == 0.0)) {
-            logger->warning(3211, "Cannot get length and FPS of " + location, thisClass + "::add()");
-            bRet = false;
-            break;
-        }
-        
-	this->closeVideo();
-    
-#endif
-        bRet = Sequence::add(name, location, "video");
-#if VTAPI_HAVE_OPENCV
-        bRet &= addInt("vid_length", cnt_frames);
-        bRet &= addFloat("vid_fps", fps);
-        if (realtime > 0) bRet &= addTimestamp("vid_time", realtime);
-#endif
-    } while(0);
-
-    return bRet;
 }
 
 bool Video::next()
@@ -206,21 +153,26 @@ bool Video::next()
 bool Video::openVideo()
 {
     closeVideo();
-    this->capture = cv::VideoCapture(this->getDataLocation());
-    return this->capture.isOpened();
+    _capture = cv::VideoCapture(this->getDataLocation());
+    return _capture.isOpened();
 }
 
 void Video::closeVideo()
 {
-    if (this->capture.isOpened()) this->capture.release();
+    if (_capture.isOpened()) _capture.release();
 }
 
-cv::Mat Video::getData()
+cv::VideoCapture& Video::getCapture()
+{
+    return _capture;
+}
+
+cv::Mat Video::getNextFrame()
 {
     cv::Mat frame;
 
-    if (this->capture.isOpened() || this->openVideo()) {
-        this->capture >> frame;
+    if (_capture.isOpened() || this->openVideo()) {
+        _capture >> frame;
     }
     
     return frame;

@@ -1,0 +1,33 @@
+DEPENDENCIES
+--------------------------------
+
+CMake 2.8
+cmake
+
+OpenCV 2.4
+libopencv-dev
+
+PostgreSQL 9.3
+libpq-dev
+
+libpqtypes 1.5
+libpqtypes-dev
+http://libpqtypes.esilo.com
+
+Boost 1.54
+libboost-thread-dev libboost-program-options-dev
+
+POCO 1.61
+libpoco-dev
+http://pocoproject.org
+
+Protocol Buffers 2.5
+libprotobuf-dev libprotoc-dev
+
+ZeroMQ 4.0.4
+libzmq3-dev
+http://zeromq.org
+
+rpcz
+https://github.com/thesamet/rpcz
+

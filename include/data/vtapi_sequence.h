@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Sequence, Video and VideoPlayer classes
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -28,7 +27,6 @@ namespace vtapi {
  *
  * @note Error codes 32*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -40,12 +38,21 @@ class Sequence : public KeyValues
 {
 public:
     /**
-     * Constructor for sequences
-     * @param orig   pointer to the parrent KeyValues object
-     * @param name   specific sequence name
+     * Construct sequence object for iterating through VTApi sequences (video/imagefolder)
+     * If a specific name is set, object will represent one sequence only
+     * @param commons base Commons object
+     * @param name sequence name (no name = all sequences)
      */
-    explicit Sequence(const KeyValues& orig, const std::string& name = "");
+    Sequence(const Commons& orig, const std::string& name = std::string());
 
+    /**
+     * Construct sequence object for iterating through VTApi sequences (video/imagefolder)
+     * Object will represent set of sequences specified by their names
+     * @param commons base Commons object
+     * @param names list of sequences names
+     */
+    Sequence(const Commons& commons, const std::list<std::string>& names);
+    
     /**
      * Destructor
      */
@@ -63,12 +70,6 @@ public:
      * @return string value with the name of the sequence
      */
     std::string getName();
-
-    /**
-     * Gets a sequence location
-     * @return string value with the location of the sequence
-     */
-    std::string getLocation();
     
     /**
      * Gets a sequence type
@@ -77,47 +78,31 @@ public:
     std::string getType();
     
     /**
-     * Adds a new sequence to a database table - minimal insert
-     * @param name       name of the sequence
-     * @param location   location of the sequence
-     * @param type       type of the sequence
-     * @return success
+     * Gets sequence comment
+     * @return string value
      */
-    bool add(const std::string& name, const std::string& location, const std::string& type);
+    std::string getComment();
 
     /**
-     * Adds a new sequence to a database table - full insert
-     * @param name       name of the sequence
-     * @param location   location of the sequence
-     * @param type       type of the sequence
-     * @param userid     name of an owner
-     * @param notes      optional description
-     * @return success
+     * Gets full path to sequence location
+     * @return full path
      */
-    bool add(
-        const std::string& name,
-        const std::string& location,
-        const std::string& type,
-        const std::string& userid,
-        const std::string& notes);
+    std::string getDataLocation();
     
     /**
-     * Creates a new interval specified by a start time and an end time
-     * @return pointer to the new interval
+     * Sets video's comment
+     * @param comment new comment
+     * @return success
      */
-    Interval* newInterval()
-    { return new Interval(*this); }
-
-    /**
-     * Creates a new image specified by a name
-     * @param name   name of the image
-     * @return pointer to the new image
-     */
-    Image* newImage(const std::string& name = "")
-    { return new Image(*this, name); }
+    bool updateComment(const std::string& comment);
     
 protected:
     bool preUpdate();
+
+private:
+    Sequence() = delete;
+    Sequence(const Sequence&) = delete;
+    Sequence& operator=(const Sequence&) = delete;
 };
 
 
@@ -128,7 +113,6 @@ protected:
  *
  * @note Error codes 321*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -140,19 +124,20 @@ class ImageFolder : public Sequence
 {
 public:
     /**
-     * Constructor for ImageFolder
-     * @param orig   pointer to the parent KeyValues object
-     * @param name   specific image folder name
+     * Construct image folder object for iterating through VTApi image folders
+     * If a specific name is set, object will represent one image folder only
+     * @param commons base Commons object
+     * @param name image folder name (no name = all image folders)
      */
-    explicit ImageFolder(const KeyValues& orig, const std::string& name = "");
+    ImageFolder(const Commons& orig, const std::string& name = std::string());
 
     /**
-     * Adds a new image folder to the dataset
-     * @param name       name of the image folder
-     * @param location   location of the image folder
-     * @return success
+     * Construct image folder object for iterating through VTApi image folders
+     * Object will represent set of image folders specified by their names
+     * @param commons base Commons object
+     * @param names list of image folders names
      */
-    bool add(const std::string& name, const std::string& location);
+    ImageFolder(const Commons& commons, const std::list<std::string>& names);
 
     /**
      * Individual next() for image folder
@@ -160,6 +145,11 @@ public:
      * @note Overloading next() from KeyValues
      */
     bool next();
+    
+private:
+    ImageFolder() = delete;
+    ImageFolder(const Sequence&) = delete;
+    ImageFolder& operator=(const ImageFolder&) = delete;
 };
 
 /**
@@ -169,7 +159,6 @@ public:
  *
  * @note Error codes 321*
  * 
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -181,24 +170,25 @@ class Video : public Sequence
 {
 public:
     /**
-     * Constructor for Video
-     * @param orig   pointer to the parent KeyValues object
-     * @param name   specific video name
+     * Construct video object for iterating through VTApi videos
+     * If a specific name is set, object will represent one video only
+     * @param commons base Commons object
+     * @param name video name (no name = all videos)
      */
-    explicit Video(const KeyValues& orig, const std::string& name = "");
+    Video(const Commons& orig, const std::string& name = std::string());
+
+    /**
+     * Construct video object for iterating through VTApi videos
+     * Object will represent set of videos specified by their names
+     * @param commons base Commons object
+     * @param names list of sequences videos
+     */
+    Video(const Commons& commons, const std::list<std::string>& names);
 
     /**
      * Destructor
      */
     ~Video();
-    
-    /**
-     * Adds a new video to the dataset
-     * @param name       name of the video
-     * @param location   location of the video
-     * @return success
-     */
-    bool add(const std::string& name, const std::string& location, const time_t& realtime = 0);
 
     /**
      * Moves to a next video, releases capture and sets sequence name and location varibles
@@ -208,11 +198,9 @@ public:
     bool next();
     
 #if VTAPI_HAVE_OPENCV
-    cv::VideoCapture capture;   /**< Video file capture */
     
     /**
      * Opens a video capture (not necessary to call directly)
-     * @todo Test
      * @return success
      */
     bool openVideo();
@@ -223,15 +211,20 @@ public:
     void closeVideo();
 
     /**
+     * Gets OpenCV capture object of opened video
+     * @return reference to capture object
+     */
+    cv::VideoCapture& getCapture();
+    
+    /**
      * Gets next frame from current capture
      * @return frame of the video
      */
-    cv::Mat getData();
+    cv::Mat getNextFrame();
     
     /**
      * Gets video length in frames
      * @return video length in frames
-     * @unimplemented
      */
     size_t getLength();
     
@@ -255,6 +248,12 @@ public:
     
 #endif
 
+private:
+    cv::VideoCapture _capture;   /**< Video file capture */
+
+    Video() = delete;
+    Video(const Video&) = delete;
+    Video& operator=(const Video&) = delete;
 };
 
 

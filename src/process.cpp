@@ -2,7 +2,6 @@
  * @file
  * @brief   Methods of Process class
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -12,7 +11,6 @@
  */
 
 #include <sstream>
-#include <functional>
 #include <boost/filesystem.hpp>
 #include <common/vtapi_global.h>
 #include <data/vtapi_process.h>
@@ -22,28 +20,38 @@ using namespace std;
 namespace vtapi {
 
 
-Process::Process(const KeyValues& orig, const string& name) : KeyValues(orig)
+Process::Process(const Commons& commons, int id)
+    : KeyValues(commons)
 {
-    thisClass   = "Process";
-
-    // like this because outputs is regtype which has to be converted on server
-    this->select = new Select(orig);
-    this->select->from("processes", "prsname");
-    this->select->from("processes", "mtname");
-    this->select->from("processes", "inputs");
-    this->select->from("processes", "outputs::text");
-    this->select->from("processes", "state");
-    this->select->from("processes", "params");
-    this->select->from("processes", "userid");
-    this->select->from("processes", "created");
-    this->select->from("processes", "notes");
-
-    if (!name.empty()) {
-        this->process = name;
-    }
+    if (_context.dataset.empty())
+        VTLOG_WARNING("Dataset is not specified");
     
-    if (!process.empty()) select->whereString("prsname", process);
-    if (!method.empty()) select->whereString("mtname", method);
+    if (id != 0)
+        _context.process = id;
+    
+    _select.from(def_tab_processes, def_col_all);
+    
+    if (_context.process != 0) {
+        _select.whereInt(def_col_prs_prsid, _context.process);
+    }
+    else {
+        if (!_context.task.empty())
+            _select.whereString(def_col_prs_taskname, _context.task);  
+    }
+
+}
+
+Process::Process(const Commons& commons, const list<int>& ids)
+    : KeyValues(commons)
+{
+    if (_context.dataset.empty())
+        VTLOG_WARNING("Dataset is not specified");
+    
+    _select.from(def_col_task_name, def_col_all);
+
+    _select.whereIntInList(def_col_task_name, ids);
+    
+    _context.task.clear();
 }
 
 Process::~Process()
@@ -51,12 +59,11 @@ Process::~Process()
 
 bool Process::next()
 {
-    m_instance.close();
+    _instance.close();
     
     bool ret = KeyValues::next();
     if (ret) {
-        this->process   = this->getName();
-        this->selection = this->getOutputTable();
+        _context.process = this->getId();
         return true;
     }
     else {
@@ -70,42 +77,35 @@ bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
     bool ret = false;
     
     do {
-        // run newly added process and set Process object to represent it
-        if (this->insert) {
-            if (!addExecute()) break;
-            if (select->resultSet->getPosition() >= 0)
-                select->resultSet->setPosition(-1);
-            if (!next()) break;
-        }
-
         if (suspended) {
             updateStateSuspended();
         }
         
         boost::filesystem::path cdir = boost::filesystem::current_path();
         if (cdir.empty()) {
-            logger->error("failed to get current directory", thisClass + "::run()");
+            VTLOG_ERROR("Failed to get current directory");
             break;
         }
 
+        //TODO: dodelat
+        
         boost::filesystem::path exec(cdir);
         exec /= "modules";
-        exec /= this->method;
+        exec /= _context.method;
 
-        boost::filesystem::path cfg = boost::filesystem::absolute(this->configfile, cdir);
+        boost::filesystem::path cfg = boost::filesystem::absolute(_config->configfile, cdir);
 
         compat::ProcessInstance::Args args;
         args.push_back("--config=" + cfg.string());
-        args.push_back("--process=" + this->process);
-        args.push_back("--dataset=" + this->dataset);
+        args.push_back("--process=" + _context.process);
+        args.push_back("--dataset=" + _context.dataset);
 
-        ret = m_instance.launch(exec.string(), args, !async);
+        ret = _instance.launch(exec.string(), args, !async);
         if (ret) {
-            if (ctrl) *ctrl = new ProcessControl(this->getName(), m_instance);
+            if (ctrl) *ctrl = new ProcessControl(this->getId(), _instance);
         }
         else {
-            logger->warning("error launching process " + this->getName()
-            + ": " + exec.string(), thisClass + "::run()");
+            VTLOG_ERROR("Failed to launch process " + toString(this->getId()) + ": " + exec.string());
         }
         
     } while(0);
@@ -113,138 +113,20 @@ bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
     return ret;
 }
 
-string Process::constructName(const ProcessParams & params)
-{
-    string input;
 
-    input += this->method;
-    input += 'p';
-
-    string par = params.serializeAsName();
-    if (!par.empty()) {
-        input += '_';
-        input += par;
-    }
-    
-    hash<string> hash_fn;
-    stringstream ss;
-    ss << hex << hash_fn(input);
-    
-    return ss.str();
-}
 
 //////////////////////////////////////////////////
 // getters - SELECT
 //////////////////////////////////////////////////
 
-string Process::getName() {
-    return this->getString("prsname");
+int Process::getId()
+{
+    return this->getInt(def_col_prs_prsid);
 }
 
 ProcessState *Process::getState()
 {
-    return this->getProcessState("state");
-}
-
-string Process::getInputProcessName()
-{
-    return this->getString("inputs");
-}
-
-string Process::getOutputTable()
-{
-    return this->getString("outputs");
-}
-
-Process *Process::getInputProcess()
-{
-    string inputs = getInputProcessName();
-
-    return inputs.empty() ? NULL : new Process(*this, inputs);
-}
-
-Interval *Process::getInputData()
-{
-    string inputs = this->getInputProcessName();
-
-    if (!inputs.empty()) {
-        Process p(*this, inputs);
-        p.next();
-
-        return new Interval(p, p.getOutputTable());
-    }
-    else {
-        return NULL;
-    }
-}
-
-Interval *Process::getOutputData()
-{
-    return new Interval(*this, this->getOutputTable());
-}
-
-ProcessParams *Process::getParams()
-{
-    ProcessParams *params = new ProcessParams(this->getString("params"));
-    params->setInputProcessName(getInputProcessName());
-    
-    return params;
-}
-
-//////////////////////////////////////////////////
-// adders - INSERT
-//////////////////////////////////////////////////
-
-bool Process::add(const string& outputs)
-{
-    bool retval = true;
-
-    retval &= KeyValues::preAdd(this->getDataset() + ".processes");
-    retval &= addString("mtname", this->method);
-    retval &= addString("outputs", this->getDataset() + "." + (outputs.empty() ? this->method + "out" : outputs));
-
-    return retval;
-}
-
-bool Process::addInputProcessName(const string& processName)
-{
-    m_inputProcess = processName;
-    return true;
-}
-
-bool Process::addOutputTable(const string& table)
-{
-    return addString("outputs", this->getDataset() + "." + table);
-}
-
-bool Process::addParams(ProcessParams && params)
-{
-    m_params = move(params);
-    return true;
-}
-
-bool Process::addExecute()
-{
-    if (this->process.empty()) {
-        if (!m_inputProcess.empty()) {
-            m_params.setInputProcessName(m_inputProcess);
-        }
-        else {
-            m_params.getInputProcess(m_inputProcess);
-        }
-        this->process = constructName(m_params);
-    }
-    
-    insert->keyString("prsname", this->process);
-    insert->keyString("params", m_params.serialize());
-    if (!m_inputProcess.empty()) insert->keyString("inputs", m_inputProcess);
-
-    m_params.clear();
-    m_inputProcess.clear();
-    
-    select->whereString("prsname", this->process);
-    
-    return KeyValues::addExecute();
+    return this->getProcessState(def_col_prs_state);
 }
 
 //////////////////////////////////////////////////
@@ -253,9 +135,9 @@ bool Process::addExecute()
 
 bool Process::preUpdate()
 {
-    bool ret = KeyValues::preUpdate("processes");
+    bool ret = KeyValues::preUpdate(def_tab_processes);
     if (ret) {
-        ret &= update->whereString("prsname", this->process);
+        ret &= _update->whereInt(def_col_prs_prsid, _context.process);
     }
 
     return ret;
@@ -265,18 +147,18 @@ bool Process::updateState(const ProcessState& state, ProcessControl *control)
 {
     bool retval = true;
     
-    retval &= updateProcessStatus("state,status", state.status);
+    retval &= updateProcessStatus(def_col_prs_pstate_status, state.status);
     
     switch (state.status)
     {
     case ProcessState::STATUS_RUNNING:
-        retval &= updateFloat("state,progress", state.progress);
-        retval &= updateString("state,current_item", state.currentItem);
+        retval &= updateFloat(def_col_prs_pstate_progress, state.progress);
+        retval &= updateString(def_col_prs_pstate_curritem, state.currentItem);
         break;
     case ProcessState::STATUS_FINISHED:
         break;
     case ProcessState::STATUS_ERROR:
-        retval &= updateString("state,last_error", state.lastError);
+        retval &= updateString(def_col_prs_pstate_errmsg, state.lastError);
         break;
     case ProcessState::STATUS_SUSPENDED:
         break;
@@ -328,8 +210,8 @@ bool Process::updateStateError(const string& lastError, ProcessControl *control)
 
 ProcessControl *Process::getProcessControl()
 {
-    if (this->select->resultSet->getPosition() >= 0) {
-        return new ProcessControl(this->getName(), m_instance);
+    if (_select._resultSet->getPosition() >= 0) {
+        return new ProcessControl(this->getId(), _instance);
     }
     else {
         return NULL;
@@ -355,22 +237,6 @@ bool Process::controlStop(ProcessControl *control)
 // filters/utilities
 //////////////////////////////////////////////////
 
-void Process::filterByInputProcessName(const string& processName)
-{
-    this->select->whereString("inputs", processName);
-}
 
-void Process::filterByOutputTable(const string& table)
-{
-    this->select->whereString("outputs", table);
-}
-
-bool Process::clearOutputData()
-{
-    Query q(*this,
-        "DELETE FROM " + this->getOutputTable() +
-        " WHERE prsname = '" + this->getName() + "';");
-    return q.execute();
-}
 
 }

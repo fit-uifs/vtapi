@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of main %VTApi class which provides a basic functionality of %VTApi.
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -15,6 +14,7 @@
 
 #include "common/vtapi_config.h"
 #include "data/vtapi_dataset.h"
+#include "data/vtapi_method.h"
 
 
 /**
@@ -33,7 +33,6 @@ namespace vtapi {
 class VTApi
 {
 public:
-    Commons*    commons;    /**< Commons are common objects to the project. */
 
     /**
      * Constructor recomended by any program
@@ -46,23 +45,7 @@ public:
      * Constructor
      * @param configFile   location of configuration file
      */
-    explicit VTApi(const std::string& configFile = "./vtapi.conf");
-
-    /**
-     * Constructor
-     * @deprecated
-     * @param connStr
-     * @param location
-     * @param user
-     * @param password
-     */
-    VTApi(const std::string& connStr, const std::string& location, const std::string& user, const std::string& password);
-
-    /**
-     * Copy constructor
-     * @param orig
-     */
-    explicit VTApi(const Commons& orig);
+    explicit VTApi(const std::string& configFile);
 
     /**
      * Copy constructor
@@ -71,32 +54,57 @@ public:
     explicit VTApi(const VTApi& orig);
 
     /**
+     * Copy assignment
+     * @param orig
+     * @return 
+     */
+    
+    /**
      * Destructor
      */
     ~VTApi();
 
     /**
-     * This might be a HOW-TO function for learning and testing purposes
-     * @see documentation -> examples -> vtapi.conf, SAMPLES.txt
-     * @todo is this on given location?
+     * Creates new dataset + appropriate DB objects and returns its object for iteration
+     * @param name new dataset name (simple, unique)
+     * @param location new dataset location
+     * @param friendly_name user readable dataset name
+     * @param description optional description
+     * @return dataset object, NULL on error
      */
-    void test();
+    Dataset* createDataset(
+        const std::string& name,
+        const std::string& location,
+        const std::string& friendly_name,
+        const std::string& description = std::string());
+    
+    /**
+     * Creates new method + appropriate DB objects and returns its object for iteration
+     * @param name new method name
+     * @param keys_definition definiton of method's keys (DB inputs, outputs)
+     * @param params_definition definiton of method's params (user inputs)
+     * @param description optional description
+     * @return method object, NULL on error
+     */
+    Method* createMethod(
+        const std::string& name,
+        const MethodKeys keys_definition,
+        const MethodParams params_definition,
+        const std::string& description = std::string());
+    
+    /**
+     * Loads dataset(s) for iteration
+     * @param name dataset name (empty => all datasets)
+     * @return dataset object, NULL on error
+     */
+    Dataset* loadDatasets(const std::string& name = std::string());
 
     /**
-     * This is how to continue after creating the API class...
-     * @param name   specific dataset name
-     * @return new Dataset
+     * Loads method(s) for iteration
+     * @param name method name (empty => all methods)
+     * @return method object, NULL on error
      */
-    Dataset* newDataset(const std::string& name = "")
-    { return (new Dataset(*commons, name)); }
-
-    /**
-     * Creates new Method object
-     * @param name   method name (no name = all methods)
-     * @return pointer to the new Method object
-     */
-    Method* newMethod(const std::string& name = "")
-    { return (new Method(*commons, name)); }
+    Method* loadMethods(const std::string& name = std::string());
     
     /**
      * Initializes app as vtapi Process instance
@@ -105,19 +113,11 @@ public:
      */
     Process *initProcess(ProcessState &initState);
 
-    
 private:
+    Commons* _commons;      /**< Commons are common objects to the project. */
 
-    void testDataset();
-    void testSequence(Dataset *);
-    void testInterval(Sequence *);
-    void testImage(Sequence *);
-    void testVideo(Dataset *);
-    void testMethod(Dataset *);
-    void testProcess(Dataset *);
-
-    void testPerformance();
-
+    VTApi() = delete;             /**< forbidden */
+    VTApi& operator=(const VTApi& orig) = delete; /**< forbidden */
 };
 
 } // namespace vtapi

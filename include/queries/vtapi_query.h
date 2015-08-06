@@ -2,7 +2,6 @@
  * @file
  * @brief   Declaration of Query class which is general class for SQL queries/commands.
  *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -23,11 +22,6 @@ namespace vtapi {
 /**
  * @brief Base query class
  *
- * @todo: It will be used for delayed queries (store())
- *
- * @note Error codes 20*
- *
- * @author   Petr Chmelar, chmelarp (at) fit.vutbr.cz
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
  * 
@@ -38,16 +32,16 @@ namespace vtapi {
 class Query : public Commons
 {
 public:
-    QueryBuilder        *queryBuilder;  /**< Object implementing interface for building queries */
-    ResultSet           *resultSet;     /**< Object implementing result set interface */
-    bool                executed;       /**< Flag, disable on any change to query, enable on execute */
+    QueryBuilder        *_queryBuilder;  /**< Object implementing interface for building queries */
+    ResultSet           *_resultSet;     /**< Object implementing result set interface */
+    bool                _executed;       /**< Flag, disable on any change to query, enable on execute */
 
     /**
      * Constructs a query object
      * @param commons      pointer of the existing Commons object
-     * @param initString   initial query string
+     * @param sql           SQL query string (or default table for derived query objects)
      */
-    Query(const Commons& commons, const std::string& initString);
+    Query(const Commons& commons, const std::string& sql = std::string());
 
     /**
      * Destructor
@@ -58,31 +52,13 @@ public:
      * This expands the query, so you can check it before the execution
      * @return string value with the query
      */
-    std::string getQuery();
-    
-    /**
-     * Begins transaction, executes will be stored
-     * @return success
-     */
-    bool beginTransaction();
-    
-    /**
-     * Commits pending transaction
-     * @return success
-     */
-    bool commitTransaction();
-    
-    /**
-     * Rolls back pending transaction
-     * @return success
-     */
-    bool rollbackTransaction();
+    virtual std::string getQuery();
     
     /**
      * This will commit your query
      * @return success
      */
-    bool execute();
+    virtual bool execute();
     
     /**
      * Clears the query object to its original state
@@ -95,6 +71,10 @@ public:
      */
     bool checkQueryObject();
 
+private:
+    Query() = delete;
+    Query(const Query&) = delete;
+    Query& operator=(const Query&) = delete;
 };
 
 } // namespace vtapi
