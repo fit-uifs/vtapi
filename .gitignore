@@ -1,14 +1,7 @@
-**/nbproject/private
+/backup
+/build
+/doc
 
-/example/build
-/.deps
-/src/.deps
-/src/.libs
-
-*.lo
-*.la
-*.o
+CMakeLists.txt.user
+*.[oa]
 *~
-
-/example/mod_demo2/build/
-/example/mod_demo1/build/
