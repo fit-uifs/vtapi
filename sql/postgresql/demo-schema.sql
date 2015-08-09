@@ -16,7 +16,7 @@ SET client_min_messages = warning;
 
 -- create dataset
 SELECT public.VT_dataset_drop('demo');
-SELECT public.VT_dataset_create('demo', 'demo/', 'Pre-generated dataset', 'This dataset is for demonstration purposes only');
+SELECT public.VT_dataset_create('demo', 'demo', 'Pre-generated dataset', 'This dataset is for demonstration purposes only');
 
 SET search_path = demo, pg_catalog;
 
