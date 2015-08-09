@@ -10,8 +10,11 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <common/vtapi_global.h>
-#include <data/vtapi_dataset.h>
+#include <Poco/Path.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_defs.h>
+#include <vtapi/queries/vtapi_insert.h>
+#include <vtapi/data/vtapi_dataset.h>
 
 using namespace std;
 
@@ -23,12 +26,12 @@ Dataset::Dataset(const Commons& commons, const string& name)
 {
     // set the dataset name
     if (!name.empty())
-        _context.dataset = name;
+        context().dataset = name;
     
     _select.from(def_tab_datasets, def_col_all);
     
-    if (!_context.dataset.empty())
-        _select.whereString(def_col_ds_name, _context.dataset);
+    if (!context().dataset.empty())
+        _select.whereString(def_col_ds_name, context().dataset);
 }
 
 Dataset::Dataset(const Commons& commons, const list<string>& names)
@@ -42,8 +45,8 @@ Dataset::Dataset(const Commons& commons, const list<string>& names)
 bool Dataset::next()
 {
     if (KeyValues::next()) {
-        _context.dataset = this->getName();
-        _context.datasetLocation = this->getLocation();
+        context().dataset = this->getName();
+        context().datasetLocation = this->getLocation();
         return true;
     }
     else {
@@ -104,19 +107,17 @@ Sequence* Dataset::createSequence(
     return seq;
 }
 
-Video* Dataset::createVideo(
-    const string& name,
-    const string& location,
-    const time_t& realtime,
-    const string& comment)
+Video* Dataset::createVideo(const string& name,
+                            const string& location,
+                            const time_t& realtime,
+                            const string& comment)
 {
     Video *vid = NULL;
 
     do {
-#if VTAPI_HAVE_OPENCV
-        string fullpath = _config->baseLocation + _context.datasetLocation + location;
+        string fullpath = config().datasets_dir + context().datasetLocation + location;
 
-        if (!fileExists(fullpath)) {
+        if (!Poco::Path(fullpath).isFile()) {
             VTLOG_WARNING( "File doesn't exist: " + fullpath);
             break;
         }
@@ -135,7 +136,6 @@ Video* Dataset::createVideo(
         }
 
         capture.release();
-#endif
         
         bool retval = true;
         Insert insert(*this, def_tab_sequences);
@@ -143,11 +143,9 @@ Video* Dataset::createVideo(
         retval &= insert.keyString(def_col_seq_location, location);
         retval &= insert.keySeqtype(def_col_seq_type, def_val_video);
         if (!comment.empty()) retval &= insert.keyString(def_col_seq_comment, comment);
-#if VTAPI_HAVE_OPENCV
         retval &= insert.keyInt(def_col_seq_vidlength, cnt_frames);
         retval &= insert.keyFloat(def_col_seq_vidfps, fps);
         if (realtime > 0) retval &= insert.keyTimestamp(def_col_seq_vidtime, realtime);
-#endif
 
         if (retval && insert.execute()) {
             vid = loadVideos(name);
@@ -158,17 +156,16 @@ Video* Dataset::createVideo(
     return vid;
 }
 
-ImageFolder* Dataset::createImageFolder(
-    const string& name,
-    const string& location,
-    const string& comment)
+ImageFolder* Dataset::createImageFolder(const string& name,
+                                        const string& location,
+                                        const string& comment)
 {
     ImageFolder *im = NULL;
     
     do {
-        string fullpath = _config->baseLocation + _context.datasetLocation + location;
+        string fullpath = config().datasets_dir + context().datasetLocation + location;
 
-        if (!dirExists(fullpath)) {
+        if (!Poco::Path(fullpath).isDirectory()) {
             VTLOG_WARNING( "Cannot open folder: " + fullpath);
             break;
         }
@@ -219,7 +216,7 @@ bool Dataset::preUpdate()
 {
     bool ret = KeyValues::preUpdate(def_tab_datasets);
     if (ret) {
-        ret &= _update->whereString(def_col_ds_name, _context.dataset);
+        ret &= _update->whereString(def_col_ds_name, context().dataset);
     }
     
     return ret;

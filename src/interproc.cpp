@@ -1,8 +1,8 @@
 
-//#include <iostream>
-#include <common/vtapi_global.h>
-#include <common/vtapi_serialize.h>
-#include <data/vtapi_processcontrol.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_compat.h>
+#include <vtapi/common/vtapi_serialize.h>
+#include <vtapi/common/vtapi_interproc.h>
 
 
 #define DEF_CONNECT_ATTEMPTS    10
@@ -181,7 +181,7 @@ bool ProcessControl::Server::create(fServerCallback callback, void* context)
         _callback = callback;
         _pCallbackContext = context;
 
-        string qname = toString(_processId) + DEF_COMMAND_POSTFIX;
+        string qname = toString<int>(_processId) + DEF_COMMAND_POSTFIX;
         try {
             message_queue::remove(qname.c_str());
             _pCommandQueue = new message_queue(
@@ -224,7 +224,7 @@ void ProcessControl::Server::close()
     
     if (_pCommandQueue) {
         vt_destruct(_pCommandQueue);
-        string qname = toString(_processId) + DEF_COMMAND_POSTFIX;
+        string qname = toString<int>(_processId) + DEF_COMMAND_POSTFIX;
         message_queue::remove(qname.c_str());
     }
     
@@ -233,7 +233,7 @@ void ProcessControl::Server::close()
         if (queue) {
             vt_destruct(queue);
 
-            string qname = toString(_processId) + DEF_NOTIFY_POSTFIX + toString(slot);
+            string qname = toString<int>(_processId) + DEF_NOTIFY_POSTFIX + toString<int>(slot);
             message_queue::remove(qname.c_str());
         }
     }
@@ -304,7 +304,7 @@ void ProcessControl::Server::threadMain(ThreadArgs &args)
                         auto& queue = _vctNotifyQueues[slot];
                         if (!queue) {
                             // open client notify queue and send ack:connect
-                            string qname = toString(_processId) + DEF_NOTIFY_POSTFIX + toString(slot);
+                            string qname = toString<int>(_processId) + DEF_NOTIFY_POSTFIX + toString<int>(slot);
                             queue = new message_queue(open_only, qname.c_str());
                             
                             // save client instance for monitoring
@@ -335,7 +335,7 @@ void ProcessControl::Server::threadMain(ThreadArgs &args)
                             send(*queue, ack, DEF_ACK_PRIORITY);
                             vt_destruct(queue);
 
-                            string qname = toString(_processId) + DEF_NOTIFY_POSTFIX + toString(slot);
+                            string qname = toString<int>(_processId) + DEF_NOTIFY_POSTFIX + toString<int>(slot);
                             message_queue::remove(qname.c_str());
 
                             mapActiveClients.erase(slot);
@@ -408,7 +408,7 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
         }
         
         // try opening server command queue
-        string qname = toString(_processId) + DEF_COMMAND_POSTFIX;
+        string qname = toString<int>(_processId) + DEF_COMMAND_POSTFIX;
         string errmsg;
         for (int i = 0; i < DEF_CONNECT_ATTEMPTS; i++) {
             try {
@@ -431,7 +431,7 @@ bool ProcessControl::Client::create(unsigned int connectTimeout, fClientCallback
         // try to find free client slot
         bool remove = false;
         for (_slot = 0; _slot < DEF_MAX_CLIENTS; _slot++) {
-            string qname2 = toString(_processId) + DEF_NOTIFY_POSTFIX + toString(_slot);
+            string qname2 = toString<int>(_processId) + DEF_NOTIFY_POSTFIX + toString<int>(_slot);
             try {
                 if (remove) message_queue::remove(qname2.c_str());
                 _pNotifyQueue = new message_queue(
@@ -480,12 +480,12 @@ void ProcessControl::Client::close()
 
     if (_pNotifyQueue) {
         vt_destruct(_pNotifyQueue);
-        string qname2 = toString(_processId) + DEF_NOTIFY_POSTFIX + toString(_slot);
+        string qname2 = toString<int>(_processId) + DEF_NOTIFY_POSTFIX + toString<int>(_slot);
         message_queue::remove(qname2.c_str());
     }
 
     vt_destruct(_pCommandQueue);
-    string qname = toString(_processId) + DEF_COMMAND_POSTFIX;
+    string qname = toString<int>(_processId) + DEF_COMMAND_POSTFIX;
     //message_queue::remove(qname.c_str());
 
     _callback = NULL;
@@ -520,7 +520,7 @@ void ProcessControl::Client::threadMain(ThreadArgs &args)
     string disconnectAck;
     char buffer[DEF_MAX_NOTIFY_SIZE];
 
-    string connect = g_connect + g_slot + toString(_slot) + g_pid + toString(compat::pid());
+    string connect = g_connect + g_slot + toString<int>(_slot) + g_pid + toString<int>(compat::pid());
     try {
         send(*_pCommandQueue, connect, DEF_COMMAND_PRIORITY);
         
@@ -556,7 +556,7 @@ void ProcessControl::Client::threadMain(ThreadArgs &args)
             if (recv_size > 0) {
                 if (g_close.compare(buffer) == 0) {
                     if (!bDisconnectPending) {
-                        string disconnect = g_disconnect + g_slot + toString(_slot);
+                        string disconnect = g_disconnect + g_slot + toString<int>(_slot);
                         send(*_pCommandQueue, disconnect, DEF_COMMAND_PRIORITY);
                         
                         disconnectAck = g_ack + disconnect;

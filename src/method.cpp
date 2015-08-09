@@ -11,9 +11,11 @@
  */
 
 #include <functional>
-#include <common/vtapi_global.h>
-#include <queries/vtapi_predefined_queries.h>
-#include <data/vtapi_method.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_defs.h>
+#include <vtapi/queries/vtapi_insert.h>
+#include <vtapi/queries/vtapi_predefined.h>
+#include <vtapi/data/vtapi_method.h>
 
 using namespace std;
 
@@ -24,12 +26,12 @@ Method::Method(const Commons& commons, const string& name)
     : KeyValues(commons)
 {
     if (!name.empty())
-        _context.method = name;
+        context().method = name;
     
     _select.from(def_tab_methods, def_col_all);
     
-    if (!_context.method.empty())
-        _select.whereString(def_col_mt_name, _context.method);
+    if (!context().method.empty())
+        _select.whereString(def_col_mt_name, context().method);
 }
 
 Method::Method(const Commons& commons, const list<string>& names)
@@ -47,7 +49,7 @@ Method::~Method()
 bool Method::next()
 {
     if (KeyValues::next()) {
-        _context.method = this->getName();
+        context().method = this->getName();
         return true;
     }
     else {
@@ -87,7 +89,7 @@ Task* Method::createTask(
     {
         Insert insert(*this, def_tab_tasks);
         retval &= insert.keyString(def_col_task_name, name);
-        retval &= insert.keyString(def_col_task_mtname, _context.method);
+        retval &= insert.keyString(def_col_task_mtname, context().method);
         retval &= insert.keyString(def_col_task_params, params.serialize());
         if (!outputTable.empty())
             retval &= insert.keyString(def_col_task_outputs, outputTable);
@@ -128,7 +130,7 @@ string Method::constructTaskName(const TaskParams & params)
 {
     string input;
 
-    input += _context.method;
+    input += context().method;
     input += 'p';
 
     string par = params.serializeAsName();
@@ -148,7 +150,7 @@ bool Method::preUpdate()
 {
     bool ret = KeyValues::preUpdate(def_tab_methods);
     if (ret) {
-        ret &= _update->whereString(def_col_mt_name, _context.method);
+        ret &= _update->whereString(def_col_mt_name, context().method);
     }
 
     return ret;

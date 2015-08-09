@@ -10,13 +10,12 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <common/vtapi_global.h>
-#include <backends/vtapi_backendfactory.h>
-#include <queries/vtapi_query.h>
-#include <queries/vtapi_select.h>
-#include <queries/vtapi_insert.h>
-#include <queries/vtapi_update.h>
-#include <queries/vtapi_predefined_queries.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/queries/vtapi_query.h>
+#include <vtapi/queries/vtapi_select.h>
+#include <vtapi/queries/vtapi_insert.h>
+#include <vtapi/queries/vtapi_update.h>
+#include <vtapi/queries/vtapi_predefined.h>
 
 using namespace std;
 
@@ -28,60 +27,67 @@ namespace vtapi {
 Query::Query(const Commons& commons, const string& sql)
     : Commons(commons, false)
 {
+    _pquerybuilder = NULL;
+    _presultset = NULL;
+
+    // query builder may be initialized with query or just default table name
     bool bIsQuery = (sql.find_first_of(" \t\n") != string::npos);
     if (bIsQuery) {
         // init string is query => set it to query builder, default table is selection
-        _queryBuilder = BackendFactory::createQueryBuilder(_config->backend,
-                                                           *_backendBase,
-                                                           _connection->getConnectionObject(),
-                                                           sql);
-        if (!_context.selection.empty())
-            _queryBuilder->useDefaultTable(_context.selection);
+        _pquerybuilder = backend().createQueryBuilder(connection(), sql);
+
+        if (!context().selection.empty())
+            _pquerybuilder->useDefaultTable(context().selection);
     }
     else {
         // init string isn't query => it is default table
-        _queryBuilder = BackendFactory::createQueryBuilder(_config->backend,
-                                                           *_backendBase,
-                                                           _connection->getConnectionObject(),
-                                                           std::string());
+        _pquerybuilder = backend().createQueryBuilder(connection(), string());
         if (!sql.empty())
-            _queryBuilder->useDefaultTable(sql);
+            _pquerybuilder->useDefaultTable(sql);
     }
-    _queryBuilder->useDefaultSchema(_context.dataset);
+    _pquerybuilder->useDefaultSchema(context().dataset);
 
-    _resultSet = BackendFactory::createResultSet(_config->backend,
-                                                 *_backendBase,
-                                                 _connection->getDBTypes());
+    _presultset = backend().createResultSet(connection().getDBTypes());
 
     _executed = false;
 }
 
 Query::~Query()
 {
-    vt_destruct(_resultSet);
-    vt_destruct(_queryBuilder);
+    vt_destruct(_presultset);
+    vt_destruct(_pquerybuilder);
 }
 
 string Query::getQuery()
 {
-    return _queryBuilder->getGenericQuery();
+    return _pquerybuilder->getGenericQuery();
 }
 
 bool Query::execute()
 {
     _executed = true;
-    return _connection->execute(this->getQuery(), _queryBuilder->getQueryParam());
+    return connection().execute(this->getQuery(), _pquerybuilder->getQueryParam());
 }
 
 void Query::reset()
 {
     _executed = false;
-    _queryBuilder->reset();
+    _pquerybuilder->reset();
 }
 
-bool Query::checkQueryObject()
+QueryBuilder& Query::querybuilder()
 {
-    return (_queryBuilder && _resultSet);
+    return *_pquerybuilder;
+}
+
+ResultSet& Query::resultset()
+{
+    return *_presultset;
+}
+
+bool Query::isExecuted()
+{
+    return _executed;
 }
 
 //================================== SELECT ====================================
@@ -89,19 +95,19 @@ bool Query::checkQueryObject()
 Select::Select(const Commons& commons, const string& initString)
     : Query(commons, initString)
 {
-    _limit = _config->queryLimit;
+    _limit = 10000;
     _offset = 0;
 }
 
 string Select::getQuery()
 {
-    return _queryBuilder->getSelectQuery(_groupby, _orderby, _limit, _offset);
+    return querybuilder().getSelectQuery(_groupby, _orderby, _limit, _offset);
 }
 
 bool Select::execute()
 {
     _executed = true;
-    return _connection->fetch(this->getQuery(), _queryBuilder->getQueryParam(), _resultSet) >= 0;
+    return connection().fetch(this->getQuery(), querybuilder().getQueryParam(), resultset()) >= 0;
 }
 
 bool Select::executeNext()
@@ -114,12 +120,21 @@ bool Select::executeNext()
         return false;
     }
 }
+int Select::getLimit()
+{
+    return _limit;
+}
+
+void Select::setLimit(const int limit)
+{
+    _limit = limit;
+}
 
 bool Select::from(const string& table, const string& column)
 {
     bool retval = true;
 
-    retval &= _queryBuilder->keyFrom(table, column);
+    retval &= querybuilder().keyFrom(table, column);
     _executed = false;
 
     return retval;
@@ -133,61 +148,61 @@ void Select::orderBy(const string& key)
 bool Select::whereString(const string& key, const string& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereString(key, value, oper, from);
+    return querybuilder().whereString(key, value, oper, from);
 }
 
 bool Select::whereInt(const string& key, const int value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereInt(key, value, oper, from);
+    return querybuilder().whereInt(key, value, oper, from);
 }
 
 bool Select::whereFloat(const string& key, const float value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereFloat(key, value, oper, from);
+    return querybuilder().whereFloat(key, value, oper, from);
 }
 
 bool Select::whereSeqtype(const string& key, const string& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereSeqtype(key, value, oper, from);
+    return querybuilder().whereSeqtype(key, value, oper, from);
 }
 
 bool Select::whereInouttype(const string& key, const string& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereInouttype(key, value, oper, from);
+    return querybuilder().whereInouttype(key, value, oper, from);
 }
 
 bool Select::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->wherePStatus(key, value, oper, from);
+    return querybuilder().wherePStatus(key, value, oper, from);
 }
 
 bool Select::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereTimestamp(key, value, oper, from);
+    return querybuilder().whereTimestamp(key, value, oper, from);
 }
 
 bool Select::whereTimeRange(const string& key_start, const string& key_length, const time_t& value_start, const uint value_length, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereTimeRange(key_start, key_length, value_start, value_length, oper, from);
+    return querybuilder().whereTimeRange(key_start, key_length, value_start, value_length, oper, from);
 }
 
 bool Select::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereRegion(key, value, oper, from);
+    return querybuilder().whereRegion(key, value, oper, from);
 }
 
 bool Select::whereExpression(const string& expression, const string& value, const string& oper)
 {
     _executed = false;
-    return _queryBuilder->whereExpression(expression, value, oper);
+    return querybuilder().whereExpression(expression, value, oper);
 }
 
 bool Select::whereStringInList(const string& key, const list<string>& values)
@@ -196,7 +211,7 @@ bool Select::whereStringInList(const string& key, const list<string>& values)
 
     //TODO: whereStringInList
 
-    //return _queryBuilder->whereExpression(expression, value, oper);
+    //return querybuilder().whereExpression(expression, value, oper);
     return true;
 }
 
@@ -212,79 +227,78 @@ bool Select::whereIntInList(const string& key, const list<int>& values)
 //================================== INSERT ====================================
 
 Insert::Insert(const Commons& commons, const string& initString)
-    : Query(commons, initString) { }
+    : Query(commons, initString)
+{ }
 
 string Insert::getQuery()
 {
-    return _queryBuilder->getInsertQuery();
+    return querybuilder().getInsertQuery();
 }
 
 bool Insert::keyString(const string& key, const string& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyString(key, value, from);
+    return querybuilder().keyString(key, value, from);
 }
 
 bool Insert::keyStringA(const string& key, string* values, const int size, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyStringA(key, values, size, from);
+    return querybuilder().keyStringA(key, values, size, from);
 }
 
 bool Insert::keyInt(const string& key, int value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyInt(key, value, from);
+    return querybuilder().keyInt(key, value, from);
 }
 
 bool Insert::keyIntA(const string& key, int* values, const int size, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyIntA(key, values, size, from);
+    return querybuilder().keyIntA(key, values, size, from);
 }
 
 bool Insert::keyFloat(const string& key, float value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyFloat(key, value, from);
+    return querybuilder().keyFloat(key, value, from);
 }
 
 bool Insert::keyFloatA(const string& key, float* values, const int size, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyFloatA(key, values, size, from);
+    return querybuilder().keyFloatA(key, values, size, from);
 }
 
 bool Insert::keySeqtype(const string& key, const string& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keySeqtype(key, value, from);
+    return querybuilder().keySeqtype(key, value, from);
 }
 
 bool Insert::keyInouttype(const string& key, const string& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyInouttype(key, value, from);
+    return querybuilder().keyInouttype(key, value, from);
 }
 
 bool Insert::keyTimestamp(const string& key, const time_t& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyTimestamp(key, value, from);
+    return querybuilder().keyTimestamp(key, value, from);
 }
-#ifdef VTAPI_HAVE_OPENCV
 
 bool Insert::keyCvMat(const string& key, const cv::Mat& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyCvMat(key, value, from);
+    return querybuilder().keyCvMat(key, value, from);
 }
-#endif
 
 bool Insert::keyIntervalEvent(const string& key, const IntervalEvent& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyIntervalEvent(key, value, from);
+    return querybuilder().keyIntervalEvent(key, value, from);
 }
 
 //================================= UPDATE =====================================
@@ -296,121 +310,121 @@ Update::Update(const Commons& commons, const string& initString)
 
 string Update::getQuery()
 {
-    return _queryBuilder->getUpdateQuery();
+    return querybuilder().getUpdateQuery();
 }
 
 bool Update::setString(const string& key, const string& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyString(key, value, from);
+    return querybuilder().keyString(key, value, from);
 }
 
 bool Update::setStringA(const string& key, string* values, const int size, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyStringA(key, values, size, from);
+    return querybuilder().keyStringA(key, values, size, from);
 }
 
 bool Update::setInt(const string& key, int value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyInt(key, value, from);
+    return querybuilder().keyInt(key, value, from);
 }
 
 bool Update::setIntA(const string& key, int* values, const int size, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyIntA(key, values, size, from);
+    return querybuilder().keyIntA(key, values, size, from);
 }
 
 bool Update::setFloat(const string& key, float value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyFloat(key, value, from);
+    return querybuilder().keyFloat(key, value, from);
 }
 
 bool Update::setFloatA(const string& key, float* values, const int size, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyFloatA(key, values, size, from);
+    return querybuilder().keyFloatA(key, values, size, from);
 }
 
 bool Update::setSeqtype(const string& key, const string& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keySeqtype(key, value, from);
+    return querybuilder().keySeqtype(key, value, from);
 }
 
 bool Update::setInouttype(const string& key, const string& value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyInouttype(key, value, from);
+    return querybuilder().keyInouttype(key, value, from);
 }
 
 bool Update::updateProcessStatus(const string& key, ProcessState::STATUS_T value, const string& from)
 {
     _executed = false;
-    return _queryBuilder->keyPStatus(key, value, from);
+    return querybuilder().keyPStatus(key, value, from);
 }
 
 bool Update::setTimestamp(const string& key, const time_t& value, const string& from)
 {
     _executed = false;
-    _queryBuilder->keyTimestamp(key, value, from);
+    querybuilder().keyTimestamp(key, value, from);
 }
 
 bool Update::whereString(const string& key, const string& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereString(key, value, oper, from);
+    return querybuilder().whereString(key, value, oper, from);
 }
 
 bool Update::whereInt(const string& key, const int value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereInt(key, value, oper, from);
+    return querybuilder().whereInt(key, value, oper, from);
 }
 
 bool Update::whereFloat(const string& key, const float value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereFloat(key, value, oper, from);
+    return querybuilder().whereFloat(key, value, oper, from);
 }
 
 bool Update::whereSeqtype(const string& key, const string& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereSeqtype(key, value, oper, from);
+    return querybuilder().whereSeqtype(key, value, oper, from);
 }
 
 bool Update::whereInouttype(const string& key, const string& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereInouttype(key, value, oper, from);
+    return querybuilder().whereInouttype(key, value, oper, from);
 }
 
 bool Update::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->wherePStatus(key, value, oper, from);
+    return querybuilder().wherePStatus(key, value, oper, from);
 }
 
 bool Update::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereTimestamp(key, value, oper, from);
+    return querybuilder().whereTimestamp(key, value, oper, from);
 }
 
 bool Update::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from)
 {
     _executed = false;
-    return _queryBuilder->whereRegion(key, value, oper, from);
+    return querybuilder().whereRegion(key, value, oper, from);
 }
 
 bool Update::whereExpression(const string& expression, const string& value, const string& oper)
 {
     _executed = false;
-    return _queryBuilder->whereExpression(expression, value, oper);
+    return querybuilder().whereExpression(expression, value, oper);
 }
 
 
@@ -419,19 +433,19 @@ bool Update::whereExpression(const string& expression, const string& value, cons
 QueryBeginTransaction::QueryBeginTransaction (const Commons& commons)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(_queryBuilder->getBeginQuery());
+    querybuilder().useQueryString(querybuilder().getBeginQuery());
 }
 
 QueryCommitTransaction::QueryCommitTransaction (const Commons& commons)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(_queryBuilder->getCommitQuery());
+    querybuilder().useQueryString(querybuilder().getCommitQuery());
 }
 
 QueryRollbackTransaction::QueryRollbackTransaction (const Commons& commons)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(_queryBuilder->getRollbackQuery());
+    querybuilder().useQueryString(querybuilder().getRollbackQuery());
 }
 
 QueryDatasetCreate::QueryDatasetCreate(
@@ -442,8 +456,8 @@ QueryDatasetCreate::QueryDatasetCreate(
                                        const string& description)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(
-        _queryBuilder->getDatasetCreateQuery(name,location, friendly_name, description));
+    querybuilder().useQueryString(
+        querybuilder().getDatasetCreateQuery(name, location, friendly_name, description));
 }
 
 QueryDatasetReset::QueryDatasetReset (
@@ -451,7 +465,7 @@ QueryDatasetReset::QueryDatasetReset (
                                       const string& name)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(_queryBuilder->getDatasetResetQuery(name));
+    querybuilder().useQueryString(querybuilder().getDatasetResetQuery(name));
 }
 
 QueryDatasetDelete::QueryDatasetDelete (
@@ -459,7 +473,7 @@ QueryDatasetDelete::QueryDatasetDelete (
                                         const string& name)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(_queryBuilder->getDatasetDeleteQuery(name));
+    querybuilder().useQueryString(querybuilder().getDatasetDeleteQuery(name));
 }
 
 QueryMethodCreate::QueryMethodCreate (
@@ -470,8 +484,8 @@ QueryMethodCreate::QueryMethodCreate (
                                       const string& description)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(
-        _queryBuilder->getMethodCreateQuery(name, keys_definition, params_definition, description));
+    querybuilder().useQueryString(
+        querybuilder().getMethodCreateQuery(name, keys_definition, params_definition, description));
 }
 
 QueryMethodDelete::QueryMethodDelete (
@@ -479,26 +493,26 @@ QueryMethodDelete::QueryMethodDelete (
                                       const string& name)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(
-        _queryBuilder->getMethodDeleteQuery(name));
+    querybuilder().useQueryString(
+        querybuilder().getMethodDeleteQuery(name));
 }
 
 QueryLastInsertedId::QueryLastInsertedId(const Commons& commons)
     : Query(commons)
 {
-    _queryBuilder->useQueryString(
-                                  _queryBuilder->getLastInsertedIdQuery());
+    querybuilder().useQueryString(
+                                  querybuilder().getLastInsertedIdQuery());
 }
 
 bool QueryLastInsertedId::execute(int &returned_id)
 {
-    int retval = _connection->fetch(_queryBuilder->getGenericQuery(),
-                                    _queryBuilder->getQueryParam(),
-                                    _resultSet);
+    int retval = connection().fetch(querybuilder().getGenericQuery(),
+                                    querybuilder().getQueryParam(),
+                                    resultset());
 
     if (retval > 0) {
-        _resultSet->setPosition(0);
-        returned_id = _resultSet->getInt(0);
+        resultset().setPosition(0);
+        returned_id = resultset().getInt(0);
         return true;
     }
     else {

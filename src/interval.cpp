@@ -10,9 +10,10 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <common/vtapi_global.h>
-#include <data/vtapi_sequence.h>
-#include <data/vtapi_interval.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_defs.h>
+#include <vtapi/data/vtapi_sequence.h>
+#include <vtapi/data/vtapi_interval.h>
 
 using namespace std;
 
@@ -24,18 +25,18 @@ namespace vtapi {
 Interval::Interval(const Commons& commons, const string& selection)
     : KeyValues(commons)
 {
-    if (_context.dataset.empty())
+    if (context().dataset.empty())
         VTLOG_WARNING("Dataset is not specified");
 
     if (!selection.empty())
-        _context.selection = selection;
+        context().selection = selection;
 
-    _select.from(_context.selection , def_col_all);
+    _select.from(context().selection , def_col_all);
     _select.orderBy(def_col_int_id);
-    if (!_context.sequence.empty())
-        _select.whereString(def_col_int_seqname, _context.sequence);
-    if (!_context.task.empty())
-        _select.whereString(def_col_int_taskname, _context.task);
+    if (!context().sequence.empty())
+        _select.whereString(def_col_int_seqname, context().sequence);
+    if (!context().task.empty())
+        _select.whereString(def_col_int_taskname, context().task);
 }
 
 Interval::~Interval()
@@ -87,7 +88,7 @@ bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
 
 bool Interval::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(_context.selection);
+    bool ret = KeyValues::preUpdate(context().selection);
     if (ret) {
         ret &= _update->whereInt(def_col_int_id, this->getId());
     }
@@ -174,16 +175,16 @@ bool Image::next()
 
 string Image::getDataLocation()
 {
-    return _config->baseLocation + _context.datasetLocation +
-        _context.sequenceLocation  + this->getString(def_col_int_imglocation);
+    //TODO: parent + dir
+
+    return config().datasets_dir + context().datasetLocation +
+        context().sequenceLocation  + this->getString(def_col_int_imglocation);
 }
 
 int Image::getTime()
 {
     return this->getStartTime();
 }
-
-#if VTAPI_HAVE_OPENCV
 
 cv::Mat& Image::getImageData()
 {
@@ -192,11 +193,6 @@ cv::Mat& Image::getImageData()
     _image = cv::imread(this->getDataLocation().c_str(), CV_LOAD_IMAGE_COLOR);
     return _image;
 }
-#endif
 
-////bool Image::add(const string& sequence, const int t, const string& location)
-////{
-////    return ((Interval*)this)->add(sequence, t, t, location);
-////}
 
 }

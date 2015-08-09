@@ -11,88 +11,95 @@
  */
 
 #include <exception>
-#include <common/vtapi_global.h>
-#include <common/vtapi_settings.h>
-#include <queries/vtapi_predefined_queries.h>
-#include <vtapi.h>
+#include <Poco/Util/PropertyFileConfiguration.h>
+#include <Poco/Util/OptionSet.h>
+#include <Poco/Util/OptionProcessor.h>
+#include <Poco/Path.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/queries/vtapi_predefined.h>
+#include <vtapi/vtapi.h>
 
 using namespace std;
+using Poco::Util::MapConfiguration;
+using Poco::Util::PropertyFileConfiguration;
 
 namespace vtapi {
 
 
+#define ADD_OPTION(set, cfg, opt, desc) \
+    set.addOption(Poco::Util::Option(opt, "", desc).binding(opt, &cfg));
+#define ADD_OPTION_ARG(set, cfg, opt, arg, desc) \
+    set.addOption(Poco::Util::Option(opt, "", desc).argument(arg).binding(opt, &cfg));
+#define DEFINE_OPTIONS(opts, cfg) \
+    ADD_OPTION_ARG(opts, cfg, "config", "file", "configuration file path");\
+    ADD_OPTION_ARG(opts, cfg, "datasets_dir", "dir", "folder containing your datasets");\
+    ADD_OPTION_ARG(opts, cfg, "modules_dir", "dir", "folder containing module binaries");\
+    ADD_OPTION_ARG(opts, cfg, "dataset", "name", "default dataset");\
+    ADD_OPTION_ARG(opts, cfg, "process", "id", "run VTApi as module instance");\
+    ADD_OPTION_ARG(opts, cfg, "connection", "string", "database connection string");\
+    ADD_OPTION_ARG(opts, cfg, "logfile", "file", "log file location");\
+    ADD_OPTION(opts, cfg, "log_errors", "log error messages");\
+    ADD_OPTION(opts, cfg, "log_warnings", "log warning messages");\
+    ADD_OPTION(opts, cfg, "log_debug", "log debug messages");
+
+
 VTApi::VTApi(int argc, char** argv)
 {
-    gengetopt_args_info args_info;
+    _pcommons = NULL;
 
-    // Initialize parser parameters structure
-    // Hold check for required arguments until config file is parsed
-    struct cmdline_parser_params cli_params;
-    cmdline_parser_params_init(&cli_params);
-    cli_params.check_required = 0;
-    cli_params.print_errors = 0;
+    Poco::Util::OptionSet options;
+    Poco::AutoPtr<MapConfiguration> cmd_config(new MapConfiguration());
 
-    // Parse cmdline first
-    bool ok = (cmdline_parser_ext (argc, argv, &args_info, &cli_params) == 0);
-    if (ok && args_info.config_given) {
-        // Get the rest of arguments from config file, don't override cmdline
-        cli_params.initialize = 0;
-        cli_params.override = 0;
-        cli_params.check_required = 1;
+    // define command line options
+    DEFINE_OPTIONS(options, *cmd_config);
 
-        // Parse config file now
-        ok = (cmdline_parser_config_file (args_info.config_arg, &args_info, &cli_params) == 0);
-    }
-    
-    // Check if all required args are specified
-    if (cmdline_parser_required (&args_info, "VTApi") != EXIT_SUCCESS) {
-        VTLOG_ERROR("Missing required config arguments (possibly connection to DB). Use \"-h\" for help");
-        cmdline_parser_free (&args_info);
-        throw new exception;
+    // load all command line options into configuration
+    Poco::Util::OptionProcessor opt_proc(options);
+    string opt_name, opt_arg;
+    for (int i = 1; i < argc; i++) {
+        bool ok = opt_proc.process(argv[i], opt_name, opt_arg);
+        if (!ok) throw exception();
     }
 
-    // Create commons class to store connection etc.
-    _commons = new Commons(args_info);
-    if (!ok) VTLOG_WARNING("Error parsing config arguments");
-    
-    cmdline_parser_free (&args_info);
+    // set default config file
+    if (!cmd_config->hasProperty("config"))
+        cmd_config->setString("config", Poco::Path::current() + "vtapi.conf");
+
+    // load configuration from config file
+    Poco::AutoPtr<PropertyFileConfiguration> file_config(
+                new PropertyFileConfiguration(cmd_config->getString("config")));
+
+    // override config file with command line
+    string opt_raw;
+    MapConfiguration::Keys keys;
+    cmd_config->keys(keys);
+    for (auto const &key : keys) {
+        cmd_config->getRawString(key, opt_raw);
+        file_config->setString(key, opt_raw);
+    }
+
+    _pcommons = new Commons(*file_config);
 }
 
 VTApi::VTApi(const string& configFile)
 {
-    gengetopt_args_info args_info;
+    _pcommons = NULL;
 
-    // Initialize parser parameters structure
-    // Hold check for required arguments until config file is parsed
-    struct cmdline_parser_params cli_params;
-    cmdline_parser_params_init(&cli_params);
-    cli_params.print_errors = 0;
-    
-    // Parse config file
-    bool ok = (cmdline_parser_config_file (configFile.c_str(), &args_info, &cli_params) == 0);
-
-    // Check if all required args are specified
-    if (cmdline_parser_required (&args_info, "VTApi") != EXIT_SUCCESS) {
-        VTLOG_ERROR("Missing required config arguments (possibly connection to DB). Use \"-h\" for help");
-        cmdline_parser_free (&args_info);
-        throw new exception;
-    }
-    
-    // Create commons class to store connection etc.
-    _commons = new Commons(args_info);
-    if (!ok) VTLOG_WARNING("Error parsing config arguments");
-    
-    cmdline_parser_free (&args_info);
+    Poco::AutoPtr<PropertyFileConfiguration> file_config(
+                new PropertyFileConfiguration(configFile));
+    _pcommons = new Commons(*file_config);
 }
 
 VTApi::VTApi(const VTApi& orig)
-    : _commons(new Commons(*orig._commons, true))
-{ }
+{
+    _pcommons = NULL;
+    _pcommons =  new Commons(*orig._pcommons, true);
+}
 
 
 VTApi::~VTApi()
 {
-    vt_destruct(_commons);
+    vt_destruct(_pcommons);
 }
 
 
@@ -103,7 +110,7 @@ Dataset* VTApi::createDataset(const string& name,
 {
     Dataset *ds = NULL;
 
-    QueryDatasetCreate q(*_commons, name, location, friendly_name, description);
+    QueryDatasetCreate q(*_pcommons, name, location, friendly_name, description);
     if (q.execute()) {
         ds = loadDatasets(name);
         if (!ds->next()) vt_destruct(ds);
@@ -119,7 +126,7 @@ Method* VTApi::createMethod(const string& name,
 {
     Method *m = NULL;
 
-    QueryMethodCreate q(*_commons, name, keys_definition, params_definition, description);
+    QueryMethodCreate q(*_pcommons, name, keys_definition, params_definition, description);
     if (q.execute()) {
         m = loadMethods(name);
         if (!m->next()) vt_destruct(m);
@@ -130,34 +137,37 @@ Method* VTApi::createMethod(const string& name,
 
 Dataset* VTApi::loadDatasets(const string& name)
 {
-    return (new Dataset(*_commons, name));
+    return (new Dataset(*_pcommons, name));
 }
 
 Method* VTApi::loadMethods(const string& name)
 {
-    return (new Method(*_commons, name));
+    return (new Method(*_pcommons, name));
 }
 
-Process *VTApi::initProcess(ProcessState &initState)
+Sequence* VTApi::loadSequences(const string& name)
 {
-    Process * p = NULL;
+    return (new Sequence(*_pcommons, name));
+}
 
-    if (!_commons->_context.dataset.empty() && _commons->_context.process != 0) {
-        if (p = new Process(*_commons)) {
-            if (p->next()) {
-                ProcessState *ps = p->getState();
-                if (ps) {
-                    initState = *ps;
-                    delete ps;
-                }
-            }
-            else {
-                vt_destruct(p);
-            }
-        }
-    }
+Video* VTApi::loadVideos(const string& name)
+{
+    return (new Video(*_pcommons, name));
+}
 
-    return p;
+ImageFolder* VTApi::loadImageFolders(const string& name)
+{
+    return (new ImageFolder(*_pcommons, name));
+}
+
+Task* VTApi::loadTasks(const string& name)
+{
+    return (new Task(*_pcommons, name));
+}
+
+Process* VTApi::loadProcesses(int id)
+{
+    return (new Process(*_pcommons, id));
 }
 
 

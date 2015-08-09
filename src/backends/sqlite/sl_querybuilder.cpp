@@ -1,8 +1,6 @@
 
-#include <common/vtapi_global.h>
-#include <backends/vtapi_querybuilder.h>
-
-#if VTAPI_HAVE_SQLITE
+#include <vtapi/common/vtapi_global.h>
+#include "sl_querybuilder.h"
 
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"
 #define DEF_NO_TABLE    "!NO_TABLE!"
@@ -15,15 +13,15 @@ using namespace std;
 
 namespace vtapi {
 
-SLQueryBuilder::SLQueryBuilder(const SLBackendBase &base, void *connection, const string& initString)
-    : QueryBuilder (connection, initString), SLBackendBase(base)
+SLQueryBuilder::SLQueryBuilder(SLConnection &connection, const string& init_string)
+    : QueryBuilder (connection, init_string)
 {
-    _queryParam  = createQueryParam();
+    _pquery_param  = createQueryParam();
 }
 
 SLQueryBuilder::~SLQueryBuilder()
 {
-    destroyQueryParam(_queryParam);
+    destroyQueryParam(_pquery_param);
     destroyKeys();
 }
 
@@ -31,7 +29,7 @@ void SLQueryBuilder::reset()
 {
     _opers.clear();
     destroyKeys();
-    destroyQueryParam(_queryParam);
+    destroyQueryParam(_pquery_param);
 }
 
 void *SLQueryBuilder::createQueryParam()
@@ -70,8 +68,8 @@ void SLQueryBuilder::destroyKeys()
 
 string SLQueryBuilder::getGenericQuery()
 {
-    ((SLparam *) _queryParam)->database = _defaultSchema;
-    return _initString;
+    ((SLparam *) _pquery_param)->database = _defaultSchema;
+    return _init_string;
 }
 
 string SLQueryBuilder::getSelectQuery(const string& groupby, const string& orderby,
@@ -82,8 +80,8 @@ string SLQueryBuilder::getSelectQuery(const string& groupby, const string& order
     string tablesStr;
     string whereStr;
 
-    ((SLparam *) _queryParam)->database = _defaultSchema;
-    if (this->_keyValuesMain.empty()) return _initString; // in case of a direct query
+    ((SLparam *) _pquery_param)->database = _defaultSchema;
+    if (this->_keyValuesMain.empty()) return _init_string; // in case of a direct query
 
     // go through keys
     for (int i = 0; i < _keyValuesMain.size(); i++) {
@@ -146,11 +144,11 @@ string SLQueryBuilder::getSelectQuery(const string& groupby, const string& order
         queryString += "\n ORDER BY " + orderby;
     }
     if (limit > 0) {
-        queryString += "\n LIMIT " + toString(limit);
+        queryString += "\n LIMIT " + toString<int>(limit);
     }
 
     if (offset > 0) {
-        queryString += "\n OFFSET " + toString(offset);
+        queryString += "\n OFFSET " + toString<int>(offset);
     }
     queryString += ";";
     return (queryString);
@@ -164,11 +162,11 @@ string SLQueryBuilder::getInsertQuery()
     string valuesStr;
     size_t dotPos;
 
-    ((SLparam *) _queryParam)->database = _defaultSchema;
-    if (this->_keyValuesMain.empty()) return _initString; // in case of a direct query
+    ((SLparam *) _pquery_param)->database = _defaultSchema;
+    if (this->_keyValuesMain.empty()) return _init_string; // in case of a direct query
 
     // in case we're lazy, we have the table specified in initString or selection
-    dstTable = (!_initString.empty()) ? _initString : _defaultTable;
+    dstTable = (!_init_string.empty()) ? _init_string : _defaultTable;
 
     // go through keys
     for (int i = 0; i < this->_keyValuesMain.size(); ++i) {
@@ -201,11 +199,11 @@ string SLQueryBuilder::getUpdateQuery()
     string whereStr;
     size_t dotPos;
 
-    ((SLparam *) _queryParam)->database = _defaultSchema;
-    if (this->_keyValuesMain.empty()) return _initString; // in case of a direct query
+    ((SLparam *) _pquery_param)->database = _defaultSchema;
+    if (this->_keyValuesMain.empty()) return _init_string; // in case of a direct query
 
     // in case we're lazy, we have the table specified in initString or selection
-    dstTable = (!_initString.empty()) ? _initString : _defaultTable;
+    dstTable = (!_init_string.empty()) ? _init_string : _defaultTable;
 
     // go through keys
     for (int i = 0; i < this->_keyValuesMain.size(); ++i) {
@@ -418,8 +416,6 @@ bool SLQueryBuilder::keyTimestamp(const string& key, const time_t& value, const 
     }
 }
 
-#if VTAPI_HAVE_OPENCV
-
 bool SLQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const string& from)
 {
     if (key.empty()) return false;
@@ -429,7 +425,6 @@ bool SLQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const str
         return true;
     }
 }
-#endif 
 
 bool SLQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& value, const string& from)
 {
@@ -557,8 +552,5 @@ string SLQueryBuilder::escapeLiteral(const string& ident)
     return "\'" + escaped + "\'";
 }
 
+
 }
-
-
-#endif
-

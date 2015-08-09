@@ -1,6 +1,7 @@
 
-#include <common/vtapi_global.h>
-#include <data/vtapi_intervalevent.h>
+#include <cstring>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/data/vtapi_intervalevent.h>
 
 namespace vtapi {
 

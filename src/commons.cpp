@@ -10,103 +10,179 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <exception>
-#include <common/vtapi_global.h>
-#include <data/vtapi_commons.h>
+#include <Poco/Manifest.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/data/vtapi_commons.h>
 
 using namespace std;
 
 namespace vtapi {
 
-Commons::Commons(const gengetopt_args_info& args_info)
+
+Commons::Commons(const Poco::Util::AbstractConfiguration &config)
 {
-    // fill configuration
-    _config = new CONFIG();
-    if (args_info.config_given)     _config->configfile = args_info.config_arg;
-    if (args_info.location_given)   _config->baseLocation = args_info.location_arg;
-    if (args_info.backend_given)    _config->backend = BackendFactory::type(args_info.backend_arg);
-    if (args_info.connection_given) _config->connection = args_info.connection_arg;
-    if (args_info.dbfolder_given)   _config->dbfolder = args_info.dbfolder_arg;
-    if (args_info.querylimit_given) _config->queryLimit = args_info.querylimit_arg;
-    if (args_info.arraylimit_given) _config->arrayLimit = args_info.arraylimit_arg;
-    if (args_info.log_given)        _config->logfile = args_info.log_arg;
-    _config->verbose = args_info.verbose_given;
-    _config->debug = args_info.debug_given;
-
-    // fill default context
-    if (args_info.dataset_given)    _context.dataset = args_info.dataset_arg;
-    if (args_info.sequence_given)   _context.sequence = args_info.sequence_arg;
-    if (args_info.selection_given)  _context.selection = args_info.selection_arg;
-    if (args_info.method_given)     _context.method = args_info.method_arg;
-    if (args_info.process_given)    _context.process = args_info.process_arg;
-    if (args_info.task_given)       _context.task = args_info.task_arg;
-
-    // initialize global logger
-    bool ok = Logger::instance().config(_config->logfile, _config->verbose, _config->debug);
-    if (!ok) throw new exception;
-
-    // initialize base for all backend-specific objects
-    _backendBase = BackendFactory::createBackendBase(_config->backend);
-    ok = _backendBase->base_init();
-    if (!ok) throw new exception;
-
-    _connection = BackendFactory::createConnection(_config->backend,
-                                                   *_backendBase,
-                                                   _config->connection,
-                                                   _config->dbfolder);
-    ok = _connection->connect();
-    if (!ok) throw new exception;
-
     _is_owner = true;
+    _pconfig = NULL;
+    _pbackend = NULL;
+    _pconnection = NULL;
+    _ploader = NULL;
+
+    try {
+        _pconfig = new CONFIG();
+
+        // required properties
+
+        if (config.hasProperty("datasets_dir"))
+            _pconfig->datasets_dir = config.getString("datasets_dir");
+        else
+            throw exception();
+        if (config.hasProperty("modules_dir"))
+            _pconfig->modules_dir = config.getString("modules_dir");
+        else
+            throw exception();
+        if (config.hasProperty("connection"))
+            _pconfig->connection = config.getString("connection");
+        else
+            throw exception();
+
+        // optional properties
+
+        if (config.hasProperty("logfile"))
+            _pconfig->logfile = config.getString("logfile");
+        if (config.hasProperty("log_errors"))
+            _pconfig->log_errors = config.getBool("log_errors");
+        if (config.hasProperty("log_warnings"))
+            _pconfig->log_warnings= config.getBool("log_warnings");
+        if (config.hasProperty("log_debug"))
+            _pconfig->log_debug = config.getBool("log_debug");
+
+        // context properties
+
+        if (config.hasProperty("dataset"))
+            _context.dataset = config.getString("dataset");
+        if (config.hasProperty("process"))
+            _context.process = config.getInt("process");
+
+        // initialize global logger
+        bool ok = Logger::instance().config(_pconfig->logfile, _pconfig->log_errors,
+                                            _pconfig->log_warnings, _pconfig->log_debug);
+        if (!ok) throw exception();
+
+        // load backend interface + connection
+        ok = LoadBackend();
+        if (!ok) throw exception();
+    }
+    catch (...)
+    {
+        //UnloadBackend();
+        vt_destruct(_pconfig);
+        throw;
+    }
 }
 
 Commons::Commons(const Commons& orig, bool new_copy)
 {
-    if (new_copy) {
-        _config = new CONFIG(*orig._config);
+    _is_owner = new_copy;
+    _pconfig = NULL;
+    _pbackend = NULL;
+    _pconnection = NULL;
+    _ploader = NULL;
+
+    try {
         _context = orig._context;
-        
-        _backendBase = BackendFactory::createBackendBase(_config->backend);
-        bool ok = _backendBase->base_init();
-        if (!ok) throw new exception;
 
-        _connection = BackendFactory::createConnection(_config->backend,
-                                                      *_backendBase,
-                                                      _config->connection,
-                                                      _config->dbfolder);
-        ok = _connection->connect();
-        if (!ok) throw new exception;
+        if (new_copy) {
+            // copy config
+            _pconfig = new CONFIG(*orig._pconfig);
 
-        _is_owner = true;
+            // load backend interface + connection
+            if (!LoadBackend()) throw exception();
+        }
+        else {
+            _pconfig = orig._pconfig;
+            _ploader = orig._ploader;
+            _pbackend = orig._pbackend;
+            _pconnection = orig._pconnection;
+        }
+    }
+    catch (...)
+    {
+        if (new_copy) {
+            //UnloadBackend();
+            vt_destruct(_pconfig);
+        }
+        throw;
+    }
+}
+
+bool Commons::LoadBackend()
+{
+    // get library path
+    string lib_name = GetBackendLibName();
+    if (lib_name.empty()) return false;
+
+    try {
+        // load library
+        _ploader = new Poco::ClassLoader<IBackendInterface>();
+        _ploader->loadLibrary(lib_name);
+
+        // load plugin interface
+        string plugin_name = _ploader->begin()->second->begin()->name();
+        _pbackend = _ploader->create(plugin_name);
+
+        // create connection object and connect to database
+        _pconnection = _pbackend->createConnection(_pconfig->connection);
+        if (!_pconnection->connect()) throw exception();
+
+        return true;
+    }
+    catch(...) {
+        UnloadBackend();
+        return false;
+    }
+}
+
+void Commons::UnloadBackend()
+{
+    vt_destruct(_pconnection);
+    vt_destruct(_pbackend);
+    if (_ploader) {
+        string lib_name = GetBackendLibName();
+        if (!lib_name.empty()) {
+            if (_ploader->isLibraryLoaded(lib_name))
+                _ploader->unloadLibrary(lib_name);
+        }
+        vt_destruct(_ploader);
+    }
+
+}
+
+string Commons::GetBackendLibName()
+{
+    size_t uri_end = _pconfig->connection.find("://");
+    if (uri_end != string::npos) {
+        string backend_name = _pconfig->connection.substr(0, uri_end);
+        return "libvtapi_" + backend_name + Poco::SharedLibrary::suffix();
     }
     else {
-        _config = orig._config;
-        _context = orig._context;
-        _backendBase = orig._backendBase;
-        _connection = orig._connection;
-
-        _is_owner = false;
+        return string();
     }
 }
 
 Commons::~Commons()
 {
     if (_is_owner) {
-        vt_destruct(_connection);
-        vt_destruct(_backendBase);
-        vt_destruct(_config);
+        UnloadBackend();
+        vt_destruct(_pconfig);
     }
 }
 
 Commons::_CONFIG::_CONFIG()
 {
-    backend = BackendFactory::BACKEND_UNKNOWN;
-    queryLimit = 0;
-    arrayLimit = 0;
-    verbose = false;
-    debug = false;
+    log_errors = false;
+    log_warnings = false;
+    log_debug = false;
 }
 
 Commons::_CONTEXT::_CONTEXT()
@@ -114,20 +190,29 @@ Commons::_CONTEXT::_CONTEXT()
     process = 0;
 }
 
-// static
 
-bool Commons::fileExists(const string& filepath)
+const Commons::CONFIG& Commons::config()
 {
-    struct stat info;
-    return (stat(filepath.c_str(), &info) == 0 && info.st_mode & S_IFREG);
+    return *_pconfig;
 }
 
-// static
 
-bool Commons::dirExists(const string& dirpath)
+Commons::CONTEXT& Commons::context()
 {
-    struct stat info;
-    return (stat(dirpath.c_str(), &info) == 0 && info.st_mode & S_IFDIR);
+    return _context;
 }
+
+
+const IBackendInterface& Commons::backend()
+{
+    return *_pbackend;
+}
+
+
+Connection& Commons::connection()
+{
+    return *_pconnection;
+}
+
 
 }

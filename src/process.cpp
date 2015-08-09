@@ -11,9 +11,10 @@
  */
 
 #include <sstream>
-#include <boost/filesystem.hpp>
-#include <common/vtapi_global.h>
-#include <data/vtapi_process.h>
+//#include <boost/filesystem.hpp>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_defs.h>
+#include <vtapi/data/vtapi_process.h>
 
 using namespace std;
 
@@ -23,20 +24,20 @@ namespace vtapi {
 Process::Process(const Commons& commons, int id)
     : KeyValues(commons)
 {
-    if (_context.dataset.empty())
+    if (context().dataset.empty())
         VTLOG_WARNING("Dataset is not specified");
     
     if (id != 0)
-        _context.process = id;
+        context().process = id;
     
     _select.from(def_tab_processes, def_col_all);
     
-    if (_context.process != 0) {
-        _select.whereInt(def_col_prs_prsid, _context.process);
+    if (context().process != 0) {
+        _select.whereInt(def_col_prs_prsid, context().process);
     }
     else {
-        if (!_context.task.empty())
-            _select.whereString(def_col_prs_taskname, _context.task);  
+        if (!context().task.empty())
+            _select.whereString(def_col_prs_taskname, context().task);
     }
 
 }
@@ -44,14 +45,14 @@ Process::Process(const Commons& commons, int id)
 Process::Process(const Commons& commons, const list<int>& ids)
     : KeyValues(commons)
 {
-    if (_context.dataset.empty())
+    if (context().dataset.empty())
         VTLOG_WARNING("Dataset is not specified");
     
-    _select.from(def_col_task_name, def_col_all);
+    _select.from(def_tab_processes, def_col_all);
 
     _select.whereIntInList(def_col_task_name, ids);
     
-    _context.task.clear();
+    context().task.clear();
 }
 
 Process::~Process()
@@ -63,7 +64,7 @@ bool Process::next()
     
     bool ret = KeyValues::next();
     if (ret) {
-        _context.process = this->getId();
+        context().process = this->getId();
         return true;
     }
     else {
@@ -76,39 +77,39 @@ bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
 {
     bool ret = false;
     
-    do {
-        if (suspended) {
-            updateStateSuspended();
-        }
+//    do {
+//        if (suspended) {
+//            updateStateSuspended();
+//        }
         
-        boost::filesystem::path cdir = boost::filesystem::current_path();
-        if (cdir.empty()) {
-            VTLOG_ERROR("Failed to get current directory");
-            break;
-        }
+//        boost::filesystem::path cdir = boost::filesystem::current_path();
+//        if (cdir.empty()) {
+//            VTLOG_ERROR("Failed to get current directory");
+//            break;
+//        }
 
-        //TODO: dodelat
+//        //TODO: dodelat
         
-        boost::filesystem::path exec(cdir);
-        exec /= "modules";
-        exec /= _context.method;
+//        boost::filesystem::path exec(cdir);
+//        exec /= "modules";
+//        exec /= context().method;
 
-        boost::filesystem::path cfg = boost::filesystem::absolute(_config->configfile, cdir);
+//        boost::filesystem::path cfg = boost::filesystem::absolute(config().configfile, cdir);
 
-        compat::ProcessInstance::Args args;
-        args.push_back("--config=" + cfg.string());
-        args.push_back("--process=" + _context.process);
-        args.push_back("--dataset=" + _context.dataset);
+//        compat::ProcessInstance::Args args;
+//        args.push_back("--config=" + cfg.string());
+//        args.push_back("--process=" + context().process);
+//        args.push_back("--dataset=" + context().dataset);
 
-        ret = _instance.launch(exec.string(), args, !async);
-        if (ret) {
-            if (ctrl) *ctrl = new ProcessControl(this->getId(), _instance);
-        }
-        else {
-            VTLOG_ERROR("Failed to launch process " + toString(this->getId()) + ": " + exec.string());
-        }
+//        ret = _instance.launch(exec.string(), args, !async);
+//        if (ret) {
+//            if (ctrl) *ctrl = new ProcessControl(this->getId(), _instance);
+//        }
+//        else {
+//            VTLOG_ERROR("Failed to launch process " + toString(this->getId()) + ": " + exec.string());
+//        }
         
-    } while(0);
+//    } while(0);
     
     return ret;
 }
@@ -137,7 +138,7 @@ bool Process::preUpdate()
 {
     bool ret = KeyValues::preUpdate(def_tab_processes);
     if (ret) {
-        ret &= _update->whereInt(def_col_prs_prsid, _context.process);
+        ret &= _update->whereInt(def_col_prs_prsid, context().process);
     }
 
     return ret;
@@ -210,7 +211,7 @@ bool Process::updateStateError(const string& lastError, ProcessControl *control)
 
 ProcessControl *Process::getProcessControl()
 {
-    if (_select._resultSet->getPosition() >= 0) {
+    if (_select.resultset().getPosition() >= 0) {
         return new ProcessControl(this->getId(), _instance);
     }
     else {

@@ -1,6 +1,6 @@
 
-#include <vtapi_global.h>
-#include <common/vtapi_compat.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_compat.h>
 
 #if defined(_WIN32)
 #   define VTAPI_WIN

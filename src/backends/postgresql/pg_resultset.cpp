@@ -1,9 +1,8 @@
 
-#include <common/vtapi_global.h>
-#include <common/vtapi_serialize.h>
-#include <backends/vtapi_resultset.h>
-
-#if VTAPI_HAVE_POSTGRESQL
+#include <libpq-fe.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_serialize.h>
+#include "pg_resultset.h"
 
 #define PGRES ((PGresult *)_res)
 
@@ -13,8 +12,8 @@ using namespace std;
 namespace vtapi {
 
 
-PGResultSet::PGResultSet(const PGBackendBase &base, DBTYPES_MAP *dbtypes)
-    : ResultSet(dbtypes), PGBackendBase(base)
+PGResultSet::PGResultSet(DBTYPES_MAP *dbtypes)
+    : ResultSet(dbtypes)
 {
 }
 
@@ -31,12 +30,12 @@ void PGResultSet::newResult(void *res)
 
 int PGResultSet::countRows()
 {
-    return PGRES ? _pg.PQntuples(PGRES) : -1;
+    return PGRES ? PQntuples(PGRES) : -1;
 }
 
 int PGResultSet::countCols()
 {
-    return PGRES ? _pg.PQnfields(PGRES) : -1;
+    return PGRES ? PQnfields(PGRES) : -1;
 }
 
 bool PGResultSet::isOk()
@@ -47,14 +46,14 @@ bool PGResultSet::isOk()
 void PGResultSet::clear()
 {
     if (PGRES) {
-        _pg.PQclear(PGRES);
+        PQclear(PGRES);
         _res = NULL;
     }
 }
 
 TKey PGResultSet::getKey(int col)
 {
-    string name = _pg.PQfname(PGRES, col);
+    string name = PQfname(PGRES, col);
     string type = getKeyType(col);
 
     return TKey(type, name, 0, "");
@@ -64,7 +63,7 @@ TKeys* PGResultSet::getKeys()
 {
     TKeys* keys = new TKeys;
 
-    int cols = _pg.PQnfields(PGRES);
+    int cols = PQnfields(PGRES);
     for (int col = 0; col < cols; col++) {
         keys->push_back(getKey(col));
     }
@@ -74,9 +73,9 @@ TKeys* PGResultSet::getKeys()
 string PGResultSet::getKeyType(const int col)
 {
     string type;
-    if (this->_dbtypes) {
-        DBTYPES_MAP::iterator it = this->_dbtypes->find(_pg.PQftype(PGRES, col));
-        if (it != this->_dbtypes->end()) {
+    if (_pdbtypes) {
+        DBTYPES_MAP::iterator it = _pdbtypes->find(PQftype(PGRES, col));
+        if (it != _pdbtypes->end()) {
             type = (*it).second.name;
         }
     }
@@ -87,9 +86,9 @@ string PGResultSet::getKeyType(const int col)
 short PGResultSet::getKeyTypeLength(const int col, const short def)
 {
     short length = def;
-    if (this->_dbtypes) {
-        DBTYPES_MAP_IT it = this->_dbtypes->find(_pg.PQftype(PGRES, col));
-        if (it != this->_dbtypes->end()) {
+    if (_pdbtypes) {
+        DBTYPES_MAP_IT it = _pdbtypes->find(PQftype(PGRES, col));
+        if (it != _pdbtypes->end()) {
             length = DBTYPE_GETLENGTH((*it).second.type);
         }
     }
@@ -99,7 +98,7 @@ short PGResultSet::getKeyTypeLength(const int col, const short def)
 
 int PGResultSet::getKeyIndex(const string& key)
 {
-    return PGRES ? _pg.PQfnumber(PGRES, key.c_str()) : -1;
+    return PGRES ? PQfnumber(PGRES, key.c_str()) : -1;
 }
 
 // =============== SINGLE VALUES / ARRAYS / VECTORS TEMPLATES ===================
@@ -108,8 +107,8 @@ template<typename TDB, typename TOUT>
 TOUT PGResultSet::getSingleValue(const int col, const char *def)
 {
     TDB value = { 0 };
-    if (!_pqt.PQgetf(PGRES, _pos, def, col, &value)) {
-        VTLOG_WARNING( string("Value is not a ") + def);
+    if (!PQgetf(PGRES, _pos, def, col, &value)) {
+        VTLOG_WARNING(string("Value is not a ") + def);
     }
 
     return (TOUT) value;
@@ -124,12 +123,12 @@ TOUT *PGResultSet::getArray(const int col, int& size, const char *def)
     do {
         char defArr[128];
         sprintf(defArr, "%s[]", def);
-        if (!_pqt.PQgetf(PGRES, _pos, defArr, col, &tmp)) {
+        if (!PQgetf(PGRES, _pos, defArr, col, &tmp)) {
             VTLOG_WARNING( string("Value is not an array of ") + def);
             break;
         }
 
-        size = _pg.PQntuples(tmp.res);
+        size = PQntuples(tmp.res);
         if (size == 0) break;
 
         values = new TOUT [size];
@@ -137,7 +136,7 @@ TOUT *PGResultSet::getArray(const int col, int& size, const char *def)
 
         for (int i = 0; i < size; i++) {
             TDB value = { 0 };
-            if (!_pqt.PQgetf(tmp.res, i, def, 0, &value)) {
+            if (!PQgetf(tmp.res, i, def, 0, &value)) {
                 VTLOG_WARNING( string("Unexpected value in array of ") + def);
                 vt_destructall(values);
                 break;
@@ -149,7 +148,7 @@ TOUT *PGResultSet::getArray(const int col, int& size, const char *def)
     } while (0);
 
     if (!values) size = 0;
-    if (tmp.res) _pg.PQclear(tmp.res);
+    if (tmp.res) PQclear(tmp.res);
 
     return values;
 }
@@ -163,12 +162,12 @@ vector<TOUT> *PGResultSet::getVector(const int col, const char *def)
     do {
         char defArr[128];
         sprintf(defArr, "%s[]", def);
-        if (!_pqt.PQgetf(PGRES, _pos, defArr, col, &tmp)) {
+        if (!PQgetf(PGRES, _pos, defArr, col, &tmp)) {
             VTLOG_WARNING( string("Value is not an array of ") + def);
             break;
         }
 
-        int size = _pg.PQntuples(tmp.res);
+        int size = PQntuples(tmp.res);
         if (size == 0) break;
 
         values = new vector<TOUT>;
@@ -176,7 +175,7 @@ vector<TOUT> *PGResultSet::getVector(const int col, const char *def)
 
         for (int i = 0; i < size; i++) {
             TDB value = { 0 };
-            if (!_pqt.PQgetf(tmp.res, i, def, 0, &value)) {
+            if (!PQgetf(tmp.res, i, def, 0, &value)) {
                 VTLOG_WARNING( string("Unexpected value in array of ") + def);
                 vt_destruct(values);
                 break;
@@ -187,7 +186,7 @@ vector<TOUT> *PGResultSet::getVector(const int col, const char *def)
         }
     } while (0);
 
-    if (tmp.res) _pg.PQclear(tmp.res);
+    if (tmp.res) PQclear(tmp.res);
 
     return values;
 }
@@ -202,7 +201,7 @@ char PGResultSet::getChar(const int col)
 string PGResultSet::getString(const int col)
 {
     // no conversions with libpqtypes, just get the value
-    char *value = _pg.PQgetvalue(PGRES, _pos, col);
+    char *value = PQgetvalue(PGRES, _pos, col);
     return value ? value : "";
 }
 
@@ -622,8 +621,6 @@ vector<double>* PGResultSet::getFloat8V(const int col)
     return values;
 }
 
-#if VTAPI_HAVE_OPENCV
-
 cv::Mat *PGResultSet::getCvMat(const int col)
 {
     PGresult *matres    = NULL;
@@ -639,21 +636,21 @@ cv::Mat *PGResultSet::getCvMat(const int col)
         // get cvmat members
         PGint4 mat_type = 0;
         PGbytea mat_data_bytea = { 0 };
-        if (! _pqt.PQgetf(matres, 0, "%int4 %int4[] %bytea",
+        if (! PQgetf(matres, 0, "%int4 %int4[] %bytea",
                          0, &mat_type, 1, &mat_dims_arr, 2, &mat_data_bytea)) {
             VTLOG_WARNING("Cannot get cvmat header");
             break;
         }
 
         // create dimensions array
-        int mat_dims = _pg.PQntuples(mat_dims_arr.res);
+        int mat_dims = PQntuples(mat_dims_arr.res);
         if (!mat_dims) break;
 
         mat_dim_sizes = new int[mat_dims];
         if (!mat_dim_sizes) break;
 
         for (int i = 0; i < mat_dims; i++) {
-            _pqt.PQgetf(mat_dims_arr.res, i, "%int4", 0, &mat_dim_sizes[i]);
+            PQgetf(mat_dims_arr.res, i, "%int4", 0, &mat_dim_sizes[i]);
         }
 
         // create matrix
@@ -667,53 +664,29 @@ cv::Mat *PGResultSet::getCvMat(const int col)
         memcpy(mat->data, mat_data_bytea.data, mat_data_bytea.len);
     } while (0);
 
-    if (mat_dims_arr.res) _pg.PQclear(mat_dims_arr.res);
+    if (mat_dims_arr.res) PQclear(mat_dims_arr.res);
     vt_destructall(mat_dim_sizes);
-    if (matres) _pg.PQclear(matres);
+    if (matres) PQclear(matres);
 
     return mat;
 }
-#endif
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
-#if VTAPI_HAVE_POSTGRESQL
-
-PGpoint PGResultSet::getPoint(const int col)
+Point PGResultSet::getPoint(const int col)
 {
-    return getSingleValue<PGpoint, PGpoint>(col, "%point");
+    PGpoint pt = getSingleValue<PGpoint, PGpoint>(col, "%point");
+    return *(reinterpret_cast<Point*>(&pt));
 }
 
-PGpoint* PGResultSet::getPointA(const int col, int& size)
+Point* PGResultSet::getPointA(const int col, int& size)
 {
-    return getArray<PGpoint, PGpoint>(col, size, "%point");
+    return reinterpret_cast<Point*>(getArray<PGpoint, PGpoint>(col, size, "%point"));
 }
 
-vector<PGpoint>*  PGResultSet::getPointV(const int col)
+vector<Point>*  PGResultSet::getPointV(const int col)
 {
-    return getVector<PGpoint, PGpoint>(col, "%point");
+    return reinterpret_cast< vector<Point>* >(getVector<PGpoint, PGpoint>(col, "%point"));
 }
-#endif
-
-#if VTAPI_HAVE_POSTGIS
-
-GEOSGeometry* PGResultSet::getGeometry(const int col)
-{
-    GEOSGeometry *geo = NULL;
-    if (! _pqt.PQgetf(PGRES, this->pos, "%geometry", col, &geo)) {
-        VTLOG_WARNING("Value is not a geometry type");
-    }
-    return geo;
-}
-
-GEOSGeometry* PGResultSet::getLineString(const int col)
-{
-    GEOSGeometry *ls = getGeometry(col);
-    if (!ls || GEOSGeomTypeId(ls) != GEOS_LINESTRING) {
-        VTLOG_WARNING("Value is not a linestring");
-    }
-    return ls;
-}
-#endif
 
 // =============== GETTERS - TIMESTAMP =========================================
 
@@ -749,7 +722,7 @@ IntervalEvent *PGResultSet::getIntervalEvent(const int col)
         PGbox ev_region = { 0 };
         PGfloat8 ev_score = 0.0;
         PGbytea ev_data = { 0 };
-        if (! _pqt.PQgetf(evres, 0, "%int4 %int4 %bool %box %float8 %bytea",
+        if (! PQgetf(evres, 0, "%int4 %int4 %bool %box %float8 %bytea",
                          0, &ev_group_id, 1, &ev_class_id, 2, &ev_is_root, 3, &ev_region, 4, &ev_score, 5, &ev_data)) {
             VTLOG_WARNING("Cannot get vtevent header");
             break;
@@ -771,7 +744,7 @@ IntervalEvent *PGResultSet::getIntervalEvent(const int col)
         event->SetUserData(ev_data.data, ev_data.len);
     } while (0);
 
-    if (evres) _pg.PQclear(evres);
+    if (evres) PQclear(evres);
 
     return event;
 }
@@ -789,7 +762,7 @@ ProcessState *PGResultSet::getProcessState(const int col)
         // get event members
         PGvarchar ps_status = NULL, ps_curritem = NULL, ps_lasterror = NULL;
         PGfloat4 ps_progress = 0;
-        if (! _pqt.PQgetf(psres, 0, "%public.pstatus %float4 %varchar %varchar",
+        if (! PQgetf(psres, 0, "%public.pstatus %float4 %varchar %varchar",
                          0, &ps_status, 1, &ps_progress, 2, &ps_curritem, 3, &ps_lasterror)) {
             VTLOG_WARNING("Cannot get pstate header");
             break;
@@ -809,7 +782,7 @@ ProcessState *PGResultSet::getProcessState(const int col)
 
     } while (0);
 
-    if (psres) _pg.PQclear(psres);
+    if (psres) PQclear(psres);
 
     return pstate;
 }
@@ -844,7 +817,7 @@ void *PGResultSet::getBlob(const int col, int &size)
     int size = 0;\
     TYPE *value = FUNC(col, size);\
     if (value) {\
-        ret = toString(value, size, arrayLimit);\
+        ret = toString(value, size, 0);\
     }\
 }
 #define GET_AND_SERIALIZE_ARRAY(TYPE, FUNC) \
@@ -852,7 +825,7 @@ void *PGResultSet::getBlob(const int col, int &size)
     int size = 0;\
     TYPE *values = FUNC(col, size);\
     if (values) {\
-        ret = toString(values, size, arrayLimit);\
+        ret = toString(values, size, 0);\
         vt_destructall(values);\
     }\
 }
@@ -866,14 +839,14 @@ void *PGResultSet::getBlob(const int col, int &size)
     }\
 }
 
-string PGResultSet::getValue(const int col, const int arrayLimit)
+string PGResultSet::getValue(const int col)
 {
     string ret;
 
     DBTYPE dbtype = 0;
-    if (this->_dbtypes) {
-        DBTYPES_MAP_IT it = this->_dbtypes->find(_pg.PQftype(PGRES, col));
-        if (it != this->_dbtypes->end()) {
+    if (_pdbtypes) {
+        DBTYPES_MAP_IT it = _pdbtypes->find(PQftype(PGRES, col));
+        if (it != _pdbtypes->end()) {
             dbtype = (*it).second.type;
         }
     }
@@ -912,9 +885,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
     }
     case DBTYPE_GEO_POINT:
     {
-#if VTAPI_HAVE_POSTGRESQL
-        GET_AND_SERIALIZE_VALUE_AND_ARRAY(PGpoint, getPoint);
-#endif
+        GET_AND_SERIALIZE_VALUE_AND_ARRAY(Point, getPoint);
         break;
     }
     case DBTYPE_GEO_LSEG:
@@ -943,9 +914,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
     }
     case DBTYPE_GEO_GEOMETRY:
     {
-#if VTAPI_HAVE_POSTGIS
-        //TODO: handle PostGIS geometry
-#endif
+        // PostGIS geometry type
         break;
     }
     case DBTYPE_UD_SEQTYPE:
@@ -965,9 +934,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
     }
     case DBTYPE_UD_CVMAT:
     {
-#if VTAPI_HAVE_OPENCV
         GET_AND_SERIALIZE_VALUE_ALLOC(cv::Mat, getCvMat);
-#endif
         break;
     }
     case DBTYPE_UD_EVENT:
@@ -995,35 +962,7 @@ string PGResultSet::getValue(const int col, const int arrayLimit)
     }
 
     return ret;
-
-    //#if VTAPI_HAVE_POSTGIS
-    //                    // PostGIS generic geometry type
-    //                    if (!keytype.compare("geometry")) {
-    //                        GEOSGeometry *geo;
-    //                        GEOSWKTWriter *geo_writer;
-    //                        char * geo_string;
-    //
-    //                        if (!(geo = getGeometry(col))) break;
-    //                        if (!(geo_writer = GEOSWKTWriter_create())) {
-    //                            GEOSGeom_destroy(geo);
-    //                            break;
-    //                        }
-    //
-    //                        //TODO: GEOS 2.2 conflict, if resolved uncomment int precision
-    //                        //GEOSWKTWriter_setRoundingPrecision(geo_writer, precision);
-    //                        geo_string = GEOSWKTWriter_write(geo_writer, geo);
-    //                        valss << geo_string;
-    //
-    //                        GEOSFree(geo_string);
-    //                        GEOSGeom_destroy(geo);
-    //                    }
-    //#endif        
-
 }
 
 
 }
-
-
-#endif // VTAPI_HAVE_POSTGRESQL
-

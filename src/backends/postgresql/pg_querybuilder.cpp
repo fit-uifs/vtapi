@@ -1,9 +1,8 @@
 
 #include <set>
-#include <common/vtapi_global.h>
-#include <backends/vtapi_querybuilder.h>
-
-#if VTAPI_HAVE_POSTGRESQL
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_defs.h>
+#include "pg_querybuilder.h"
 
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"
 #define DEF_NO_TABLE    "!NO_TABLE!"
@@ -16,15 +15,15 @@ using namespace std;
 
 namespace vtapi {
 
-PGQueryBuilder::PGQueryBuilder(const PGBackendBase &base, void *connection, const string& initString)
-    : QueryBuilder (connection, initString), PGBackendBase(base)
+PGQueryBuilder::PGQueryBuilder(PGConnection &connection, const std::string& init_string)
+    : QueryBuilder (connection, init_string)
 {
     _cntParam = 0;
 }
 
 PGQueryBuilder::~PGQueryBuilder()
 {
-    destroyQueryParam(_queryParam);
+    destroyQueryParam(_pquery_param);
 }
 
 void PGQueryBuilder::reset()
@@ -32,25 +31,25 @@ void PGQueryBuilder::reset()
     _listMain.clear();
     _listWhere.clear();
     _cntParam = 0;
-    destroyQueryParam(_queryParam);
+    destroyQueryParam(_pquery_param);
 }
 
 void *PGQueryBuilder::createQueryParam()
 {
-    return (void*) _pqt.PQparamCreate((PGconn *) _connection);
+    return (void*) PQparamCreate((PGconn *) _connection.getConnectionObject());
 }
 
 void PGQueryBuilder::destroyQueryParam(void *param)
 {
     if (param) {
-        _pqt.PQparamClear((PGparam *) param);
+        PQparamClear((PGparam *) param);
     }
 }
 
 void *PGQueryBuilder::duplicateQueryParam(void *param)
 {
     if (param) {
-        return _pqt.PQparamDup((PGparam *) param);
+        return PQparamDup((PGparam *) param);
     }
     else {
         return NULL;
@@ -59,10 +58,10 @@ void *PGQueryBuilder::duplicateQueryParam(void *param)
 
 string PGQueryBuilder::getGenericQuery()
 {
-    if (_initString.empty())
+    if (_init_string.empty())
         VTLOG_WARNING("Empty query");
 
-    return _initString;
+    return _init_string;
 }
 
 string PGQueryBuilder::getSelectQuery(const string& groupby, const string& orderby, const int limit, const int offset)
@@ -70,8 +69,8 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
     string queryString;
 
     // use initialization string if specified
-    if (!_initString.empty()) {
-        queryString = _initString;
+    if (!_init_string.empty()) {
+        queryString = _init_string;
 
         // replace trailing ;
         for (int i = queryString.length() - 1; i >= 0 && queryString[i] == ';'; i--) {
@@ -133,7 +132,7 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
             if ((*it).idParam > 0) {
                 whereStr += constructColumn(key.m_key, key.m_from);
                 whereStr += ' ' + (*it).oper + ' ';
-                whereStr += '$' + toString((*it).idParam);
+                whereStr += '$' + toString<unsigned int>((*it).idParam);
             }
                 // use key as custom expression
             else {
@@ -156,10 +155,10 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
         queryString += "\nORDER BY " + orderby;
     }
     if (limit > 0) {
-        queryString += "\nLIMIT " + toString(limit);
+        queryString += "\nLIMIT " + toString<int>(limit);
     }
     if (offset > 0) {
-        queryString += "\nOFFSET " + toString(offset);
+        queryString += "\nOFFSET " + toString<int>(offset);
     }
     queryString += ';';
 
@@ -168,8 +167,8 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
 
 string PGQueryBuilder::getInsertQuery()
 {
-    if (!_initString.empty()) {
-        return _initString;
+    if (!_init_string.empty()) {
+        return _init_string;
     }
     else {
         string &tab = _defaultTable;
@@ -187,7 +186,7 @@ string PGQueryBuilder::getInsertQuery()
             intoStr     += escapeIdent(key.m_key);
 
             if (it != _listMain.begin()) valuesStr += ',';
-            valuesStr   += '$' + toString((*it).idParam);
+            valuesStr   += '$' + toString<unsigned int>((*it).idParam);
         }
 
         bool bError = tab.empty() || intoStr.empty() || valuesStr.empty();
@@ -213,8 +212,8 @@ string PGQueryBuilder::getUpdateQuery()
     string queryString;
 
     // use initialization string if specified
-    if (!_initString.empty()) {
-        queryString = _initString;
+    if (!_init_string.empty()) {
+        queryString = _init_string;
 
         // replace trailing ; with spaces
         for (int i = queryString.length() - 1; i >= 0; i--) {
@@ -234,7 +233,7 @@ string PGQueryBuilder::getUpdateQuery()
             if (!key.m_from.empty()) tab = key.m_from;
 
             if (!setStr.empty()) setStr += ',';
-            setStr += constructColumnNoTable(key.m_key) + "=$" + toString((*it).idParam);
+            setStr += constructColumnNoTable(key.m_key) + "=$" + toString<unsigned int>((*it).idParam);
         }
 
         bool bError = tab.empty() || setStr.empty();
@@ -262,7 +261,7 @@ string PGQueryBuilder::getUpdateQuery()
             if ((*it).idParam > 0) {
                 whereStr += constructColumn(key.m_key, key.m_from);
                 whereStr += ' ' + (*it).oper + ' ';
-                whereStr += "$" + toString((*it).idParam);
+                whereStr += "$" + toString<int>((*it).idParam);
             }
             else {
                 whereStr += (key.m_key);
@@ -415,12 +414,12 @@ bool PGQueryBuilder::keyArray(const string& key, T* values, const int size,
     do {
         if (key.empty() || !values || size <= 0) break;
 
-        arr.param = _pqt.PQparamCreate((PGconn *) _connection);
+        arr.param = PQparamCreate((PGconn *) _connection.getConnectionObject());
         if (!arr.param) break;
 
         // put the array elements
         for (int i = 0; i < size; ++i) {
-            _pqt.PQputf(arr.param, type, values[i]);
+            PQputf(arr.param, type, values[i]);
         }
 
         idParam = addToParam(type_arr, &arr);
@@ -429,7 +428,7 @@ bool PGQueryBuilder::keyArray(const string& key, T* values, const int size,
         _listMain.push_back(MAIN_ITEM(key, from, idParam));
     } while (0);
 
-    if (arr.param) _pqt.PQparamClear(arr.param);
+    if (arr.param) PQparamClear(arr.param);
 
     return (idParam > 0);
 }
@@ -459,12 +458,12 @@ bool PGQueryBuilder::keyStringA(const string& key, string* values, const int siz
     do {
         if (key.empty() || !values || size <= 0) break;
 
-        arr.param = _pqt.PQparamCreate((PGconn *) _connection);
+        arr.param = PQparamCreate((PGconn *) _connection.getConnectionObject());
         if (!arr.param) break;
 
         // put the array elements
         for (int i = 0; i < size; ++i) {
-            _pqt.PQputf(arr.param, "%varchar", (PGvarchar) values[i].c_str());
+            PQputf(arr.param, "%varchar", (PGvarchar) values[i].c_str());
         }
 
         idParam = addToParam("%varchar[]", &arr);
@@ -473,7 +472,7 @@ bool PGQueryBuilder::keyStringA(const string& key, string* values, const int siz
         _listMain.push_back(MAIN_ITEM(key, from, idParam));
     } while (0);
 
-    if (arr.param) _pqt.PQparamClear(arr.param);
+    if (arr.param) PQparamClear(arr.param);
 
     return (idParam > 0);
 }
@@ -519,8 +518,6 @@ bool PGQueryBuilder::keyTimestamp(const string& key, const time_t& value, const 
     return keySingleValue(key, &ts, "%timestamp", from);
 }
 
-#if VTAPI_HAVE_OPENCV
-
 bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const string& from)
 {
     bool ret = true;
@@ -529,14 +526,14 @@ bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const str
 
     do {
         // create dimensions array
-        mat_dims.param = _pqt.PQparamCreate((PGconn *) _connection);
+        mat_dims.param = PQparamCreate((PGconn *) _connection.getConnectionObject());
         if (!mat_dims.param) {
             ret = false;
             break;
         }
 
         for (int i = 0; i < value.dims; i++) {
-            ret &= (0 != _pqt.PQputf(mat_dims.param, "%int4", value.size[i]));
+            ret &= (0 != PQputf(mat_dims.param, "%int4", value.size[i]));
         }
         if (!ret) break;
 
@@ -544,25 +541,24 @@ bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const str
         PGbytea mat_data = { (int) (value.dataend - value.datastart), (char*) value.data };
 
         // create cvmat composite
-        cvmat = _pqt.PQparamCreate((PGconn *) _connection);
+        cvmat = PQparamCreate((PGconn *) _connection.getConnectionObject());
         if (!cvmat) {
             ret = false;
             break;
         }
 
-        ret = (0 != _pqt.PQputf(cvmat, "%int4 %int4[] %bytea*",
+        ret = (0 != PQputf(cvmat, "%int4 %int4[] %bytea*",
                                 (PGint4) value.type(), &mat_dims, &mat_data));
         if (!ret) break;
 
         ret = keySingleValue(key, cvmat, "%public.cvmat", from);
     } while (0);
 
-    if (cvmat) _pqt.PQparamClear(cvmat);
-    if (mat_dims.param) _pqt.PQparamClear(mat_dims.param);
+    if (cvmat) PQparamClear(cvmat);
+    if (mat_dims.param) PQparamClear(mat_dims.param);
 
     return ret;
 }
-#endif
 
 bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& value, const string& from)
 {
@@ -574,13 +570,13 @@ bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& va
         PGbytea data = { (int) value.user_data_size, (char*) value.user_data };
 
         // create interval event composite
-        event = _pqt.PQparamCreate((PGconn *) _connection);
+        event = PQparamCreate((PGconn *) _connection.getConnectionObject());
         if (!event) {
             ret = false;
             break;
         }
 
-        ret = (0 != _pqt.PQputf(event, "%int4 %int4 %bool %box %float8 %bytea*",
+        ret = (0 != PQputf(event, "%int4 %int4 %bool %box %float8 %bytea*",
                                 (PGint4) value.group_id, (PGint4) value.class_id, (PGbool) value.is_root,
                                 (PGbox *) & value.region, (PGfloat8) value.score, &data));
         if (!ret) break;
@@ -588,7 +584,7 @@ bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& va
         ret = keySingleValue(key, event, "%public.vtevent", from);
     } while (0);
 
-    if (event) _pqt.PQparamClear(event);
+    if (event) PQparamClear(event);
 
     return ret;
 }
@@ -692,10 +688,10 @@ unsigned int PGQueryBuilder::addToParam(const char* type, T value)
     uint ret = 0;
 
     do {
-        if (!_queryParam && !(_queryParam = createQueryParam())) break;
+        if (!_pquery_param && !(_pquery_param = createQueryParam())) break;
 
-        if (_pqt.PQputf((PGparam *) _queryParam, type, value) == 0) {
-            VTLOG_WARNING( "Failed to add value to query: " + toString(value));
+        if (PQputf((PGparam *) _pquery_param, type, value) == 0) {
+            VTLOG_WARNING( "Failed to add value to query: " + toString<T>(value));
             break;
         }
 
@@ -809,17 +805,17 @@ string PGQueryBuilder::constructAlias(const string& column)
 
 string PGQueryBuilder::escapeIdent(const string& ident)
 {
-    char *escaped = _pg.PQescapeIdentifier((PGconn *) _connection, ident.c_str(), ident.length());
+    char *escaped = PQescapeIdentifier((PGconn *) _connection.getConnectionObject(), ident.c_str(), ident.length());
     string ret = escaped;
-    _pg.PQfreemem(escaped);
+    PQfreemem(escaped);
     return ret;
 }
 
 string PGQueryBuilder::escapeLiteral(const string& literal)
 {
-    char *escaped = _pg.PQescapeLiteral((PGconn *) _connection, literal.c_str(), literal.length());
+    char *escaped = PQescapeLiteral((PGconn *) _connection.getConnectionObject(), literal.c_str(), literal.length());
     string ret = escaped;
-    _pg.PQfreemem(escaped);
+    PQfreemem(escaped);
     return ret;
 }
 
@@ -851,6 +847,3 @@ string PGQueryBuilder::UnixTimeToTimestampString(const time_t& utime)
 }
 
 }
-
-#endif
-

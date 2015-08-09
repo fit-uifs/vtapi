@@ -1,8 +1,12 @@
-DEPENDENCIES
+DEPENDENCIES VTAPI
 --------------------------------
 
-CMake 2.8
+CMake 2.8.9
 cmake
+
+POCO 1.61
+libpoco-dev
+http://pocoproject.org
 
 OpenCV 2.4
 libopencv-dev
@@ -14,12 +18,15 @@ libpqtypes 1.5
 libpqtypes-dev
 http://libpqtypes.esilo.com
 
+SQLite 3.8
+libsqlite3-dev
+
+
+DEPENDENCIES VIDEOTERROR
+--------------------------------
+
 Boost 1.54
 libboost-thread-dev libboost-program-options-dev
-
-POCO 1.61
-libpoco-dev
-http://pocoproject.org
 
 Protocol Buffers 2.5
 libprotobuf-dev libprotoc-dev
@@ -30,4 +37,3 @@ http://zeromq.org
 
 rpcz
 https://github.com/thesamet/rpcz
-

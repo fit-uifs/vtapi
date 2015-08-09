@@ -11,9 +11,9 @@
  */
 
 #include <iostream>
-#include <common/vtapi_global.h>
-#include <common/vtapi_serialize.h>
-#include <common/vtapi_logger.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_serialize.h>
+#include <vtapi/common/vtapi_logger.h>
 
 using namespace std;
 
@@ -27,20 +27,21 @@ Logger& Logger::instance()
     return instance;
 }
 
-bool Logger::config(const string& filepath, bool verbose, bool debug)
+bool Logger::config(const string& logfile, bool errors, bool warnings, bool debug)
 {
     bool ret = true;
 
     if (_log.is_open())
         _log.close();
 
-    if (!filepath.empty()) {
-        _log.open(filepath);
+    if (!logfile.empty()) {
+        _log.open(logfile);
         ret = _log.is_open();
     }
     
-    _verbose = verbose;
-    _debug = debug;
+    _log_errors = errors;
+    _log_warnings = warnings;
+    _log_debug = debug;
     
     return ret;
 }
@@ -50,9 +51,24 @@ void Logger::message(const string& line)
     output(cout, line);
 }
 
+void Logger::error(const string& line, const string& where)
+{
+    if (_log_errors) {
+        string message(timestamp());
+        message += " ERROR: ";
+        message += line;
+        if (!where.empty()) {
+            message += " @ ";
+            message += where;
+        }
+
+        output(cerr, message);
+    }
+}
+
 void Logger::warning(const string& line, const string& where)
 {
-    if (_verbose) {
+    if (_log_warnings) {
         string message(timestamp());
         message += " WARNING: ";
         message += line;
@@ -65,22 +81,9 @@ void Logger::warning(const string& line, const string& where)
     }
 }
 
-void Logger::error(const string& line, const string& where)
-{
-    string message(timestamp());
-    message += " ERROR: ";
-    message += line;
-    if (!where.empty()) {
-        message += " @ ";
-        message += where;
-    }
-
-    output(cerr, message);
-}
-
 void Logger::debug(const string& line, const string& where)
 {
-    if (_debug) {
+    if (_log_debug) {
         string message(timestamp());
         message += " DEBUG: ";
         message += line;

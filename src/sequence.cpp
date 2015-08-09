@@ -10,8 +10,9 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <common/vtapi_global.h>
-#include <data/vtapi_sequence.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_defs.h>
+#include <vtapi/data/vtapi_sequence.h>
 
 using namespace std;
 
@@ -24,22 +25,22 @@ namespace vtapi {
 Sequence::Sequence(const Commons& commons, const string& name)
     : KeyValues(commons)
 {
-    if (_context.dataset.empty())
+    if (context().dataset.empty())
         VTLOG_WARNING("Dataset is not specified");
     
     if (!name.empty())
-        _context.sequence = name;
+        context().sequence = name;
 
     _select.from(def_tab_sequences, def_col_all);
     
-    if (!_context.sequence.empty())
-        _select.whereString(def_col_seq_name, _context.sequence);
+    if (!context().sequence.empty())
+        _select.whereString(def_col_seq_name, context().sequence);
 }
 
 Sequence::Sequence(const Commons& commons, const list<string>& names)
     : KeyValues(commons)
 {
-    if (_context.dataset.empty())
+    if (context().dataset.empty())
         VTLOG_WARNING("Dataset is not specified");
     
     _select.from(def_tab_sequences, def_col_all);
@@ -53,8 +54,8 @@ Sequence::~Sequence()
 bool Sequence::next()
 {
     if (KeyValues::next()) {
-        _context.sequence = this->getName();
-        _context.sequenceLocation = this->getString(def_col_seq_location);
+        context().sequence = this->getName();
+        context().sequenceLocation = this->getString(def_col_seq_location);
         return true;
     }
     else {
@@ -79,10 +80,11 @@ string Sequence::getComment()
 
 std::string Sequence::getDataLocation()
 {
-    if (_context.sequenceLocation.empty())
+    //TODO: parent + location
+    if (context().sequenceLocation.empty())
         VTLOG_WARNING("Sequence location is unknown");
     
-    return _config->baseLocation + _context.datasetLocation + _context.sequenceLocation;
+    return config().datasets_dir + context().datasetLocation + context().sequenceLocation;
 }
 
 
@@ -95,7 +97,7 @@ bool Sequence::preUpdate()
 {
     bool ret = KeyValues::preUpdate(def_tab_sequences);
     if (ret) {
-        ret &= _update->whereString(def_col_seq_name, _context.sequence);
+        ret &= _update->whereString(def_col_seq_name, context().sequence);
     }
 
     return ret;
@@ -141,14 +143,10 @@ Video::~Video()
 
 bool Video::next()
 {
-#if VTAPI_HAVE_OPENCV
     closeVideo();
-#endif
     
     return Sequence::next();
 }
-
-#if VTAPI_HAVE_OPENCV
 
 bool Video::openVideo()
 {
@@ -197,7 +195,5 @@ bool Video::updateRealStartTime(const time_t& starttime)
 {
     return (updateTimestamp("vid_time", starttime) && updateExecute());
 }
-
-#endif
 
 }

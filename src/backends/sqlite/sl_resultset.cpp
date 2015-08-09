@@ -1,11 +1,8 @@
 
 #include <sstream>
-#include <common/vtapi_global.h>
-#include <common/vtapi_misc.h>
-#include <common/vtapi_serialize.h>
-#include <backends/vtapi_resultset.h>
-
-#if VTAPI_HAVE_SQLITE
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_serialize.h>
+#include "sl_resultset.h"
 
 #define SLRES ((SLres *)_res)
 
@@ -14,8 +11,8 @@ using namespace std;
 namespace vtapi {
 
 
-SLResultSet::SLResultSet(const SLBackendBase &base)
-    : ResultSet(NULL), SLBackendBase(base)
+SLResultSet::SLResultSet()
+    : ResultSet(NULL)
 {
 }
 
@@ -48,7 +45,7 @@ bool SLResultSet::isOk()
 void SLResultSet::clear()
 {
     if (_res) {
-        _sl.sqlite3_free_table(SLRES->res);
+        sqlite3_free_table(SLRES->res);
         delete (SLRES);
         _res = NULL;
     }
@@ -222,8 +219,6 @@ vector<double>* SLResultSet::getFloat8V(const int col)
     }
 }
 
-#if VTAPI_HAVE_OPENCV
-
 cv::Mat *SLResultSet::getCvMat(const int col)
 {
     cv::Mat *mat = NULL;
@@ -298,44 +293,28 @@ cv::Mat *SLResultSet::getCvMat(const int col)
 
     return mat;
 }
-#endif
 
 // =============== GETTERS - GEOMETRIC TYPES ===============================
-#if VTAPI_HAVE_POSTGRESQL
 
-PGpoint SLResultSet::getPoint(const int col)
+Point SLResultSet::getPoint(const int col)
 {
-    PGpoint point = { 0.0, 0.0 };
-    //    memset(&point, 0, sizeof(PGpoint));
+    Point point = { 0.0, 0.0 };
+    //    memset(&point, 0, sizeof(Point));
     //    if (! PQgetf(select->res, _pos, "%point", col, &point)) {
     //        logger->warning(314, "Value is not a point");
     //    }
     return point;
 }
 
-PGpoint* SLResultSet::getPointA(const int col, int& size)
+Point* SLResultSet::getPointA(const int col, int& size)
 {
     return NULL;
 }
 
-vector<PGpoint>*  SLResultSet::getPointV(const int col)
+vector<Point>*  SLResultSet::getPointV(const int col)
 {
     return NULL;
 }
-#endif
-
-#if VTAPI_HAVE_POSTGIS
-
-GEOSGeometry* SLResultSet::getGeometry(const int col)
-{
-    return NULL;
-}
-
-GEOSGeometry* SLResultSet::getLineString(const int col)
-{
-    return NULL;
-}
-#endif
 
 //// =============== GETTERS - TIMESTAMP =========================================
 
@@ -367,24 +346,13 @@ void *SLResultSet::getBlob(const int col, int &size)
 
 // =======================UNIVERSAL GETTER=====================================
 
-string SLResultSet::getValue(const int col, const int arrayLimit)
+string SLResultSet::getValue(const int col)
 {
     char        *val_c  = SLRES->res[(SLRES->cols)*(_pos + 1) + col];
     string      value   = (val_c && col >= 0) ? val_c : "";
-    size_t      comPos  = 0;
 
-    if (arrayLimit > 0) {
-        for (int lim = 0; lim < arrayLimit; lim++) {
-            comPos = value.find(',', comPos);
-            if (comPos == string::npos) break;
-        }
-        value = value.substr(0, comPos);
-    }
     return value;
 }
 
 
 }
-
-#endif // VTAPI_HAVE_POSTGRESQL
-

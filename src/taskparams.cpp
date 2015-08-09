@@ -1,7 +1,7 @@
 
-#include <common/vtapi_global.h>
-#include <common/vtapi_serialize.h>
-#include <data/vtapi_taskparams.h>
+#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/vtapi_serialize.h>
+#include <vtapi/data/vtapi_taskparams.h>
 
 using namespace std;
 
@@ -207,7 +207,7 @@ string TaskParams::serialize() const
         if (ret.length() > 1) ret += ',';
         ret += kv.first;
         ret += ':';
-        ret += toString(kv.second->type());
+        ret += toString<int>(kv.second->type());
         ret += ':';
         ret += '\"';
         ret += kv.second->toString();

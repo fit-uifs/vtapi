@@ -1,28 +1,26 @@
 
-#include <common/vtapi_global.h>
-#include <backends/vtapi_connection.h>
+#include <cstdarg>
+#include <vtapi/common/vtapi_global.h>
+#include "pg_connection.h"
 
-#if VTAPI_HAVE_POSTGRESQL
+#define PG_FORMAT 1   // postgres data transfer format: 0=text, 1=binary
+
 
 using namespace std;
 
 namespace vtapi {
 
 
-POSTGRES_INTERFACE *g_pg;
-
-PGConnection::PGConnection(const PGBackendBase &base, const string& connectionInfo)
-    : Connection (connectionInfo), PGBackendBase(base)
+PGConnection::PGConnection(const string& connection_string)
+    : Connection (connection_string)
 {
     _conn = NULL;
-    g_pg = &_pg;
 }
 
 PGConnection::~PGConnection()
 {
     disconnect();
-    _pqt.PQclearTypes(_conn);
-    if (g_pg == &_pg) g_pg == NULL;
+    PQclearTypes(_conn);
 }
 
 bool PGConnection::connect()
@@ -32,9 +30,9 @@ bool PGConnection::connect()
     do {
         VTLOG_DEBUG("Connecting to DB... " + _connInfo);
         
-        _conn = _pg.PQconnectdb(_connInfo.c_str());
+        _conn = PQconnectdb(_connInfo.c_str());
         if (!(retval = isConnected())) {
-            const char *errmsgc = _pg.PQerrorMessage(_conn);
+            const char *errmsgc = PQerrorMessage(_conn);
             if (errmsgc)
                 VTLOG_ERROR(errmsgc);
             else
@@ -42,7 +40,7 @@ bool PGConnection::connect()
             break;
         }
 
-        if (!(retval = _pqt.PQinitTypes(_conn))) {
+        if (!(retval = PQinitTypes(_conn))) {
             VTLOG_ERROR("Failed to init libpqtypes");
             break;
         }
@@ -61,14 +59,14 @@ void PGConnection::disconnect ()
     if (isConnected()) {
         VTLOG_DEBUG("Disconnecting DB...");
 
-        _pg.PQfinish(_conn);
+        PQfinish(_conn);
         _conn = NULL;
     }
 }
 
 bool PGConnection::isConnected ()
 {
-    return (_conn && _pg.PQstatus(_conn) == CONNECTION_OK);
+    return (_conn && PQstatus(_conn) == CONNECTION_OK);
 }
 
 bool PGConnection::execute(const string& query, void *param)
@@ -81,29 +79,29 @@ bool PGConnection::execute(const string& query, void *param)
     _errorMessage.clear();
 
     if (param)
-        pgres = _pqt.PQparamExec(_conn, (PGparam *) param, query.c_str(), PG_FORMAT);
+        pgres = PQparamExec(_conn, (PGparam *) param, query.c_str(), PG_FORMAT);
     else
-        pgres = _pqt.PQexecf(_conn, query.c_str(), PG_FORMAT);
+        pgres = PQexecf(_conn, query.c_str(), PG_FORMAT);
 
     if (!pgres) {
-        _errorMessage = _pqt.PQgeterror();
+        _errorMessage = PQgeterror();
         VTLOG_ERROR(_errorMessage);
         retval = false;
     }
     else {
-        int result = _pg.PQresultStatus(pgres);
+        int result = PQresultStatus(pgres);
         if (result != PGRES_TUPLES_OK && result != PGRES_COMMAND_OK) {
-            _errorMessage = _pg.PQerrorMessage(_conn);
+            _errorMessage = PQerrorMessage(_conn);
             VTLOG_ERROR(_errorMessage);
             retval = false;
         }
-        _pg.PQclear(pgres);
+        PQclear(pgres);
     }
 
     return retval;
 }
 
-int PGConnection::fetch(const string& query, void *param, ResultSet *resultSet)
+int PGConnection::fetch(const string& query, void *param, ResultSet &resultSet)
 {
     int retval  = -1;
     PGresult *pgres  = NULL;
@@ -113,26 +111,26 @@ int PGConnection::fetch(const string& query, void *param, ResultSet *resultSet)
     _errorMessage.clear();
 
     if (param)
-        pgres = _pqt.PQparamExec(_conn, (PGparam *) param, query.c_str(), PG_FORMAT);
+        pgres = PQparamExec(_conn, (PGparam *) param, query.c_str(), PG_FORMAT);
     else
-        pgres = _pqt.PQexecf(_conn, query.c_str(), PG_FORMAT);
+        pgres = PQexecf(_conn, query.c_str(), PG_FORMAT);
 
-    resultSet->newResult((void *) pgres);
+    resultSet.newResult((void *) pgres);
 
     if (!pgres) {
-        _errorMessage = _pqt.PQgeterror();
+        _errorMessage = PQgeterror();
         VTLOG_ERROR(_errorMessage);
         retval = -1;
     }
     else {
-        if (_pg.PQresultStatus(pgres) == PGRES_TUPLES_OK) {
-            retval = _pg.PQntuples(pgres);
+        if (PQresultStatus(pgres) == PGRES_TUPLES_OK) {
+            retval = PQntuples(pgres);
         }
-        else if (_pg.PQresultStatus(pgres) == PGRES_COMMAND_OK) {
+        else if (PQresultStatus(pgres) == PGRES_COMMAND_OK) {
             retval = 0;
         }
         else {
-            _errorMessage = _pg.PQerrorMessage(_conn);
+            _errorMessage = PQerrorMessage(_conn);
             VTLOG_ERROR(_errorMessage);
             retval = -1;
         }
@@ -158,57 +156,52 @@ bool PGConnection::loadDBTypes()
 
         // general types registered at all times
         PGregisterType types_userdef[] = {
-#if VTAPI_HAVE_POSTGIS
-            {"geometry", geometry_put, geometry_get },
-#endif
             {"public.seqtype", enum_put, enum_get },
             {"public.inouttype", enum_put, enum_get },
             {"public.pstatus", enum_put, enum_get }
             //{"public.paramtype", enum_put, enum_get}
         };
-        retval = _pqt.PQregisterTypes(_conn,
+        retval = PQregisterTypes(_conn,
                                      PQT_USERDEFINED,
                                      types_userdef,
                                      sizeof (types_userdef) / sizeof (PGregisterType),
                                      0);
         if (!retval) {
-            VTLOG_ERROR(_pqt.PQgeterror());
+            VTLOG_ERROR(PQgeterror());
             break;
         }
 
         // register composites
         PGregisterType types_comp[] = {
-#if VTAPI_HAVE_OPENCV
             {"public.cvmat", NULL, NULL },
-#endif
             {"public.vtevent", NULL, NULL },
             {"public.pstate", NULL, NULL }
         };
-        retval = _pqt.PQregisterTypes(_conn,
+        retval = PQregisterTypes(_conn,
                                      PQT_COMPOSITE,
                                      types_comp,
                                      sizeof (types_comp) / sizeof (PGregisterType),
                                      0);
         if (!retval) {
-            VTLOG_ERROR(_pqt.PQgeterror());
+            VTLOG_ERROR(PQgeterror());
             break;
         }
 
         // now load types definitions
 
         // select type info from catalog
-        pgres = _pqt.PQexecf(_conn,
+        pgres = PQexecf(_conn,
                             "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type",
                              PG_FORMAT);
         if (!pgres) {
-            VTLOG_ERROR(_pqt.PQgeterror());
+            VTLOG_ERROR(PQgeterror());
             retval = false;
             break;
         }
 
         // go through all types and fill dbtypes map
         map<int, int> oid_array;    // oid of array -> oid of elem
-        int ntuples = _pg.PQntuples(pgres);
+        int ntuples = PQntuples(pgres);
         for (int i = 0; i < ntuples; i++) {
             DBTYPE_DEFINITION_T def;
             PGint4 oid;
@@ -217,7 +210,7 @@ bool PGConnection::loadDBTypes()
             PGint2 length;
             PGint4 oid_elem;
 
-            _pqt.PQgetf(pgres, i, "%oid %name %char %int2 %oid",
+            PQgetf(pgres, i, "%oid %name %char %int2 %oid",
                        0, &oid, 1, &name, 2, &cat, 3, &length, 4, &oid_elem);
 
             def.name = name;
@@ -251,7 +244,7 @@ bool PGConnection::loadDBTypes()
 
     } while (0);
 
-    if (pgres) _pg.PQclear(pgres);
+    if (pgres) PQclear(pgres);
 
     return retval;
 }
@@ -382,12 +375,13 @@ short PGConnection::getTypeCategoryFlags(char c, const string &name)
 
 int PGConnection::enum_get(PGtypeArgs *args)
 {
-    char *val   = g_pg->PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
-    int len     = g_pg->PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
+    char *val   = PQgetvalue(args->get.result, args->get.tup_num, args->get.field_num);
+    int len     = PQgetlength(args->get.result, args->get.tup_num, args->get.field_num);
 
     if (val) {
         char **result = va_arg(args->ap, char **);
-        *result = (char *) g_pg->PQresultAlloc((PGresult *) args->get.result, (len + 1) * sizeof (char));
+        *result = (char *) PQresultAlloc((PGresult *) args->get.result,
+                                         (len + 1) * sizeof (char));
         if (*result) {
             copy(val, val + len, *result);
             (*result)[len] = '\0';
@@ -418,7 +412,5 @@ int PGConnection::enum_put(PGtypeArgs *args)
     return len;
 }
 
-
-#endif
 
 }
