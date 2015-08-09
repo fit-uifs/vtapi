@@ -51,11 +51,11 @@ Commons::Commons(const Poco::Util::AbstractConfiguration &config)
         if (config.hasProperty("logfile"))
             _pconfig->logfile = config.getString("logfile");
         if (config.hasProperty("log_errors"))
-            _pconfig->log_errors = config.getBool("log_errors");
+            _pconfig->log_errors = true;
         if (config.hasProperty("log_warnings"))
-            _pconfig->log_warnings= config.getBool("log_warnings");
+            _pconfig->log_warnings = true;
         if (config.hasProperty("log_debug"))
-            _pconfig->log_debug = config.getBool("log_debug");
+            _pconfig->log_debug = true;
 
         // context properties
 
