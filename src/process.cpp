@@ -10,6 +10,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <exception>
 #include <sstream>
 //#include <boost/filesystem.hpp>
 #include <vtapi/common/global.h>
@@ -25,7 +26,7 @@ Process::Process(const Commons& commons, int id)
     : KeyValues(commons)
 {
     if (context().dataset.empty())
-        VTLOG_WARNING("Dataset is not specified");
+        throw exception();
     
     if (id != 0)
         context().process = id;
@@ -50,7 +51,7 @@ Process::Process(const Commons& commons, const list<int>& ids)
     
     _select.from(def_tab_processes, def_col_all);
 
-    _select.whereIntInList(def_col_task_name, ids);
+    _select.whereIntInList(def_col_prs_prsid, ids);
     
     context().task.clear();
 }
@@ -112,6 +113,66 @@ bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
 //    } while(0);
     
     return ret;
+}
+
+Dataset *Process::getParentDataset()
+{
+    Dataset *d = new Dataset(*this);
+    if (d->next()) {
+        return d;
+    }
+    else {
+        delete d;
+        return NULL;
+    }
+}
+
+Task *Process::getParentTask()
+{
+    string taskname;
+    if (!context().task.empty())
+        taskname = context().task;
+    else
+        taskname = this->getString(def_col_prs_taskname);
+
+    if (!taskname.empty()) {
+        Task *t = new Task(*this, taskname);
+        if (t->next()) {
+            return t;
+        }
+        else {
+            delete t;
+            return NULL;
+        }
+    }
+    else {
+        return NULL;
+    }
+}
+
+Method *Process::getParentMethod()
+{
+    Task *t = getParentTask();
+    if (t) {
+        Method *m = t->getParentMethod();
+        delete t;
+        return m;
+    }
+    else {
+        return NULL;
+    }
+}
+
+Sequence *Process::loadAssignedSequences()
+{
+    list<string> seqnames;
+    KeyValues kv(*this, def_tab_processes_seq);
+    kv._select.whereInt(def_col_prss_prsid, context().process);
+    while(kv.next()) {
+        seqnames.push_back(kv.getString(def_col_prss_seqname));
+    }
+
+    return new Sequence(*this, seqnames);
 }
 
 
@@ -212,7 +273,7 @@ bool Process::updateStateError(const string& lastError, ProcessControl *control)
 ProcessControl *Process::getProcessControl()
 {
     if (_select.resultset().getPosition() >= 0) {
-        return new ProcessControl(this->getId(), _instance);
+        return new ProcessControl(context().process, _instance);
     }
     else {
         return NULL;

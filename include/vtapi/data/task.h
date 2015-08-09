@@ -15,10 +15,21 @@
 
 #include <list>
 #include "keyvalues.h"
+#include "dataset.h"
+#include "sequence.h"
+#include "interval.h"
+#include "method.h"
 #include "process.h"
 #include "taskparams.h"
 
 namespace vtapi {
+
+class Dataset;
+class Sequence;
+class Interval;
+class Method;
+class Process;
+
 
 class Task : public KeyValues
 {
@@ -43,45 +54,87 @@ public:
     
     bool next();
     
+    //////////////////////////////////////////////////
+    // getters - associated objects
+    //////////////////////////////////////////////////
+
+    /**
+     * @brief Gets parent dataset object
+     * @return dataset object (initialized)
+     */
+    Dataset *getParentDataset();
+
+    /**
+     * @brief Gets parent method object
+     * @return method object (initialized)
+     */
+    Method *getParentMethod();
+
+    /**
+     * @brief Gets specified sequence object and marks is as "in progress"
+     * @param seqname sequence name
+     * @return sequence object (initialized), NULL on failed lock
+     */
+    Sequence *getSequenceLock(const std::string& seqname);
+
+    /**
+     * Gets tasks which should be completed before running this one
+     * @return task object representing prerequisite tasks for iteration
+     */
+    Task *loadPrerequisiteTasks();
+
+    /**
+     * Gets output intervals of this process
+     * @return output intervals for iteration
+     */
+    Interval *loadOutputData();
+
+    /**
+     * @brief Loads sequences "in progress" for iteration
+     * @return sequence object for iteration
+     */
+    Sequence *loadSequencesInProgress();
+
+    /**
+     * @brief Loads finished sequences for iteration
+     * @return sequence object for iteration
+     */
+    Sequence *loadSequencesFinished();
+
+    /**
+     * Loads method's processes for iteration
+     * @param id   process ID (0 = all processes)
+     * @return process object for iteration
+     */
+    Process *loadProcesses(int id = 0);
+
+    //////////////////////////////////////////////////
+    // getters - SELECT
+    //////////////////////////////////////////////////
+
     /**
      * Gets this task's name
      * @return task name
      */
     std::string getName();
-
-    /**
-     * Gets tasks which should be completed before running this one
-     * @return task object representing prerequisite tasks (for iteration), NULL on error
-     */
-    Task *getPrerequisiteTasks();
     
     /**
      * Gets object containing task parameters
      * @return task parameters map
      */
     TaskParams *getParams();
+
     
-    /**
-     * Gets output intervals of this process
-     * @return output intervals
-     */
-    Interval *getOutputData();
-    
-    //TODO: hotove videa?
-    
+    //////////////////////////////////////////////////
+    // create - INSERT
+    //////////////////////////////////////////////////
+
     /**
      * Creates new process for this task
      * @param seqnames names of sequences for which to process the task
      * @return pointer to the new Process object, NULL on error
      */
     Process* createProcess(const std::list<std::string>& seqnames);
-
-    /**
-     * Loads method's processes for iteration
-     * @param id   process ID (0 = all processes)
-     * @return pointer to the new Process object, NULL on error
-     */
-    Process* loadProcesses(int id = 0);
 
 protected:
     virtual bool preUpdate();

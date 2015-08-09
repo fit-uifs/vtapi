@@ -15,8 +15,12 @@
 #include <list>
 #include "keyvalues.h"
 #include "task.h"
+#include "taskparams.h"
 
 namespace vtapi {
+
+class Task;
+
 
 /**
  * @brief A class which represents methods and gets also their keys

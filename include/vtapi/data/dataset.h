@@ -21,6 +21,13 @@
 
 namespace vtapi {
 
+class Sequence;
+class Video;
+class ImageFolder;
+class Task;
+class Process;
+
+
 /**
  * @brief This class should always be on the path of your program...
  *
@@ -66,7 +73,7 @@ public:
     std::string getName();
 
     /**
-     * Gets full dataset location
+     * Gets dataset location relative to base location (in config file)
      * @return location of the current dataset
      */
     std::string getLocation();
@@ -105,7 +112,7 @@ public:
      * @param comment optional comment
      * @return sequence object, NULL on error
      */
-    Sequence* createSequence(
+    Sequence *createSequence(
         const std::string& name,
         const std::string& location,
         const std::string& type,
@@ -119,7 +126,7 @@ public:
      * @param comment optional comment
      * @return video object, NULL on error
      */
-    Video* createVideo(
+    Video *createVideo(
         const std::string& name,
         const std::string& location,
         const time_t& realtime,
@@ -132,7 +139,7 @@ public:
      * @param comment optional comment
      * @return image folder object, NULL on error
      */
-    ImageFolder* createImageFolder(
+    ImageFolder *createImageFolder(
         const std::string& name,
         const std::string& location,
         const std::string& comment = std::string());
@@ -142,35 +149,70 @@ public:
      * @param name   sequence name (no name = all sequences)
      * @return pointer to the new Sequence object
      */
-    Sequence* loadSequences(const std::string& name = std::string());
+    Sequence *loadSequences(const std::string& name = std::string());
+
+    /**
+     * Loads dataset's sequences for iteration
+     * @param name   sequences names
+     * @return pointer to the new Sequence object
+     */
+    Sequence *loadSequences(const std::list<std::string>& names);
 
     /**
      * Loads dataset's videos (= sequences) for iteration
      * @param name   video (sequence) name (no name = all sequences)
      * @return pointer to the new Video object
      */
-    Video* loadVideos(const std::string& name = std::string());
+    Video *loadVideos(const std::string& name = std::string());
+
+    /**
+     * Loads dataset's videos for iteration
+     * @param name   videos names
+     * @return pointer to the new Video object
+     */
+    Video *loadVideos(const std::list<std::string>& names);
 
     /**
      * Loads dataset's image folders (= sequences) for iteration
      * @param name image folder name (no name = all image folders)
      * @return pointer to the new ImageFolder object
      */
-    ImageFolder* loadImageFolders(const std::string& name = std::string());
+    ImageFolder *loadImageFolders(const std::string& name = std::string());
+
+    /**
+     * Loads dataset's image folders for iteration
+     * @param names   image folders names
+     * @return pointer to the new ImageFolder object
+     */
+    ImageFolder *loadImageFolders(const std::list<std::string>& names);
 
     /**
      * Loads dataset's processing tasks for iteration
      * @param name task name (no name = all tasks)
      * @return pointer to the new Task object
      */
-    Task* loadTasks(const std::string& name = std::string());
+    Task *loadTasks(const std::string& name = std::string());
     
+    /**
+     * Loads dataset's processing tasks for iteration
+     * @param name   tasks names
+     * @return pointer to the new Task object
+     */
+    Task *loadTasks(const std::list<std::string>& names);
+
     /**
      * Loads dataset's processes for iteration
      * @param id   process ID (0 = all processes)
      * @return pointer to the new Process object
      */
-    Process* loadProcesses(int id = 0);
+    Process *loadProcesses(int id = 0);
+
+    /**
+     * Loads dataset's processes for iteration
+     * @param ids   processes IDs
+     * @return pointer to the new Process object
+     */
+    Process *loadProcesses(const std::list<int>& ids);
 
 protected:
     virtual bool preUpdate();

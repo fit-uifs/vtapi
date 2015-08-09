@@ -35,7 +35,7 @@ extern const std::string def_tab_tasks;
 extern const std::string def_tab_processes;
 extern const std::string def_tab_tasks_prereq;
 extern const std::string def_tab_processes_seq;
-
+extern const std::string def_tab_tasks_seq;
 
 extern const std::string def_col_all;
 
@@ -58,6 +58,10 @@ extern const std::string def_col_tprq_taskprereq;
 
 extern const std::string def_col_prss_prsid;
 extern const std::string def_col_prss_seqname;
+
+extern const std::string def_col_tsd_taskname;
+extern const std::string def_col_tsd_seqname;
+extern const std::string def_col_tsd_isdone;
 
 extern const std::string def_col_seq_name;
 extern const std::string def_col_seq_location;

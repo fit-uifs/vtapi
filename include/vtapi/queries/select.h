@@ -100,6 +100,17 @@ public:
     bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = std::string());
     
     /**
+     * This is a WHERE statement construction function for bools
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
+     * @return success
+     * @note It may be called several times.
+     */
+    bool whereBool(const std::string& key, bool value, const std::string& oper = "=", const std::string& from = std::string());
+
+    /**
      * This is a WHERE statement construction function for integers
      * @param key     key to compare with a value
      * @param value   requested value for key
@@ -196,8 +207,9 @@ public:
      */
      bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper = "=");
 
-     bool whereStringInList(const std::string& key, const std::list<std::string>& values);
-     bool whereIntInList(const std::string& key, const std::list<int>& values);
+     bool whereStringInList(const std::string& key, const std::list<std::string>& values, const std::string& from = std::string());
+     bool whereIntInList(const std::string& key, const std::list<int>& values, const std::string& from = std::string());
+
 
 private:
     std::string _groupby;    /**< String used for the GROUP BY statement */

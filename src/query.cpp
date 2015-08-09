@@ -157,6 +157,12 @@ bool Select::whereInt(const string& key, const int value, const string& oper, co
     return querybuilder().whereInt(key, value, oper, from);
 }
 
+bool Select::whereBool(const string& key, bool value, const string& oper, const string& from)
+{
+    _executed = false;
+    return querybuilder().whereBool(key, value, oper, from);
+}
+
 bool Select::whereFloat(const string& key, const float value, const string& oper, const string& from)
 {
     _executed = false;
@@ -205,22 +211,16 @@ bool Select::whereExpression(const string& expression, const string& value, cons
     return querybuilder().whereExpression(expression, value, oper);
 }
 
-bool Select::whereStringInList(const string& key, const list<string>& values)
+bool Select::whereStringInList(const string& key, const list<string>& values, const string& from)
 {
     _executed = false;
-
-    //TODO: whereStringInList
-
-    //return querybuilder().whereExpression(expression, value, oper);
-    return true;
+    return querybuilder().whereStringList(key, values, "IN", from);
 }
 
-bool Select::whereIntInList(const string& key, const list<int>& values)
+bool Select::whereIntInList(const string& key, const list<int>& values, const string& from)
 {
     _executed = false;
-    //TODO: whereIntInList
-
-    return true;
+    return querybuilder().whereIntList(key, values, "IN", from);
 }
 
 
@@ -245,6 +245,12 @@ bool Insert::keyStringA(const string& key, string* values, const int size, const
 {
     _executed = false;
     return querybuilder().keyStringA(key, values, size, from);
+}
+
+bool Insert::keyBool(const string &key, bool value, const string &from)
+{
+    _executed = false;
+    return querybuilder().keyBool(key, value, from);
 }
 
 bool Insert::keyInt(const string& key, int value, const string& from)
@@ -325,6 +331,12 @@ bool Update::setStringA(const string& key, string* values, const int size, const
     return querybuilder().keyStringA(key, values, size, from);
 }
 
+bool Update::setBool(const string& key, bool value, const string& from)
+{
+    _executed = false;
+    return querybuilder().keyBool(key, value, from);
+}
+
 bool Update::setInt(const string& key, int value, const string& from)
 {
     _executed = false;
@@ -377,6 +389,12 @@ bool Update::whereString(const string& key, const string& value, const string& o
 {
     _executed = false;
     return querybuilder().whereString(key, value, oper, from);
+}
+
+bool Update::whereBool(const string& key, bool value, const string& oper, const string& from)
+{
+    _executed = false;
+    return querybuilder().whereBool(key, value, oper, from);
 }
 
 bool Update::whereInt(const string& key, const int value, const string& oper, const string& from)

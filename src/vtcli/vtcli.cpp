@@ -2,6 +2,7 @@
 #include <vtapi/vtapi.h>
 
 using namespace vtapi;
+using namespace std;
 
 
 int main(int argc, char *argv[])
@@ -10,9 +11,22 @@ int main(int argc, char *argv[])
 
     Dataset *ds = vtapi.loadDatasets();
     while (ds->next()) {
-        std::cout << ds->getName() << std::endl;
-    }
+        cout << ds->getName() << endl;
 
+        list<string> seqnames = { "video1", "video2" };
+        Sequence *seq = ds->loadSequences(seqnames);
+        while (seq->next()) {
+            cout << seq->getName() << endl;
+        }
+        delete seq;
+
+        list<int> prsids = { 1, 2 };
+        Process *prs = ds->loadProcesses(prsids);
+        while (prs->next()) {
+            cout << prs->getId() << endl;
+        }
+        delete prs;
+    }
     delete ds;
 
     return 0;

@@ -11,6 +11,7 @@
  */
 
 #include <Poco/Path.h>
+#include <Poco/File.h>
 #include <vtapi/common/global.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/queries/insert.h>
@@ -165,8 +166,8 @@ ImageFolder* Dataset::createImageFolder(const string& name,
     do {
         string fullpath = config().datasets_dir + context().datasetLocation + location;
 
-        if (!Poco::Path(fullpath).isDirectory()) {
-            VTLOG_WARNING( "Cannot open folder: " + fullpath);
+        if (!Poco::File(Poco::Path(fullpath)).isDirectory()) {
+            VTLOG_WARNING("Cannot open folder: " + fullpath);
             break;
         }
 
@@ -191,9 +192,19 @@ Sequence* Dataset::loadSequences(const string& name)
     return (new Sequence(*this, name));
 }
 
+Sequence *Dataset::loadSequences(const list<string> &names)
+{
+    return (new Sequence(*this, names));
+}
+
 Video* Dataset::loadVideos(const string& name)
 {
     return (new Video(*this, name));
+}
+
+Video *Dataset::loadVideos(const list<string> &names)
+{
+    return (new Video(*this, names));
 }
 
 ImageFolder* Dataset::loadImageFolders(const string& name)
@@ -201,14 +212,29 @@ ImageFolder* Dataset::loadImageFolders(const string& name)
     return (new ImageFolder(*this, name));
 }
 
+ImageFolder *Dataset::loadImageFolders(const list<string> &names)
+{
+    return (new ImageFolder(*this, names));
+}
+
 Task* Dataset::loadTasks(const string& name)
 {
     return (new Task(*this, name));
 }
 
+Task *Dataset::loadTasks(const list<string> &names)
+{
+    return (new Task(*this, names));
+}
+
 Process* Dataset::loadProcesses(int id)
 {
     return (new Process(*this, id));
+}
+
+Process *Dataset::loadProcesses(const list<int> &ids)
+{
+    return (new Process(*this, ids));
 }
 
 

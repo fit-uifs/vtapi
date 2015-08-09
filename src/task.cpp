@@ -10,6 +10,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <exception>
 #include <vtapi/common/global.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/queries/insert.h>
@@ -26,7 +27,7 @@ Task::Task(const Commons& commons, const string& name)
     : KeyValues(commons)
 {
     if (context().dataset.empty())
-        VTLOG_WARNING("Dataset is not specified");
+        throw exception();
     
     if (!name.empty())
         context().task = name;
@@ -81,32 +82,131 @@ bool Task::next()
     }
 }
 
+Dataset *Task::getParentDataset()
+{
+    Dataset *d = new Dataset(*this);
+    if (d->next()) {
+        return d;
+    }
+    else {
+        delete d;
+        return NULL;
+    }
+}
+
+Method *Task::getParentMethod()
+{
+    string mtname;
+    if (!context().method.empty())
+        mtname = context().method;
+    else
+        mtname = this->getString(def_col_task_mtname);
+
+    if (!mtname.empty()) {
+        Method *m = new Method(*this, mtname);
+        if (m->next()) {
+            return m;
+        }
+        else {
+            delete m;
+            return NULL;
+        }
+    }
+    else {
+        return NULL;
+    }
+}
+
+Sequence *Task::getSequenceLock(const string &seqname)
+{
+    if (!seqname.empty())
+        return NULL;
+
+    KeyValues kv(*this, def_tab_tasks_seq);
+    kv._select.whereString(def_col_tsd_taskname, context().task);
+    kv._select.whereString(def_col_tsd_seqname, seqname);
+    if (kv.next()) {
+        return NULL;
+    }
+    else {
+        Insert i(*this, def_tab_tasks_seq);
+        i.keyString(def_col_tsd_taskname, context().task);
+        i.keyString(def_col_tsd_seqname, seqname);
+        i.keyBool(def_col_tsd_isdone, false);
+        if (i.execute()) {
+            Sequence *s = new Sequence(*this, seqname);
+            if (s->next()) {
+                return s;
+            }
+            else {
+                delete s;
+                return NULL;
+            }
+        }
+        else
+            return NULL;
+    }
+}
+
+Task *Task::loadPrerequisiteTasks()
+{
+    KeyValues kv(*this, def_tab_tasks_prereq);
+    kv._select.whereString(def_col_tprq_taskname, context().task);
+
+    list<string> tasknames;
+    while(kv.next()) {
+        tasknames.push_back(kv.getString(def_col_tprq_taskprereq));
+    }
+
+    return new Task(*this, tasknames);
+}
+
+Interval *Task::loadOutputData()
+{
+    return new Interval(*this, this->getString(def_col_task_outputs));
+}
+
+Sequence *Task::loadSequencesInProgress()
+{
+    KeyValues kv(*this, def_tab_tasks_seq);
+    kv._select.whereString(def_col_tsd_taskname, context().task);
+    kv._select.whereBool(def_col_tsd_isdone, false);
+
+    list<string> seqnames;
+    while (kv.next()) {
+        seqnames.push_back(kv.getString(def_col_tsd_seqname));
+    }
+
+    return new Sequence(*this, seqnames);
+}
+
+Sequence *Task::loadSequencesFinished()
+{
+    KeyValues kv(*this, def_tab_tasks_seq);
+    kv._select.whereString(def_col_tsd_taskname, context().task);
+    kv._select.whereBool(def_col_tsd_isdone, true);
+
+    list<string> seqnames;
+    while (kv.next()) {
+        seqnames.push_back(kv.getString(def_col_tsd_seqname));
+    }
+
+    return new Sequence(*this, seqnames);
+}
+
+Process* Task::loadProcesses(int id)
+{
+    return (new Process(*this, id));
+}
+
 string Task::getName()
 {
     return this->getString(def_col_task_name);
 }
 
-Task *Task::getPrerequisiteTasks()
-{
-    KeyValues kv(*this, def_tab_tasks_prereq);
-    kv._select.whereString(def_col_tprq_taskname, context().task);
-    
-    list<string> tasknames;
-    while(kv.next()) {
-        tasknames.push_back(kv.getString(def_col_tprq_taskprereq));
-    }
-    
-    return new Task(*this, tasknames);
-}
-
 TaskParams *Task::getParams()
 {
     return new TaskParams(this->getString(def_col_task_params));
-}
-
-Interval *Task::getOutputData()
-{
-    return new Interval(*this, this->getString(def_col_task_outputs));
 }
 
 Process* Task::createProcess(const list<string>& seqnames)
@@ -148,11 +248,6 @@ Process* Task::createProcess(const list<string>& seqnames)
     }
 
     return p;
-}
-
-Process* Task::loadProcesses(int id)
-{
-    return (new Process(*this, id));
 }
 
 bool Task::preUpdate()

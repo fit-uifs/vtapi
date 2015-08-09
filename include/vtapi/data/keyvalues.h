@@ -24,21 +24,11 @@
 
 namespace vtapi {
 
-// forward declarations
-class Dataset;
-class Method;
-class Sequence;
-class Interval;
-class Task;
-class Process;
 
-// ************************************************************************** //
 /**
  * @brief KeyValues storage class
  *
  * @see Basic definition on page @ref BASICDEFS
- *
- * @note Error codes 30*
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz

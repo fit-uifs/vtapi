@@ -16,9 +16,13 @@
 #include <ctime>
 #include <string>
 #include "keyvalues.h"
+#include "dataset.h"
 #include "interval.h"
 
 namespace vtapi {
+
+class Dataset;
+
 
 /**
  * @brief A Sequence class manages videos and images
@@ -66,6 +70,12 @@ public:
     virtual bool next();
 
     /**
+     * @brief Gets parent dataset object
+     * @return dataset object (initialized)
+     */
+    Dataset *getParentDataset();
+
+    /**
      * Gets a sequence name
      * @return string value with the name of the sequence
      */
@@ -77,6 +87,12 @@ public:
      */
     std::string getType();
     
+    /**
+     * Gets sequence location relative to dataset location
+     * @return location of the current sequence
+     */
+    std::string getLocation();
+
     /**
      * Gets sequence comment
      * @return string value

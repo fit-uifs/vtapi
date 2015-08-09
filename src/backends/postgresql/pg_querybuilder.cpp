@@ -15,7 +15,7 @@ using namespace std;
 
 namespace vtapi {
 
-PGQueryBuilder::PGQueryBuilder(PGConnection &connection, const std::string& init_string)
+PGQueryBuilder::PGQueryBuilder(PGConnection &connection, const string& init_string)
     : QueryBuilder (connection, init_string)
 {
     _cntParam = 0;
@@ -477,6 +477,11 @@ bool PGQueryBuilder::keyStringA(const string& key, string* values, const int siz
     return (idParam > 0);
 }
 
+bool PGQueryBuilder::keyBool(const string &key, bool value, const string &from)
+{
+    return keySingleValue(key, value, "%bool", from);
+}
+
 bool PGQueryBuilder::keyInt(const string& key, int value, const string& from)
 {
     return keySingleValue(key, value, "%int4", from);
@@ -611,6 +616,11 @@ bool PGQueryBuilder::whereString(const string& key, const string& value, const s
     return whereSingleValue(key, value.c_str(), "%varchar", oper, from);
 }
 
+bool PGQueryBuilder::whereBool(const string &key, bool value, const string &oper, const string &from)
+{
+    return whereSingleValue(key, value, "%bool", oper, from);
+}
+
 bool PGQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from)
 {
     return whereSingleValue(key, value, "%int4", oper, from);
@@ -633,7 +643,8 @@ bool PGQueryBuilder::whereInouttype(const string& key, const string& value, cons
 
 bool PGQueryBuilder::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
 {
-    return value != ProcessState::STATUS_NONE && whereSingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", oper, from);
+    return value != ProcessState::STATUS_NONE &&
+            whereSingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", oper, from);
 }
 
 bool PGQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
@@ -680,6 +691,34 @@ bool PGQueryBuilder::whereExpression(const string& expression, const string& val
     else {
         return false;
     }
+}
+
+bool PGQueryBuilder::whereStringList(const string &key, const list<string> &values, const string &oper, const string &from)
+{
+    string exp = constructColumn(key, from);
+    string listval;
+    listval += '(';
+    for (auto const& value : values) {
+        if (listval.length() > 1) listval += ',';
+        listval += escapeLiteral(value);
+    }
+    listval += ')';
+
+    _listWhere.push_back(WHERE_ITEM(exp, oper, listval));
+}
+
+bool PGQueryBuilder::whereIntList(const string &key, const list<int> &values, const string &oper, const string &from)
+{
+    string exp = constructColumn(key, from);
+    string listval ;
+    listval += '(';
+    for (auto const& value : values) {
+        if (listval.length() > 1) listval += ',';
+        listval += escapeLiteral(toString<int>(value));
+    }
+    listval += ')';
+
+    _listWhere.push_back(WHERE_ITEM(exp, oper, listval));
 }
 
 template<typename T>

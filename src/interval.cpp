@@ -10,6 +10,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <Poco/Path.h>
 #include <vtapi/common/global.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/data/sequence.h>
@@ -26,7 +27,7 @@ Interval::Interval(const Commons& commons, const string& selection)
     : KeyValues(commons)
 {
     if (context().dataset.empty())
-        VTLOG_WARNING("Dataset is not specified");
+        throw exception();
 
     if (!selection.empty())
         context().selection = selection;
@@ -47,41 +48,97 @@ bool Interval::next()
     return KeyValues::next();
 }
 
+Dataset *Interval::getParentDataset()
+{
+    Dataset *d = new Dataset(*this);
+    if (d->next()) {
+        return d;
+    }
+    else {
+        delete d;
+        return NULL;
+    }
+}
+
+Task *Interval::getParentTask()
+{
+    string taskname;
+    if (!context().task.empty())
+        taskname = context().task;
+    else
+        taskname = this->getString(def_col_int_taskname);
+
+    if (!taskname.empty()) {
+        Task *t = new Task(*this, taskname);
+        if (t->next()) {
+            return t;
+        }
+        else {
+            delete t;
+            return NULL;
+        }
+    }
+    else {
+        return NULL;
+    }
+}
+
+Sequence *Interval::getParentSequence()
+{
+    string seqname;
+    if (!context().sequence.empty())
+        seqname = context().sequence;
+    else
+        seqname = this->getString(def_col_int_seqname);
+
+    if (!seqname.empty()) {
+        Sequence *s = new Sequence(*this, seqname);
+        if (s->next()) {
+            return s;
+        }
+        else {
+            delete s;
+            return NULL;
+        }
+    }
+    else {
+        return NULL;
+    }
+}
+
 int Interval::getId()
 {
     return this->getInt(def_col_int_id);
 }
-string Interval::getTaskName()
-{
-    return this->getString(def_col_int_taskname);
-}
-string Interval::getSequenceName()
-{
-    return this->getString(def_col_int_seqname);
-}
+
 int Interval::getStartTime()
 {
     return this->getInt(def_col_int_t1);
 }
+
 int Interval::getEndTime()
 {
     return this->getInt(def_col_int_t2);
 }
+
 bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
 {
     bool bRet = false;
-    Sequence seq(*this, this->getSequenceName());
-    
-    if (seq.next() && seq.getType().compare(def_val_video) == 0) {
-        time_t start = seq.getTimestamp(def_col_seq_vidtime);
-        float fps = seq.getFloat(def_col_seq_vidfps);
+    Sequence *seq = getParentSequence();
 
-        if (start && fps) {
-            *t1 = start + (time_t)(this->getStartTime() / fps);
-            *t2 = start + (time_t) (this->getEndTime() / fps);
-            bRet = true;
+    if (seq) {
+        if (seq->getType().compare(def_val_video) == 0) {
+            time_t start = seq->getTimestamp(def_col_seq_vidtime);
+            float fps = seq->getFloat(def_col_seq_vidfps);
+
+            if (start && fps) {
+                *t1 = start + (time_t)(this->getStartTime() / fps);
+                *t2 = start + (time_t) (this->getEndTime() / fps);
+                bRet = true;
+            }
         }
-    } 
+        delete seq;
+    }
     
     return bRet;
 }
@@ -175,10 +232,22 @@ bool Image::next()
 
 string Image::getDataLocation()
 {
-    //TODO: parent + dir
+    if (context().datasetLocation.empty()) {
+        Dataset *d = getParentDataset();
+        context().datasetLocation = d->getLocation();
+        delete d;
+    }
 
-    return config().datasets_dir + context().datasetLocation +
-        context().sequenceLocation  + this->getString(def_col_int_imglocation);
+    if (context().sequenceLocation.empty()) {
+        Sequence *s = getParentSequence();
+        context().sequenceLocation = s->getLocation();
+        delete s;
+    }
+
+    return config().datasets_dir + Poco::Path::separator() +
+            context().datasetLocation + Poco::Path::separator() +
+            context().sequenceLocation  + Poco::Path::separator() +
+            this->getString(def_col_int_imglocation);
 }
 
 int Image::getTime()

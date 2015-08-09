@@ -22,6 +22,7 @@ const std::string def_tab_tasks = "tasks";
 const std::string def_tab_processes = "processes";
 const std::string def_tab_tasks_prereq = "rel_tasks_tasks_prerequisities";
 const std::string def_tab_processes_seq = "rel_processes_sequences_assigned";
+const std::string def_tab_tasks_seq = "rel_tasks_sequences_done";
 
 
 const std::string def_col_all = "*";
@@ -45,6 +46,11 @@ const std::string def_col_tprq_taskprereq = "taskprereq";
 
 const std::string def_col_prss_prsid = "prsid";
 const std::string def_col_prss_seqname = "seqname";
+
+const std::string def_col_tsd_taskname = "taskname";
+const std::string def_col_tsd_seqname = "seqname";
+const std::string def_col_tsd_isdone = "is_done";
+
 
 const std::string def_col_seq_name = "seqname";
 const std::string def_col_seq_location = "seqlocation";

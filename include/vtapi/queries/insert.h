@@ -73,6 +73,15 @@ public:
     bool keyStringA(const std::string& key, std::string* values, const int size, const std::string& from = std::string());
     
     /**
+     * @brief Add bool value
+     * @param key key holding values to be inserted
+     * @param value bool value
+     * @param from selection table (optional)
+     * @return success
+     */
+    bool keyBool(const std::string& key, bool value, const std::string& from = std::string());
+
+    /**
      * This is a persistent function to add integer value to a key
      * @param key      key holding value to be inserted
      * @param value    integer to be inserted

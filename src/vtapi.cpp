@@ -16,6 +16,7 @@
 #include <Poco/Util/OptionSet.h>
 #include <Poco/Util/OptionProcessor.h>
 #include <Poco/Path.h>
+#include <Poco/File.h>
 #include <vtapi/common/global.h>
 #include <vtapi/queries/predefined.h>
 #include <vtapi/vtapi.h>
@@ -49,9 +50,19 @@ VTApi::VTApi(int argc, char** argv)
 {
     _pcommons = NULL;
 
-    // define command line options and
-    Poco::Util::OptionSet options;
+    // master configuration
+    Poco::AutoPtr<LayeredConfiguration> config(new LayeredConfiguration());
+    // command line configuration
     Poco::AutoPtr<MapConfiguration> cmd_config(new MapConfiguration());
+    // config file configuration
+    Poco::AutoPtr<PropertyFileConfiguration> file_config(new PropertyFileConfiguration());
+
+    // add configurations to master
+    config->add(cmd_config.get(), -100);
+    config->add(file_config.get(), 100);
+
+    // define command line options
+    Poco::Util::OptionSet options;
     DEFINE_OPTIONS(options, *cmd_config.get());
 
     // load all command line options into configuration
@@ -65,22 +76,18 @@ VTApi::VTApi(int argc, char** argv)
             throw exception();
     }
 
-    // set proper absolute config file path
+    // check config file (given by argument or default one)
     string config_path;
     if (!cmd_config->hasProperty("config"))
         config_path = Poco::Path::current() + "vtapi.conf";
     else
         config_path = Poco::Path(cmd_config->getString("config")).makeAbsolute().toString();
-    cmd_config->setString("config", config_path);
 
-    // load configuration from config file
-    Poco::AutoPtr<PropertyFileConfiguration> file_config(
-                new PropertyFileConfiguration(config_path));
-
-    // add both configs to master config
-    Poco::AutoPtr<LayeredConfiguration> config(new LayeredConfiguration());
-    config->add(cmd_config.get(), -100);
-    config->add(file_config.get(), 100);
+    // load configuration from file if found
+    if (Poco::File(Poco::Path(config_path)).exists()) {
+        cmd_config->setString("config", config_path);
+        file_config->load(config_path);
+    }
 
     _pcommons = new Commons(*config.get());
 }

@@ -48,6 +48,7 @@ public:
     bool keyFrom(const std::string& table, const std::string& column);
     bool keyString(const std::string& key, const std::string& value, const std::string& from);
     bool keyStringA(const std::string& key, std::string* values, const int size, const std::string& from);
+    bool keyBool(const std::string& key, bool value, const std::string& from);
     bool keyInt(const std::string& key, int value, const std::string& from);
     bool keyIntA(const std::string& key, int* values, const int size, const std::string& from);
     bool keyFloat(const std::string& key, float value, const std::string& from);
@@ -60,6 +61,7 @@ public:
     bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from);
 
     bool whereString(const std::string& key, const std::string& value, const std::string& oper, const std::string& from);
+    bool whereBool(const std::string& key, bool value, const std::string& oper, const std::string& from);
     bool whereInt(const std::string& key, const int value, const std::string& oper, const std::string& from);
     bool whereFloat(const std::string& key, const float value, const std::string& oper, const std::string& from);
     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper, const std::string& from);
@@ -69,6 +71,8 @@ public:
     bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper, const std::string& from);
     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper, const std::string& from);
     bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper);
+    bool whereStringList(const std::string& key, const std::list<std::string>& values, const std::string& oper, const std::string& from);
+    bool whereIntList(const std::string& key, const std::list<int>& values, const std::string& oper, const std::string& from);
 
 private:
     typedef struct _MAIN_ITEM

@@ -10,6 +10,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <Poco/Path.h>
 #include <vtapi/common/global.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/data/sequence.h>
@@ -26,7 +27,7 @@ Sequence::Sequence(const Commons& commons, const string& name)
     : KeyValues(commons)
 {
     if (context().dataset.empty())
-        VTLOG_WARNING("Dataset is not specified");
+        throw exception();
     
     if (!name.empty())
         context().sequence = name;
@@ -55,11 +56,23 @@ bool Sequence::next()
 {
     if (KeyValues::next()) {
         context().sequence = this->getName();
-        context().sequenceLocation = this->getString(def_col_seq_location);
+        context().sequenceLocation = this->getLocation();
         return true;
     }
     else {
         return false;
+    }
+}
+
+Dataset *Sequence::getParentDataset()
+{
+    Dataset *d = new Dataset(*this);
+    if (d->next()) {
+        return d;
+    }
+    else {
+        delete d;
+        return NULL;
     }
 }
 
@@ -73,6 +86,11 @@ string Sequence::getType()
     return this->getString(def_col_seq_type);
 }
 
+string Sequence::getLocation()
+{
+    return this->getString(def_col_seq_location);
+}
+
 string Sequence::getComment()
 {
     return this->getString(def_col_seq_comment);
@@ -80,11 +98,15 @@ string Sequence::getComment()
 
 std::string Sequence::getDataLocation()
 {
-    //TODO: parent + location
-    if (context().sequenceLocation.empty())
-        VTLOG_WARNING("Sequence location is unknown");
+    if (context().datasetLocation.empty()) {
+        Dataset *d = getParentDataset();
+        context().datasetLocation = d->getLocation();
+        delete d;
+    }
     
-    return config().datasets_dir + context().datasetLocation + context().sequenceLocation;
+    return config().datasets_dir + Poco::Path::separator() +
+            context().datasetLocation + Poco::Path::separator() +
+            context().sequenceLocation;
 }
 
 
@@ -178,22 +200,22 @@ cv::Mat Video::getNextFrame()
 
 size_t Video::getLength()
 {
-    return getInt("vid_length");
+    return getInt(def_col_seq_vidlength);
 }
 
 float Video::getFPS()
 {
-    return getFloat("vid_fps");
+    return getFloat(def_col_seq_vidfps);
 }
 
 time_t Video::getRealStartTime()
 {
-    return getTimestamp("vid_time");
+    return getTimestamp(def_col_seq_vidtime);
 }
 
 bool Video::updateRealStartTime(const time_t& starttime)
 {
-    return (updateTimestamp("vid_time", starttime) && updateExecute());
+    return (updateTimestamp(def_col_seq_vidtime, starttime) && updateExecute());
 }
 
 }

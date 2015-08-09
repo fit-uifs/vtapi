@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <list>
 #include <opencv2/opencv.hpp>
 #include "../common/tkeyvalue.h"
 #include "../data/processstate.h"
@@ -206,6 +207,16 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
+    virtual bool keyBool(const std::string& key, bool value, const std::string& from) = 0;
+
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     virtual bool keyInt(const std::string& key, int value, const std::string& from) = 0;
 
     /**
@@ -314,6 +325,17 @@ public:
     virtual bool whereString(const std::string& key, const std::string& value, const std::string& oper, const std::string& from) = 0;
 
     /**
+     * This is a WHERE statement construction class for bools
+     * It can be called several times.
+     * @param key key to compare with the value
+     * @param value requested value for key
+     * @param oper comparision operator between key and value
+     * @param from table where the key is situated
+     * @return success
+     */
+    virtual bool whereBool(const std::string& key, bool value, const std::string& oper, const std::string& from) = 0;
+
+    /**
      * This is a WHERE statement construction class for integers
      * It can be called several times.
      * @param key key to compare with the value
@@ -403,6 +425,26 @@ public:
      * @return  success
      */
     virtual bool whereExpression(const std::string& expression, const std::string& value, const std::string& oper) = 0;
+
+    /**
+     * This is a WHERE statement construction function for filters by string list
+     * @param key  key to compare with a value
+     * @param values requested values for key
+     * @param oper comparison operator between key and value
+     * @param from table where the key is situated
+     * @return success
+     */
+    virtual bool whereStringList(const std::string& key, const std::list<std::string>& values, const std::string& oper, const std::string& from) = 0;
+
+    /**
+     * This is a WHERE statement construction function for filters by integer list
+     * @param key  key to compare with a value
+     * @param values requested values for key
+     * @param oper comparison operator between key and value
+     * @param from table where the key is situated
+     * @return success
+     */
+    virtual bool whereIntList(const std::string& key, const std::list<int>& values, const std::string& oper, const std::string& from) = 0;
 
 protected:
     Connection  &_connection;    /**< connection object */

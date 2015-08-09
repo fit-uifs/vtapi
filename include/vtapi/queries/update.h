@@ -74,6 +74,16 @@ public:
     bool setStringA(const std::string& key, std::string* values, const int size, const std::string& from = std::string());
     
     /**
+     * This is a persistent function to set bool value to a key
+     * @param key       key holding value to be set
+     * @param value     integer value to be set
+     * @param from      selection table (optional)
+     * @return success
+     * @note It may be called several times.
+     */
+    bool setBool(const std::string& key, bool value, const std::string& from = std::string());
+
+    /**
      * This is a persistent function to set integer value to a key
      * @param key       key holding value to be set
      * @param value     integer value to be set
@@ -166,6 +176,17 @@ public:
      */
     bool whereString(const std::string& key, const std::string& value, const std::string& oper = "=", const std::string& from = std::string());
     
+    /**
+     * This is a WHERE statement construction function for bools
+     * @param key     key to compare with a value
+     * @param value   requested value for key
+     * @param oper    comparision operator between key and value
+     * @param from    table where the key is situated
+     * @return success
+     * @note It may be called several times.
+     */
+    bool whereBool(const std::string& key, bool value, const std::string& oper = "=", const std::string& from = std::string());
+
     /**
      * This is a WHERE statement construction function for integers
      * @param key     key to compare with a value

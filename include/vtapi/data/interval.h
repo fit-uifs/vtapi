@@ -13,10 +13,17 @@
 #pragma once
 
 #include "keyvalues.h"
+#include "dataset.h"
+#include "sequence.h"
+#include "task.h"
 #include "intervalevent.h"
 
 namespace vtapi {
-    
+
+class Dataset;
+class Sequence;
+class Task;
+
 
 /**
  * @brief Interval is equivalent to an interval of images
@@ -53,22 +60,28 @@ public:
     virtual bool next();
 
     /**
+     * @brief Gets parent dataset object
+     * @return dataset object (initialized)
+     */
+    Dataset *getParentDataset();
+
+    /**
+     * @brief Gets parent task object
+     * @return task object (initialized)
+     */
+    Task *getParentTask();
+
+    /**
+     * @brief Gets parent sequence object
+     * @return sequence object (initialized)
+     */
+    Sequence *getParentSequence();
+
+    /**
      * Gets interval ID
      * @return interval ID
      */
     int getId();
-    
-    /** 
-     * Gets task name of associated task
-     * @return task name
-     */
-    std::string getTaskName();
-    
-    /**
-     * Gets sequence name of parent sequence
-     * @return sequence string
-     */
-    std::string getSequenceName();
     
     /**
      * Gets a start frame of the current interval

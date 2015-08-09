@@ -14,13 +14,20 @@
  
 #include <list>
 #include "keyvalues.h"
+#include "dataset.h"
 #include "sequence.h"
 #include "task.h"
+#include "method.h"
 #include "processstate.h"
 #include "../common/interproc.h"
 #include "../common/compat.h"
 
 namespace vtapi {
+
+class Dataset;
+class Sequence;
+class Task;
+class Method;
 
 /**
  * @brief A class which represents processes and gets information about them
@@ -75,6 +82,35 @@ public:
      */
     bool run(bool async = false, bool suspended = false, ProcessControl **ctrl = NULL);
     
+
+    //////////////////////////////////////////////////
+    // getters - associated objects
+    //////////////////////////////////////////////////
+
+    /**
+     * @brief Gets parent dataset object
+     * @return dataset object (initialized)
+     */
+    Dataset *getParentDataset();
+
+    /**
+     * @brief Gets parent task object
+     * @return task object (initialized)
+     */
+    Task *getParentTask();
+
+    /**
+     * @brief Gets parent method object
+     * @return method object (initialized)
+     */
+    Method *getParentMethod();
+
+    /**
+     * @brief Loads sequences which should be processed
+     * @return sequences object for iteration
+     */
+    Sequence *loadAssignedSequences();
+
     //////////////////////////////////////////////////
     // getters - SELECT
     //////////////////////////////////////////////////

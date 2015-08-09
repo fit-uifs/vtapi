@@ -336,6 +336,16 @@ bool SLQueryBuilder::keyStringA(const string& key, string* values, const int siz
     }
 }
 
+bool SLQueryBuilder::keyBool(const string &key, bool value, const string &from)
+{
+    if (key.empty()) return false;
+    else {
+        TKeyValue<bool> *tk = new TKeyValue<bool>("bool", key, value, from);
+        _keyValuesMain.push_back(tk);
+        return true;
+    }
+}
+
 bool SLQueryBuilder::keyInt(const string& key, int value, const string& from)
 {
     if (key.empty()) return false;
@@ -448,6 +458,17 @@ bool SLQueryBuilder::whereString(const string& key, const string& value, const s
     }
 }
 
+bool SLQueryBuilder::whereBool(const string &key, bool value, const string &oper, const string &from)
+{
+    if (key.empty()) return false;
+    else {
+        TKeyValue<bool> *tk = new TKeyValue<bool>("bool", key, value, from);
+        _keyValuesWhere.push_back(tk);
+        _opers.push_back(oper);
+        return true;
+    }
+}
+
 bool SLQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from)
 {
     if (key.empty()) return false;
@@ -525,6 +546,16 @@ bool SLQueryBuilder::whereRegion(const string& key, const IntervalEvent::box& va
 }
 
 bool SLQueryBuilder::whereExpression(const string& expression, const string& value, const string& oper)
+{
+    return false;
+}
+
+bool SLQueryBuilder::whereStringList(const string &key, const std::list<string> &values, const string &oper, const string &from)
+{
+    return false;
+}
+
+bool SLQueryBuilder::whereIntList(const string &key, const std::list<int> &values, const string &oper, const string &from)
 {
     return false;
 }
