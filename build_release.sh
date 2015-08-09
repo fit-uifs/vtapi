@@ -8,9 +8,10 @@ INSTALL_PREFIX="/usr/local"
 MODULES_DIR="lib"
 
 
-mkdir -p build
+mkdir -p build/release
 mkdir -p $INSTALL_PREFIX
-cd build
-cmake .. -DCMAKE_BUILD_TYPE:STRING="Release" -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX -DVTAPI_MODULES_DIR=$MODULES_DIR
+cd build/release
+cmake ../.. -DCMAKE_BUILD_TYPE:STRING="Release" -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX -DVTAPI_MODULES_DIR=$MODULES_DIR
 make
 make install
+#sudo make install

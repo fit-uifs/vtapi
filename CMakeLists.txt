@@ -9,7 +9,9 @@ set (VTAPI_SOVERSION 3)
 set(VTAPI_MODULES_DIR "modules" CACHE STRING "where to install VTApi modules")
 
 # global g++ flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DBOOST_DATE_TIME_NO_LIB" )
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DBOOST_DATE_TIME_NO_LIB")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DVTAPI_DEBUG")
+
 
 # find POCO libraries
 find_library(PocoFoundation_LIBRARY PocoFoundation /usr/local/lib)
