@@ -11,6 +11,7 @@
  */
 
 #include <exception>
+#include <Poco/Util/LayeredConfiguration.h>
 #include <Poco/Util/PropertyFileConfiguration.h>
 #include <Poco/Util/OptionSet.h>
 #include <Poco/Util/OptionProcessor.h>
@@ -22,6 +23,7 @@
 using namespace std;
 using Poco::Util::MapConfiguration;
 using Poco::Util::PropertyFileConfiguration;
+using Poco::Util::LayeredConfiguration;
 
 namespace vtapi {
 
@@ -47,38 +49,40 @@ VTApi::VTApi(int argc, char** argv)
 {
     _pcommons = NULL;
 
+    // define command line options and
     Poco::Util::OptionSet options;
     Poco::AutoPtr<MapConfiguration> cmd_config(new MapConfiguration());
-
-    // define command line options
-    DEFINE_OPTIONS(options, *cmd_config);
+    DEFINE_OPTIONS(options, *cmd_config.get());
 
     // load all command line options into configuration
     Poco::Util::OptionProcessor opt_proc(options);
     string opt_name, opt_arg;
     for (int i = 1; i < argc; i++) {
         bool ok = opt_proc.process(argv[i], opt_name, opt_arg);
-        if (!ok) throw exception();
+        if (ok)
+            cmd_config->setString(opt_name, opt_arg);
+        else
+            throw exception();
     }
 
-    // set default config file
+    // set proper absolute config file path
+    string config_path;
     if (!cmd_config->hasProperty("config"))
-        cmd_config->setString("config", Poco::Path::current() + "vtapi.conf");
+        config_path = Poco::Path::current() + "vtapi.conf";
+    else
+        config_path = Poco::Path(cmd_config->getString("config")).makeAbsolute().toString();
+    cmd_config->setString("config", config_path);
 
     // load configuration from config file
     Poco::AutoPtr<PropertyFileConfiguration> file_config(
-                new PropertyFileConfiguration(cmd_config->getString("config")));
+                new PropertyFileConfiguration(config_path));
 
-    // override config file with command line
-    string opt_raw;
-    MapConfiguration::Keys keys;
-    cmd_config->keys(keys);
-    for (auto const &key : keys) {
-        cmd_config->getRawString(key, opt_raw);
-        file_config->setString(key, opt_raw);
-    }
+    // add both configs to master config
+    Poco::AutoPtr<LayeredConfiguration> config(new LayeredConfiguration());
+    config->add(cmd_config.get(), -100);
+    config->add(file_config.get(), 100);
 
-    _pcommons = new Commons(*file_config);
+    _pcommons = new Commons(*config.get());
 }
 
 VTApi::VTApi(const string& configFile)

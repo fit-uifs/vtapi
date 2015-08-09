@@ -33,6 +33,10 @@ Commons::Commons(const Poco::Util::AbstractConfiguration &config)
 
         // required properties
 
+        if (config.hasProperty("config"))
+            _pconfig->configfile = config.getString("config");
+        else
+            throw exception();
         if (config.hasProperty("datasets_dir"))
             _pconfig->datasets_dir = config.getString("datasets_dir");
         else
@@ -50,12 +54,9 @@ Commons::Commons(const Poco::Util::AbstractConfiguration &config)
 
         if (config.hasProperty("logfile"))
             _pconfig->logfile = config.getString("logfile");
-        if (config.hasProperty("log_errors"))
-            _pconfig->log_errors = true;
-        if (config.hasProperty("log_warnings"))
-            _pconfig->log_warnings = true;
-        if (config.hasProperty("log_debug"))
-            _pconfig->log_debug = true;
+        _pconfig->log_errors = config.hasProperty("log_errors");
+        _pconfig->log_warnings = config.hasProperty("log_warnings");
+        _pconfig->log_debug = config.hasProperty("log_debug");
 
         // context properties
 
