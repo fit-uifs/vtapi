@@ -1,5 +1,5 @@
 
-#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/global.h>
 #include "sl_connection.h"
 
 // sqlite database files

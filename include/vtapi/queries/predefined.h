@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "vtapi_query.h"
-#include "../data/vtapi_methodkeys.h"
-#include "../data/vtapi_methodparams.h"
+#include "query.h"
+#include "../data/methodkeys.h"
+#include "../data/methodparams.h"
 
 namespace vtapi {
 

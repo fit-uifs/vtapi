@@ -10,11 +10,11 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_defs.h>
-#include <vtapi/queries/vtapi_insert.h>
-#include <vtapi/queries/vtapi_predefined.h>
-#include <vtapi/data/vtapi_task.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/defs.h>
+#include <vtapi/queries/insert.h>
+#include <vtapi/queries/predefined.h>
+#include <vtapi/data/task.h>
 
 
 using namespace std;

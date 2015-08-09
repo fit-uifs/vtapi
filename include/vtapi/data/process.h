@@ -13,12 +13,12 @@
 #pragma once
  
 #include <list>
-#include "vtapi_keyvalues.h"
-#include "vtapi_sequence.h"
-#include "vtapi_task.h"
-#include "vtapi_processstate.h"
-#include "../common/vtapi_interproc.h"
-#include "../common/vtapi_compat.h"
+#include "keyvalues.h"
+#include "sequence.h"
+#include "task.h"
+#include "processstate.h"
+#include "../common/interproc.h"
+#include "../common/compat.h"
 
 namespace vtapi {
 

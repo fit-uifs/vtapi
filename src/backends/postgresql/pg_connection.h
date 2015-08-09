@@ -2,7 +2,7 @@
 
 #include <libpq-fe.h>
 #include <libpqtypes.h>
-#include <vtapi/plugins/vtapi_backend_connection.h>
+#include <vtapi/plugins/backend_connection.h>
 
 namespace vtapi {
 

@@ -2,8 +2,8 @@
 
 #include <string>
 #include <utility>
-#include "vtapi_methodparams.h"
-#include "../common/vtapi_baseparams.h"
+#include "methodparams.h"
+#include "../common/baseparams.h"
 
 
 namespace vtapi {

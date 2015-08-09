@@ -14,9 +14,9 @@
 #pragma once
 
 #include <list>
-#include "vtapi_keyvalues.h"
-#include "vtapi_process.h"
-#include "vtapi_taskparams.h"
+#include "keyvalues.h"
+#include "process.h"
+#include "taskparams.h"
 
 namespace vtapi {
 

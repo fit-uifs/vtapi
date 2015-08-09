@@ -15,8 +15,8 @@
 #include <Poco/Util/OptionSet.h>
 #include <Poco/Util/OptionProcessor.h>
 #include <Poco/Path.h>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/queries/vtapi_predefined.h>
+#include <vtapi/common/global.h>
+#include <vtapi/queries/predefined.h>
 #include <vtapi/vtapi.h>
 
 using namespace std;

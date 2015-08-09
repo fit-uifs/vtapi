@@ -13,10 +13,10 @@
 #pragma once
 
 #include <ctime>
-#include "../data/vtapi_processstate.h"
-#include "../data/vtapi_intervalevent.h"
-#include "../data/vtapi_commons.h"
-#include "vtapi_query.h"
+#include "../data/processstate.h"
+#include "../data/intervalevent.h"
+#include "../data/commons.h"
+#include "query.h"
 
 namespace vtapi {
     

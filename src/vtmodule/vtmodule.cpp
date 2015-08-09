@@ -1,5 +1,5 @@
 #include <iostream>
-#include <vtapi/plugins/vtapi_module_interface.h>
+#include <vtapi/plugins/module_interface.h>
 #include <vtapi/vtapi.h>
 
 using namespace vtapi;
@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 }
 
 //#include <vtapi.h>
-//#include <modules/vtapi_methodinterface.h>
+//#include <modules/methodinterface.h>
 
 //#include <Poco/ClassLoader.h>
 //#include <Poco/Manifest.h>

@@ -1,7 +1,7 @@
 
 #include <libpq-fe.h>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_serialize.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/serialize.h>
 #include "pg_resultset.h"
 
 #define PGRES ((PGresult *)_res)

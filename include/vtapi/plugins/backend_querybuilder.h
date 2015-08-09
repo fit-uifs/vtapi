@@ -2,12 +2,12 @@
 
 #include <string>
 #include <opencv2/opencv.hpp>
-#include "../common/vtapi_tkeyvalue.h"
-#include "../data/vtapi_processstate.h"
-#include "../data/vtapi_intervalevent.h"
-#include "../data/vtapi_methodkeys.h"
-#include "../data/vtapi_methodparams.h"
-#include "vtapi_backend_connection.h"
+#include "../common/tkeyvalue.h"
+#include "../data/processstate.h"
+#include "../data/intervalevent.h"
+#include "../data/methodkeys.h"
+#include "../data/methodparams.h"
+#include "backend_connection.h"
 
 namespace vtapi {
 

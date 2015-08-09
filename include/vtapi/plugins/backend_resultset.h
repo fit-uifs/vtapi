@@ -4,10 +4,10 @@
 #include <string>
 #include <vector>
 #include <opencv2/opencv.hpp>
-#include "../common/vtapi_types.h"
-#include "../common/vtapi_tkey.h"
-#include "../data/vtapi_intervalevent.h"
-#include "../data/vtapi_processstate.h"
+#include "../common/types.h"
+#include "../common/tkey.h"
+#include "../data/intervalevent.h"
+#include "../data/processstate.h"
 
 namespace vtapi {
 

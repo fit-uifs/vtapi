@@ -1,6 +1,6 @@
 
 #include <cstdarg>
-#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/global.h>
 #include "pg_connection.h"
 
 #define PG_FORMAT 1   // postgres data transfer format: 0=text, 1=binary

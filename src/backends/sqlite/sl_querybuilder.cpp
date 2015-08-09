@@ -1,5 +1,5 @@
 
-#include <vtapi/common/vtapi_global.h>
+#include <vtapi/common/global.h>
 #include "sl_querybuilder.h"
 
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"

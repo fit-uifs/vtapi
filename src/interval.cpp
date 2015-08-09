@@ -10,10 +10,10 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_defs.h>
-#include <vtapi/data/vtapi_sequence.h>
-#include <vtapi/data/vtapi_interval.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/defs.h>
+#include <vtapi/data/sequence.h>
+#include <vtapi/data/interval.h>
 
 using namespace std;
 

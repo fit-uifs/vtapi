@@ -14,13 +14,13 @@
 
 #include <ctime>
 #include <vector>
-#include "vtapi_commons.h"
-#include "vtapi_intervalevent.h"
-#include "vtapi_processstate.h"
-#include "../common/vtapi_tkey.h"
-#include "../common/vtapi_types.h"
-#include "../queries/vtapi_select.h"
-#include "../queries/vtapi_update.h"
+#include "commons.h"
+#include "intervalevent.h"
+#include "processstate.h"
+#include "../common/tkey.h"
+#include "../common/types.h"
+#include "../queries/select.h"
+#include "../queries/update.h"
 
 namespace vtapi {
 

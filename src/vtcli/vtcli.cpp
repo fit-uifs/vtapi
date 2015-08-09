@@ -1,5 +1,4 @@
 #include <iostream>
-#include <vtapi/plugins/vtapi_module_interface.h>
 #include <vtapi/vtapi.h>
 
 using namespace vtapi;

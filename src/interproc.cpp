@@ -1,8 +1,8 @@
 
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_compat.h>
-#include <vtapi/common/vtapi_serialize.h>
-#include <vtapi/common/vtapi_interproc.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/compat.h>
+#include <vtapi/common/serialize.h>
+#include <vtapi/common/interproc.h>
 
 
 #define DEF_CONNECT_ATTEMPTS    10

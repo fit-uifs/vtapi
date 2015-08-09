@@ -1,6 +1,6 @@
 
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/data/vtapi_processstate.h>
+#include <vtapi/common/global.h>
+#include <vtapi/data/processstate.h>
 
 using namespace std;
 

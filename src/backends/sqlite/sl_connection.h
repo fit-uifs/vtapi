@@ -1,7 +1,7 @@
 #pragma once
 
 #include <sqlite3.h>
-#include <vtapi/plugins/vtapi_backend_connection.h>
+#include <vtapi/plugins/backend_connection.h>
 #include "sl_resultset.h"
 
 namespace vtapi {

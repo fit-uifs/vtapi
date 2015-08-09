@@ -12,9 +12,9 @@
 
 #include <sstream>
 //#include <boost/filesystem.hpp>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_defs.h>
-#include <vtapi/data/vtapi_process.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/defs.h>
+#include <vtapi/data/process.h>
 
 using namespace std;
 

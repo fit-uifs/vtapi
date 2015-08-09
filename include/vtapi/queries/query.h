@@ -12,9 +12,9 @@
 
 #pragma once
 
-#include "../data/vtapi_commons.h"
-#include "../plugins/vtapi_backend_querybuilder.h"
-#include "../plugins/vtapi_backend_resultset.h"
+#include "../data/commons.h"
+#include "../plugins/backend_querybuilder.h"
+#include "../plugins/backend_resultset.h"
 
 namespace vtapi {
     

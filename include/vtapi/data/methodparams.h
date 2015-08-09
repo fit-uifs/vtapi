@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <utility>
-#include "../common/vtapi_baseparams.h"
+#include "../common/baseparams.h"
 
 namespace vtapi {
 

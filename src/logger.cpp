@@ -11,9 +11,9 @@
  */
 
 #include <iostream>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_serialize.h>
-#include <vtapi/common/vtapi_logger.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/serialize.h>
+#include <vtapi/common/logger.h>
 
 using namespace std;
 

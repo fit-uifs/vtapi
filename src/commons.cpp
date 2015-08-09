@@ -12,8 +12,8 @@
 
 #include <exception>
 #include <Poco/Manifest.h>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/data/vtapi_commons.h>
+#include <vtapi/common/global.h>
+#include <vtapi/data/commons.h>
 
 using namespace std;
 

@@ -12,11 +12,11 @@
 
 #pragma once
 
-#include "data/vtapi_dataset.h"
-#include "data/vtapi_method.h"
-#include "data/vtapi_sequence.h"
-#include "data/vtapi_task.h"
-#include "data/vtapi_process.h"
+#include "data/dataset.h"
+#include "data/method.h"
+#include "data/sequence.h"
+#include "data/task.h"
+#include "data/process.h"
 
 
 /**

@@ -14,8 +14,8 @@
 
 #include <string>
 #include <vector>
-#include "vtapi_serialize.h"
-#include "vtapi_tkey.h"
+#include "serialize.h"
+#include "tkey.h"
 
 namespace vtapi {
 

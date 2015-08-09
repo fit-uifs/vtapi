@@ -11,11 +11,11 @@
  */
 
 #include <functional>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_defs.h>
-#include <vtapi/queries/vtapi_insert.h>
-#include <vtapi/queries/vtapi_predefined.h>
-#include <vtapi/data/vtapi_method.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/defs.h>
+#include <vtapi/queries/insert.h>
+#include <vtapi/queries/predefined.h>
+#include <vtapi/data/method.h>
 
 using namespace std;
 

@@ -11,10 +11,10 @@
  */
 
 #include <Poco/Path.h>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_defs.h>
-#include <vtapi/queries/vtapi_insert.h>
-#include <vtapi/data/vtapi_dataset.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/defs.h>
+#include <vtapi/queries/insert.h>
+#include <vtapi/data/dataset.h>
 
 using namespace std;
 

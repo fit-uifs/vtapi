@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../common/vtapi_types.h"
-#include "vtapi_backend_connection.h"
-#include "vtapi_backend_querybuilder.h"
-#include "vtapi_backend_resultset.h"
+#include "../common/types.h"
+#include "backend_connection.h"
+#include "backend_querybuilder.h"
+#include "backend_resultset.h"
 
 
 namespace vtapi {

@@ -1,7 +1,7 @@
 
 #include <cstring>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/data/vtapi_intervalevent.h>
+#include <vtapi/common/global.h>
+#include <vtapi/data/intervalevent.h>
 
 namespace vtapi {
 

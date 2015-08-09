@@ -18,8 +18,8 @@
 #include <mutex>
 #include <condition_variable>
 #include <boost/interprocess/ipc/message_queue.hpp>
-#include "vtapi_compat.h"
-#include "../data/vtapi_processstate.h"
+#include "compat.h"
+#include "../data/processstate.h"
 
 namespace vtapi {
 

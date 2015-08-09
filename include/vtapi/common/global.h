@@ -15,7 +15,7 @@
 
 
 // global logging
-#include "vtapi_logger.h"
+#include "logger.h"
 
 
 // delete macro helper

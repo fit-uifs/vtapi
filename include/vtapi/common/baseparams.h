@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <utility>
-#include "../common/vtapi_serialize.h"
+#include "../common/serialize.h"
 
 namespace vtapi {
 

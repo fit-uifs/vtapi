@@ -1,6 +1,6 @@
 #pragma once
 
-#include <vtapi/plugins/vtapi_backend_interface.h>
+#include <vtapi/plugins/backend_interface.h>
 
 namespace vtapi {
 

@@ -1,7 +1,7 @@
 
 #include <set>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/common/vtapi_defs.h>
+#include <vtapi/common/global.h>
+#include <vtapi/common/defs.h>
 #include "pg_querybuilder.h"
 
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"

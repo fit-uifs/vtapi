@@ -15,7 +15,7 @@
 #include <string>
 #include <Poco/Util/AbstractConfiguration.h>
 #include <Poco/ClassLoader.h>
-#include "../plugins/vtapi_backend_interface.h"
+#include "../plugins/backend_interface.h"
 
 namespace vtapi {
 

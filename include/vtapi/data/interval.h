@@ -12,8 +12,8 @@
 
 #pragma once
 
-#include "vtapi_keyvalues.h"
-#include "vtapi_intervalevent.h"
+#include "keyvalues.h"
+#include "intervalevent.h"
 
 namespace vtapi {
     

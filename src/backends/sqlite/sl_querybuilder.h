@@ -1,9 +1,9 @@
 #pragma once
 
 #include <sqlite3.h>
-#include <vtapi/common/vtapi_tkeyvalue.h>
+#include <vtapi/common/tkeyvalue.h>
 #include "sl_connection.h"
-#include <vtapi/plugins/vtapi_backend_querybuilder.h>
+#include <vtapi/plugins/backend_querybuilder.h>
 
 namespace vtapi {
 

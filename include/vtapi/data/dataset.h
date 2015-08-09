@@ -14,10 +14,10 @@
 
 #include <string>
 #include <list>
-#include "vtapi_keyvalues.h"
-#include "vtapi_sequence.h"
-#include "vtapi_task.h"
-#include "vtapi_process.h"
+#include "keyvalues.h"
+#include "sequence.h"
+#include "task.h"
+#include "process.h"
 
 namespace vtapi {
 

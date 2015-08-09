@@ -15,8 +15,8 @@
 
 #include <ctime>
 #include <string>
-#include "vtapi_keyvalues.h"
-#include "vtapi_interval.h"
+#include "keyvalues.h"
+#include "interval.h"
 
 namespace vtapi {
 

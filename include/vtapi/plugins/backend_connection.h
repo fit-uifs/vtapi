@@ -1,8 +1,8 @@
 #pragma once
 
 #include <string>
-#include "../common/vtapi_types.h"
-#include "vtapi_backend_resultset.h"
+#include "../common/types.h"
+#include "backend_resultset.h"
 
 
 namespace vtapi {

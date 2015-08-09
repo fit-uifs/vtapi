@@ -13,8 +13,8 @@
 #pragma once
 
 #include <list>
-#include "vtapi_keyvalues.h"
-#include "vtapi_task.h"
+#include "keyvalues.h"
+#include "task.h"
 
 namespace vtapi {
 

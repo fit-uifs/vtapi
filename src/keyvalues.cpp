@@ -11,8 +11,8 @@
  */
 
 #include <iostream>
-#include <vtapi/common/vtapi_global.h>
-#include <vtapi/data/vtapi_keyvalues.h>
+#include <vtapi/common/global.h>
+#include <vtapi/data/keyvalues.h>
 
 using namespace std;
 

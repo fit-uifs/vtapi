@@ -1,5 +1,5 @@
 
-#include <vtapi/common/vtapi_defs.h>
+#include <vtapi/common/defs.h>
 
 namespace vtapi {
 

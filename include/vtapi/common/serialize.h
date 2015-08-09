@@ -17,9 +17,9 @@
 #include <sstream>
 #include <vector>
 #include <opencv2/opencv.hpp>
-#include "vtapi_types.h"
-#include "../data/vtapi_intervalevent.h"
-#include "../data/vtapi_processstate.h"
+#include "types.h"
+#include "../data/intervalevent.h"
+#include "../data/processstate.h"
 
 namespace vtapi {
     

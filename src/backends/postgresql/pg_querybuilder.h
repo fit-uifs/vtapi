@@ -3,9 +3,9 @@
 #include <list>
 #include <libpq-fe.h>
 #include <libpqtypes.h>
-#include <vtapi/common/vtapi_tkey.h>
+#include <vtapi/common/tkey.h>
 #include "pg_connection.h"
-#include <vtapi/plugins/vtapi_backend_querybuilder.h>
+#include <vtapi/plugins/backend_querybuilder.h>
 
 namespace vtapi {
 
