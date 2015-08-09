@@ -5,7 +5,7 @@
 INSTALL_PREFIX="/usr/local"
 # where to install module libraries
 # (relative path to INSTALL_PREFIX or absolute)
-MODULES_DIR="bin"
+MODULES_DIR="lib"
 
 
 mkdir -p build

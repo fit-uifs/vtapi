@@ -5,7 +5,7 @@
 INSTALL_PREFIX="../install"
 # where to install module libraries
 # (relative path to INSTALL_PREFIX or absolute)
-MODULES_DIR="bin/modules"
+MODULES_DIR="lib/modules"
 
 
 mkdir -p build
