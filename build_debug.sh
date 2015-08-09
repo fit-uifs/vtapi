@@ -1,8 +1,10 @@
 #! /usr/bin/env bash
 
 # where to install executables, libraries and headers
+# (relative path to ./build or absolute)
 INSTALL_PREFIX="../install"
-# where to install module libraries (relative path to INSTALL_PREFIX or absolute)
+# where to install module libraries
+# (relative path to INSTALL_PREFIX or absolute)
 MODULES_DIR="bin/modules"
 
 
