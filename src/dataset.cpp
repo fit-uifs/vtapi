@@ -30,6 +30,7 @@ Dataset::Dataset(const Commons& commons, const string& name)
         context().dataset = name;
     
     _select.from(def_tab_datasets, def_col_all);
+    _select.orderBy(def_col_ds_name);
     
     if (!context().dataset.empty())
         _select.whereString(def_col_ds_name, context().dataset);

@@ -33,6 +33,7 @@ Sequence::Sequence(const Commons& commons, const string& name)
         context().sequence = name;
 
     _select.from(def_tab_sequences, def_col_all);
+    _select.orderBy(def_col_seq_name);
     
     if (!context().sequence.empty())
         _select.whereString(def_col_seq_name, context().sequence);

@@ -38,6 +38,7 @@ Task::Task(const Commons& commons, const string& name)
     _select.from(def_tab_tasks, def_col_task_params);
     _select.from(def_tab_tasks, def_col_task_outputs + "::text");
     _select.from(def_tab_tasks, def_col_task_created);
+    _select.orderBy(def_col_task_name);
     
     if (!context().task.empty()) {
         _select.whereString(def_col_task_name, context().task);
