@@ -12,7 +12,6 @@ int main(int argc, char *argv[])
 
     Process *prs = vtapi.instantiateProcess();
     if (prs) {
-        Poco::Net::TCPServer serv;
         prs->updateStateRunning(0, "zdarec");
 
         delete prs;
