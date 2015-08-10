@@ -49,7 +49,6 @@ DROP TYPE IF EXISTS public.pstatus CASCADE;
 DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
 DROP TYPE IF EXISTS public.pstate CASCADE;
-DROP TYPE IF EXISTS public.VT_TBLCOLDEF CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_dataset_create(VARCHAR, VARCHAR, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
@@ -150,13 +149,7 @@ CREATE TYPE pstate AS (
     last_error varchar      -- error message
 );
 
-/*
-CREATE TYPE VT_TBLCOLDEF AS (
-    attname    NAME,
-    atttypid   REGTYPE,
-    attio      VARCHAR
-);
-*/
+
 -------------------------------------
 -- CREATE tables
 -------------------------------------
@@ -220,10 +213,10 @@ CREATE TABLE methods_params (
 -- Function behavior:
 --   * Successful creation of a dataset => returns 1
 --   * Whole dataset structure already exists => returns 0
---   * Dataset is already registered, but _dslocation, _dsfname or _dsdescription is different than in DB => returns -1
+--   * Dataset is already registered, but _dslocation, _friendly_name or _description is different than in DB => returns -1
 --   * There already exist some parts of dataset and some parts not exist => INTERRUPTED with INCONSISTENCY EXCEPTION
 --   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCHAR, _dsfriendlyname VARCHAR DEFAULT NULL, _dsdescription TEXT DEFAULT NULL) 
+CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCHAR, _friendly_name VARCHAR DEFAULT NULL, _description TEXT DEFAULT NULL) 
   RETURNS INT AS 
   $VT_dataset_create$
   DECLARE
@@ -232,69 +225,64 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
     _schemacount    INT;
     _classescount   INT;
     
-    _tmp1 VARCHAR;
-    _tmp2 VARCHAR;
+    __tmp1 VARCHAR;
+    __tmp2 VARCHAR;
   BEGIN
     IF _dsname IN ('public', 'pg_catalog') THEN
       RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
     END IF;
 
-    EXECUTE 'SELECT COUNT(*)'
-            || ' FROM public.datasets'
-            || ' WHERE dsname = ' || quote_literal(_dsname)
-            || ';'
+    EXECUTE 'SELECT COUNT(*)
+             FROM public.datasets
+             WHERE dsname = ' || quote_literal(_dsname)
       INTO _dsnamecount;
-    EXECUTE 'SELECT COUNT(*)'
-            || ' FROM pg_catalog.pg_namespace'
-            || ' WHERE nspname = ' || quote_literal(_dsname)
-            || ';'
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_catalog.pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
 
 
-    IF _dsfriendlyname IS NULL THEN
-      _tmp1 := 'IS NULL';
+    IF _friendly_name IS NULL THEN
+      __tmp1 := 'IS NULL';
     ELSE 
-      _tmp1 := '= ' || quote_literal(_dsfriendlyname);
+      __tmp1 := '= ' || quote_literal(_friendly_name);
     END IF;
-    IF _dsdescription IS NULL THEN
-      _tmp2 := 'IS NULL';
+    IF _description IS NULL THEN
+      __tmp2 := 'IS NULL';
     ELSE 
-      _tmp2 := '= ' || quote_literal(_dsdescription);
+      __tmp2 := '= ' || quote_literal(_description);
     END IF;
 
-    EXECUTE 'SELECT COUNT(*)'
-            || ' FROM public.datasets'
-            || ' WHERE dsname = ' || quote_literal(_dsname)
-            || ' AND dslocation = ' || quote_literal(_dslocation)
-            || ' AND friendly_name ' || _tmp1
-            || ' AND description ' || _tmp2
-            || ';'
-    INTO _dsidentical;
+    EXECUTE 'SELECT COUNT(*)
+             FROM public.datasets
+             WHERE dsname = ' || quote_literal(_dsname)
+             || ' AND dslocation = ' || quote_literal(_dslocation)
+             || ' AND friendly_name ' || __tmp1
+             || ' AND description ' || __tmp2
+      INTO _dsidentical;
     
     IF _dsnamecount <> _dsidentical THEN
-      RAISE WARNING 'Dataset "%" already exists, but has different value in "dslocation", "friendly_name" or/and in "description" property.', _dsname;
+      RAISE WARNING 'Dataset "%" already exists, but has different value in "dslocation" or/and in "friendly_name", "description" property.', _dsname;
       RETURN -1;
     END IF;
 
-    -- check if schema already exists
-    --TODO: overit ostatni veci?
+    -- check if schema already exists (only dataset core relations; we assume, that the user did not modify other database objects (like table columns, primary and foreign key constraints, indexes. etc.)
     IF _schemacount = 1 THEN
-      _tmp1 := quote_literal('sequences') || ',' || quote_literal('processes') || ',' || quote_literal('tasks') || ','
-              || quote_literal('rel_processes_sequences_assigned') || ',' || quote_literal('rel_tasks_tasks_prerequisities') || ','
-              || quote_literal('rel_tasks_sequences_done');
-              --|| ''processes'', ''tasks'', ''sequences_pk'', ''sequences_seqtyp_idx'', ''processes_pk'', ''processes_mtname_idx'', ''processes_inputs_idx'', ''processes_status_idx'')';
-      _tmp2 := 'SELECT oid'
-              || ' FROM pg_catalog.pg_namespace'
-              || ' WHERE nspname = ' || quote_literal(_dsname);
-      EXECUTE 'SELECT COUNT(*)'
-              || ' FROM pg_catalog.pg_class'
-              || ' WHERE relname IN (' || _tmp1 || ')' 
-              || ' AND relnamespace = (' || _tmp2 || ')'
-              || ';'
+      EXECUTE 'SELECT COUNT(*)
+               FROM pg_catalog.pg_class
+               WHERE relname IN (
+                   ''sequences'', ''tasks'', ''processes'', 
+                   ''rel_processes_sequences_assigned'', ''rel_tasks_tasks_prerequisities'', ''rel_tasks_sequences_done''
+                 )
+                 AND relnamespace = (
+                   SELECT oid
+                   FROM pg_catalog.pg_namespace
+                   WHERE nspname = ' || quote_literal(_dsname) || '
+                 );'
         INTO _classescount;
 
       -- check inconsistence || already existing dataset
-      IF _dsnamecount <> 1 OR _classescount <> 8 THEN
+      IF _dsnamecount <> 1 OR _classescount <> 6 THEN
         -- inconsistence
         RAISE EXCEPTION 'Inconsistency was detected in dataset "%".', _dsname;
       ELSE
@@ -313,8 +301,8 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
         EXECUTE 'INSERT INTO public.datasets(dsname, dslocation, friendly_name, description) VALUES ('
                 || quote_literal(_dsname) || ', '
                 || quote_literal(_dslocation) || ', '
-                || quote_nullable(_dsfriendlyname) || ', '
-                || quote_nullable(_dslocation) || ');';
+                || quote_nullable(_friendly_name) || ', '
+                || quote_nullable(_description) || ');';
     ELSE
       RAISE NOTICE 'Dataset inconsistency was repaired by creating dataset "%".', _dsname;
     END IF;
@@ -346,13 +334,13 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
       RAISE EXCEPTION 'Can not drop dataset "%" due to it is not valid VTApi dataset (reserved name whose use for dataset name is not allowed!).', _dsname; 
     END IF;
 
-    EXECUTE 'SELECT COUNT(*)'
-            || ' FROM public.datasets'
-            || ' WHERE dsname = ' || quote_literal(_dsname)
+    EXECUTE 'SELECT COUNT(*)
+             FROM public.datasets
+             WHERE dsname = ' || quote_literal(_dsname)
       INTO _dsnamecount;
-    EXECUTE 'SELECT COUNT(*)'
-            || ' FROM pg_catalog.pg_namespace'
-            || ' WHERE nspname = ' || quote_literal(_dsname)
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_catalog.pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
 
     IF _dsnamecount = 0 THEN
@@ -364,8 +352,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
       END IF;
     END IF;
 
-    EXECUTE 'DELETE FROM public.datasets'
-            || ' WHERE dsname = ' || quote_literal(_dsname);
+    EXECUTE 'DELETE FROM public.datasets WHERE dsname = ' || quote_literal(_dsname);
     IF _schemacount <> 0 THEN
       EXECUTE 'DROP SCHEMA ' || quote_ident(_dsname) || ' CASCADE';
     ELSE
@@ -417,13 +404,13 @@ CREATE OR REPLACE FUNCTION VT_dataset_truncate (_dsname VARCHAR)
     _dsnamecount   INT;
     _schemacount   INT;
   BEGIN
-    EXECUTE 'SELECT COUNT(*)'
-            || ' FROM public.datasets'
-            || ' WHERE dsname = ' || quote_literal(_dsname)
+    EXECUTE 'SELECT COUNT(*)
+             FROM public.datasets
+             WHERE dsname = ' || quote_literal(_dsname)
       INTO _dsnamecount;
-    EXECUTE 'SELECT COUNT(*)'
-            || ' FROM pg_catalog.pg_namespace'
-            || ' WHERE nspname = ' || quote_literal(_dsname)
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_catalog.pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
     
     IF _dsnamecount = 0 THEN
@@ -461,9 +448,9 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
   DECLARE
     _schemacount   INT;
   BEGIN
-    EXECUTE 'SELECT COUNT(*)'
-            || ' FROM pg_catalog.pg_namespace'
-            || ' WHERE nspname = ' || quote_literal(_dsname)
+    EXECUTE 'SELECT COUNT(*)
+             FROM pg_catalog.pg_namespace
+             WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
 
     IF _schemacount = 0 THEN
@@ -546,9 +533,6 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
         REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE CASCADE
     );
     CREATE INDEX rel_tasks_sequences_done_is_done_idx ON rel_tasks_sequences_done(is_done);
-
-
-
 
   END;
   $VT_dataset_create_support$
