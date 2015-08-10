@@ -56,8 +56,7 @@ DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_truncate(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 
--- TODO:  methodkeytype and methodparamtype don't exist here!
---DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], VARCHAR, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR) CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_process_output_create(VARCHAR, VARCHAR, VARCHAR) CASCADE;
@@ -619,34 +618,12 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
         _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout) || ', ';
 
         IF _mkeys[_i].inout = 'out' THEN
-          IF _mkeys[_i].required IS NOT NULL THEN
-            _insvals := _insvals || quote_literal(_mkeys[_i].required) || ', ';
-          ELSE
-            _insvals := _insvals || 'NULL, ';
-          END IF;
-
-          IF _mkeys[_i].indexedkey IS NOT NULL THEN
-            _insvals := _insvals || quote_literal(_mkeys[_i].indexedkey) || ', ';
-          ELSE
-            _insvals := _insvals || 'NULL, ';
-          END IF;
-
-          IF _mkeys[_i].indexedparts IS NOT NULL THEN
-            _insvals := _insvals || quote_literal(_mkeys[_i].indexedparts) || ', ';
-          ELSE
-            _insvals := _insvals || 'NULL, ';
-          END IF;
+          _insvals := _insvals || quote_nullable(_mkeys[_i].required) || ', ' || quote_nullable(_mkeys[_i].indexedkey) || ', ' || quote_nullable(_mkeys[_i].indexedparts) || ', ';
         ELSE
           _insvals := _insvals || 'NULL, NULL, NULL, ';
         END IF;
 
-        IF _mkeys[_i].description IS NOT NULL THEN
-          _insvals := _insvals || quote_literal(_mkeys[_i].description);
-        ELSE
-          _insvals := _insvals || 'NULL';
-        END IF;
-
-        _insvals := _insvals || '), ';
+        _insvals := _insvals || quote_nullable(_mkeys[_i].description) || '), ';
       END LOOP;
 
       _stmt := 'INSERT INTO public.methods_keys(mtname, keyname, typname, inout, required, indexedkey, indexedparts, description) VALUES ' || rtrim(_insvals, ', ');
@@ -666,34 +643,15 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
         END IF;
 
 
-        _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mparams[_i].paramname) || ', ' || quote_literal(_mparams[_i].type) || ', ';
-
-        IF _mparams[_i].required IS NOT NULL THEN
-          _insvals := _insvals || quote_literal(_mparams[_i].required) || ', ';
-        ELSE
-          _insvals := _insvals || 'NULL, ';
-        END IF;
-
-        IF _mparams[_i].default_val IS NOT NULL THEN
-          _insvals := _insvals || quote_literal(_mparams[_i].default_val) || ', ';
-        ELSE
-          _insvals := _insvals || 'NULL, ';
-        END IF;
-
-        IF _mparams[_i].valid_range IS NOT NULL THEN
-          _insvals := _insvals || quote_literal(_mparams[_i].valid_range) || ', ';
-        ELSE
-          _insvals := _insvals || 'NULL, ';
-        END IF;
-
-        IF _mparams[_i].description IS NOT NULL THEN
-          _insvals := _insvals || quote_literal(_mparams[_i].description);
-        ELSE
-          _insvals := _insvals || 'NULL';
-        END IF;
-
-        _insvals := _insvals || '), ';
-        RAISE NOTICE '%: %', _i, _insvals;
+        _insvals := _insvals || '(' || quote_literal(_mtname)                   || ', ' 
+                                    || quote_literal(_mparams[_i].paramname)    || ', ' 
+                                    || quote_literal(_mparams[_i].type)         || ', '
+                                    -- this values can be NULL
+                                    || quote_nullable(_mparams[_i].required)    || ', '
+                                    || quote_nullable(_mparams[_i].default_val) || ', '
+                                    || quote_nullable(_mparams[_i].valid_range) || ', '
+                                    || quote_nullable(_mparams[_i].description)
+                             || '), ';
       END LOOP;
 
       _stmt := 'INSERT INTO public.methods_params(mtname, paramname, type, required, default_val, valid_range, description) VALUES ' || rtrim(_insvals, ', ');
