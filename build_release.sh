@@ -13,5 +13,5 @@ mkdir -p $INSTALL_PREFIX
 cd build/release
 cmake ../.. -DCMAKE_BUILD_TYPE:STRING="Release" -DCMAKE_INSTALL_PREFIX:PATH=$INSTALL_PREFIX -DVTAPI_MODULES_DIR=$MODULES_DIR
 make
-make install
-#sudo make install
+#make install
+sudo make install
