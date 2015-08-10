@@ -8,6 +8,7 @@ INSTALL_PREFIX="../../install"
 MODULES_DIR="lib/modules"
 
 
+mkdir -p build
 mkdir -p build/debug
 mkdir -p $INSTALL_PREFIX
 cd build/debug

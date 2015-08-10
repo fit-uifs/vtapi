@@ -8,6 +8,7 @@ INSTALL_PREFIX="/usr/local"
 MODULES_DIR="lib"
 
 
+mkdir -p build
 mkdir -p build/release
 mkdir -p $INSTALL_PREFIX
 cd build/release
