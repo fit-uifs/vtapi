@@ -10,22 +10,40 @@ int main(int argc, char *argv[])
     VTApi vtapi(argc, argv);
 
     Dataset *ds = vtapi.loadDatasets();
-    while (ds->next()) {
+    if (ds->next()) {
         cout << ds->getName() << endl;
 
-        list<string> seqnames = { "video1", "video2" };
-        Sequence *seq = ds->loadSequences(seqnames);
-        while (seq->next()) {
-            cout << seq->getName() << endl;
+        {
+            list<string> seqnames = { "video1", "video2" };
+            Sequence *seq = ds->loadSequences(seqnames);
+            while (seq->next()) {
+                cout << seq->getName() << endl;
+            }
+            delete seq;
         }
-        delete seq;
 
-        list<int> prsids = { 1, 2 };
-        Process *prs = ds->loadProcesses(prsids);
-        while (prs->next()) {
-            cout << prs->getId() << endl;
+        {
+            list<int> prsids = { 1, 2 };
+            Process *prs = ds->loadProcesses(prsids);
+            while (prs->next()) {
+                cout << prs->getId() << endl;
+            }
+            delete prs;
         }
-        delete prs;
+
+        {
+            Task *task = ds->loadTasks();
+            if (task->next()) {
+                list<string> seqnames = { "video1", "video2" };
+                Process *prs = task->createProcess(seqnames);
+                if (prs) {
+                    prs->launch();
+
+                    delete prs;
+                }
+            }
+            delete task;
+        }
     }
     delete ds;
 

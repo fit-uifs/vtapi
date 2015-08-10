@@ -81,7 +81,7 @@ VTApi::VTApi(int argc, char** argv)
     if (!cmd_config->hasProperty("config"))
         config_path = Poco::Path::current() + "vtapi.conf";
     else
-        config_path = Poco::Path(cmd_config->getString("config")).makeAbsolute().toString();
+        config_path = cmd_config->getString("config");
 
     // load configuration from file if found
     if (Poco::File(Poco::Path(config_path)).exists()) {
@@ -179,6 +179,18 @@ Task* VTApi::loadTasks(const string& name)
 Process* VTApi::loadProcesses(int id)
 {
     return (new Process(*_pcommons, id));
+}
+
+Process *VTApi::instantiateProcess()
+{
+    Process *prs = new Process(*_pcommons);
+    if (prs->instantiateSelf()) {
+        return prs;
+    }
+    else {
+        delete prs;
+        return NULL;
+    }
 }
 
 

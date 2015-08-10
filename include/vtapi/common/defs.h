@@ -85,6 +85,7 @@ extern const std::string def_col_int_created;
 extern const std::string def_col_prs_prsid;
 extern const std::string def_col_prs_taskname;
 extern const std::string def_col_prs_state;
+extern const std::string def_col_prs_ipcport;
 extern const std::string def_col_prs_created;
 
 extern const std::string def_col_prs_pstate_status;

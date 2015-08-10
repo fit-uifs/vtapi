@@ -31,39 +31,8 @@ Commons::Commons(const Poco::Util::AbstractConfiguration &config)
     try {
         _pconfig = new CONFIG();
 
-        // required properties
-
-        if (config.hasProperty("config"))
-            _pconfig->configfile = config.getString("config");
-        else
-            throw exception();
-        if (config.hasProperty("datasets_dir"))
-            _pconfig->datasets_dir = config.getString("datasets_dir");
-        else
-            throw exception();
-        if (config.hasProperty("modules_dir"))
-            _pconfig->modules_dir = config.getString("modules_dir");
-        else
-            throw exception();
-        if (config.hasProperty("connection"))
-            _pconfig->connection = config.getString("connection");
-        else
-            throw exception();
-
-        // optional properties
-
-        if (config.hasProperty("logfile"))
-            _pconfig->logfile = config.getString("logfile");
-        _pconfig->log_errors = config.hasProperty("log_errors");
-        _pconfig->log_warnings = config.hasProperty("log_warnings");
-        _pconfig->log_debug = config.hasProperty("log_debug");
-
-        // context properties
-
-        if (config.hasProperty("dataset"))
-            _context.dataset = config.getString("dataset");
-        if (config.hasProperty("process"))
-            _context.process = config.getInt("process");
+        // load config
+        loadConfig(config);
 
         // initialize global logger
         bool ok = Logger::instance().config(_pconfig->logfile, _pconfig->log_errors,
@@ -213,6 +182,70 @@ const IBackendInterface& Commons::backend()
 Connection& Commons::connection()
 {
     return *_pconnection;
+}
+
+void Commons::loadConfig(const Poco::Util::AbstractConfiguration &config)
+{
+    // required properties
+
+    if (config.hasProperty("datasets_dir"))
+        _pconfig->datasets_dir = config.getString("datasets_dir");
+    else
+        throw exception();
+    if (config.hasProperty("modules_dir"))
+        _pconfig->modules_dir = config.getString("modules_dir");
+    else
+        throw exception();
+    if (config.hasProperty("connection"))
+        _pconfig->connection = config.getString("connection");
+    else
+        throw exception();
+
+    // optional properties
+
+    if (config.hasProperty("config"))
+        _pconfig->configfile = config.getString("config");
+    if (config.hasProperty("logfile"))
+        _pconfig->logfile = config.getString("logfile");
+    _pconfig->log_errors = config.hasProperty("log_errors");
+    _pconfig->log_warnings = config.hasProperty("log_warnings");
+    _pconfig->log_debug = config.hasProperty("log_debug");
+
+    // context properties
+
+    if (config.hasProperty("dataset"))
+        _context.dataset = config.getString("dataset");
+    if (config.hasProperty("process"))
+        _context.process = config.getInt("process");
+}
+
+void Commons::saveConfig(Poco::Util::AbstractConfiguration &config)
+{
+    // required properties
+
+    config.setString("datasets_dir", _pconfig->datasets_dir);
+    config.setString("modules_dir", _pconfig->modules_dir);
+    config.setString("connection", _pconfig->connection);
+
+    // optional properties
+
+    if (!_pconfig->configfile.empty())
+        config.setString("config", _pconfig->configfile);
+    if (!_pconfig->logfile.empty())
+        config.setString("logfile", _pconfig->logfile);
+    if (_pconfig->log_errors)
+        config.setBool("log_errors", true);
+    if (_pconfig->log_warnings)
+        config.setBool("log_warnings", true);
+    if (_pconfig->log_debug)
+        config.setBool("log_debug", true);
+
+    // context properties
+
+    if (!_context.dataset.empty())
+        config.setString("dataset", _context.dataset);
+    if (_context.process != 0)
+        config.setInt("process", _context.process);
 }
 
 

@@ -19,8 +19,6 @@
 #include "task.h"
 #include "method.h"
 #include "processstate.h"
-#include "../common/interproc.h"
-#include "../common/compat.h"
 
 namespace vtapi {
 
@@ -28,6 +26,7 @@ class Dataset;
 class Sequence;
 class Task;
 class Method;
+
 
 /**
  * @brief A class which represents processes and gets information about them
@@ -74,14 +73,18 @@ public:
     bool next();
 
     /**
-     * Launches process and waits for its finish (unless async is specified)
-     * @param async function returns immediately after launching process
-     * @param suspended start process in suspended state (use ProcessControl to unpause it)
-     * @param ctrl output pointer to new process control object (client)
+     * @brief Checks if process can be instance and calls next()
+     * Call this before first next()
+     * @return succesful intantiations
+     */
+    bool instantiateSelf();
+
+    /**
+     * Launches process instance
+     * @param suspended start process in suspended state (use InterProc to unpause it)
      * @return success
      */
-    bool run(bool async = false, bool suspended = false, ProcessControl **ctrl = NULL);
-    
+    bool launch(bool suspended = false);
 
     //////////////////////////////////////////////////
     // getters - associated objects
@@ -120,11 +123,18 @@ public:
      * @return process ID
      */
     int getId();
+
     /**
      * Gets detailed process state
      * @return process state object
      */
     ProcessState *getState();
+
+    /**
+     * @brief Gets IPC port of running instance
+     * @return IPC port
+     */
+    int getIpcPort();
     
     //////////////////////////////////////////////////
     // updaters - UPDATE
@@ -133,79 +143,49 @@ public:
     /**
      * Sets custom process state
      * @param state process state
-     * @param control ProcessControl object through which to send state update notification
      * @return success
      */
-    bool updateState(const ProcessState& state, ProcessControl *control = NULL);
+    bool updateState(const ProcessState& state);
     /**
      * Sets process status as RUNNING
      * @param progress percentage progress [0-100]
      * @param currentItem currently processed item
-     * @param control ProcessControl object through which to send state update notification
      * @return success
      */
-    bool updateStateRunning(float progress, const std::string& currentItem, ProcessControl *control = NULL);
+    bool updateStateRunning(float progress, const std::string& currentItem);
     /**
      * Sets process status as SUSPENDED (paused)
-     * @param control ProcessControl object through which to send state update notification
      * @return success
      */
-    bool updateStateSuspended(ProcessControl *control = NULL);
+    bool updateStateSuspended();
     /**
      * Sets process status as FINISHED (without error)
-     * @param control ProcessControl object through which to send state update notification
      * @return success
      */
-    bool updateStateFinished(ProcessControl *control = NULL);
+    bool updateStateFinished();
     /**
      * Sets process status as ERROR and sets last error message
      * @param errorMsg error message
-     * @param control ProcessControl object through which to send state update notification
-     * @return 
-     */
-    bool updateStateError(const std::string& lastError, ProcessControl *control = NULL);
-    
-    //////////////////////////////////////////////////
-    // controls - commands to process instance
-    //////////////////////////////////////////////////
-
-    /**
-     * Get process control object to initialize server/client notifications
-     * between launcher and process
-     * @return process control object or NULL on failure
-     */
-    ProcessControl *getProcessControl();
-    /**
-     * Sends control message to process: resume.
-     * @param control ProcessControl object through which to send command
      * @return success
      */
-    bool controlResume(ProcessControl *control);
+    bool updateStateError(const std::string& lastError);
     /**
-     * Sends control message to process: suspend.
-     * @param control ProcessControl object through which to send command
+     * @brief Sets new port for IPC
+     * @param port port
      * @return success
      */
-    bool controlSuspend(ProcessControl *control);
-    /**
-     * Sends control message to process: stop.
-     * @param control ProcessControl object through which to send command
-     * @return success
-     */
-    bool controlStop(ProcessControl *control);
+    bool updateIpcPort(int port);
 
     //////////////////////////////////////////////////
     // filters/utilities
     //////////////////////////////////////////////////
-   
+
     /**
      * Filters iteration via next() by task
      */
     void filterByTask(const std::string& taskname);
 
 protected:
-    compat::ProcessInstance _instance;  /**< Newly launched instance via run() */
-
     virtual bool preUpdate();
 
 private:

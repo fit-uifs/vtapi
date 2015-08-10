@@ -138,8 +138,13 @@ public:
      */
     Process* loadProcesses(int id = 0);
 
-private:
+    /**
+     * @brief This process is module instance, gets its process object
+     * @return process object
+     */
+    Process *instantiateProcess();
 
+private:
     Commons* _pcommons;      /**< Commons are common objects to all vtapi objects */
 
     VTApi() = delete;             /**< forbidden */

@@ -225,8 +225,8 @@ Process* Task::createProcess(const list<string>& seqnames)
             if (retval = QueryLastInsertedId(*this).execute(prsid)) {
                 for (auto & item : seqnames) {
                     Insert insert2(*this, def_tab_processes_seq);
-                    retval &= insert.keyInt(def_col_prss_prsid, prsid);
-                    retval &= insert.keyString(def_col_prss_seqname, item);
+                    retval &= insert2.keyInt(def_col_prss_prsid, prsid);
+                    retval &= insert2.keyString(def_col_prss_seqname, item);
                     if (retval && (retval = insert2.execute())) {
                     }
                     else {

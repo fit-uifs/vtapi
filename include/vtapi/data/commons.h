@@ -109,6 +109,18 @@ protected:
      */
     Connection& connection();
 
+    /**
+     * @brief Loads configuration into commons
+     * @param config source configuration
+     */
+    void loadConfig(const Poco::Util::AbstractConfiguration &config);
+
+    /**
+     * @brief Saves configuration from commons
+     * @param config destination configuration
+     */
+    void saveConfig(Poco::Util::AbstractConfiguration &config);
+
 private:
     CONFIG          *_pconfig;              /**< Global configuration */
     CONTEXT         _context;               /**< Local context for VTApi objects */

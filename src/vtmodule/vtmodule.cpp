@@ -1,20 +1,25 @@
 #include <iostream>
+#include <Poco/Net/TCPServer.h>
 #include <vtapi/plugins/module_interface.h>
 #include <vtapi/vtapi.h>
 
 using namespace vtapi;
-
+using namespace std;
 
 int main(int argc, char *argv[])
 {
     VTApi vtapi(argc, argv);
 
-    Dataset *ds = vtapi.loadDatasets();
-    while (ds->next()) {
-        std::cout << ds->getName() << std::endl;
-    }
+    Process *prs = vtapi.instantiateProcess();
+    if (prs) {
+        Poco::Net::TCPServer serv;
+        prs->updateStateRunning(0, "zdarec");
 
-    delete ds;
+        delete prs;
+    }
+    else {
+
+    }
 
     return 0;
 }

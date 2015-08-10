@@ -11,8 +11,10 @@
  */
 
 #include <exception>
-#include <sstream>
-//#include <boost/filesystem.hpp>
+#include <Poco/Path.h>
+#include <Poco/File.h>
+#include <Poco/Process.h>
+#include <Poco/Util/PropertyFileConfiguration.h>
 #include <vtapi/common/global.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/data/process.h>
@@ -40,7 +42,6 @@ Process::Process(const Commons& commons, int id)
         if (!context().task.empty())
             _select.whereString(def_col_prs_taskname, context().task);
     }
-
 }
 
 Process::Process(const Commons& commons, const list<int>& ids)
@@ -61,8 +62,6 @@ Process::~Process()
 
 bool Process::next()
 {
-    _instance.close();
-    
     bool ret = KeyValues::next();
     if (ret) {
         context().process = this->getId();
@@ -74,44 +73,54 @@ bool Process::next()
     return ret;
 }
 
-bool Process::run(bool async, bool suspended, ProcessControl **ctrl)
+bool Process::instantiateSelf()
+{
+    // delete temporary config file created for process
+    string tmpdir = Poco::Path::temp();
+    if (config().configfile.find(tmpdir) == 0)
+        Poco::File(config().configfile).remove();
+
+    return context().process != 0 && !_select.isExecuted() && next();
+}
+
+bool Process::launch(bool suspended)
 {
     bool ret = false;
-    
-//    do {
-//        if (suspended) {
-//            updateStateSuspended();
-//        }
-        
-//        boost::filesystem::path cdir = boost::filesystem::current_path();
-//        if (cdir.empty()) {
-//            VTLOG_ERROR("Failed to get current directory");
-//            break;
-//        }
 
-//        //TODO: dodelat
-        
-//        boost::filesystem::path exec(cdir);
-//        exec /= "modules";
-//        exec /= context().method;
+    if (suspended)
+        updateStateSuspended();
 
-//        boost::filesystem::path cfg = boost::filesystem::absolute(config().configfile, cdir);
+    // create temporary config file
+    string config_path = Poco::Path::temp();
+    config_path += "vtproc_" + toString<int>(context().process) + ".conf";
 
-//        compat::ProcessInstance::Args args;
-//        args.push_back("--config=" + cfg.string());
-//        args.push_back("--process=" + context().process);
-//        args.push_back("--dataset=" + context().dataset);
+    // save configuration
+    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config =
+            new Poco::Util::PropertyFileConfiguration();
+    this->saveConfig(*config.get());
+    config->save(config_path);
 
-//        ret = _instance.launch(exec.string(), args, !async);
-//        if (ret) {
-//            if (ctrl) *ctrl = new ProcessControl(this->getId(), _instance);
-//        }
-//        else {
-//            VTLOG_ERROR("Failed to launch process " + toString(this->getId()) + ": " + exec.string());
-//        }
-        
-//    } while(0);
-    
+    // set config file through command line
+    Poco::Process::Args args;
+    args.push_back("--config=" + config_path + "");
+
+    // try launching vtmodule
+    try {
+        VTLOG_DEBUG("Launching process... " +
+                    toString<int>(context().process) + ";" + config_path);
+
+        Poco::ProcessHandle hproc = Poco::Process::launch("vtmodule", args);
+        VTLOG_DEBUG("Launched PID " + toString<Poco::ProcessHandle::PID>(hproc.id()));
+
+        ret = true;
+    }
+    catch(exception& e) {
+        VTLOG_ERROR("Failed to launch process : " +
+                    toString<int>(context().process) + ";" + e.what());
+        Poco::File(config_path).remove();
+        updateStateError(e.what());
+    }
+
     return ret;
 }
 
@@ -191,6 +200,11 @@ ProcessState *Process::getState()
     return this->getProcessState(def_col_prs_state);
 }
 
+int Process::getIpcPort()
+{
+    return this->getInt(def_col_prs_ipcport);
+}
+
 //////////////////////////////////////////////////
 // updaters - UPDATE
 //////////////////////////////////////////////////
@@ -205,7 +219,7 @@ bool Process::preUpdate()
     return ret;
 }
 
-bool Process::updateState(const ProcessState& state, ProcessControl *control)
+bool Process::updateState(const ProcessState& state)
 {
     bool retval = true;
     
@@ -231,9 +245,6 @@ bool Process::updateState(const ProcessState& state, ProcessControl *control)
 
     if (retval) {
         retval = updateExecute();
-        if (retval && control) {
-            retval = control->notify(state);
-        }
     }
     else {
         preUpdate();
@@ -242,62 +253,46 @@ bool Process::updateState(const ProcessState& state, ProcessControl *control)
     return retval;
 }
 
-bool Process::updateStateRunning(float progress, const string& currentItem, ProcessControl *control)
+bool Process::updateStateRunning(float progress, const string& currentItem)
 {
-    return updateState(
-        ProcessState(ProcessState::STATUS_RUNNING, progress, currentItem), control);
+    return updateState(ProcessState(ProcessState::STATUS_RUNNING, progress, currentItem));
 }
 
-bool Process::updateStateSuspended(ProcessControl *control)
+bool Process::updateStateSuspended()
 {
-    return updateState(
-        ProcessState(ProcessState::STATUS_SUSPENDED, 0, ""), control);
+    return updateState(ProcessState(ProcessState::STATUS_SUSPENDED, 0, ""));
 }
 
-bool Process::updateStateFinished(ProcessControl *control)
+bool Process::updateStateFinished()
 {
-    return updateState(
-        ProcessState(ProcessState::STATUS_FINISHED, 0, ""), control);
+    return updateState(ProcessState(ProcessState::STATUS_FINISHED, 0, ""));
 }
 
-bool Process::updateStateError(const string& lastError, ProcessControl *control)
+bool Process::updateStateError(const string& lastError)
 {
-    return updateState(
-        ProcessState(ProcessState::STATUS_ERROR, 0, lastError), control);
+    return updateState(ProcessState(ProcessState::STATUS_ERROR, 0, lastError));
 }
 
-//////////////////////////////////////////////////
-// controls - commands to process instance
-//////////////////////////////////////////////////
-
-ProcessControl *Process::getProcessControl()
+bool Process::updateIpcPort(int port)
 {
-    if (_select.resultset().getPosition() >= 0) {
-        return new ProcessControl(context().process, _instance);
-    }
-    else {
-        return NULL;
-    }
-}
+    bool ret = this->updateInt(def_col_prs_ipcport, port);
+    if (ret)
+        ret = updateExecute();
+    else
+        preUpdate();
 
-bool Process::controlResume(ProcessControl *control)
-{
-    return control ? control->control(ProcessControl::COMMAND_RESUME) : false;
-}
-
-bool Process::controlSuspend(ProcessControl *control)
-{
-    return control ? control->control(ProcessControl::COMMAND_SUSPEND) : false;
-}
-
-bool Process::controlStop(ProcessControl *control)
-{
-    return control ? control->control(ProcessControl::COMMAND_STOP) : false;
+    return ret;
 }
 
 //////////////////////////////////////////////////
 // filters/utilities
 //////////////////////////////////////////////////
+
+void Process::filterByTask(const string &taskname)
+{
+    _select.whereString(def_col_prs_taskname, taskname);
+}
+
 
 
 
