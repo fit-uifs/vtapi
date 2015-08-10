@@ -34,6 +34,7 @@ Interval::Interval(const Commons& commons, const string& selection)
 
     _select.from(context().selection , def_col_all);
     _select.orderBy(def_col_int_id);
+
     if (!context().sequence.empty())
         _select.whereString(def_col_int_seqname, context().sequence);
     if (!context().task.empty())
@@ -83,13 +84,18 @@ Task *Interval::getParentTask()
     }
 }
 
-Sequence *Interval::getParentSequence()
+string Interval::getParentSequenceName()
 {
     string seqname;
     if (!context().sequence.empty())
-        seqname = context().sequence;
+        return context().sequence;
     else
-        seqname = this->getString(def_col_int_seqname);
+        return this->getString(def_col_int_seqname);
+}
+
+Sequence *Interval::getParentSequence()
+{
+    string seqname = getParentSequenceName();
 
     if (!seqname.empty()) {
         Sequence *s = new Sequence(*this, seqname);
@@ -190,6 +196,12 @@ bool Interval::filterBySequence(const string& seqname)
 {
     return _select.whereString(def_col_int_seqname, seqname);
 }
+
+bool Interval::filterBySequences(const std::list<string> &seqnames)
+{
+    return _select.whereStringInList(def_col_int_seqname, seqnames);
+}
+
 bool Interval::filterByTask(const string& taskname)
 {
     return _select.whereString(def_col_int_taskname, taskname);
@@ -209,7 +221,6 @@ bool Interval::filterByTimeRange(const time_t t_low, const time_t t_high)
 
 bool Interval::filterByRegion(const IntervalEvent::box& region)
 {
-    //TODO: wtf
     return _select.whereRegion("event,region", region, "&&");
 }
 

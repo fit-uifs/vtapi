@@ -72,6 +72,12 @@ public:
     Task *getParentTask();
 
     /**
+     * @brief Gets parent sequence name
+     * @return sequence name
+     */
+    std::string getParentSequenceName();
+
+    /**
      * @brief Gets parent sequence object
      * @return sequence object (initialized)
      */
@@ -145,6 +151,12 @@ public:
      * @return success
      */
     bool filterBySequence(const std::string& seqname);
+    /**
+     * Sets filter for intervals by sequences before calling next()
+     * @param seqnames   sequences names
+     * @return success
+     */
+    bool filterBySequences(const std::list<std::string>& seqnames);
     /**
      * Sets filter for intervals by task before calling next()
      * @param taskname task name
