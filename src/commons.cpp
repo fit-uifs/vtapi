@@ -119,10 +119,8 @@ void Commons::UnloadBackend()
     vt_destruct(_pbackend);
     if (_ploader) {
         string lib_name = GetBackendLibName();
-        if (!lib_name.empty()) {
-            if (_ploader->isLibraryLoaded(lib_name))
-                _ploader->unloadLibrary(lib_name);
-        }
+        if (!lib_name.empty() && _ploader->isLibraryLoaded(lib_name))
+            _ploader->unloadLibrary(lib_name);
         vt_destruct(_ploader);
     }
 

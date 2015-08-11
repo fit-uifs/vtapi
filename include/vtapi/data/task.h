@@ -65,6 +65,12 @@ public:
     Dataset *getParentDataset();
 
     /**
+     * @brief Gets parent method name
+     * @return method name
+     */
+    std::string getParentMethodName();
+
+    /**
      * @brief Gets parent method object
      * @return method object (initialized)
      */

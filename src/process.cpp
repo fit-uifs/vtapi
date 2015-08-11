@@ -11,6 +11,7 @@
  */
 
 #include <exception>
+#include <Poco/AutoPtr.h>
 #include <Poco/Path.h>
 #include <Poco/File.h>
 #include <Poco/Process.h>

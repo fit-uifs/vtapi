@@ -106,6 +106,12 @@ public:
     std::string getDataLocation();
     
     /**
+     * @brief Gets time when sequence was added to dataset
+     * @return timestamp
+     */
+    time_t getCreatedTime();
+
+    /**
      * Sets video's comment
      * @param comment new comment
      * @return success
@@ -246,7 +252,13 @@ public:
      * Gets video FPS rate
      * @return FPS
      */
-    float getFPS();
+    double getFPS();
+
+    /**
+     * @brief Gets video speed (0-1)
+     * @return  speed
+     */
+    double getSpeed();
     
     /**
      * Gets video real-world start time

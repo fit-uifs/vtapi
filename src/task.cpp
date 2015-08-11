@@ -95,13 +95,17 @@ Dataset *Task::getParentDataset()
     }
 }
 
+string vtapi::Task::getParentMethodName()
+{
+    if (!context().method.empty())
+        return context().method;
+    else
+        return this->getString(def_col_task_mtname);
+}
+
 Method *Task::getParentMethod()
 {
-    string mtname;
-    if (!context().method.empty())
-        mtname = context().method;
-    else
-        mtname = this->getString(def_col_task_mtname);
+    string mtname = this->getParentMethodName();
 
     if (!mtname.empty()) {
         Method *m = new Method(*this, mtname);
