@@ -58,9 +58,9 @@ DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR) CASCADE;
 
-DROP FUNCTION IF EXISTS public.VT_process_output_create(VARCHAR, VARCHAR, VARCHAR) CASCADE;
-DROP FUNCTION IF EXISTS public.VT_process_output_drop(VARCHAR, BOOLEAN, VARCHAR) CASCADE;
-DROP FUNCTION IF EXISTS public.VT_process_output_idxquery(VARCHAR, NAME, REGTYPE, INT, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_task_output_create(VARCHAR, VARCHAR, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_task_output_drop(VARCHAR, BOOLEAN, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_task_output_idxquery(VARCHAR, NAME, REGTYPE, INT, VARCHAR) CASCADE;
 
 
 DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, REAL) CASCADE;
@@ -80,8 +80,8 @@ CREATE TYPE seqtype AS ENUM (
 
 -- method key type - does column contain input or output data?
 CREATE TYPE inouttype AS ENUM (
-    'in',           -- input = column from other method's processes' output table
-    'out'           -- output = column from this method's processes' output table
+    'in',           -- input = column from other method's task' output table
+    'out'           -- output = column from this method's task' output table
 );
 
 -- supported data types for method params
@@ -93,18 +93,18 @@ CREATE TYPE paramtype AS ENUM (
     'double[]'      -- double vector
 );
 
--- definition of input/output column for method's processes (used when creating method)
+-- definition of input/output column for method's tasks (used when creating method)
 CREATE TYPE methodkeytype AS (
     keyname        NAME,      -- column name
     typname        REGTYPE,   -- column data type
-    inout          INOUTTYPE, -- is column a process input/output?
+    inout          INOUTTYPE, -- is column a task input/output?
     required       BOOLEAN,   -- is value in column required (must not be NULL) or not?
     indexedkey     BOOLEAN,   -- is column indexed?
     indexedparts   INT[],     -- which parts of composite type is indexed?
     description    VARCHAR    -- key description
 );
 
--- definition of input params for method's processes (used when creating method)
+-- definition of input params for method's tasks (used when creating method)
 CREATE TYPE methodparamtype AS (
     paramname     NAME,      -- param name
     type          PARAMTYPE, -- param type (enum)
@@ -672,10 +672,10 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEF
     
     -- pokud je _force false, SELECT procesů kde je method name - IF TRUE - exception 
     IF _force = FALSE THEN
-      FOR _tblname IN SELECT tgconstrrelid::regclass::varchar FROM pg_catalog.pg_trigger WHERE tgrelid = 'public.methods'::regclass AND tgconstrrelid::regclass::varchar LIKE '%.processes' AND tgfoid::regproc::varchar = '"RI_FKey_cascade_del"' LOOP
+      FOR _tblname IN SELECT tgconstrrelid::regclass::varchar FROM pg_catalog.pg_trigger WHERE tgrelid = 'public.methods'::regclass AND tgconstrrelid::regclass::varchar LIKE '%.tasks' AND tgfoid::regproc::varchar = '"RI_FKey_cascade_del"' LOOP
         EXECUTE 'SELECT COUNT(*) FROM ' || _tblname || ' WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
         IF _controlcount > 0 THEN
-          RAISE EXCEPTION 'Can not delete method "%" due to dependent processes in dataset "%".', _mtname, regexp_replace(_tblname, '.processes$', '');
+          RAISE EXCEPTION 'Can not delete method "%" due to dependent tasks in dataset "%".', _mtname, regexp_replace(_tblname, '.tasks$', '');
         END IF;
       END LOOP;
     END IF;
@@ -694,20 +694,21 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEF
 
 
 -------------------------------------
--- VTApi CORE UNDERLYING functions for PROCESS' OUTPUT of given method
+-- VTApi CORE UNDERLYING functions for TASK OUTPUT of given method
 -------------------------------------
+-- TODO: create by task
 
--- PROCESS OUTPUT: CREATE
+-- TASK OUTPUT: CREATE
 -- Function args:
---   * _mtname - name of method for which will be created process' output table
---   * _dsname - name of dataset where will be created process' output table (optional)
---   * _reqoutname - process' ouput table according to user requirements (optional)
+--   * _mtname - name of method for which will be created task' output table
+--   * _dsname - name of dataset where will be created task' output table (optional)
+--   * _reqoutname - task' ouput table according to user requirements (optional)
 -- Function behavior:
---   * Process' output table succesfully created => returns TRUE
+--   * Task' output table succesfully created => returns TRUE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _dsname VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsname VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL)
   RETURNS BOOLEAN AS
-  $VT_method_output_create$
+  $VT_task_output_create$
   DECLARE
     _keyname        public.methods_keys.keyname%TYPE;
     _typname        public.methods_keys.typname%TYPE;
@@ -738,9 +739,9 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
     IF _reqoutname IS NULL THEN
       _reqoutname := _mtname || '_out';
     ELSE
-      -- check if requested process' output name is not reserved to other infrastructure tables
-      IF _reqoutname IN ('processes', 'sequences') THEN
-        RAISE EXCEPTION 'Usage of the name "%" for process output is not allowed!', _reqoutname;
+      -- check if requested task' output name is not reserved to other dataset core tables
+      IF _reqoutname IN ('processes', 'sequences', 'tasks', 'rel_processes_sequences_assigned', 'rel_tasks_sequences_done', 'rel_tasks_tasks_prerequisities') THEN
+        RAISE EXCEPTION 'Usage of the name "%" for task output is not allowed!', _reqoutname;
       END IF;
     END IF;
 
@@ -768,7 +769,7 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
       RAISE EXCEPTION 'Dataset "%" does not exist.', _dsname;
     END IF;
     
-    -- check if process' output table exists
+    -- check if task' output table exists
     EXECUTE 'SELECT COUNT(*)
              FROM pg_catalog.pg_class
              WHERE relname = ' || quote_literal(_reqoutname) || '
@@ -779,19 +780,20 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
     EXECUTE 'SELECT usert FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _usert;
 
 
+    -- task' output table doesn't exist
     IF _controlcount = 0 THEN
-      _stmt := 'id        SERIAL   NOT NULL,
-                seqname   NAME     NOT NULL,
-                prsname   NAME,
-                t1        INT      NOT NULL,
-                t2        INT      NOT NULL,';
+      _stmt := 'id            SERIAL   NOT NULL,
+                taskname      NAME     NOT NULL,
+                seqname       NAME     NOT NULL,
+                imglocation   VARCHAR,
+                t1            INT      NOT NULL,
+                t2            INT      NOT NULL,';
 
       IF _usert = TRUE THEN
         _stmt := _stmt || 'rt_start      TIMESTAMP WITHOUT TIME ZONE   DEFAULT NULL,'; -- trigger supplied
       END IF;
 
-      _stmt := _stmt || 'sec_length    REAL,   -- trigger supplied
-                         imglocation   VARCHAR, ';
+      _stmt := _stmt || 'sec_length    REAL, ';   -- trigger supplied
 
       FOR _keyname, _typname, _required, _indexedkey, _indexedparts IN EXECUTE 'SELECT keyname, typname, required, indexedkey, indexedparts FROM public.methods_keys WHERE mtname = ' || quote_literal(_mtname) || ' AND inout = ''out''' LOOP
         _stmt := _stmt || ' ' || quote_ident(_keyname) || ' ' || _typname::regtype;
@@ -801,12 +803,12 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
         _stmt := _stmt || ', ';
 
         IF _indexedkey THEN
-          _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, NULL, _dsname);
+          _idxstmt := _idxstmt || public.VT_task_output_idxquery(_reqoutname, _keyname, _typname, NULL, _dsname);
         END IF;
 
         IF _indexedparts IS NOT NULL THEN
           FOREACH _i IN ARRAY _indexedparts LOOP
-            _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, _i, _dsname);
+            _idxstmt := _idxstmt || public.VT_task_output_idxquery(_reqoutname, _keyname, _typname, _i, _dsname);
           END LOOP;
         END IF;
 
@@ -816,31 +818,31 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
                   || _stmt ||
                '  created       TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
                   CONSTRAINT ' || quote_ident(_reqoutname || '_pk') || ' PRIMARY KEY (id),
+                  CONSTRAINT taskname_fk FOREIGN KEY (taskname)
+                    REFERENCES tasks(taskname) ON UPDATE CASCADE ON DELETE CASCADE.
                   CONSTRAINT seqname_fk FOREIGN KEY (seqname)
-                    REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT,
-                  CONSTRAINT prsname_fk FOREIGN KEY (prsname)
-                    REFERENCES processes(prsname) ON UPDATE CASCADE ON DELETE CASCADE
+                    REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT
                 );
+                CREATE INDEX ' || quote_ident(_reqoutname || '_taskname_idx') || ' ON ' || __outname || '(taskname);
                 CREATE INDEX ' || quote_ident(_reqoutname || '_seqname_idx') || ' ON ' || __outname || '(seqname);
-                CREATE INDEX ' || quote_ident(_reqoutname || '_prsname_idx') || ' ON ' || __outname || '(prsname);
-                CREATE INDEX ' || quote_ident(_reqoutname || '_sec_length_idx') || ' ON ' || __outname || '(sec_length);
-                CREATE INDEX ' || quote_ident(_reqoutname || '_imglocation_idx') || ' ON ' || __outname || '(imglocation);';
+                CREATE INDEX ' || quote_ident(_reqoutname || '_imglocation_idx') || ' ON ' || __outname || '(imglocation);
+                CREATE INDEX ' || quote_ident(_reqoutname || '_sec_length_idx') || ' ON ' || __outname || '(sec_length);';
 
       IF _usert = TRUE THEN
         _stmt := _stmt || 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
       END IF;
       
-      _stmt := _stmt || 'CREATE TRIGGER ' || quote_ident(_reqoutname || '_provide_realtime') ||
-               '  BEFORE INSERT OR UPDATE
-                  ON ' || __outname ||
-               '  FOR EACH ROW
-                  EXECUTE PROCEDURE public.trg_interval_provide_realtime();';
+      _stmt := _stmt || 'CREATE TRIGGER ' || quote_ident(_reqoutname || '_provide_realtime') || '
+                           BEFORE INSERT OR UPDATE
+                           ON ' || __outname || '
+                           FOR EACH ROW
+                           EXECUTE PROCEDURE public.trg_interval_provide_realtime();';
 
 
-    -- process output table doesn't exist
+    -- task' output table maybe exists - it is needed to check the presence of columns required by method
     ELSE
     
-      -- check if sequence exists
+      -- check if sequence (for SERIALed "id" column) exists
       EXECUTE 'SELECT COUNT(*)
                FROM pg_catalog.pg_class
                WHERE relname = ' || quote_literal(_reqoutname || '_id_seq') ||
@@ -851,12 +853,12 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
         RAISE EXCEPTION 'Column named "id" also defined as a sequence is missing.';
       END IF;
     
-      EXECUTE 'SELECT ''seqname'' AS attname, ''NAME''::regtype AS attypid
-               UNION SELECT ''prsname'', ''NAME''::regtype
+      EXECUTE 'SELECT ''taskname'' AS attname, ''NAME''::regtype AS attypid
+               UNION SELECT ''seqame'', ''NAME''::regtype
+               UNION SELECT ''imglocation'', ''VARCHAR''::regtype
                UNION SELECT ''t1'', ''INT''::regtype
                UNION SELECT ''t2'', ''INT''::regtype
                UNION SELECT ''sec_length'', ''REAL''::regtype --trigger supplied
-               UNION SELECT ''imglocation'', ''VARCHAR''::regtype
                UNION SELECT ''created'', ''TIMESTAMP WITHOUT TIME ZONE''::regtype
                EXCEPT
                SELECT attname, atttypid
@@ -866,7 +868,7 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
           INTO _keyname, _typname;
       
       IF _keyname IS NOT NULL THEN
-        RAISE EXCEPTION 'It seems, that "%" is not a process'' output table (column named "%" of "%" data type is missing).', _dsname || '.' || _reqoutname, _keyname, _typname;
+        RAISE EXCEPTION 'It seems, that "%" is not a task'' output table (column named "%" of "%" data type is missing).', _dsname || '.' || _reqoutname, _keyname, _typname;
       END IF;
       
       EXECUTE 'SELECT array_agg(indexrelid::regclass::varchar)
@@ -906,7 +908,7 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
         IF _indexedkey = TRUE THEN
           EXECUTE 'SELECT COUNT(*) WHERE ' || quote_literal(_idxprefix || _reqoutname || '_' || _keyname || '_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' INTO _controlcount;
           IF _controlcount = 0 THEN
-            _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, NULL, _dsname);
+            _idxstmt := _idxstmt || public.VT_task_output_idxquery(_reqoutname, _keyname, _typname, NULL, _dsname);
           END IF;
         END IF;
 
@@ -915,7 +917,7 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
             EXECUTE 'SELECT attname FROM pg_catalog.pg_attribute WHERE attrelid = (SELECT oid FROM pg_catalog.pg_class WHERE reltype = ' || quote_literal(_typname) || '::regtype AND relkind = ''c'') AND attnum = ' || _i INTO _tmpstmt;
             EXECUTE 'SELECT COUNT(*) WHERE ' || quote_literal(_idxprefix || _reqoutname || '_' || _keyname || '_' || _tmpstmt || '_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' INTO _controlcount;
             IF _controlcount = 0 THEN
-              _idxstmt := _idxstmt || public.VT_process_output_idxquery(_reqoutname, _keyname, _typname, _i, _dsname);
+              _idxstmt := _idxstmt || public.VT_task_output_idxquery(_reqoutname, _keyname, _typname, _i, _dsname);
             END IF;
           END LOOP;
         END IF;
@@ -933,25 +935,25 @@ CREATE OR REPLACE FUNCTION public.VT_process_output_create (_mtname VARCHAR, _ds
     RETURN TRUE;
 
     EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during the creation of the process'' output table "%". (Details: ERROR %: %)', __outname, SQLSTATE, SQLERRM;
+      RAISE EXCEPTION 'Some problem occured during the creation of the task'' output table "%". (Details: ERROR %: %)', __outname, SQLSTATE, SQLERRM;
   END;
-  $VT_method_output_create$
+  $VT_task_output_create$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
 
--- PROCESS OUTPUT: DROP
+-- TASK OUTPUT: DROP
 -- Function args:
---   * _name - name of method or directly process' output table name
---   * _isnamedbymethod - determines if "_name" is method name or directly process' output table name (default TRUE => _name is method name)
---   * _dsname - name of dataset where will be dropped process' output table (optional)
+--   * _name - name of method or directly task' output table name
+--   * _isnamedbymethod - determines if "_name" is method name or directly task' output table name (default TRUE => _name is method name)
+--   * _dsname - name of dataset where will be dropped task' output table (optional)
 -- Function behavior:
---   * Successful deletion of a process' output table => returns TRUE
---   * Process'output table with the given name (or derived from method name) is no longer available => returns FALSE
+--   * Successful deletion of a task' output table => returns TRUE
+--   * Task' output table with the given name (or derived from method name) is no longer available => returns FALSE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_process_output_drop (_name VARCHAR, _isnamebymethod BOOLEAN DEFAULT TRUE, _dsname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION VT_task_output_drop (_name VARCHAR, _isnamebymethod BOOLEAN DEFAULT TRUE, _dsname VARCHAR DEFAULT NULL)
   RETURNS BOOLEAN AS
-  $VT_method_output_drop$
+  $VT_task_output_drop$
   DECLARE
     _controlcount   INT;
     __outname       VARCHAR;
@@ -981,7 +983,7 @@ CREATE OR REPLACE FUNCTION VT_process_output_drop (_name VARCHAR, _isnamebymetho
                AND relkind = ''r''; '
         INTO _controlcount; 
     IF _controlcount <> 1 THEN
-      RAISE NOTICE 'Process'' output table "%" can not be dropped due to it is no longer available.', __outname;
+      RAISE NOTICE 'Task'' output table "%" can not be dropped due to it is no longer available.', __outname;
       RETURN FALSE;
     END IF;
     
@@ -989,9 +991,9 @@ CREATE OR REPLACE FUNCTION VT_process_output_drop (_name VARCHAR, _isnamebymetho
     RETURN TRUE;
 
     EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during the removal of the process'' output table "%.%". (Details: ERROR %: %)', __outname, SQLSTATE, SQLERRM;    
+      RAISE EXCEPTION 'Some problem occured during the removal of the task'' output table "%.%". (Details: ERROR %: %)', __outname, SQLSTATE, SQLERRM;    
   END;
-  $VT_method_output_drop$
+  $VT_task_output_drop$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
@@ -999,9 +1001,9 @@ CREATE OR REPLACE FUNCTION VT_process_output_drop (_name VARCHAR, _isnamebymetho
 -- PROCESS OUTPUT: support for index creation
 -- Function behavior:
 --   * Returns SQL command for index creation
-CREATE OR REPLACE FUNCTION VT_process_output_idxquery(_tblname VARCHAR, _keyname NAME, _typname REGTYPE, _keypart INT DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NAME, _typname REGTYPE, _keypart INT DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
   RETURNS VARCHAR AS
-  $VT_process_output_idxquery$
+  $VT_task_output_idxquery$
   DECLARE
     _stmt      VARCHAR   DEFAULT '';
     _goid      OID;
@@ -1036,7 +1038,7 @@ CREATE OR REPLACE FUNCTION VT_process_output_idxquery(_tblname VARCHAR, _keyname
       RAISE WARNING 'It seems, that indexing of "%" type (above key "%") is not supported by VTApi at this moment. If you would like to index this key, try to contact VTApi team. (Details: ERROR %: %)', _typname, _keyname, SQLSTATE, SQLERRM;
       RETURN '';
   END;
-  $VT_process_output_idxquery$
+  $VT_task_output_idxquery$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
