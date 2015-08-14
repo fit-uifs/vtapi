@@ -68,6 +68,7 @@ extern const std::string def_col_seq_location;
 extern const std::string def_col_seq_type;
 extern const std::string def_col_seq_vidlength;
 extern const std::string def_col_seq_vidfps;
+extern const std::string def_col_seq_vidspeed;
 extern const std::string def_col_seq_vidtime;
 extern const std::string def_col_seq_created;
 extern const std::string def_col_seq_comment;

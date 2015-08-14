@@ -13,6 +13,7 @@
 #pragma once
 
 #include <ctime>
+#include <list>
 #include "../data/processstate.h"
 #include "../data/intervalevent.h"
 #include "../data/commons.h"

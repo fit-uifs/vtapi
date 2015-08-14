@@ -33,6 +33,7 @@ Sequence::Sequence(const Commons& commons, const string& name)
         context().sequence = name;
 
     _select.from(def_tab_sequences, def_col_all);
+    _select.orderBy(def_col_seq_name);
     
     if (!context().sequence.empty())
         _select.whereString(def_col_seq_name, context().sequence);
@@ -109,6 +110,10 @@ std::string Sequence::getDataLocation()
             context().sequenceLocation;
 }
 
+time_t vtapi::Sequence::getCreatedTime()
+{
+    return this->getTimestamp(def_col_seq_created);
+}
 
 bool Sequence::updateComment(const std::string& comment)
 {
@@ -203,9 +208,14 @@ size_t Video::getLength()
     return getInt(def_col_seq_vidlength);
 }
 
-float Video::getFPS()
+double Video::getFPS()
 {
     return getFloat(def_col_seq_vidfps);
+}
+
+double vtapi::Video::getSpeed()
+{
+    return getFloat(def_col_seq_vidspeed);
 }
 
 time_t Video::getRealStartTime()

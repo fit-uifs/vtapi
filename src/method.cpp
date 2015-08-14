@@ -29,6 +29,7 @@ Method::Method(const Commons& commons, const string& name)
         context().method = name;
     
     _select.from(def_tab_methods, def_col_all);
+    _select.orderBy(def_col_mt_name);
     
     if (!context().method.empty())
         _select.whereString(def_col_mt_name, context().method);

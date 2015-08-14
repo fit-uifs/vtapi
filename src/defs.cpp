@@ -57,6 +57,7 @@ const std::string def_col_seq_location = "seqlocation";
 const std::string def_col_seq_type = "seqtyp";
 const std::string def_col_seq_vidlength = "vid_length";
 const std::string def_col_seq_vidfps = "vid_fps";
+const std::string def_col_seq_vidspeed = "vid_speed";
 const std::string def_col_seq_vidtime = "vid_time";
 const std::string def_col_seq_created = "created";
 const std::string def_col_seq_comment = "comment";

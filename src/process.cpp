@@ -11,6 +11,7 @@
  */
 
 #include <exception>
+#include <Poco/AutoPtr.h>
 #include <Poco/Path.h>
 #include <Poco/File.h>
 #include <Poco/Process.h>
@@ -34,6 +35,7 @@ Process::Process(const Commons& commons, int id)
         context().process = id;
     
     _select.from(def_tab_processes, def_col_all);
+    _select.orderBy(def_col_prs_prsid);
     
     if (context().process != 0) {
         _select.whereInt(def_col_prs_prsid, context().process);
