@@ -58,8 +58,8 @@ DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR) CASCADE;
 
-DROP FUNCTION IF EXISTS public.VT_task_output_create(VARCHAR, VARCHAR, VARCHAR) CASCADE;
-DROP FUNCTION IF EXISTS public.VT_task_output_drop(VARCHAR, BOOLEAN, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_task_add(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_task_delete(VARCHAR, BOOLEAN, VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_task_output_idxquery(VARCHAR, NAME, REGTYPE, INT, VARCHAR) CASCADE;
 
 
@@ -475,11 +475,11 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
 
     -- table for processing tasks
     CREATE TABLE tasks (
-      taskname name NOT NULL,
-      mtname name NOT NULL,
-      params varchar,
-      outputs regclass,
-      created timestamp without time zone DEFAULT now(),
+      taskname   NAME      NOT NULL,
+      mtname     NAME      NOT NULL,
+      params     VARCHAR   DEFAULT NULL,
+      outputs    REGCLASS,
+      created    TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
       CONSTRAINT tasks_pk PRIMARY KEY (taskname),
       CONSTRAINT mtname_fk FOREIGN KEY (mtname)
         REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
@@ -523,12 +523,17 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
 
     -- table for recording which sequences has been processed for task
     CREATE TABLE rel_tasks_sequences_done (
-      taskname name NOT NULL,
-      seqname name NOT NULL,
-      is_done boolean default false,
+      taskname   NAME      NOT NULL,
+      prsid      INT       NOT NULL,
+      seqname    NAME      NOT NULL,
+      is_done    BOOLEAN   DEFAULT FALSE,
+      started    TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
+      finished   TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
       CONSTRAINT rel_tasks_sequences_done_pk PRIMARY KEY (taskname, seqname),
       CONSTRAINT taskname_fk FOREIGN KEY (taskname)
         REFERENCES tasks(taskname) ON UPDATE CASCADE ON DELETE CASCADE,
+      CONSTRAINT prsid_fk FOREIGN KEY (prsid)
+        REFERENCES processes(prsid) ON UPDATE CASCADE ON DELETE CASCADE,
       CONSTRAINT seqname_fk FOREIGN KEY (seqname)
         REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE CASCADE
     );
@@ -694,22 +699,25 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEF
 
 
 -------------------------------------
--- VTApi CORE UNDERLYING functions for TASK OUTPUT of given method
+-- VTApi CORE UNDERLYING functions for TASK
 -------------------------------------
--- TODO: create by task
 
--- TASK OUTPUT: CREATE
+-- TASK: ADD
 -- Function args:
---   * _mtname - name of method for which will be created task' output table
---   * _dsname - name of dataset where will be created task' output table (optional)
---   * _reqoutname - task' ouput table according to user requirements (optional)
+--   * _taskname - name of task which will be added
+--   * _mtname - name of method for which will be created output keys in output table
+--   * _params - parameters of task (optional)
+--   * _taskprereq - name of prerequisity task (optional)
+--   * _reqoutname - task' ouput table name according to user requirements (optional)
+--   * _dsname - name of dataset where will be task added (optional)
 -- Function behavior:
---   * Task' output table succesfully created => returns TRUE
+--   * Task' output table succesfully added => returns TRUE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsname VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.VT_task_add (_taskname VARCHAR, _mtname VARCHAR, _params VARCHAR DEFAULT NULL, _taskprereq VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
   RETURNS BOOLEAN AS
-  $VT_task_output_create$
+  $VT_task_add$
   DECLARE
+    _prereqmtname   public.methods.mtname%TYPE;
     _keyname        public.methods_keys.keyname%TYPE;
     _typname        public.methods_keys.typname%TYPE;
     _required       public.methods_keys.required%TYPE;
@@ -745,20 +753,12 @@ CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsnam
       END IF;
     END IF;
 
-    -- check if method exists
-    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
-    IF _controlcount <> 1 THEN
-      RAISE EXCEPTION 'Method "%" does not exist.', _mtname;
-    END IF;
-    
     IF _dsname IS NULL THEN
       _dsname := current_schema();
     ELSE
       _idxprefix := _dsname || '.';
     END IF;
-
-    __outname := quote_ident(_dsname) || '.' || quote_ident(_reqoutname);
-
+    
     -- check if dataset (schema) exists
     EXECUTE 'SELECT oid
              FROM pg_catalog.pg_namespace
@@ -769,6 +769,35 @@ CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsnam
       RAISE EXCEPTION 'Dataset "%" does not exist.', _dsname;
     END IF;
     
+    -- check if method exists
+    EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
+    IF _controlcount <> 1 THEN
+      RAISE EXCEPTION 'Method "%" does not exist.', _mtname;
+    END IF;
+    
+    -- check if inkeys of task' method are already defined as outkeys of preprequisity task' method
+    IF _taskprereq IS NOT NULL THEN
+      EXECUTE 'SELECT mtname FROM tasks WHERE taskname = ' || quote_literal(_taskprereq) INTO _prereqmtname;
+      EXECUTE 'SELECT COUNT(*)
+               FROM (
+                 SELECT keyname, typname
+                 FROM public.methods_keys
+                 WHERE mtname = ' || quote_literal(_mtname) || '
+                   AND inout = ''in''
+                 EXCEPT
+                 SELECT keyname, typname
+                 FROM public.methods_keys
+                 WHERE mtname = ' || quote_literal(_prereqmtname) || '
+                   AND inout = ''out''
+               ) AS x;' INTO _controlcount;
+        IF _controlcount <> 0 THEN
+          RAISE EXCEPTION 'Methods inconsistency: Not all inkeys of method "%" are outkeys of method "%".', _mtname, _prereqmtname;
+        END IF;
+    END IF; 
+
+
+    __outname := quote_ident(_dsname) || '.' || quote_ident(_reqoutname);
+
     -- check if task' output table exists
     EXECUTE 'SELECT COUNT(*)
              FROM pg_catalog.pg_class
@@ -819,7 +848,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsnam
                '  created       TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
                   CONSTRAINT ' || quote_ident(_reqoutname || '_pk') || ' PRIMARY KEY (id),
                   CONSTRAINT taskname_fk FOREIGN KEY (taskname)
-                    REFERENCES tasks(taskname) ON UPDATE CASCADE ON DELETE CASCADE.
+                    REFERENCES tasks(taskname) ON UPDATE CASCADE ON DELETE CASCADE,
                   CONSTRAINT seqname_fk FOREIGN KEY (seqname)
                     REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT
                 );
@@ -854,7 +883,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsnam
       END IF;
     
       EXECUTE 'SELECT ''taskname'' AS attname, ''NAME''::regtype AS attypid
-               UNION SELECT ''seqame'', ''NAME''::regtype
+               UNION SELECT ''seqname'', ''NAME''::regtype
                UNION SELECT ''imglocation'', ''VARCHAR''::regtype
                UNION SELECT ''t1'', ''INT''::regtype
                UNION SELECT ''t2'', ''INT''::regtype
@@ -880,7 +909,8 @@ CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsnam
         _tmpstmt := 'SELECT ''rt_start'', ''TIMESTAMP WITHOUT TIME ZONE'', FALSE, FALSE, NULL  -- trigger supplied
                      UNION ';
         
-        IF EXECUTE 'SELECT TRUE WHERE ' || quote_literal(_idxprefix || _reqoutname || '_tsrange_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' THEN
+        EXECUTE 'SELECT 1 WHERE ' || quote_literal(_idxprefix || _reqoutname || '_tsrange_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' INTO _controlcount;
+        IF _controlcount <> 1 THEN
           _idxstmt := 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
         END IF;
       END IF;
@@ -901,7 +931,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsnam
           _stmt := _stmt || ', ';
         ELSIF _typname <> _typname2 THEN
           RAISE EXCEPTION 'Column named "%" already exists, but is of different data type (existing: "%", requested: "%").', _keyname, _typname, _typname2;
-        ELSIF _required <> required2 THEN
+        ELSIF _required <> _required2 THEN
           _stmt := _stmt || ' ALTER COLUMN ' || quote_ident(_keyname) || ' SET NOT NULL, ';
         END IF;
 
@@ -932,73 +962,74 @@ CREATE OR REPLACE FUNCTION public.VT_task_output_create (_mtname VARCHAR, _dsnam
     EXECUTE _stmt;
     EXECUTE _idxstmt;
     
+    EXECUTE 'INSERT INTO tasks(taskname, mtname, params, outputs)
+               VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_mtname) || ', ' || quote_nullable(_params) || ', ''' || __outname || '''::regclass);';
+               
+    IF _taskprereq IS NOT NULL THEN
+      EXECUTE 'INSERT INTO rel_tasks_tasks_prerequisities VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_taskprereq) || ');';
+    END IF;
+    
     RETURN TRUE;
 
     EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during the creation of the task'' output table "%". (Details: ERROR %: %)', __outname, SQLSTATE, SQLERRM;
+      RAISE EXCEPTION 'Some problem occured during the addition of the task "%" in dataset "%". (Details: ERROR %: %)', _taskname, _dsname, SQLSTATE, SQLERRM;
   END;
-  $VT_task_output_create$
+  $VT_task_add$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
 
--- TASK OUTPUT: DROP
+-- TASK: DELETE
 -- Function args:
---   * _name - name of method or directly task' output table name
---   * _isnamedbymethod - determines if "_name" is method name or directly task' output table name (default TRUE => _name is method name)
---   * _dsname - name of dataset where will be dropped task' output table (optional)
--- Function behavior:
---   * Successful deletion of a task' output table => returns TRUE
---   * Task' output table with the given name (or derived from method name) is no longer available => returns FALSE
+--   * _taskname - name of task which will be deleted
+--   * _force - determines if task will be deleted with all following tasks (default FALSE => delete only if no other task depends on it)
+--   * _dsname - name of dataset where will be task deleted (optional)
+-- Function behavior TODO:
+--   * Successful deletion of a task => returns TRUE
+--   * Task with the same name is no longer available => returns FALSE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_task_output_drop (_name VARCHAR, _isnamebymethod BOOLEAN DEFAULT TRUE, _dsname VARCHAR DEFAULT NULL)
+--   * If deletion is not forced and tasks' dependencies exist => INTERRUPTED with EXCEPTION
+--   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
+CREATE OR REPLACE FUNCTION VT_task_delete (_taskname VARCHAR, _force BOOLEAN DEFAULT FALSE, _dsname VARCHAR DEFAULT NULL)
   RETURNS BOOLEAN AS
-  $VT_task_output_drop$
+  $VT_task_delete$
   DECLARE
     _controlcount   INT;
     __outname       VARCHAR;
   BEGIN
+    IF _dsname IS NULL THEN
+      _dsname := current_schema();
+    END IF;
+
     IF _dsname IN ('public', 'pg_catalog') THEN
       RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
     END IF;
 
-    IF _isnamebymethod = TRUE THEN
-      _name := _name || '_out';
-    END IF;
-    
-    IF _dsname IS NULL THEN
-      _dsname := current_schema();
-    END IF;
-    
-    __outname := quote_ident(_dsname) || '.' || quote_ident(_name);
-    
-    EXECUTE 'SELECT COUNT(*)
-             FROM pg_catalog.pg_class
-             WHERE relname = ' || quote_literal(_name) || '
-               AND relnamespace = (
-                 SELECT oid
-                 FROM pg_catalog.pg_namespace
-                 WHERE nspname = ' || quote_literal(_dsname) || '
-               )
-               AND relkind = ''r''; '
-        INTO _controlcount; 
+
+    EXECUTE 'SELECT COUNT(*) FROM ' || quote_ident(_dsname) || '.tasks WHERE taskname = ' || quote_literal(_taskname) INTO _controlcount;
     IF _controlcount <> 1 THEN
-      RAISE NOTICE 'Task'' output table "%" can not be dropped due to it is no longer available.', __outname;
       RETURN FALSE;
     END IF;
+
+    IF _force = FALSE THEN
+      EXECUTE 'SELECT COUNT(*) FROM ' || quote_ident(_dsname) || '.rel_tasks_tasks_prerequisities WHERE taskprereq = ' || quote_literal(_taskname) INTO _controlcount;
+      IF _controlcount > 0 THEN
+        RAISE EXCEPTION 'Can not delete task "%" due to dependent tasks in dataset "%".', _taskname, _dsname;
+      END IF;
+    END IF;
     
-    EXECUTE 'DROP TABLE ' || __outname || ' CASCADE; ';
+    EXECUTE 'DELETE FROM ' || quote_ident(_dsname) || '.tasks WHERE taskname = ' || quote_literal(_taskname);
     RETURN TRUE;
 
     EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during the removal of the task'' output table "%.%". (Details: ERROR %: %)', __outname, SQLSTATE, SQLERRM;    
+      RAISE EXCEPTION 'Some problem occured during the deletion of the task "%" in dataset "%". (Details: ERROR %: %)', _taskname, _dsname, SQLSTATE, SQLERRM;    
   END;
-  $VT_task_output_drop$
+  $VT_task_delete$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
 
--- PROCESS OUTPUT: support for index creation
+-- TASK OUTPUT: support for index creation
 -- Function behavior:
 --   * Returns SQL command for index creation
 CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NAME, _typname REGTYPE, _keypart INT DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
