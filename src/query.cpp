@@ -474,28 +474,27 @@ QueryDatasetCreate::QueryDatasetCreate(
                                        const string& description)
     : Query(commons)
 {
-    querybuilder().useQueryString(
-        querybuilder().getDatasetCreateQuery(name, location, friendly_name, description));
+    querybuilder().useQueryString(querybuilder().getDatasetCreateQuery(name,
+                                                                       location,
+                                                                       friendly_name,
+                                                                       description));
 }
 
-QueryDatasetReset::QueryDatasetReset (
-                                      const Commons& commons,
+QueryDatasetReset::QueryDatasetReset (const Commons& commons,
                                       const string& name)
     : Query(commons)
 {
     querybuilder().useQueryString(querybuilder().getDatasetResetQuery(name));
 }
 
-QueryDatasetDelete::QueryDatasetDelete (
-                                        const Commons& commons,
+QueryDatasetDelete::QueryDatasetDelete (const Commons& commons,
                                         const string& name)
     : Query(commons)
 {
     querybuilder().useQueryString(querybuilder().getDatasetDeleteQuery(name));
 }
 
-QueryMethodCreate::QueryMethodCreate (
-                                      const Commons& commons,
+QueryMethodCreate::QueryMethodCreate (const Commons& commons,
                                       const string& name,
                                       const MethodKeys keys_definition,
                                       const MethodParams params_definition,
@@ -506,19 +505,42 @@ QueryMethodCreate::QueryMethodCreate (
         querybuilder().getMethodCreateQuery(name, keys_definition, params_definition, description));
 }
 
-QueryMethodDelete::QueryMethodDelete (
-                                      const Commons& commons,
+QueryMethodDelete::QueryMethodDelete (const Commons& commons,
                                       const string& name)
     : Query(commons)
 {
     querybuilder().useQueryString(querybuilder().getMethodDeleteQuery(name));
 }
 
-QuerySequenceDelete::QuerySequenceDelete(const Commons &commons, const std::string &name)
+QuerySequenceDelete::QuerySequenceDelete(const Commons &commons, const string &name)
     : Query(commons)
 {
     querybuilder().useQueryString(querybuilder().getSequenceDeleteQuery(name));
 }
+
+QueryTaskCreate::QueryTaskCreate(const Commons& commons,
+                                 const string& name,
+                                 const string& dsname,
+                                 const string& mtname,
+                                 const string& params,
+                                 const string &prereq_task,
+                                 const string& outputs)
+    : Query(commons)
+{
+    context().dataset = dsname;
+    querybuilder().useQueryString(querybuilder().getTaskCreateQuery(name,
+                                                                    mtname,
+                                                                    params,
+                                                                    prereq_task,
+                                                                    outputs));
+}
+
+QueryTaskDelete::QueryTaskDelete(const Commons& commons, const string& taskname)
+    : Query(commons)
+{
+    querybuilder().useQueryString(querybuilder().getTaskDeleteQuery(taskname));
+}
+
 
 QueryLastInsertedId::QueryLastInsertedId(const Commons& commons)
     : Query(commons)

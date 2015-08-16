@@ -17,6 +17,7 @@
 #include "keyvalues.h"
 #include "sequence.h"
 #include "task.h"
+#include "taskparams.h"
 #include "process.h"
 
 namespace vtapi {
@@ -25,6 +26,7 @@ class Sequence;
 class Video;
 class ImageFolder;
 class Task;
+class TaskParams;
 class Process;
 
 
@@ -118,11 +120,10 @@ public:
      * @param comment optional comment
      * @return sequence object, NULL on error
      */
-    Sequence *createSequence(
-        const std::string& name,
-        const std::string& location,
-        const std::string& type,
-        const std::string& comment = std::string());
+    Sequence *createSequence(const std::string& name,
+                             const std::string& location,
+                             const std::string& type,
+                             const std::string& comment = std::string());
 
     /**
      * Creates new video in dataset and returns its object for iteration
@@ -133,12 +134,11 @@ public:
      * @param comment optional comment
      * @return video object, NULL on error
      */
-    Video *createVideo(
-        const std::string& name,
-        const std::string& location,
-        const time_t& realtime,
-        double speed,
-        const std::string& comment = std::string());
+    Video *createVideo(const std::string& name,
+                       const std::string& location,
+                       const time_t& realtime,
+                       double speed,
+                       const std::string& comment = std::string());
 
     /**
      * Creates new image folder in dataset and returns its object for iteration
@@ -147,11 +147,23 @@ public:
      * @param comment optional comment
      * @return image folder object, NULL on error
      */
-    ImageFolder *createImageFolder(
-        const std::string& name,
-        const std::string& location,
-        const std::string& comment = std::string());
+    ImageFolder *createImageFolder(const std::string& name,
+                                   const std::string& location,
+                                   const std::string& comment = std::string());
     
+    /**
+     * @brief Creates new task for given method
+     * @param mtname method name
+     * @param params task parameters
+     * @param prereq_task prerequisite task, empty for none
+     * @param outputs optional output table
+     * @return created task object, NULL on error
+     */
+    Task *createTask(const std::string& mtname,
+                     const TaskParams& params,
+                     const std::string& prereq_task,
+                     const std::string& outputs = std::string());
+
     /**
      * Loads dataset's sequences for iteration
      * @param name   sequence name (no name = all sequences)

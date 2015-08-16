@@ -22,6 +22,7 @@
 namespace vtapi {
 
 class Dataset;
+class Interval;
 
 
 /**

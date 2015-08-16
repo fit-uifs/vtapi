@@ -391,6 +391,48 @@ string PGQueryBuilder::getSequenceDeleteQuery(const string &name)
     q += escapeIdent(def_col_seq_name);
     q += " = ";
     q += escapeLiteral(name);
+    q += ";";
+
+    return q;
+}
+
+string PGQueryBuilder::getTaskCreateQuery(const string &name,
+                                          const string& mtname,
+                                          const string &params,
+                                          const string& prereq_task,
+                                          const string &outputs)
+{
+    string q;
+    q += "SELECT ";
+    q += def_fnc_task_create;
+    q += '(';
+    q += escapeLiteral(name);
+    q += ',';
+    q += escapeLiteral(mtname);
+    q += ',';
+    q += escapeLiteral(params);
+    q += ',';
+    q += prereq_task.empty() ? "NULL" : escapeLiteral(prereq_task);
+    q += ',';
+    q += outputs.empty() ? "NULL" : escapeLiteral(outputs);
+    q += ',';
+    q += escapeLiteral(_defaultSchema);
+    q += ");";
+
+    return q;
+}
+
+string PGQueryBuilder::getTaskDeleteQuery(const string &name)
+{
+    string q;
+    q += "SELECT ";
+    q += def_fnc_task_delete;
+    q += '(';
+    q += escapeLiteral(name);
+    q += ',';
+    q += "TRUE";
+    q += ',';
+    q += escapeLiteral(_defaultSchema);
     q += ");";
 
     return q;

@@ -255,6 +255,23 @@ Process* Task::createProcess(const list<string>& seqnames)
     return p;
 }
 
+string vtapi::Task::constructName(const string &mtname, const TaskParams &params)
+{
+    string input(mtname);
+
+    string par = params.serializeAsName();
+    if (!par.empty()) {
+        input += '_';
+        input += par;
+    }
+
+    hash<string> hash_fn;
+    stringstream ss;
+    ss << hex << hash_fn(input);
+
+    return ss.str();
+}
+
 bool Task::preUpdate()
 {
     bool ret = KeyValues::preUpdate(def_tab_tasks);

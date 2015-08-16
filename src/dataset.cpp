@@ -200,6 +200,33 @@ ImageFolder* Dataset::createImageFolder(const string& name,
     return im;
 }
 
+vtapi::Task *Dataset::createTask(const string &mtname,
+                                        const TaskParams &params,
+                                        const string &prereq_task,
+                                        const string &outputs)
+{
+    Task *ts = NULL;
+    string name = Task::constructName(mtname, params);
+
+    // TODO: validace parametru
+
+    QueryTaskCreate q(*this,
+                    name,
+                    this->getName(),
+                    mtname,
+                    params.serialize(),
+                    prereq_task,
+                    outputs);
+
+    if (q.execute()) {
+        ts = new Task(*this, name);
+        if (!ts->next())
+            vt_destruct(ts);
+    }
+
+    return ts;
+}
+
 Sequence* Dataset::loadSequences(const string& name)
 {
     return (new Sequence(*this, name));

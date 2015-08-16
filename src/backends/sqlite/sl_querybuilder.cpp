@@ -306,6 +306,20 @@ string SLQueryBuilder::getSequenceDeleteQuery(const string &name)
     return "";
 }
 
+string SLQueryBuilder::getTaskCreateQuery(const string &name,
+                                          const string& mtname,
+                                          const string &params,
+                                          const string& prereq_task,
+                                          const string &outputs)
+{
+    return "";
+}
+
+string SLQueryBuilder::getTaskDeleteQuery(const string &name)
+{
+    return "";
+}
+
 string SLQueryBuilder::getLastInsertedIdQuery()
 {
     return "";

@@ -13,14 +13,14 @@ public:
     PGConnection(const std::string& connection_string);
     ~PGConnection();
 
-    bool connect();
-    void disconnect();
-    bool isConnected();
+    bool connect() override;
+    void disconnect() override;
+    bool isConnected() override;
 
-    bool execute(const std::string& query, void *param);
-    int fetch(const std::string& query, void *param, ResultSet &resultSet);
+    bool execute(const std::string& query, void *param) override;
+    int fetch(const std::string& query, void *param, ResultSet &resultSet) override;
 
-    void* getConnectionObject();
+    void* getConnectionObject() override;
 
 private:
     PGconn *_conn;

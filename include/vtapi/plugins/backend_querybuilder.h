@@ -149,25 +149,31 @@ public:
      */
     virtual std::string getRollbackQuery() = 0;
 
-    virtual std::string getDatasetCreateQuery(
-        const std::string& name,
-        const std::string& location,
-        const std::string& friendly_name,
-        const std::string& description) = 0;
+    virtual std::string getDatasetCreateQuery(const std::string& name,
+                                              const std::string& location,
+                                              const std::string& friendly_name,
+                                              const std::string& description) = 0;
 
     virtual std::string getDatasetResetQuery(const std::string& name) = 0;
 
     virtual std::string getDatasetDeleteQuery(const std::string& name) = 0;
 
-    virtual std::string getMethodCreateQuery(
-        const std::string& name,
-        const MethodKeys keys_definition,
-        const MethodParams params_definition,
-        const std::string& description) = 0;
+    virtual std::string getMethodCreateQuery(const std::string& name,
+                                             const MethodKeys keys_definition,
+                                             const MethodParams params_definition,
+                                             const std::string& description) = 0;
 
     virtual std::string getMethodDeleteQuery(const std::string& name) = 0;
 
     virtual std::string getSequenceDeleteQuery(const std::string& name) = 0;
+
+    virtual std::string getTaskCreateQuery(const std::string& name,
+                                           const std::string& mtname,
+                                           const std::string& params,
+                                           const std::string& prereq_task,
+                                           const std::string& outputs) = 0;
+
+    virtual std::string getTaskDeleteQuery(const std::string& name) = 0;
 
     virtual std::string getLastInsertedIdQuery() = 0;
 

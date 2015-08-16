@@ -20,7 +20,7 @@
 namespace vtapi {
 
 class Task;
-
+class TaskParams;
 
 /**
  * @brief A class which represents methods and gets also their keys
@@ -86,16 +86,17 @@ public:
     bool updateDescription(const std::string& description);
     
     /**
-     * Creates new task for this method
-     * @param params task parameters list
-     * @param tasknames_prereq which tasks are prerequisities to the new task
-     * @param outputTable destination table for task outputs (empty => <methodname>_out)
-     * @return pointer to the new Task object, NULL on error
+     * @brief Creates new task for given dataset
+     * @param dsname dataset name
+     * @param params task parameters
+     * @param prereq_task prerequisite task, empty for none
+     * @param outputs optional output table
+     * @return created task object, NULL on error
      */
-    Task* createTask(
-        const TaskParams& params,
-        const std::list<std::string>& tasknames_prereq,
-        const std::string& outputTable = std::string());
+    Task *createTask(const std::string& dsname,
+                     const TaskParams& params,
+                     const std::string& prereq_task,
+                     const std::string& outputs = std::string());
     
     /**
      * Loads method's processing tasks for iteration
@@ -103,13 +104,6 @@ public:
      * @return pointer to the new Task object, NULL on error
      */
     Task* loadTasks(const std::string& name = std::string());
-
-    /**
-     * Constructs a task name from input parameters
-     * @param params container
-     * @return process name
-     */
-    std::string constructTaskName(const TaskParams &params);
     
 protected:
     virtual bool preUpdate();

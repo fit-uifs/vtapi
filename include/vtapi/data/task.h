@@ -29,6 +29,7 @@ class Sequence;
 class Interval;
 class Method;
 class Process;
+class TaskParams;
 
 
 class Task : public KeyValues
@@ -141,6 +142,18 @@ public:
      * @return pointer to the new Process object, NULL on error
      */
     Process* createProcess(const std::list<std::string>& seqnames);
+
+    //////////////////////////////////////////////////
+    // misc
+    //////////////////////////////////////////////////
+
+    /**
+     * Constructs a task name from input parameters
+     * @param mtname method name of this task
+     * @param params container
+     * @return process name
+     */
+    static std::string constructName(const std::string &mtname, const TaskParams &params);
 
 protected:
     virtual bool preUpdate();

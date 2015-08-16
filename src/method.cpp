@@ -73,50 +73,28 @@ bool Method::updateDescription(const string& description)
     return this->updateString(def_col_mt_description, description);
 }
 
-Task* Method::createTask(
-    const TaskParams& params,
-    const list<string>& tasknames_prereq,
-    const string& outputTable)
+Task *Method::createTask(const string& dsname,
+                 const TaskParams& params,
+                 const string& prereq_task,
+                 const string& outputs)
 {
     Task *ts = NULL;
-    bool retval = true;
+    string name = Task::constructName(this->getName(), params);
 
-    //TODO: validace parametru
+    // TODO: validace parametru
 
-    string name = constructTaskName(params);
+    QueryTaskCreate q(*this,
+                    name,
+                    dsname,
+                    this->getName(),
+                    params.serialize(),
+                    prereq_task,
+                    outputs);
 
-    QueryBeginTransaction(*this).execute();
-    
-    {
-        Insert insert(*this, def_tab_tasks);
-        retval &= insert.keyString(def_col_task_name, name);
-        retval &= insert.keyString(def_col_task_mtname, context().method);
-        retval &= insert.keyString(def_col_task_params, params.serialize());
-        if (!outputTable.empty())
-            retval &= insert.keyString(def_col_task_outputs, outputTable);
-
-        if (retval && (retval = insert.execute())) {
-            for (auto & item : tasknames_prereq) {
-                Insert insert2(*this, def_tab_tasks_prereq);
-                retval &= insert.keyString(def_col_tprq_taskname, name);
-                retval &= insert.keyString(def_col_tprq_taskprereq, item);
-                if (retval && (retval = insert2.execute())) {
-                }
-                else {
-                    break;
-                }
-            }
-        }
-    }
-    
-    if (retval) {
-        QueryCommitTransaction(*this).execute();
-
-        ts = loadTasks(name);
-        if (!ts->next()) vt_destruct(ts);
-    }
-    else {
-        QueryRollbackTransaction(*this).execute();
+    if (q.execute()) {
+        ts = new Task(*this, name);
+        if (!ts->next())
+            vt_destruct(ts);
     }
 
     return ts;
@@ -125,26 +103,6 @@ Task* Method::createTask(
 Task* Method::loadTasks(const string& name)
 {
     return (new Task(*this, name));
-}
-
-string Method::constructTaskName(const TaskParams & params)
-{
-    string input;
-
-    input += context().method;
-    input += 'p';
-
-    string par = params.serializeAsName();
-    if (!par.empty()) {
-        input += '_';
-        input += par;
-    }
-
-    hash<string> hash_fn;
-    stringstream ss;
-    ss << hex << hash_fn(input);
-
-    return ss.str();
 }
 
 bool Method::preUpdate()

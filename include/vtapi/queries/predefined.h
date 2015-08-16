@@ -83,6 +83,24 @@ public:
     QuerySequenceDelete(const Commons& commons, const std::string& name);
 } ;
 
+class QueryTaskCreate : public Query
+{
+public:
+    QueryTaskCreate(const Commons& commons,
+                    const std::string& name,
+                    const std::string& dsname,
+                    const std::string& mtname,
+                    const std::string& params,
+                    const std::string &prereq_task,
+                    const std::string& outputs);
+};
+
+class QueryTaskDelete : public Query
+{
+public:
+    QueryTaskDelete(const Commons& commons, const std::string& taskname);
+};
+
 class QueryLastInsertedId : public Query
 {
 public:
