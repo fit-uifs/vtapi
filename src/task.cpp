@@ -267,13 +267,7 @@ IntervalOutput *Task::createIntervalOutput(const string &seqname)
 
 string Task::constructName(const string &mtname, const TaskParams &params)
 {
-    string input(mtname);
-
-    string par = params.serializeAsName();
-    if (!par.empty()) {
-        input += '_';
-        input += par;
-    }
+    string input = mtname + params.serialize();
 
     hash<string> hash_fn;
     stringstream ss;

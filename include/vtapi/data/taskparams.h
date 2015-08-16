@@ -18,12 +18,6 @@ public:
     ~TaskParams();
 
     TaskParams& operator=(TaskParams&& other);
-    
-    // input process name
-
-    bool hasInputProcessName() const;
-    bool getInputProcess(std::string& value) const;
-    void setInputProcessName(const std::string& value);
 
     // param getters
 
@@ -57,13 +51,6 @@ public:
     std::string serialize() const;
 
     /**
-     * Serializes params as process name postfix, eg.: inputProcess_0.2_myval
-     * Includes input process name string
-     * @return 
-     */
-    std::string serializeAsName() const;
-
-    /**
      * Deserializes params params from DB input (JSON-like format)
      * Deletes all previously stored params
      * @param serialized serialized input string
@@ -79,8 +66,6 @@ public:
     bool validate(const MethodParams& definitions);
     
 private:
-    std::string m_inputProcessName;
-    
     // templated stuff
     template <class T>
     bool get(const std::string& key, T& value) const;

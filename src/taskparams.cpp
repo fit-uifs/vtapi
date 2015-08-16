@@ -40,7 +40,7 @@ TaskParams::TaskParams()
 { }
 
 TaskParams::TaskParams(TaskParams && other)
-: BaseParams(), m_inputProcessName(std::move(other.m_inputProcessName))
+: BaseParams()
 {
     m_data = std::move(other.m_data);
 }
@@ -59,30 +59,8 @@ TaskParams::~TaskParams()
 TaskParams& TaskParams::operator=(TaskParams&& other)
 {
     clear();
-    m_inputProcessName = std::move(other.m_inputProcessName);
     m_data = std::move(other.m_data);
     return *this;
-}
-
-bool TaskParams::hasInputProcessName() const
-{
-    return !m_inputProcessName.empty();
-}
-
-bool TaskParams::getInputProcess(string& value) const
-{
-    if (!m_inputProcessName.empty()) {
-        value = m_inputProcessName;
-        return true;
-    }
-    else {
-        return false;
-    }
-}
-
-void TaskParams::setInputProcessName(const string& value)
-{
-    m_inputProcessName = value;
 }
 
 template <typename T>
@@ -194,7 +172,6 @@ void TaskParams::clear()
 {
     for (auto &item : m_data) delete item.second;
     m_data.clear();
-    m_inputProcessName.clear();
 }
 
 string TaskParams::serialize() const
@@ -215,21 +192,6 @@ string TaskParams::serialize() const
     }
 
     ret += '}';
-
-    return ret;
-}
-
-string TaskParams::serializeAsName() const
-{
-    string ret;
-
-    if (!m_inputProcessName.empty()) {
-        ret = m_inputProcessName;
-    }
-    for (auto& kv : m_data) {
-        if (!ret.empty()) ret += '_';
-        ret += kv.second->toString();
-    }
 
     return ret;
 }
