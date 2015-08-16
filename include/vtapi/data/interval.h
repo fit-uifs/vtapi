@@ -116,29 +116,6 @@ public:
      */
     bool updateStartEndTime(const int t1, const int t2 = -1);
 
-//    /**
-//     * Adds new interval to the table - minimal insert
-//     * @param sequence   interval name
-//     * @param t1         start time
-//     * @param t2         end time
-//     * @param location   location of an image
-//     * @return success
-//     */
-//    bool add(const std::string& sequence, const int t1, const int t2 = -1, const std::string& location = "");
-//    
-//    /**
-//     * Adds new interval to the table - full insert
-//     * @param sequence   interval name
-//     * @param t1         start time
-//     * @param t2         end time
-//     * @param location   location of an image
-//     * @param userid     name of an owner
-//     * @param notes      optional description
-//     * @return success
-//     */
-//    bool add(const std::string& sequence, const int t1, const int t2, const std::string& location,
-//    const std::string& userid, const std::string& notes);
-
     /**
      * Sets filter for intervals by ID before calling next()
      * @param id interval ID

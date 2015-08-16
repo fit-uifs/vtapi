@@ -12,6 +12,7 @@
 
 #include <iostream>
 #include <vtapi/common/global.h>
+#include <vtapi/common/defs.h>
 #include <vtapi/data/keyvalues.h>
 
 using namespace std;
@@ -23,7 +24,7 @@ KeyValues::KeyValues(const Commons& commons, const string& selection)
     : Commons(commons, false), _select(commons), _update(NULL)
 {
     if (!selection.empty())
-        context().selection = selection;
+        _select.from(selection, def_col_all);
 }
 
 KeyValues::~KeyValues()

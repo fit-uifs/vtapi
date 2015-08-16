@@ -34,7 +34,7 @@ class TaskParams;
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Method : public KeyValues
+class Method : protected KeyValues
 {
 public:
 
@@ -77,6 +77,12 @@ public:
      * @return description of the current dataset
      */
     std::string getDescription();
+
+    /**
+     * @brief Gets absolute path to method library
+     * @return path
+     */
+    std::string getPluginPath();
 
     /**
      * Sets method's description

@@ -60,6 +60,8 @@ public:
     bool keyIntA(const std::string& key, int* values, const int size, const std::string& from) override;
     bool keyFloat(const std::string& key, float value, const std::string& from) override;
     bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from) override;
+    bool keyFloat8(const std::string& key, double value, const std::string& from) override;
+    bool keyFloat8A(const std::string& key, double* values, const int size, const std::string& from) override;
     bool keySeqtype(const std::string& key, const std::string& value, const std::string& from) override;
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from) override;
     bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from) override;

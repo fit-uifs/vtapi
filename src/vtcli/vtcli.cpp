@@ -11,39 +11,17 @@ int main(int argc, char *argv[])
 
     Dataset *ds = vtapi.loadDatasets();
     if (ds->next()) {
-        cout << ds->getName() << endl;
-
-        {
+        Task *task = ds->loadTasks();
+        if (task->next()) {
             list<string> seqnames = { "video1", "video2" };
-            Sequence *seq = ds->loadSequences(seqnames);
-            while (seq->next()) {
-                cout << seq->getName() << endl;
-            }
-            delete seq;
-        }
+            Process *prs = task->createProcess(seqnames);
+            if (prs) {
+                prs->launch();
 
-        {
-            list<int> prsids = { 1, 2 };
-            Process *prs = ds->loadProcesses(prsids);
-            while (prs->next()) {
-                cout << prs->getId() << endl;
+                delete prs;
             }
-            delete prs;
         }
-
-        {
-            Task *task = ds->loadTasks();
-            if (task->next()) {
-                list<string> seqnames = { "video1", "video2" };
-                Process *prs = task->createProcess(seqnames);
-                if (prs) {
-                    prs->launch();
-
-                    delete prs;
-                }
-            }
-            delete task;
-        }
+        delete task;
     }
     delete ds;
 

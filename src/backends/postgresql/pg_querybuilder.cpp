@@ -558,6 +558,16 @@ bool PGQueryBuilder::keyFloatA(const string& key, float* values, const int size,
     return keyArray(key, values, size, "%float4", "%float4[]", from);
 }
 
+bool PGQueryBuilder::keyFloat8(const string &key, double value, const string &from)
+{
+    return keySingleValue(key, value, "%float8", from);
+}
+
+bool PGQueryBuilder::keyFloat8A(const string &key, double *values, const int size, const string &from)
+{
+    return keyArray(key, values, size, "%float8", "%float8[]", from);
+}
+
 bool PGQueryBuilder::keySeqtype(const string& key, const string& value, const string& from)
 {
     return checkSeqtype(value) && keySingleValue(key, value.c_str(), "%public.seqtype", from);

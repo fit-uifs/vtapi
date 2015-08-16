@@ -405,6 +405,26 @@ bool SLQueryBuilder::keyFloatA(const string& key, float* values, const int size,
     }
 }
 
+bool SLQueryBuilder::keyFloat8(const string &key, double value, const string &from)
+{
+    if (key.empty()) return false;
+    else {
+        TKeyValue<double> *tk = new TKeyValue<double>("float8", key, value, from);
+        _keyValuesMain.push_back(tk);
+        return true;
+    }
+}
+
+bool SLQueryBuilder::keyFloat8A(const string &key, double *values, const int size, const string &from)
+{
+    if (key.empty() || !values || size <= 0) return false;
+    else {
+        TKeyValue<double> *tk = new TKeyValue<double>("float8A", key, values, size, from);
+        _keyValuesMain.push_back(tk);
+        return true;
+    }
+}
+
 bool SLQueryBuilder::keySeqtype(const string& key, const string& value, const string& from)
 {
     if (key.empty() || value.empty() || !this->checkSeqtype(value)) return false;

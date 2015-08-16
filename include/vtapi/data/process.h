@@ -24,6 +24,8 @@ namespace vtapi {
 
 class Dataset;
 class Sequence;
+class ImageFolder;
+class Video;
 class Task;
 class Method;
 
@@ -40,7 +42,7 @@ class Method;
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Process : public KeyValues
+class Process : protected KeyValues
 {
 public:
 
@@ -109,10 +111,16 @@ public:
     Method *getParentMethod();
 
     /**
-     * @brief Loads sequences which should be processed
-     * @return sequences object for iteration
+     * @brief Loads image folders which should be processed
+     * @return image folders object for iteration
      */
-    Sequence *loadAssignedSequences();
+    ImageFolder *loadAssignedImageFolders();
+
+    /**
+     * @brief Loads videos which should be processed
+     * @return videos object for iteration
+     */
+    Video *loadAssignedVideos();
 
     //////////////////////////////////////////////////
     // getters - SELECT

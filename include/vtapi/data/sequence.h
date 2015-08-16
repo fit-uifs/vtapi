@@ -39,7 +39,7 @@ class Interval;
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Sequence : public KeyValues
+class Sequence : protected KeyValues
 {
 public:
     /**
@@ -118,7 +118,7 @@ public:
      * @return success
      */
     bool updateComment(const std::string& comment);
-    
+
 protected:
     bool preUpdate();
 

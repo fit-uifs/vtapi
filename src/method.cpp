@@ -11,6 +11,8 @@
  */
 
 #include <functional>
+#include <Poco/Path.h>
+#include <Poco/SharedLibrary.h>
 #include <vtapi/common/global.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/queries/insert.h>
@@ -66,6 +68,12 @@ string Method::getName()
 string Method::getDescription()
 {
     return this->getString(def_col_mt_description);
+}
+
+string Method::getPluginPath()
+{
+    return config().modules_dir + Poco::Path::separator() +
+            "libvtmodule_" + this->getName() + Poco::SharedLibrary::suffix();
 }
 
 bool Method::updateDescription(const string& description)

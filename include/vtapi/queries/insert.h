@@ -111,7 +111,7 @@ public:
      * @note It may be called several times.
      */
     bool keyFloat(const std::string& key, float value, const std::string& from = std::string());
-    
+
     /**
      * This is a persistent function to add float values (float array) to a key
      * @param key      key holding value to be inserted
@@ -122,6 +122,27 @@ public:
      * @note It may be called several times.
      */
     bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = std::string());
+
+    /**
+     * This is a persistent function to add float value to a key
+     * @param key      key holding value to be inserted
+     * @param value    float value to be inserted
+     * @param from     selection table (optional)
+     * @return success
+     * @note It may be called several times.
+     */
+    bool keyFloat8(const std::string& key, double value, const std::string& from = std::string());
+
+    /**
+     * This is a persistent function to add float values (float array) to a key
+     * @param key      key holding value to be inserted
+     * @param values   float array to be inserted
+     * @param size     size of array
+     * @param from     selection table (optional)
+     * @return success
+     * @note It may be called several times.
+     */
+    bool keyFloat8A(const std::string& key, double* values, const int size, const std::string& from = std::string());
     
     /**
      * This is a persistent function to add seqtype value to a key

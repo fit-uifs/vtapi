@@ -95,7 +95,7 @@ Dataset *Task::getParentDataset()
     }
 }
 
-string vtapi::Task::getParentMethodName()
+string Task::getParentMethodName()
 {
     if (!context().method.empty())
         return context().method;
@@ -166,9 +166,14 @@ Task *Task::loadPrerequisiteTasks()
     return new Task(*this, tasknames);
 }
 
+string Task::getOutputDataTable()
+{
+    return this->getString(def_col_task_outputs);
+}
+
 Interval *Task::loadOutputData()
 {
-    return new Interval(*this, this->getString(def_col_task_outputs));
+    return new Interval(*this, this->getOutputDataTable());
 }
 
 Sequence *Task::loadSequencesInProgress()
@@ -255,7 +260,12 @@ Process* Task::createProcess(const list<string>& seqnames)
     return p;
 }
 
-string vtapi::Task::constructName(const string &mtname, const TaskParams &params)
+IntervalOutput *Task::createIntervalOutput(const string &seqname)
+{
+    return new IntervalOutput(*this, seqname, this->getOutputDataTable());
+}
+
+string Task::constructName(const string &mtname, const TaskParams &params)
 {
     string input(mtname);
 

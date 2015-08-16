@@ -42,7 +42,7 @@ class Process;
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Dataset : public KeyValues
+class Dataset : protected KeyValues
 {
 public:
     /**

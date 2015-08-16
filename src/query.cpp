@@ -277,6 +277,18 @@ bool Insert::keyFloatA(const string& key, float* values, const int size, const s
     return querybuilder().keyFloatA(key, values, size, from);
 }
 
+bool vtapi::Insert::keyFloat8(const string &key, double value, const string &from)
+{
+    _executed = false;
+    return querybuilder().keyFloat8(key, value, from);
+}
+
+bool vtapi::Insert::keyFloat8A(const string &key, double *values, const int size, const string &from)
+{
+    _executed = false;
+    return querybuilder().keyFloat8A(key, values, size, from);
+}
+
 bool Insert::keySeqtype(const string& key, const string& value, const string& from)
 {
     _executed = false;

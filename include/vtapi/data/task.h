@@ -21,6 +21,7 @@
 #include "method.h"
 #include "process.h"
 #include "taskparams.h"
+#include "intervaloutput.h"
 
 namespace vtapi {
 
@@ -30,9 +31,10 @@ class Interval;
 class Method;
 class Process;
 class TaskParams;
+class IntervalOutput;
 
 
-class Task : public KeyValues
+class Task : protected KeyValues
 {
 public:
     /**
@@ -91,6 +93,12 @@ public:
     Task *loadPrerequisiteTasks();
 
     /**
+     * @brief Gets output data table name for this task
+     * @return table name
+     */
+    std::string getOutputDataTable();
+
+    /**
      * Gets output intervals of this process
      * @return output intervals for iteration
      */
@@ -142,6 +150,13 @@ public:
      * @return pointer to the new Process object, NULL on error
      */
     Process* createProcess(const std::list<std::string>& seqnames);
+
+    /**
+     * @brief Creates new object for outputting data
+     * @param seqname output data for this sequence
+     * @return interval output object, NULL on error
+     */
+    IntervalOutput *createIntervalOutput(const std::string &seqname);
 
     //////////////////////////////////////////////////
     // misc

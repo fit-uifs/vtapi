@@ -267,6 +267,27 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
+    virtual bool keyFloat8(const std::string& key, double value, const std::string& from) = 0;
+
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param values values
+     * @param size size of array
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+    virtual bool keyFloat8A(const std::string& key, double* values, const int size, const std::string& from) = 0;
+
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
     virtual bool keySeqtype(const std::string& key, const std::string& value, const std::string& from) = 0;
 
     /**

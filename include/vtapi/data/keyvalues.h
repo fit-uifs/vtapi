@@ -37,7 +37,7 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class KeyValues : public Commons
+class KeyValues : protected Commons
 {
 public:
 

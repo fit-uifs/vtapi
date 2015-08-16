@@ -130,21 +130,19 @@ int Interval::getEndTime()
 bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
 {
     bool bRet = false;
-    Sequence *seq = getParentSequence();
+    Video *vid = new Video(*this, getParentSequenceName());
 
-    if (seq) {
-        if (seq->getType().compare(def_val_video) == 0) {
-            time_t start = seq->getTimestamp(def_col_seq_vidtime);
-            double fps = seq->getFloat8(def_col_seq_vidfps);
+    if (vid->next()) {
+        time_t start = vid->getRealStartTime();
+        double fps = vid->getFPS();
 
-            if (start && fps) {
-                *t1 = start + (time_t)(this->getStartTime() / fps);
-                *t2 = start + (time_t) (this->getEndTime() / fps);
-                bRet = true;
-            }
+        if (start && fps) {
+            *t1 = start + (time_t)(this->getStartTime() / fps);
+            *t2 = start + (time_t) (this->getEndTime() / fps);
+            bRet = true;
         }
-        delete seq;
     }
+    delete vid;
     
     return bRet;
 }
@@ -162,31 +160,6 @@ bool Interval::updateStartEndTime(const int t1, const int t2)
 {
     return (updateInt(def_col_int_t1, t1) && updateInt(def_col_int_t2, t2) && updateExecute());
 }
-
-
-//bool Interval::add(const string& sequence, const int t1, const int t2, const string& location)
-//{
-//    return add(sequence, t1, t2, location, getUser(), "");
-//}
-//
-//bool Interval::add(const string& sequence, const int t1, const int t2, const string& location,
-//    const string& userid, const string& notes)
-//{
-//    bool retval = true;
-//    int te2 = (t2 < 0) ? t1 : t2;
-//
-//    retval &= KeyValues::preAdd(this->selection);
-//    retval &= insert->keyString("seqname", sequence);
-//    retval &= insert->keyString("prsname", this->process);
-//    retval &= insert->keyInt("t1", t1);
-//    retval &= insert->keyInt("t2", te2);
-//    retval &= insert->keyString("imglocation", location);
-//    if (!userid.empty()) retval &= insert->keyString("userid", userid);
-//    if (!notes.empty()) retval &= insert->keyString("notes", notes);
-//    
-//    return retval;
-//}
-
 
 bool Interval::filterById(const int id)
 {

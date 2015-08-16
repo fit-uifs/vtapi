@@ -174,7 +174,7 @@ Method *Process::getParentMethod()
     }
 }
 
-Sequence *Process::loadAssignedSequences()
+vtapi::Video *vtapi::Process::loadAssignedVideos()
 {
     list<string> seqnames;
     KeyValues kv(*this, def_tab_processes_seq);
@@ -183,9 +183,20 @@ Sequence *Process::loadAssignedSequences()
         seqnames.push_back(kv.getString(def_col_prss_seqname));
     }
 
-    return new Sequence(*this, seqnames);
+    return new Video(*this, seqnames);
 }
 
+vtapi::ImageFolder *vtapi::Process::loadAssignedImageFolders()
+{
+    list<string> seqnames;
+    KeyValues kv(*this, def_tab_processes_seq);
+    kv._select.whereInt(def_col_prss_prsid, context().process);
+    while(kv.next()) {
+        seqnames.push_back(kv.getString(def_col_prss_seqname));
+    }
+
+    return new ImageFolder(*this, seqnames);
+}
 
 
 //////////////////////////////////////////////////

@@ -43,8 +43,9 @@ bool Logger::config(const string& logfile, bool errors, bool warnings, bool debu
             Poco::Path logpath = Poco::Path(logfile).makeAbsolute();
             Poco::File(logpath.parent()).createDirectories();
 
-            _log.open(logpath.toString());
-            ret = _log.is_open();
+            _log.open(logpath.toString(), ios::app);
+            if (ret = _log.is_open())
+                message("------------------------------------------------------");
         }
         catch (Poco::Exception &e)
         {
