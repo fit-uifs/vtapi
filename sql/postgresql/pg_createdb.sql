@@ -55,10 +55,11 @@ DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_truncate(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 
-DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
+-- TODO: it still crashes here
+--DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR) CASCADE;
 
-DROP FUNCTION IF EXISTS public.VT_task_add(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_task_create(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_task_delete(VARCHAR, BOOLEAN, VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_task_output_idxquery(VARCHAR, NAME, REGTYPE, INT, VARCHAR) CASCADE;
 
@@ -713,9 +714,9 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEF
 -- Function behavior:
 --   * Task' output table succesfully added => returns TRUE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION public.VT_task_add (_taskname VARCHAR, _mtname VARCHAR, _params VARCHAR DEFAULT NULL, _taskprereq VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VARCHAR, _params VARCHAR DEFAULT NULL, _taskprereq VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
   RETURNS BOOLEAN AS
-  $VT_task_add$
+  $VT_task_create$
   DECLARE
     _prereqmtname   public.methods.mtname%TYPE;
     _keyname        public.methods_keys.keyname%TYPE;
@@ -974,7 +975,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_add (_taskname VARCHAR, _mtname VARCHA
     EXCEPTION WHEN OTHERS THEN
       RAISE EXCEPTION 'Some problem occured during the addition of the task "%" in dataset "%". (Details: ERROR %: %)', _taskname, _dsname, SQLSTATE, SQLERRM;
   END;
-  $VT_task_add$
+  $VT_task_create$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 
