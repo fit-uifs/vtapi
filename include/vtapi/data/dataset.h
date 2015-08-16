@@ -61,12 +61,17 @@ public:
      */
     Dataset(const Commons& commons, const std::list<std::string>& names);
 
+    using KeyValues::count;
+    using KeyValues::print;
+    using KeyValues::printAll;
+    using KeyValues::printKeys;
+
     /**
      * Moves to a next dataset and sets dataset name and location varibles
      * @return success
      * @note Overloading next() from KeyValues
      */
-    bool next();
+    bool next() override;
 
     /**
      * Gets name of the current dataset

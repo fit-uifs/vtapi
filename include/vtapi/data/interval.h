@@ -51,13 +51,12 @@ public:
      * Destructor
      */
     virtual ~Interval();
-    
+
     /*
      * Moves to next interval
      * @return success
-     * @note Overloading next() from KeyValues
      */
-    virtual bool next();
+    virtual bool next() override;
 
     /**
      * @brief Gets parent dataset object
@@ -204,9 +203,8 @@ public:
     /*
      * Moves to next image
      * @return success
-     * @note Overloading next() from Interval
      */
-    bool next();
+    bool next() override;
 
     /**
      * Gets a sequence (order) number of the current image (interval)

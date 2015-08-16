@@ -63,12 +63,17 @@ public:
      */
     virtual ~Sequence();
     
+    using KeyValues::count;
+    using KeyValues::print;
+    using KeyValues::printAll;
+    using KeyValues::printKeys;
+
     /**
      * Moves to a next sequence and sets sequence name and location varibles
      * @return success
      * @note Overloading next() from KeyValues
      */
-    virtual bool next();
+    virtual bool next() override;
 
     /**
      * @brief Gets parent dataset object
@@ -165,9 +170,8 @@ public:
     /**
      * Individual next() for image folder
      * @return success
-     * @note Overloading next() from KeyValues
      */
-    bool next();
+    bool next() override;
     
 private:
     ImageFolder() = delete;
@@ -216,9 +220,8 @@ public:
     /**
      * Moves to a next video, releases capture and sets sequence name and location varibles
      * @return success
-     * @note Overloading next() from Sequence
      */
-    bool next();
+    bool next() override;
     
     /**
      * Opens a video capture (not necessary to call directly)

@@ -59,12 +59,17 @@ public:
      */
     virtual ~Method();
     
+    using KeyValues::count;
+    using KeyValues::print;
+    using KeyValues::printAll;
+    using KeyValues::printKeys;
+
     /**
      * Moves to a next method and set a method name and its methodkeys variables
      * @return success
      * @note Overloading next() from KeyValues
      */
-    bool next();
+    bool next() override;
     
     /**
      * Gets a name of the current method

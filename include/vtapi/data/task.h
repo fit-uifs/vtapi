@@ -55,7 +55,16 @@ public:
 
     ~Task();
     
-    bool next();
+    using KeyValues::count;
+    using KeyValues::print;
+    using KeyValues::printAll;
+    using KeyValues::printKeys;
+
+    /**
+     * @brief Iterates to next task
+     * @return success on existing task
+     */
+    bool next() override;
     
     //////////////////////////////////////////////////
     // getters - associated objects

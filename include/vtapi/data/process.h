@@ -67,12 +67,17 @@ public:
      */
     virtual ~Process();
     
+    using KeyValues::count;
+    using KeyValues::print;
+    using KeyValues::printAll;
+    using KeyValues::printKeys;
+
     /**
      * Individual next() for processes, updates process and selection
      * @return success
      * @note Overloading next() from KeyValues
      */
-    bool next();
+    bool next() override;
 
     /**
      * @brief Checks if process can be instance and calls next()

@@ -37,7 +37,7 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class KeyValues : protected Commons
+class KeyValues : public Commons
 {
 public:
 
@@ -56,6 +56,7 @@ public:
      * It raises warning when there was something left not-excecuted (some collaborants left)
      */
     virtual ~KeyValues();
+
 
     /**
      * The most used function of the VTApi - next (row)
@@ -100,6 +101,7 @@ public:
      */
     bool printKeys();
     
+
     // =============== GETTERS (Select) ========================================
 
      /**
