@@ -11,6 +11,9 @@
  */
 
 #include <iostream>
+#include <Poco/Path.h>
+#include <Poco/File.h>
+#include <Poco/Exception.h>
 #include <vtapi/common/global.h>
 #include <vtapi/common/serialize.h>
 #include <vtapi/common/logger.h>
@@ -35,8 +38,18 @@ bool Logger::config(const string& logfile, bool errors, bool warnings, bool debu
         _log.close();
 
     if (!logfile.empty()) {
-        _log.open(logfile);
-        ret = _log.is_open();
+        try
+        {
+            Poco::Path logpath = Poco::Path(logfile).makeAbsolute();
+            Poco::File(logpath.parent()).createDirectories();
+
+            _log.open(logpath.toString());
+            ret = _log.is_open();
+        }
+        catch (Poco::Exception &e)
+        {
+            ret = false;
+        }
     }
     
     _log_errors = errors;
