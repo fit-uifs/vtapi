@@ -2,9 +2,12 @@
 find_package(OpenCV REQUIRED)
 
 file(GLOB ${PROJECT_NAME}.Sources *.cpp)
+file(GLOB_RECURSE ${PROJECT_NAME}.Headers ../include/*.h)
 
 add_library(vtapi SHARED
-    ${${PROJECT_NAME}.Sources})
+    ${${PROJECT_NAME}.Sources}
+    ${${PROJECT_NAME}.Headers}
+)
 
 set_target_properties(vtapi PROPERTIES
     VERSION ${VTAPI_VERSION}

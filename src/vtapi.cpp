@@ -181,6 +181,16 @@ Process* VTApi::loadProcesses(int id)
     return (new Process(*_pcommons, id));
 }
 
+bool vtapi::VTApi::deleteDataset(const string &dsname)
+{
+    return QueryDatasetDelete(*_pcommons, dsname).execute();
+}
+
+bool vtapi::VTApi::deleteMethod(const string &mtname)
+{
+    return QueryMethodDelete(*_pcommons, mtname).execute();
+}
+
 Process *VTApi::instantiateProcess()
 {
     Process *prs = new Process(*_pcommons);

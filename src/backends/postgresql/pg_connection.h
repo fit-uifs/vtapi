@@ -28,6 +28,8 @@ private:
     bool loadDBTypes();
     short getTypeCategoryFlags(char c, const std::string &name);
 
+    static void noticeProcessor(void *arg, const char *message);
+
     static int enum_get(PGtypeArgs *args);
     static int enum_put(PGtypeArgs *args);
 };

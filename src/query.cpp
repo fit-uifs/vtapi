@@ -511,15 +511,19 @@ QueryMethodDelete::QueryMethodDelete (
                                       const string& name)
     : Query(commons)
 {
-    querybuilder().useQueryString(
-        querybuilder().getMethodDeleteQuery(name));
+    querybuilder().useQueryString(querybuilder().getMethodDeleteQuery(name));
+}
+
+QuerySequenceDelete::QuerySequenceDelete(const Commons &commons, const std::string &name)
+    : Query(commons)
+{
+    querybuilder().useQueryString(querybuilder().getSequenceDeleteQuery(name));
 }
 
 QueryLastInsertedId::QueryLastInsertedId(const Commons& commons)
     : Query(commons)
 {
-    querybuilder().useQueryString(
-                                  querybuilder().getLastInsertedIdQuery());
+    querybuilder().useQueryString(querybuilder().getLastInsertedIdQuery());
 }
 
 bool QueryLastInsertedId::execute(int &returned_id)

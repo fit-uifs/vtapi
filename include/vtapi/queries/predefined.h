@@ -77,6 +77,12 @@ public:
     QueryMethodDelete(const Commons& commons, const std::string& name);
 } ;
 
+class QuerySequenceDelete : public Query
+{
+public:
+    QuerySequenceDelete(const Commons& commons, const std::string& name);
+} ;
+
 class QueryLastInsertedId : public Query
 {
 public:

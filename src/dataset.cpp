@@ -15,6 +15,7 @@
 #include <vtapi/common/global.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/queries/insert.h>
+#include <vtapi/queries/predefined.h>
 #include <vtapi/data/dataset.h>
 
 using namespace std;
@@ -76,6 +77,12 @@ string Dataset::getDescription()
     return this->getString(def_col_ds_description);
 }
 
+string vtapi::Dataset::getDataLocation()
+{
+    return config().datasets_dir + Poco::Path::separator() +
+            this->getLocation();
+}
+
 bool Dataset::updateFriendlyName(const string& friendly_name)
 {
     return this->updateString(def_col_ds_fname, friendly_name);
@@ -112,12 +119,16 @@ Sequence* Dataset::createSequence(
 Video* Dataset::createVideo(const string& name,
                             const string& location,
                             const time_t& realtime,
+                            double speed,
                             const string& comment)
 {
     Video *vid = NULL;
 
     do {
-        string fullpath = config().datasets_dir + context().datasetLocation + location;
+        string fullpath =
+                config().datasets_dir + Poco::Path::separator() +
+                context().datasetLocation + Poco::Path::separator() +
+                location;
 
         if (!Poco::Path(fullpath).isFile()) {
             VTLOG_WARNING( "File doesn't exist: " + fullpath);
@@ -148,6 +159,7 @@ Video* Dataset::createVideo(const string& name,
         retval &= insert.keyInt(def_col_seq_vidlength, cnt_frames);
         retval &= insert.keyFloat(def_col_seq_vidfps, fps);
         if (realtime > 0) retval &= insert.keyTimestamp(def_col_seq_vidtime, realtime);
+        if (speed > 0.0) retval &= insert.keyFloat(def_col_seq_vidspeed, speed);
 
         if (retval && insert.execute()) {
             vid = loadVideos(name);
@@ -236,6 +248,11 @@ Process* Dataset::loadProcesses(int id)
 Process *Dataset::loadProcesses(const list<int> &ids)
 {
     return (new Process(*this, ids));
+}
+
+bool vtapi::Dataset::deleteSequence(const string &seqname)
+{
+    return QuerySequenceDelete(*this, seqname).execute();
 }
 
 

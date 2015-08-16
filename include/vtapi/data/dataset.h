@@ -91,6 +91,12 @@ public:
     std::string getDescription();
     
     /**
+     * Gets full path to sequence location
+     * @return full path
+     */
+    std::string getDataLocation();
+
+    /**
      * Sets dataset's friendly name
      * @param friendly_name new friendly name
      * @return success
@@ -123,6 +129,7 @@ public:
      * @param name video name (unique)
      * @param location location in dataset
      * @param realtime UNIX timestamp of start of the video
+     * @param speed video speed [0,inf]
      * @param comment optional comment
      * @return video object, NULL on error
      */
@@ -130,6 +137,7 @@ public:
         const std::string& name,
         const std::string& location,
         const time_t& realtime,
+        double speed,
         const std::string& comment = std::string());
 
     /**
@@ -213,6 +221,13 @@ public:
      * @return pointer to the new Process object
      */
     Process *loadProcesses(const std::list<int>& ids);
+
+    /**
+     * @brief Deletes sequence with given name
+     * @param seqname sequence name to delete
+     * @return succesful delete
+     */
+    bool deleteSequence(const std::string &seqname);
 
 protected:
     virtual bool preUpdate();

@@ -167,6 +167,8 @@ public:
 
     virtual std::string getMethodDeleteQuery(const std::string& name) = 0;
 
+    virtual std::string getSequenceDeleteQuery(const std::string& name) = 0;
+
     virtual std::string getLastInsertedIdQuery() = 0;
 
     /**

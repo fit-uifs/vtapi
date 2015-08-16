@@ -42,6 +42,7 @@ public:
         const MethodParams params_definition,
         const std::string& description);
     std::string getMethodDeleteQuery(const std::string& name);
+    std::string getSequenceDeleteQuery(const std::string& name);
     std::string getLastInsertedIdQuery();
 
     bool keyFrom(const std::string& table, const std::string& column);

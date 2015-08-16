@@ -301,6 +301,11 @@ string SLQueryBuilder::getMethodDeleteQuery(const string& name)
     return "";
 }
 
+string SLQueryBuilder::getSequenceDeleteQuery(const string &name)
+{
+    return "";
+}
+
 string SLQueryBuilder::getLastInsertedIdQuery()
 {
     return "";

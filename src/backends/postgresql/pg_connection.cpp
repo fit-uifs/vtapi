@@ -40,6 +40,9 @@ bool PGConnection::connect()
             break;
         }
 
+        // set NOTICE displaying function
+        PQsetNoticeProcessor(_conn, PGConnection::noticeProcessor, NULL);
+
         if (!(retval = PQinitTypes(_conn))) {
             VTLOG_ERROR("Failed to init libpqtypes");
             break;
@@ -90,7 +93,11 @@ bool PGConnection::execute(const string& query, void *param)
     }
     else {
         int result = PQresultStatus(pgres);
-        if (result != PGRES_TUPLES_OK && result != PGRES_COMMAND_OK) {
+        if (result == PGRES_NONFATAL_ERROR) {
+            _errorMessage = PQerrorMessage(_conn);
+            VTLOG_DEBUG(_errorMessage);
+        }
+        else if (result != PGRES_TUPLES_OK && result != PGRES_COMMAND_OK) {
             _errorMessage = PQerrorMessage(_conn);
             VTLOG_ERROR(_errorMessage);
             retval = false;
@@ -371,6 +378,11 @@ short PGConnection::getTypeCategoryFlags(char c, const string &name)
     }
 
     return ret;
+}
+
+void PGConnection::noticeProcessor(void *arg, const char *message)
+{
+    VTLOG_WARNING(message);
 }
 
 int PGConnection::enum_get(PGtypeArgs *args)

@@ -335,7 +335,7 @@ string PGQueryBuilder::getDatasetCreateQuery(
 
 string PGQueryBuilder::getDatasetResetQuery(const string& name)
 {
-    //SELECT public.VT_dataset_drop('demo');
+    //SELECT public.VT_dataset_truncate('demo');
 
     string q;
     q += "SELECT ";
@@ -376,6 +376,20 @@ string PGQueryBuilder::getMethodDeleteQuery(const string& name)
     q += "SELECT ";
     q += def_fnc_ds_delete;
     q += '(';
+    q += escapeLiteral(name);
+    q += ");";
+
+    return q;
+}
+
+string PGQueryBuilder::getSequenceDeleteQuery(const string &name)
+{
+    string q;
+    q += "DELETE FROM ";
+    q += constructTable(def_tab_sequences);
+    q += " WHERE ";
+    q += escapeIdent(def_col_seq_name);
+    q += " = ";
     q += escapeLiteral(name);
     q += ");";
 

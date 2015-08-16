@@ -139,6 +139,20 @@ public:
     Process* loadProcesses(int id = 0);
 
     /**
+     * @brief Deletes dataset with given name
+     * @param dsname dataset name to delete
+     * @return true on succesful delete
+     */
+    bool deleteDataset(const std::string& dsname);
+
+    /**
+     * @brief Deletes method with given name
+     * @param mtname method name to delete
+     * @return true on succesful delete
+     */
+    bool deleteMethod(const std::string& mtname);
+
+    /**
      * @brief This process is module instance, gets its process object
      * @return process object
      */
