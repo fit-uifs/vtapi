@@ -64,7 +64,7 @@ DROP FUNCTION IF EXISTS public.VT_task_delete(VARCHAR, BOOLEAN, VARCHAR) CASCADE
 DROP FUNCTION IF EXISTS public.VT_task_output_idxquery(VARCHAR, NAME, REGTYPE, INT, VARCHAR) CASCADE;
 
 
-DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, REAL) CASCADE;
+DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, DOUBLE PRECISION) CASCADE;
 DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
 
 
@@ -465,8 +465,8 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       seqlocation character varying,
       seqtyp public.seqtype,
       vid_length integer,
-      vid_fps real,
-      vid_speed  real  DEFAULT 1,
+      vid_fps double precision,
+      vid_speed  double precision  DEFAULT 1,
       vid_time timestamp without time zone,
       created timestamp without time zone DEFAULT now(),
       comment text DEFAULT NULL,
@@ -823,7 +823,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
         _stmt := _stmt || 'rt_start      TIMESTAMP WITHOUT TIME ZONE   DEFAULT NULL,'; -- trigger supplied
       END IF;
 
-      _stmt := _stmt || 'sec_length    REAL, ';   -- trigger supplied
+      _stmt := _stmt || 'sec_length    DOUBLE PRECISION, ';   -- trigger supplied
 
       FOR _keyname, _typname, _required, _indexedkey, _indexedparts IN EXECUTE 'SELECT keyname, typname, required, indexedkey, indexedparts FROM public.methods_keys WHERE mtname = ' || quote_literal(_mtname) || ' AND inout = ''out''' LOOP
         _stmt := _stmt || ' ' || quote_ident(_keyname) || ' ' || _typname::regtype;
@@ -888,7 +888,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
                UNION SELECT ''imglocation'', ''VARCHAR''::regtype
                UNION SELECT ''t1'', ''INT''::regtype
                UNION SELECT ''t2'', ''INT''::regtype
-               UNION SELECT ''sec_length'', ''REAL''::regtype --trigger supplied
+               UNION SELECT ''sec_length'', ''DOUBLE PRECISION''::regtype --trigger supplied
                UNION SELECT ''created'', ''TIMESTAMP WITHOUT TIME ZONE''::regtype
                EXCEPT
                SELECT attname, atttypid
@@ -1078,7 +1078,7 @@ CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NA
 -------------------------------------
 -- Functions to work with real time
 -------------------------------------
-CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length REAL)
+CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length DOUBLE PRECISION)
   RETURNS TSRANGE AS
   $tsrange$
     SELECT CASE _rt_start
@@ -1093,8 +1093,8 @@ CREATE OR REPLACE FUNCTION trg_interval_provide_realtime ()
   RETURNS TRIGGER AS
   $trg_interval_provide_realtime$
     DECLARE
-      _fps real := NULL;
-      _speed real := NULL;
+      _fps double precision := NULL;
+      _speed double precision := NULL;
       _rt_start timestamp without time zone := NULL;
       _tabname name := NULL;
     BEGIN

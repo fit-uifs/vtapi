@@ -135,7 +135,7 @@ bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
     if (seq) {
         if (seq->getType().compare(def_val_video) == 0) {
             time_t start = seq->getTimestamp(def_col_seq_vidtime);
-            float fps = seq->getFloat(def_col_seq_vidfps);
+            double fps = seq->getFloat8(def_col_seq_vidfps);
 
             if (start && fps) {
                 *t1 = start + (time_t)(this->getStartTime() / fps);

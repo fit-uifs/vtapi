@@ -210,12 +210,12 @@ size_t Video::getLength()
 
 double Video::getFPS()
 {
-    return getFloat(def_col_seq_vidfps);
+    return getFloat8(def_col_seq_vidfps);
 }
 
 double vtapi::Video::getSpeed()
 {
-    return getFloat(def_col_seq_vidspeed);
+    return getFloat8(def_col_seq_vidspeed);
 }
 
 time_t Video::getRealStartTime()
