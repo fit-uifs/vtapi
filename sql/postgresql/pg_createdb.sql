@@ -850,7 +850,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_add (_taskname VARCHAR, _mtname VARCHA
                   CONSTRAINT taskname_fk FOREIGN KEY (taskname)
                     REFERENCES tasks(taskname) ON UPDATE CASCADE ON DELETE CASCADE,
                   CONSTRAINT seqname_fk FOREIGN KEY (seqname)
-                    REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE RESTRICT
+                    REFERENCES sequences(seqname) ON UPDATE CASCADE ON DELETE CASCADE
                 );
                 CREATE INDEX ' || quote_ident(_reqoutname || '_taskname_idx') || ' ON ' || __outname || '(taskname);
                 CREATE INDEX ' || quote_ident(_reqoutname || '_seqname_idx') || ' ON ' || __outname || '(seqname);
