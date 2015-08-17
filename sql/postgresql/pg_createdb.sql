@@ -493,7 +493,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       prsid serial NOT NULL,
       taskname name NOT NULL,
       state public.pstate DEFAULT '(created,0,,)',
-      ipc_port int DEFAULT 0,
+      pid int DEFAULT 0,
       created timestamp without time zone DEFAULT now(),
       CONSTRAINT processes_pk PRIMARY KEY (prsid)
     );
@@ -778,7 +778,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     
     -- check if inkeys of task' method are already defined as outkeys of preprequisity task' method
     IF _taskprereq IS NOT NULL THEN
-      EXECUTE 'SELECT mtname FROM tasks WHERE taskname = ' || quote_literal(_taskprereq) INTO _prereqmtname;
+      EXECUTE 'SELECT mtname FROM ' || _dsname || '.tasks WHERE taskname = ' || quote_literal(_taskprereq) INTO _prereqmtname;
       EXECUTE 'SELECT COUNT(*)
                FROM (
                  SELECT keyname, typname
@@ -963,11 +963,11 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     EXECUTE _stmt;
     EXECUTE _idxstmt;
     
-    EXECUTE 'INSERT INTO tasks(taskname, mtname, params, outputs)
+    EXECUTE 'INSERT INTO ' || _dsname || '.tasks(taskname, mtname, params, outputs)
                VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_mtname) || ', ' || quote_nullable(_params) || ', ''' || __outname || '''::regclass);';
                
     IF _taskprereq IS NOT NULL THEN
-      EXECUTE 'INSERT INTO rel_tasks_tasks_prerequisities VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_taskprereq) || ');';
+      EXECUTE 'INSERT INTO ' || _dsname || '.rel_tasks_tasks_prerequisities VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_taskprereq) || ');';
     END IF;
     
     RETURN TRUE;
