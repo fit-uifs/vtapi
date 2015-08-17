@@ -1,7 +1,8 @@
-#include <iostream>
+#include <memory>
 #include <Poco/Exception.h>
 #include <Poco/ClassLoader.h>
 #include <Poco/Net/TCPServer.h>
+#include <vtapi/common/exception.h>
 #include <vtapi/common/logger.h>
 #include <vtapi/plugins/module_interface.h>
 #include <vtapi/vtapi.h>
@@ -9,64 +10,77 @@
 using namespace vtapi;
 using namespace std;
 
+
 int main(int argc, char *argv[])
 {
-    VTLOG_DEBUG("vtmodule : starting...");
+    int ret = 0;
 
-    VTApi vtapi(argc, argv);
+    try
+    {
+        VTApi vtapi(argc, argv);
 
-    Process *prs = vtapi.instantiateProcess();
-    if (prs) {
-        // get library path
-        Method *met = prs->getParentMethod();
-        string libpath = met->getPluginPath();
-        delete met;
+        VTLOG_DEBUG("vtmodule : starting...");
 
-        VTLOG_DEBUG("vtmodule loading plugin : " + libpath);
+        shared_ptr<Process> prs(vtapi.instantiateProcess());
+        if (prs) {
+            // get library path
+            shared_ptr<Method> met(prs->getParentMethod());
+            string libpath = met->getPluginPath();
+            VTLOG_DEBUG("vtmodule : loading module from " + libpath);
 
-        try {
-            // load library
             Poco::ClassLoader<IModuleInterface> loader;
-            loader.loadLibrary(libpath);
+            shared_ptr<IModuleInterface> module;
+            string plugin_name;
 
-            // load plugin interface
-            string plugin_name = loader.begin()->second->begin()->name();
-            IModuleInterface *pmodule = loader.create(plugin_name);
+            try
+            {
+                // load library
+                loader.loadLibrary(libpath);
+
+                // load plugin interface
+                auto & plugins = *loader.begin()->second;
+                for (const auto & plugin : plugins) {
+                    plugin_name = plugin->name();
+                    break;  // get first plugin
+                }
+                if (plugin_name.empty())
+                    throw(ModuleException(libpath, "library is not a VTApi module plugin"));
+
+                module = shared_ptr<IModuleInterface>(loader.create(plugin_name));
+            }
+            catch (Poco::Exception &e)
+            {
+                throw ModuleException(libpath, e.message());
+            }
+
+            VTLOG_DEBUG("vtmodule : running module " + plugin_name);
 
             // run processing
-            if (pmodule) {
-                if (pmodule->initialize()) {
-                    Task *task = prs->getParentTask();
-                    if (task) {
-                        Video *vid = prs->loadAssignedVideos();
-                        ImageFolder *imf = prs->loadAssignedImageFolders();
-
-                        pmodule->process(*prs, *task, *vid, *imf);
-
-                        delete imf;
-                        delete vid;
-
-                        delete task;
-                    }
-                }
-                pmodule->uninitialize();
-
-                delete pmodule;
+            try
+            {
+                module->initialize();
+                module->process(*prs);
             }
+            catch (RuntimeModuleException &e)
+            {
+                module->uninitialize();
+                throw;
+            }
+            module->uninitialize();
         }
-        catch (Poco::Exception &e) {
-             VTLOG_ERROR("vtmodule : " + e.message());
+        else {
+            throw ModuleException("<unknown>", "failed to instantiate process");
         }
-
-        delete prs;
     }
-    else {
-        VTLOG_ERROR("vtmodule : failed to instantiate process");
+    catch (Exception &e)
+    {
+        VTLOG_ERROR("vtmodule : " + e.message());
+        ret = 1;
     }
 
     VTLOG_DEBUG("vtmodule : stopped");
 
-    return 0;
+    return ret;
 }
 
 //#include <vtapi.h>

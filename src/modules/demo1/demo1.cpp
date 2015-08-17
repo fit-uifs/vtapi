@@ -1,4 +1,6 @@
-#include <sstream>
+#include <thread>
+#include <chrono>
+#include <memory>
 #include <Poco/ClassLibrary.h>
 #include <vtapi/common/logger.h>
 #include "demo1.h"
@@ -10,7 +12,7 @@ namespace vtapi {
 
 Demo1Module::Demo1Module()
 {
-
+    _stop = false;
 }
 
 Demo1Module::~Demo1Module()
@@ -18,9 +20,9 @@ Demo1Module::~Demo1Module()
 
 }
 
-bool Demo1Module::initialize()
+void Demo1Module::initialize()
 {
-    VTLOG_DEBUG("demo1 : initializing");
+    VTLOG_DEBUG("demo1: initializing");
 }
 
 void Demo1Module::uninitialize()
@@ -28,17 +30,38 @@ void Demo1Module::uninitialize()
     VTLOG_DEBUG("demo1 : uninitializing");
 }
 
-void Demo1Module::process(Process & process,
-                          Task &task,
-                          Video &videos,
-                          ImageFolder &imagefolders)
+void Demo1Module::process(Process & process)
 {
-    stringstream ss;
-    ss << "demo1 : process=" << process.getId() << "; task=" << task.getName();
-    VTLOG_DEBUG(ss.str());
+    VTLOG_DEBUG("demo1 : process=" + vtapi::toString<int>(process.getId()));
 
-    while(videos.next()) {
-        VTLOG_DEBUG("demo1 : analyzing " + videos.getName());
+    {
+        shared_ptr<Task> task (process.getParentTask());
+        if (task) {
+            VTLOG_DEBUG("demo1 : task=" + task->getName());
+        }
+    }
+
+    {
+        shared_ptr<Video> video(process.loadAssignedVideos());
+        while(video->next() && !_stop) {
+            VTLOG_DEBUG("demo1 : analyzing " + video->getName());
+            this_thread::sleep_for(chrono::milliseconds(2500));
+        }
+    }
+
+    VTLOG_DEBUG("demo1 : processing stopped");
+}
+
+void Demo1Module::control(ControlCode code)
+{
+    switch (code)
+    {
+    case ControlSuspend:
+    case ControlResume:
+        break;
+    case ControlStop:
+        _stop = true;
+        break;
     }
 }
 

@@ -62,7 +62,7 @@ public:
 
     /**
      * @brief Iterates to next task
-     * @return success on existing task
+     * @return success on task existing
      */
     bool next() override;
     
@@ -89,13 +89,6 @@ public:
     Method *getParentMethod();
 
     /**
-     * @brief Gets specified sequence object and marks is as "in progress"
-     * @param seqname sequence name
-     * @return sequence object (initialized), NULL on failed lock
-     */
-    Sequence *getSequenceLock(const std::string& seqname);
-
-    /**
      * Gets tasks which should be completed before running this one
      * @return task object representing prerequisite tasks for iteration
      */
@@ -112,6 +105,13 @@ public:
      * @return output intervals for iteration
      */
     Interval *loadOutputData();
+
+    /**
+     * @brief Checks if sequence has been done by this task
+     * @param seqname sequence to be checked
+     * @return boolean
+     */
+    bool isSequenceFinished(const std::string &seqname);
 
     /**
      * @brief Loads sequences "in progress" for iteration

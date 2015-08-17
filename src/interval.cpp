@@ -12,6 +12,7 @@
 
 #include <Poco/Path.h>
 #include <vtapi/common/global.h>
+#include <vtapi/common/exception.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/data/sequence.h>
 #include <vtapi/data/interval.h>
@@ -27,7 +28,7 @@ Interval::Interval(const Commons& commons, const string& selection)
     : KeyValues(commons)
 {
     if (context().dataset.empty())
-        throw exception();
+        throw BadConfigurationException("dataset not specified");
 
     if (!selection.empty())
         context().selection = selection;

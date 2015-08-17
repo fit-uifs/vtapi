@@ -49,7 +49,8 @@ public:
                                    const std::string& params,
                                    const std::string& prereq_task,
                                    const std::string& outputs) override;
-    std::string getTaskDeleteQuery(const std::string& name) override;
+    std::string getTaskDeleteQuery(const std::string& dsname,
+                                   const std::string& taskname) override;
     std::string getLastInsertedIdQuery() override;
 
     bool keyFrom(const std::string& table, const std::string& column) override;

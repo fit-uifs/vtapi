@@ -547,10 +547,12 @@ QueryTaskCreate::QueryTaskCreate(const Commons& commons,
                                                                     outputs));
 }
 
-QueryTaskDelete::QueryTaskDelete(const Commons& commons, const string& taskname)
+QueryTaskDelete::QueryTaskDelete(const Commons& commons,
+                                 const string &dsname,
+                                 const string &taskname)
     : Query(commons)
 {
-    querybuilder().useQueryString(querybuilder().getTaskDeleteQuery(taskname));
+    querybuilder().useQueryString(querybuilder().getTaskDeleteQuery(dsname, taskname));
 }
 
 

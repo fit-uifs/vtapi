@@ -10,13 +10,13 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <exception>
 #include <Poco/AutoPtr.h>
 #include <Poco/Path.h>
 #include <Poco/File.h>
 #include <Poco/Process.h>
 #include <Poco/Util/PropertyFileConfiguration.h>
 #include <vtapi/common/global.h>
+#include <vtapi/common/exception.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/data/process.h>
 
@@ -29,7 +29,7 @@ Process::Process(const Commons& commons, int id)
     : KeyValues(commons)
 {
     if (context().dataset.empty())
-        throw exception();
+        throw BadConfigurationException("dataset not specified");
     
     if (id != 0)
         context().process = id;
@@ -97,8 +97,8 @@ bool Process::launch(bool suspended)
     config_path += "vtproc_" + toString<int>(context().process) + ".conf";
 
     // save configuration
-    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config =
-            new Poco::Util::PropertyFileConfiguration();
+    Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config(
+            new Poco::Util::PropertyFileConfiguration());
     this->saveConfig(*config.get());
     config->save(config_path);
 
@@ -186,6 +186,37 @@ vtapi::Video *vtapi::Process::loadAssignedVideos()
     return new Video(*this, seqnames);
 }
 
+bool vtapi::Process::lockAssignedSequence(const string &seqname)
+{
+    if (!seqname.empty())
+        return NULL;
+
+    KeyValues kv(*this, def_tab_tasks_seq);
+    kv._select.whereString(def_col_tsd_taskname, context().task);
+    kv._select.whereString(def_col_tsd_seqname, seqname);
+    if (kv.next()) {
+        return NULL;
+    }
+    else {
+        Insert i(*this, def_tab_tasks_seq);
+        i.keyString(def_col_tsd_taskname, context().task);
+        i.keyString(def_col_tsd_seqname, seqname);
+        i.keyBool(def_col_tsd_isdone, false);
+        if (i.execute()) {
+            Sequence *s = new Sequence(*this, seqname);
+            if (s->next()) {
+                return s;
+            }
+            else {
+                delete s;
+                return NULL;
+            }
+        }
+        else
+            return NULL;
+    }
+}
+
 vtapi::ImageFolder *vtapi::Process::loadAssignedImageFolders()
 {
     list<string> seqnames;
@@ -213,9 +244,9 @@ ProcessState *Process::getState()
     return this->getProcessState(def_col_prs_state);
 }
 
-int Process::getIpcPort()
+pid_t Process::getInstancePID()
 {
-    return this->getInt(def_col_prs_ipcport);
+    return this->getInt(def_col_prs_pid);
 }
 
 //////////////////////////////////////////////////
@@ -286,9 +317,9 @@ bool Process::updateStateError(const string& lastError)
     return updateState(ProcessState(ProcessState::STATUS_ERROR, 0, lastError));
 }
 
-bool Process::updateIpcPort(int port)
+bool Process::updateInstancePID(pid_t pid)
 {
-    bool ret = this->updateInt(def_col_prs_ipcport, port);
+    bool ret = this->updateInt(def_col_prs_pid, pid);
     if (ret)
         ret = updateExecute();
     else

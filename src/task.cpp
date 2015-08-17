@@ -12,6 +12,7 @@
 
 #include <exception>
 #include <vtapi/common/global.h>
+#include <vtapi/common/exception.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/queries/insert.h>
 #include <vtapi/queries/predefined.h>
@@ -27,7 +28,7 @@ Task::Task(const Commons& commons, const string& name)
     : KeyValues(commons)
 {
     if (context().dataset.empty())
-        throw exception();
+        throw BadConfigurationException("dataset not specified");
     
     if (!name.empty())
         context().task = name;
@@ -122,37 +123,6 @@ Method *Task::getParentMethod()
     }
 }
 
-Sequence *Task::getSequenceLock(const string &seqname)
-{
-    if (!seqname.empty())
-        return NULL;
-
-    KeyValues kv(*this, def_tab_tasks_seq);
-    kv._select.whereString(def_col_tsd_taskname, context().task);
-    kv._select.whereString(def_col_tsd_seqname, seqname);
-    if (kv.next()) {
-        return NULL;
-    }
-    else {
-        Insert i(*this, def_tab_tasks_seq);
-        i.keyString(def_col_tsd_taskname, context().task);
-        i.keyString(def_col_tsd_seqname, seqname);
-        i.keyBool(def_col_tsd_isdone, false);
-        if (i.execute()) {
-            Sequence *s = new Sequence(*this, seqname);
-            if (s->next()) {
-                return s;
-            }
-            else {
-                delete s;
-                return NULL;
-            }
-        }
-        else
-            return NULL;
-    }
-}
-
 Task *Task::loadPrerequisiteTasks()
 {
     KeyValues kv(*this, def_tab_tasks_prereq);
@@ -174,6 +144,16 @@ string Task::getOutputDataTable()
 Interval *Task::loadOutputData()
 {
     return new Interval(*this, this->getOutputDataTable());
+}
+
+bool vtapi::Task::isSequenceFinished(const string &seqname)
+{
+    KeyValues kv(*this, def_tab_tasks_seq);
+    kv._select.whereString(def_col_tsd_taskname, context().task);
+    kv._select.whereString(def_col_tsd_seqname, seqname);
+    kv._select.whereBool(def_col_tsd_isdone, true);
+
+    return kv.next();
 }
 
 Sequence *Task::loadSequencesInProgress()

@@ -10,7 +10,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <exception>
+#include <Poco/Exception.h>
 #include <Poco/Util/LayeredConfiguration.h>
 #include <Poco/Util/PropertyFileConfiguration.h>
 #include <Poco/Util/OptionSet.h>
@@ -18,6 +18,7 @@
 #include <Poco/Path.h>
 #include <Poco/File.h>
 #include <vtapi/common/global.h>
+#include <vtapi/common/exception.h>
 #include <vtapi/queries/predefined.h>
 #include <vtapi/vtapi.h>
 
@@ -73,7 +74,7 @@ VTApi::VTApi(int argc, char** argv)
         if (ok)
             cmd_config->setString(opt_name, opt_arg);
         else
-            throw exception();
+            throw BadConfigurationException("invalid option: " + string(argv[i]));
     }
 
     // check config file (given by argument or default one)
@@ -83,21 +84,36 @@ VTApi::VTApi(int argc, char** argv)
     else
         config_path = cmd_config->getString("config");
 
-    // load configuration from file if found
-    if (Poco::File(Poco::Path(config_path)).exists()) {
-        cmd_config->setString("config", config_path);
-        file_config->load(config_path);
+    try
+    {
+        // load configuration from file if found
+        if (Poco::File(config_path).exists()) {
+            cmd_config->setString("config", config_path);
+            file_config->load(config_path);
+        }
+    }
+    catch (Poco::Exception & e)
+    {
+        throw BadConfigurationException("failed to load config file: " + e.message());
     }
 
     _pcommons = new Commons(*config.get());
 }
 
-VTApi::VTApi(const string& configFile)
+VTApi::VTApi(const string& config_file)
 {
     _pcommons = NULL;
 
-    Poco::AutoPtr<PropertyFileConfiguration> file_config(
-                new PropertyFileConfiguration(configFile));
+    Poco::AutoPtr<PropertyFileConfiguration> file_config(new PropertyFileConfiguration());
+    try
+    {
+        file_config->load(config_file);
+    }
+    catch (Poco::Exception & e)
+    {
+        throw BadConfigurationException("failed to load config file: " + e.message());
+    }
+
     _pcommons = new Commons(*file_config);
 }
 

@@ -422,17 +422,18 @@ string PGQueryBuilder::getTaskCreateQuery(const string &name,
     return q;
 }
 
-string PGQueryBuilder::getTaskDeleteQuery(const string &name)
+string PGQueryBuilder::getTaskDeleteQuery(const string &dsname,
+                                          const string &taskname)
 {
     string q;
     q += "SELECT ";
     q += def_fnc_task_delete;
     q += '(';
-    q += escapeLiteral(name);
+    q += escapeLiteral(taskname);
     q += ',';
     q += "TRUE";
     q += ',';
-    q += escapeLiteral(_defaultSchema);
+    q += escapeLiteral(dsname);
     q += ");";
 
     return q;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vtapi/common/exception.h>
 #include <vtapi/data/process.h>
 #include <vtapi/data/task.h>
 #include <vtapi/data/sequence.h>
@@ -10,38 +11,77 @@ namespace vtapi {
 class IModuleInterface
 {
 public:
+    // module control codes
+    typedef enum
+    {
+        ControlSuspend,     // suspend processing
+        ControlResume,      // resume suspended processing
+        ControlStop         // stop all processing and return
+    } ControlCode;
+
+    /**
+     * @brief virtual destructor
+     */
     virtual ~IModuleInterface() {}
 
     /**
-     * @brief Called always on plugin initialization
-     * @return true => continue processing, false => quit
+     * @brief Module initialization
+     * Called ALWAYS on plugin initialization
+     * Throw vtapi::RuntimeModuleException on failure
+     * @throws vtapi::RuntimeModuleException initialization error
      */
-    virtual bool initialize() = 0;
+    virtual void initialize() = 0;
 
     /**
-     * @brief Called always on plugin uninitialization
+     * @brief Module uninitialization
+     * Called ALWAYS on plugin uninitialization
      */
     virtual void uninitialize() = 0;
 
     /**
      * @brief Main processing function
-     * Process list of videos and image folders:
-     * 1. iterate over them using next()
-     * 2. video.openVideo() to open video, video.getCapture() to get OpenCV capture
-     * 3. don't use image folders yet :)
-     * 4. output = task.createIntervalOutput(video.getName()) to open output data
-     * 5. interval = output->newInterval(...) to create new output event
-     * 6. interval->setXXX(...) multiple times to set output event data
-     * 7. repeat 5. and 6. many times
-     * 8. output->commit() to save data to database
-     * @param task task to be performed (initialized)
-     * @param videos assigned videos to be processed
-     * @param imagefolders assigned image folders to be processed (not working now)
+     * Called when initialization ended without error
+     * Throw vtapi::RuntimeModuleException on failure
+     *
+     * Typical processing:
+     * 1. get task associated with process:
+     *      task = process.getParentTask();
+     * 2. load prerequisite tasks for our task:
+     *      task_prereq = task.loadPrerequisiteTasks();
+     *      task_prereq->next();
+     * 3. get task parameters:
+     *      params = task->getParams();
+     * 4. get assigned videos:
+     *      videos = process.loadAssignedVideos();
+     * 5. iterate over videos:
+     *      while(videos->next()) { ... }
+     * 6. check if video has been processed by prerequisite tasks:
+     *      task_prereq->isSequenceFinished(videos->getName());
+     * 7. save outputs for each video:
+     *      output = task.createIntervalOutput(video.getName());
+     *      while (continue_processing) {
+     *          // do some processing here
+     *          // now save video interval
+     *          interval = output->newInterval(...);
+     *          interval->setXXX(...);
+     *          interval->setYYY(...);
+     *          ...
+     *      }
+     *      output->commit();
+     * 8. update process status regularly:
+     *      process.updateStateXXX(...);
+     * @param process process object representing processing to be done
+     * @throws vtapi::RuntimeModuleException processing error
      */
-    virtual void process(Process & process,
-                         Task & task,
-                         Video & videos,
-                         ImageFolder & imagefolders) = 0;
+    virtual void process(Process & process) = 0;
+
+
+    /**
+     * @brief Module control implementation (suspending, resuming, stopping)
+     * Called during process() function from different thread (!)
+     * @param code control code
+     */
+    virtual void control(ControlCode code) = 0;
 };
 
 

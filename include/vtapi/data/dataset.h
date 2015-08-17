@@ -246,6 +246,13 @@ public:
      */
     bool deleteSequence(const std::string &seqname);
 
+    /**
+     * @brief Deletes task with given name
+     * @param taskname task name to delete
+     * @return succesful delete
+     */
+    bool deleteTask(const std::string &taskname);
+
 protected:
     virtual bool preUpdate();
     

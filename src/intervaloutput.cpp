@@ -1,6 +1,7 @@
 
 #include <exception>
 #include <vtapi/common/global.h>
+#include <vtapi/common/exception.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/queries/predefined.h>
 #include <vtapi/data/intervaloutput.h>
@@ -25,7 +26,8 @@ IntervalOutput::IntervalOutput(const Commons &commons,
         context().sequence.empty() ||
         context().selection.empty())
     {
-        throw exception();
+        string error = "cannot create interval output without dataset, task, sequence or output table";
+        throw BadConfigurationException(error);
     }
 }
 
@@ -39,7 +41,7 @@ bool IntervalOutput::newInterval(int t1, int t2)
 {
     bool ret = true;
 
-    Insert *insert = new Insert(*this);
+    Insert *insert = new Insert(*this, context().selection);
     ret &= insert->keyString(def_col_int_taskname, context().task);
     ret &= insert->keyString(def_col_int_seqname, context().sequence);
     ret &= insert->keyInt(def_col_int_t1, t1);

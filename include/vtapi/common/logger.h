@@ -62,7 +62,7 @@ public:
      * @param debug log debug messages
      * @return succesful config
      */
-    bool config(const std::string& logfile, bool errors, bool warnings, bool debug);
+    void config(const std::string& logfile, bool errors, bool warnings, bool debug);
     
     /**
      * Log custom message (happens always)

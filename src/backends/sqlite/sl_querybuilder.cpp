@@ -315,7 +315,8 @@ string SLQueryBuilder::getTaskCreateQuery(const string &name,
     return "";
 }
 
-string SLQueryBuilder::getTaskDeleteQuery(const string &name)
+string SLQueryBuilder::getTaskDeleteQuery(const string &dsname,
+                                          const string &taskname)
 {
     return "";
 }

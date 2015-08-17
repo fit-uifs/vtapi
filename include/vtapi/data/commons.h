@@ -130,9 +130,9 @@ private:
     bool _is_owner;                         /**< owns its resources */
     Poco::ClassLoader<IBackendInterface> *_ploader;   /** backend library loader/unloader */
 
-    bool LoadBackend();
-    void UnloadBackend();
-    std::string GetBackendLibName();
+    void loadBackend();
+    void unloadBackend();
+    std::string getBackendLibName();
 
     Commons() = delete;
     Commons(const Commons&) = delete;

@@ -98,7 +98,9 @@ public:
 class QueryTaskDelete : public Query
 {
 public:
-    QueryTaskDelete(const Commons& commons, const std::string& taskname);
+    QueryTaskDelete(const Commons& commons,
+                    const std::string &dsname,
+                    const std::string &taskname);
 };
 
 class QueryLastInsertedId : public Query

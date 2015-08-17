@@ -37,7 +37,6 @@ class TaskParams;
 class Method : protected KeyValues
 {
 public:
-
     /**
      * Construct method object for iterating through VTApi methods
      * If a specific name is set, object will represent one method only
@@ -115,7 +114,15 @@ public:
      * @return pointer to the new Task object, NULL on error
      */
     Task* loadTasks(const std::string& name = std::string());
-    
+
+    /**
+     * @brief Deletes task with given name
+     * @param dsname dataset with given task
+     * @param taskname task name to delete
+     * @return succesful delete
+     */
+    bool deleteTask(const std::string &dsname, const std::string &taskname);
+
 protected:
     virtual bool preUpdate();
     

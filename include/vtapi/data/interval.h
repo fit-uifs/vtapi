@@ -187,9 +187,9 @@ private:
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Image : public Interval {
+class Image : public Interval
+{
 public:
-
     /**
      * Constructor for Images
      * @param commons     shared Commons object

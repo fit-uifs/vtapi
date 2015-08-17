@@ -1,4 +1,6 @@
 #include <iostream>
+#include <memory>
+#include <vtapi/common/exception.h>
 #include <vtapi/vtapi.h>
 
 using namespace vtapi;
@@ -7,25 +9,31 @@ using namespace std;
 
 int main(int argc, char *argv[])
 {
-    VTApi vtapi(argc, argv);
+    int ret = 0;
 
-    Dataset *ds = vtapi.loadDatasets();
-    if (ds->next()) {
-        Task *task = ds->loadTasks();
-        if (task->next()) {
-            list<string> seqnames = { "video1", "video2" };
-            Process *prs = task->createProcess(seqnames);
-            if (prs) {
-                prs->launch();
+    try
+    {
+        VTApi vtapi(argc, argv);
 
-                delete prs;
+        shared_ptr<Dataset> ds(vtapi.loadDatasets());
+        if (ds->next()) {
+            shared_ptr<Task> task(ds->loadTasks());
+            if (task->next()) {
+                list<string> seqnames = { "video1", "video2" };
+                shared_ptr<Process> prs (task->createProcess(seqnames));
+                if (prs) {
+                    prs->launch();
+                }
             }
         }
-        delete task;
     }
-    delete ds;
+    catch (Exception &e)
+    {
+        cerr << e.message() << endl;
+        ret = 1;
+    }
 
-    return 0;
+    return ret;
 }
 
 ///*

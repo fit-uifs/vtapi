@@ -201,9 +201,9 @@ ImageFolder* Dataset::createImageFolder(const string& name,
 }
 
 vtapi::Task *Dataset::createTask(const string &mtname,
-                                        const TaskParams &params,
-                                        const string &prereq_task,
-                                        const string &outputs)
+                                 const TaskParams &params,
+                                 const string &prereq_task,
+                                 const string &outputs)
 {
     Task *ts = NULL;
     string name = Task::constructName(mtname, params);
@@ -280,6 +280,11 @@ Process *Dataset::loadProcesses(const list<int> &ids)
 bool vtapi::Dataset::deleteSequence(const string &seqname)
 {
     return QuerySequenceDelete(*this, seqname).execute();
+}
+
+bool vtapi::Dataset::deleteTask(const string &taskname)
+{
+    return QueryTaskDelete(*this, this->getName(), taskname).execute();
 }
 
 

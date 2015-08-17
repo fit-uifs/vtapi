@@ -45,7 +45,6 @@ class Method;
 class Process : protected KeyValues
 {
 public:
-
     /**
      * Construct process object for iterating through VTApi processes
      * If a specific name is set, object will represent one process only
@@ -127,6 +126,13 @@ public:
      */
     Video *loadAssignedVideos();
 
+    /**
+     * @brief Locks sequence for processing by this process
+     * @param seqname sequence name to lock
+     * @return true on succesful lock
+     */
+    bool lockAssignedSequence(const std::string &seqname);
+
     //////////////////////////////////////////////////
     // getters - SELECT
     //////////////////////////////////////////////////
@@ -144,10 +150,10 @@ public:
     ProcessState *getState();
 
     /**
-     * @brief Gets IPC port of running instance
-     * @return IPC port
+     * @brief Gets system PID value of running instance
+     * @return PID
      */
-    int getIpcPort();
+    pid_t getInstancePID();
     
     //////////////////////////////////////////////////
     // updaters - UPDATE
@@ -183,11 +189,11 @@ public:
      */
     bool updateStateError(const std::string& lastError);
     /**
-     * @brief Sets new port for IPC
-     * @param port port
+     * @brief Sets new process instance PID
+     * @param pid pid
      * @return success
      */
-    bool updateIpcPort(int port);
+    bool updateInstancePID(pid_t pid);
 
     //////////////////////////////////////////////////
     // filters/utilities

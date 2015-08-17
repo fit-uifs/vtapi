@@ -10,8 +10,8 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
-#include <exception>
 #include <Poco/Manifest.h>
+#include <vtapi/common/exception.h>
 #include <vtapi/common/global.h>
 #include <vtapi/data/commons.h>
 
@@ -23,29 +23,24 @@ namespace vtapi {
 Commons::Commons(const Poco::Util::AbstractConfiguration &config)
 {
     _is_owner = true;
-    _pconfig = NULL;
+    _pconfig = new CONFIG();
     _pbackend = NULL;
     _pconnection = NULL;
     _ploader = NULL;
 
     try {
-        _pconfig = new CONFIG();
-
         // load config
         loadConfig(config);
 
         // initialize global logger
-        bool ok = Logger::instance().config(_pconfig->logfile, _pconfig->log_errors,
-                                            _pconfig->log_warnings, _pconfig->log_debug);
-        if (!ok) throw exception();
+        Logger::instance().config(_pconfig->logfile, _pconfig->log_errors,
+                                  _pconfig->log_warnings, _pconfig->log_debug);
 
         // load backend interface + connection
-        ok = LoadBackend();
-        if (!ok) throw exception();
+        loadBackend();
     }
-    catch (...)
+    catch (Exception &e)
     {
-        //UnloadBackend();
         vt_destruct(_pconfig);
         throw;
     }
@@ -59,74 +54,91 @@ Commons::Commons(const Commons& orig, bool new_copy)
     _pconnection = NULL;
     _ploader = NULL;
 
-    try {
-        _context = orig._context;
+    if (new_copy) {
+        // copy config
+        _pconfig = new CONFIG(*orig._pconfig);
 
-        if (new_copy) {
-            // copy config
-            _pconfig = new CONFIG(*orig._pconfig);
-
+        try
+        {
             // load backend interface + connection
-            if (!LoadBackend()) throw exception();
+            loadBackend();
         }
-        else {
-            _pconfig = orig._pconfig;
-            _ploader = orig._ploader;
-            _pbackend = orig._pbackend;
-            _pconnection = orig._pconnection;
-        }
-    }
-    catch (...)
-    {
-        if (new_copy) {
-            //UnloadBackend();
+        catch (Exception &e)
+        {
             vt_destruct(_pconfig);
+            throw;
         }
-        throw;
     }
+    else {
+        _pconfig = orig._pconfig;
+        _pbackend = orig._pbackend;
+        _pconnection = orig._pconnection;
+        _ploader = orig._ploader;
+    }
+
+    _context = orig._context;
 }
 
-bool Commons::LoadBackend()
+void Commons::loadBackend()
 {
     // get library path
-    string lib_name = GetBackendLibName();
-    if (lib_name.empty()) return false;
+    string lib_name = getBackendLibName();
 
-    try {
+    try
+    {
         // load library
         _ploader = new Poco::ClassLoader<IBackendInterface>();
         _ploader->loadLibrary(lib_name);
 
         // load plugin interface
-        string plugin_name = _ploader->begin()->second->begin()->name();
+        auto & plugins = *_ploader->begin()->second;
+        string plugin_name;
+        for (const auto & plugin : plugins) {
+            plugin_name = plugin->name();
+            break;  // get first plugin
+        }
+        if (plugin_name.empty())
+            throw(BackendException(lib_name, "library is not a VTApi backend plugin"));
+
         _pbackend = _ploader->create(plugin_name);
 
         // create connection object and connect to database
         _pconnection = _pbackend->createConnection(_pconfig->connection);
-        if (!_pconnection->connect()) throw exception();
 
-        return true;
+        if (!_pconnection->connect())
+            throw DatabaseConnectionException(_pconfig->connection,_pconnection->getErrorMessage());
     }
-    catch(...) {
-        UnloadBackend();
-        return false;
+    catch(Poco::Exception &e)
+    {
+        unloadBackend();
+        throw BackendException(lib_name, e.message());
+    }
+    catch(...)
+    {
+        unloadBackend();
+        throw;
     }
 }
 
-void Commons::UnloadBackend()
+void Commons::unloadBackend()
 {
     vt_destruct(_pconnection);
     vt_destruct(_pbackend);
     if (_ploader) {
-        string lib_name = GetBackendLibName();
-        if (!lib_name.empty() && _ploader->isLibraryLoaded(lib_name))
-            _ploader->unloadLibrary(lib_name);
+        try
+        {
+            string lib_name = getBackendLibName();
+            if (_ploader->isLibraryLoaded(lib_name))
+                _ploader->unloadLibrary(lib_name);
+        }
+        catch(Exception &e) {}
+
         vt_destruct(_ploader);
     }
 
 }
 
-string Commons::GetBackendLibName()
+string Commons::getBackendLibName()
 {
     size_t uri_end = _pconfig->connection.find("://");
     if (uri_end != string::npos) {
@@ -134,14 +146,14 @@ string Commons::GetBackendLibName()
         return "libvtapi_" + backend_name + Poco::SharedLibrary::suffix();
     }
     else {
-        return string();
+        throw BadConfigurationException("invalid \'connection\' format: " + _pconfig->connection);
     }
 }
 
 Commons::~Commons()
 {
     if (_is_owner) {
-        UnloadBackend();
+        unloadBackend();
         vt_destruct(_pconfig);
     }
 }
@@ -184,37 +196,44 @@ Connection& Commons::connection()
 
 void Commons::loadConfig(const Poco::Util::AbstractConfiguration &config)
 {
-    // required properties
+    try
+    {
+        // required properties
 
-    if (config.hasProperty("datasets_dir"))
-        _pconfig->datasets_dir = config.getString("datasets_dir");
-    else
-        throw exception();
-    if (config.hasProperty("modules_dir"))
-        _pconfig->modules_dir = config.getString("modules_dir");
-    else
-        throw exception();
-    if (config.hasProperty("connection"))
-        _pconfig->connection = config.getString("connection");
-    else
-        throw exception();
+        if (config.hasProperty("datasets_dir"))
+            _pconfig->datasets_dir = config.getString("datasets_dir");
+        else
+            throw BadConfigurationException("datasets_dir option missing");
+        if (config.hasProperty("modules_dir"))
+            _pconfig->modules_dir = config.getString("modules_dir");
+        else
+            throw BadConfigurationException("modules_dir option missing");
+        if (config.hasProperty("connection"))
+            _pconfig->connection = config.getString("connection");
+        else
+            throw BadConfigurationException("connection option missing");
 
-    // optional properties
+        // optional properties
 
-    if (config.hasProperty("config"))
-        _pconfig->configfile = config.getString("config");
-    if (config.hasProperty("logfile"))
-        _pconfig->logfile = config.getString("logfile");
-    _pconfig->log_errors = config.hasProperty("log_errors");
-    _pconfig->log_warnings = config.hasProperty("log_warnings");
-    _pconfig->log_debug = config.hasProperty("log_debug");
+        if (config.hasProperty("config"))
+            _pconfig->configfile = config.getString("config");
+        if (config.hasProperty("logfile"))
+            _pconfig->logfile = config.getString("logfile");
+        _pconfig->log_errors = config.hasProperty("log_errors");
+        _pconfig->log_warnings = config.hasProperty("log_warnings");
+        _pconfig->log_debug = config.hasProperty("log_debug");
 
-    // context properties
+        // context properties
 
-    if (config.hasProperty("dataset"))
-        _context.dataset = config.getString("dataset");
-    if (config.hasProperty("process"))
-        _context.process = config.getInt("process");
+        if (config.hasProperty("dataset"))
+            _context.dataset = config.getString("dataset");
+        if (config.hasProperty("process"))
+            _context.process = config.getInt("process");
+    }
+    catch (Poco::SyntaxException &e)
+    {
+        throw (BadConfigurationException(e.message()));
+    }
 }
 
 void Commons::saveConfig(Poco::Util::AbstractConfiguration &config)

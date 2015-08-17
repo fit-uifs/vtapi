@@ -41,9 +41,9 @@ public:
 
     /**
      * Constructor from config file
-     * @param configFile   location of configuration file
+     * @param config_file   location of configuration file
      */
-    explicit VTApi(const std::string& configFile);
+    explicit VTApi(const std::string& config_file);
 
     /**
      * Copy constructor

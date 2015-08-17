@@ -113,6 +113,11 @@ Task* Method::loadTasks(const string& name)
     return (new Task(*this, name));
 }
 
+bool vtapi::Method::deleteTask(const string &dsname, const string &taskname)
+{
+    return QueryTaskDelete(*this, dsname, taskname).execute();
+}
+
 bool Method::preUpdate()
 {
     bool ret = KeyValues::preUpdate(def_tab_methods);

@@ -13,8 +13,8 @@
 #include <iostream>
 #include <Poco/Path.h>
 #include <Poco/File.h>
-#include <Poco/Exception.h>
 #include <vtapi/common/global.h>
+#include <vtapi/common/exception.h>
 #include <vtapi/common/serialize.h>
 #include <vtapi/common/logger.h>
 
@@ -30,34 +30,25 @@ Logger& Logger::instance()
     return instance;
 }
 
-bool Logger::config(const string& logfile, bool errors, bool warnings, bool debug)
+void Logger::config(const string& logfile, bool errors, bool warnings, bool debug)
 {
-    bool ret = true;
-
     if (_log.is_open())
         _log.close();
 
     if (!logfile.empty()) {
-        try
-        {
-            Poco::Path logpath = Poco::Path(logfile).makeAbsolute();
-            Poco::File(logpath.parent()).createDirectories();
+        Poco::Path logpath = Poco::Path(logfile).makeAbsolute();
+        Poco::File(logpath.parent()).createDirectories();
 
-            _log.open(logpath.toString(), ios::app);
-            if (ret = _log.is_open())
-                message("------------------------------------------------------");
-        }
-        catch (Poco::Exception &e)
-        {
-            ret = false;
-        }
+        _log.open(logpath.toString(), ios::app);
+        if (!_log.is_open())
+            throw BadConfigurationException("cannot create log file: " + logpath.toString());
+
+        message("------------------------------------------------------");
     }
     
     _log_errors = errors;
     _log_warnings = warnings;
     _log_debug = debug;
-    
-    return ret;
 }
 
 void Logger::message(const string& line)

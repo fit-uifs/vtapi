@@ -40,7 +40,6 @@ namespace vtapi {
 class KeyValues : public Commons
 {
 public:
-
     Select _select; /**< Select for select queries (usually pre-filled by the constructor) */
     Update* _update; /**< Update to update new data */
 

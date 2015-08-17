@@ -173,7 +173,8 @@ public:
                                            const std::string& prereq_task,
                                            const std::string& outputs) = 0;
 
-    virtual std::string getTaskDeleteQuery(const std::string& name) = 0;
+    virtual std::string getTaskDeleteQuery(const std::string& dsname,
+                                           const std::string& taskname) = 0;
 
     virtual std::string getLastInsertedIdQuery() = 0;
 
