@@ -15,20 +15,20 @@
 #include <string>
 #include <fstream>
 
-#define VT_S1(x) #x
-#define VT_S2(x) VT_S1(x)
-#define VT_LOCATION __FILE__ " : " VT_S2(__LINE__)
 
 #define VTLOG_MESSAGE(line) vtapi::Logger::instance().message(line)
 
-#ifdef VTAPI_DEBUG
-#define VTLOG_WARNING(line) vtapi::Logger::instance().warning(line, VT_LOCATION)
-#define VTLOG_ERROR(line)   vtapi::Logger::instance().error(line, VT_LOCATION)
-#define VTLOG_DEBUG(line)   vtapi::Logger::instance().debug(line, VT_LOCATION)
+#ifndef VTAPI_DEBUG
+    #define VTLOG_WARNING(line) vtapi::Logger::instance().warning(line)
+    #define VTLOG_ERROR(line)   vtapi::Logger::instance().error(line)
+    #define VTLOG_DEBUG(line)   //vtapi::Logger::instance().debug(line)
 #else
-#define VTLOG_WARNING(line) vtapi::Logger::instance().warning(line)
-#define VTLOG_ERROR(line)   vtapi::Logger::instance().error(line)
-#define VTLOG_DEBUG(line)   vtapi::Logger::instance().debug(line)
+    #define VT_S1(x) #x
+    #define VT_S2(x) VT_S1(x)
+    #define VT_LOCATION __FILE__ " : " VT_S2(__LINE__)
+    #define VTLOG_WARNING(line) vtapi::Logger::instance().warning(line, VT_LOCATION)
+    #define VTLOG_ERROR(line)   vtapi::Logger::instance().error(line, VT_LOCATION)
+    #define VTLOG_DEBUG(line)   vtapi::Logger::instance().debug(line, VT_LOCATION)
 #endif
 
 
