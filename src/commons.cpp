@@ -11,6 +11,7 @@
  */
 
 #include <Poco/Manifest.h>
+#include <Poco/Path.h>
 #include <vtapi/common/exception.h>
 #include <vtapi/common/global.h>
 #include <vtapi/data/commons.h>
@@ -138,7 +139,7 @@ void Commons::unloadBackend()
 
 }
 
-string Commons::getBackendLibName()
+string Commons::getBackendLibName() const
 {
     size_t uri_end = _pconfig->connection.find("://");
     if (uri_end != string::npos) {
@@ -171,11 +172,10 @@ Commons::_CONTEXT::_CONTEXT()
 }
 
 
-const Commons::CONFIG& Commons::config()
+const Commons::CONFIG& Commons::config() const
 {
     return *_pconfig;
 }
-
 
 Commons::CONTEXT& Commons::context()
 {
@@ -183,7 +183,7 @@ Commons::CONTEXT& Commons::context()
 }
 
 
-const IBackendInterface& Commons::backend()
+const IBackendInterface& Commons::backend() const
 {
     return *_pbackend;
 }
@@ -216,9 +216,9 @@ void Commons::loadConfig(const Poco::Util::AbstractConfiguration &config)
         // optional properties
 
         if (config.hasProperty("config"))
-            _pconfig->configfile = config.getString("config");
+            _pconfig->configfile = Poco::Path(config.getString("config")).makeAbsolute().toString();
         if (config.hasProperty("logfile"))
-            _pconfig->logfile = config.getString("logfile");
+            _pconfig->logfile = Poco::Path(config.getString("logfile")).makeAbsolute().toString();
         _pconfig->log_errors = config.hasProperty("log_errors");
         _pconfig->log_warnings = config.hasProperty("log_warnings");
         _pconfig->log_debug = config.hasProperty("log_debug");
@@ -236,7 +236,7 @@ void Commons::loadConfig(const Poco::Util::AbstractConfiguration &config)
     }
 }
 
-void Commons::saveConfig(Poco::Util::AbstractConfiguration &config)
+void Commons::saveConfig(Poco::Util::AbstractConfiguration &config) const
 {
     // required properties
 

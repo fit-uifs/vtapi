@@ -36,25 +36,6 @@ namespace vtapi {
 class Commons
 {
 public:
-    /**
-     * @brief Commons Construct shared configuration object from configuration map
-     * @param config configuration object
-     */
-    Commons(const Poco::Util::AbstractConfiguration &config);
-
-    /**
-     * @brief Copy constructor
-     * @param orig original object
-     * @param new_copy do full copy including configuration and connection
-     */
-    Commons(const Commons& orig, bool new_copy);
-
-    /**
-     * Destructor
-     */
-    virtual ~Commons();
-
-protected:
     // global configuration (shared by pointer between all objects)
     typedef struct _CONFIG
     {
@@ -85,23 +66,44 @@ protected:
         _CONTEXT();
     } CONTEXT;
 
+
+    /**
+     * @brief Commons Construct shared configuration object from configuration map
+     * @param config configuration object
+     */
+    Commons(const Poco::Util::AbstractConfiguration &config);
+
+    /**
+     * @brief Copy constructor
+     * @param orig original object
+     * @param new_copy do full copy including configuration and connection
+     */
+    Commons(const Commons& orig, bool new_copy);
+
+    /**
+     * Destructor
+     */
+    virtual ~Commons();
+
     /**
      * @brief configuration accessor
      * @return config
      */
-    const CONFIG& config();
+    const CONFIG& config() const;
 
     /**
      * @brief local context accessor
      * @return context
      */
-    CONTEXT& context();
+    CONTEXT &context();
+
+protected:
 
     /**
      * @brief backend interface accessor
      * @return backend interface
      */
-    const IBackendInterface& backend();
+    const IBackendInterface& backend() const;
 
     /**
      * @brief connection accessor
@@ -119,7 +121,7 @@ protected:
      * @brief Saves configuration from commons
      * @param config destination configuration
      */
-    void saveConfig(Poco::Util::AbstractConfiguration &config);
+    void saveConfig(Poco::Util::AbstractConfiguration &config) const;
 
 private:
     CONFIG          *_pconfig;              /**< Global configuration */
@@ -132,7 +134,7 @@ private:
 
     void loadBackend();
     void unloadBackend();
-    std::string getBackendLibName();
+    std::string getBackendLibName() const;
 
     Commons() = delete;
     Commons(const Commons&) = delete;

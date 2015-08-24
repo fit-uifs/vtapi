@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
                 list<string> seqnames = { "video1", "video2" };
                 shared_ptr<Process> prs (task->createProcess(seqnames));
                 if (prs) {
-                    prs->launch();
+                    prs->launchInstance(false);
                 }
             }
         }

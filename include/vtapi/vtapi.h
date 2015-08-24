@@ -153,10 +153,10 @@ public:
     bool deleteMethod(const std::string& mtname);
 
     /**
-     * @brief This process is module instance, gets its process object
+     * @brief Instantiate current process as VTApi worker process
      * @return process object
      */
-    Process *instantiateProcess();
+    Process *getRunnableProcess();
 
 private:
     Commons* _pcommons;      /**< Commons are common objects to all vtapi objects */

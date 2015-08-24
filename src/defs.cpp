@@ -77,7 +77,8 @@ const std::string def_col_int_created = "created";
 const std::string def_col_prs_prsid = "prsid";
 const std::string def_col_prs_taskname = "taskname";
 const std::string def_col_prs_state = "state";
-const std::string def_col_prs_pid = "pid";
+const std::string def_col_prs_pid = "ipc_pid";
+const std::string def_col_prs_port = "ipc_port";
 const std::string def_col_prs_created = "created";
 
 const std::string def_col_prs_pstate_status = "state,status";

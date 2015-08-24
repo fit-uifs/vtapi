@@ -75,34 +75,32 @@ bool Process::next()
     return ret;
 }
 
-bool Process::instantiateSelf()
+InterProcessServer * Process::initializeInstance()
 {
     // delete temporary config file created for process
     string tmpdir = Poco::Path::temp();
     if (config().configfile.find(tmpdir) == 0)
         Poco::File(config().configfile).remove();
 
-    return context().process != 0 && !_select.isExecuted() && next();
+    return new InterProcessServer(this->getId());
 }
 
-bool Process::launch(bool suspended)
+InterProcessClient * Process::launchInstance(bool suspended)
 {
-    bool ret = false;
-
     if (suspended)
-        updateStateSuspended();
+        this->updateStateSuspended();
 
     // create temporary config file
     string config_path = Poco::Path::temp();
     config_path += "vtproc_" + toString<int>(context().process) + ".conf";
 
-    // save configuration
+    // serialize configuration to temp directory
     Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config(
             new Poco::Util::PropertyFileConfiguration());
     this->saveConfig(*config.get());
     config->save(config_path);
 
-    // set config file through command line
+    // set temp config file through command line
     Poco::Process::Args args;
     args.push_back("--config=" + config_path + "");
 
@@ -114,7 +112,7 @@ bool Process::launch(bool suspended)
         Poco::ProcessHandle hproc = Poco::Process::launch("vtmodule", args);
         VTLOG_DEBUG("Launched PID " + toString<Poco::ProcessHandle::PID>(hproc.id()));
 
-        ret = true;
+        return new InterProcessClient(this->getId(), hproc, this->getInstancePort());
     }
     catch(exception& e) {
         VTLOG_ERROR("Failed to launch process : " +
@@ -123,7 +121,22 @@ bool Process::launch(bool suspended)
         updateStateError(e.what());
     }
 
-    return ret;
+    return NULL;
+}
+
+
+vtapi::InterProcessClient *vtapi::Process::connectToInstance()
+{
+    return new InterProcessClient(this->getId(),
+                                  this->getInstancePID(),
+                                  this->getInstancePort());
+}
+
+bool Process::isInstanceRunning()
+{
+    return InterProcessClient(this->getId(),
+                              this->getInstancePID(),
+                              this->getInstancePort()).isRunning();
 }
 
 Dataset *Process::getParentDataset()
@@ -244,9 +257,14 @@ ProcessState *Process::getState()
     return this->getProcessState(def_col_prs_state);
 }
 
-pid_t Process::getInstancePID()
+int Process::getInstancePID()
 {
     return this->getInt(def_col_prs_pid);
+}
+
+int Process::getInstancePort()
+{
+    return this->getInt(def_col_prs_port);
 }
 
 //////////////////////////////////////////////////
@@ -304,12 +322,12 @@ bool Process::updateStateRunning(float progress, const string& currentItem)
 
 bool Process::updateStateSuspended()
 {
-    return updateState(ProcessState(ProcessState::STATUS_SUSPENDED, 0, ""));
+    return updateState(ProcessState(ProcessState::STATUS_SUSPENDED, 0, string()));
 }
 
 bool Process::updateStateFinished()
 {
-    return updateState(ProcessState(ProcessState::STATUS_FINISHED, 0, ""));
+    return updateState(ProcessState(ProcessState::STATUS_FINISHED, 0, string()));
 }
 
 bool Process::updateStateError(const string& lastError)
@@ -317,15 +335,14 @@ bool Process::updateStateError(const string& lastError)
     return updateState(ProcessState(ProcessState::STATUS_ERROR, 0, lastError));
 }
 
-bool Process::updateInstancePID(pid_t pid)
+bool Process::updateInstancePID(int pid)
 {
-    bool ret = this->updateInt(def_col_prs_pid, pid);
-    if (ret)
-        ret = updateExecute();
-    else
-        preUpdate();
+    return this->updateInt(def_col_prs_pid, pid);
+}
 
-    return ret;
+bool Process::updateInstancePort(int port)
+{
+    return this->updateInt(def_col_prs_port, port);
 }
 
 //////////////////////////////////////////////////

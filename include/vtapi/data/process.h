@@ -19,6 +19,8 @@
 #include "task.h"
 #include "method.h"
 #include "processstate.h"
+#include "../common/interproc.h"
+
 
 namespace vtapi {
 
@@ -78,19 +80,35 @@ public:
      */
     bool next() override;
 
-    /**
-     * @brief Checks if process can be instance and calls next()
-     * Call this before first next()
-     * @return succesful intantiations
-     */
-    bool instantiateSelf();
+    //////////////////////////////////////////////////
+    // process instance control
+    //////////////////////////////////////////////////
 
     /**
-     * Launches process instance
-     * @param suspended start process in suspended state (use InterProc to unpause it)
+     * @brief Initializes current process as this process's instance
+     * Call this before first next()
+     * @return object for registering interprocess communication with clients, NULL on error
+     */
+    InterProcessServer * initializeInstance();
+
+    /**
+     * @brief Launches this process' instance and connects to it
+     * @param suspended start process in suspended state (use InterProcessClient to unpause it)
+     * @return object for interprocess communication with the instance, NULL on error
+     */
+    InterProcessClient * launchInstance(bool suspended);
+
+    /**
+     * @brief Connects to this process' already running instance
+     * @return object for interprocess communication with the instance, NULL on error
+     */
+    InterProcessClient * connectToInstance();
+
+    /**
+     * @brief Is this process's instance currently running
      * @return success
      */
-    bool launch(bool suspended = false);
+    bool isInstanceRunning();
 
     //////////////////////////////////////////////////
     // getters - associated objects
@@ -153,7 +171,13 @@ public:
      * @brief Gets system PID value of running instance
      * @return PID
      */
-    pid_t getInstancePID();
+    int getInstancePID();
+
+    /**
+     * @brief Gets instance's listenting port for IPC
+     * @return port
+     */
+    int getInstancePort();
     
     //////////////////////////////////////////////////
     // updaters - UPDATE
@@ -165,6 +189,7 @@ public:
      * @return success
      */
     bool updateState(const ProcessState& state);
+
     /**
      * Sets process status as RUNNING
      * @param progress percentage progress [0-100]
@@ -172,28 +197,39 @@ public:
      * @return success
      */
     bool updateStateRunning(float progress, const std::string& currentItem);
+
     /**
      * Sets process status as SUSPENDED (paused)
      * @return success
      */
     bool updateStateSuspended();
+
     /**
      * Sets process status as FINISHED (without error)
      * @return success
      */
     bool updateStateFinished();
+
     /**
      * Sets process status as ERROR and sets last error message
      * @param errorMsg error message
      * @return success
      */
     bool updateStateError(const std::string& lastError);
+
     /**
-     * @brief Sets new process instance PID
+     * @brief Sets instance's PID
      * @param pid pid
      * @return success
      */
-    bool updateInstancePID(pid_t pid);
+    bool updateInstancePID(int pid);
+
+    /**
+     * @brief Sets instance's listening port
+     * @param port listening port
+     * @return success
+     */
+    bool updateInstancePort(int port);
 
     //////////////////////////////////////////////////
     // filters/utilities

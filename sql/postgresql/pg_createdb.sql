@@ -493,7 +493,8 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       prsid serial NOT NULL,
       taskname name NOT NULL,
       state public.pstate DEFAULT '(created,0,,)',
-      pid int DEFAULT 0,
+      ipc_pid int DEFAULT 0,
+      ipc_port int DEFAULT 0,
       created timestamp without time zone DEFAULT now(),
       CONSTRAINT processes_pk PRIMARY KEY (prsid)
     );

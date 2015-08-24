@@ -207,16 +207,17 @@ bool vtapi::VTApi::deleteMethod(const string &mtname)
     return QueryMethodDelete(*_pcommons, mtname).execute();
 }
 
-Process *VTApi::instantiateProcess()
+Process *VTApi::getRunnableProcess()
 {
-    Process *prs = new Process(*_pcommons);
-    if (prs->instantiateSelf()) {
-        return prs;
+    Process *prs = NULL;
+
+    if (_pcommons->context().process != 0) {
+        prs = new Process(*_pcommons);
+        if (prs && !prs->next())
+            vt_destruct(prs);
     }
-    else {
-        delete prs;
-        return NULL;
-    }
+
+    return prs;
 }
 
 
