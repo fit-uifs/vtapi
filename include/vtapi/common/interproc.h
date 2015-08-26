@@ -13,46 +13,76 @@
 #pragma once
 
 #include <string>
+#include <atomic>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 #include <Poco/Process.h>
+#include <vtapi/data/process.h>
 
 namespace vtapi {
 
+class Process;
 
-class InterProcessServer
+
+class InterProcessBase
+{
+protected:
+    Process *_pprocess;
+
+    InterProcessBase(const Process & process);
+    ~InterProcessBase();
+
+private:
+    InterProcessBase() = delete;
+};
+
+
+class InterProcessServer : public InterProcessBase
 {
 public:
     typedef enum
     {
-        StateRunning,
-        StateSuspended,
-        StateStopping
-    } State;
+        CommandSuspend,
+        CommandResume,
+        CommandStop
+    } Command;
 
-    typedef void (*fnSignalCallback)(State new_state);
+    typedef void (*fnCommandCallback)(Command command);
 
-    explicit InterProcessServer(int vt_prsid);
+    explicit InterProcessServer(const Process & process, fnCommandCallback callback);
     ~InterProcessServer();
 
-    bool installSignalHandlers(fnSignalCallback *callback);
+    bool installSignalHandlers();
     void uninstallSignalHandlers();
 
     int startListening();
     void stopListening();
-    int getListeningPort();
 
 private:
-    int _vt_prsid;
-    bool _signals_installed;
-    int _port;
+    static fnCommandCallback _callback;
+    static std::atomic_bool _signals_installed;
+    static void sighandler(int sig);
+
+    std::thread _server_thread;
+    std::mutex _server_ready_mtx;
+    std::condition_variable _server_ready_cv;
+    std::atomic_bool _stop_server;
+    int _server_port;
+
+    static void serverProc(InterProcessServer *context);
+    void serverLoop();
 
     InterProcessServer() = delete;
 };
 
-class InterProcessClient
+
+
+class InterProcessClient : public InterProcessBase
 {
 public:
-    InterProcessClient(int vt_prsid, Poco::ProcessHandle hproc, int port);
-    InterProcessClient(int vt_prsid, int pid, int port);
+    InterProcessClient(const Process & process, Poco::ProcessHandle hproc);
+    explicit InterProcessClient(const Process & process);
     ~InterProcessClient();
 
     bool isRunning();
@@ -63,10 +93,7 @@ public:
     bool wait();
 
 private:
-    int _vt_prsid;
     Poco::ProcessHandle *_phproc;
-    Poco::Process::PID _pid;
-    int _port;
 
     InterProcessClient() = delete;
 };

@@ -25,6 +25,11 @@ using namespace std;
 namespace vtapi {
 
 
+Process::Process(const Process &copy)
+    : Process(dynamic_cast<const Commons&>(copy))
+{
+}
+
 Process::Process(const Commons& commons, int id)
     : KeyValues(commons)
 {
@@ -75,21 +80,18 @@ bool Process::next()
     return ret;
 }
 
-InterProcessServer * Process::initializeInstance()
+InterProcessServer * Process::initializeInstance(InterProcessServer::fnCommandCallback callback)
 {
     // delete temporary config file created for process
     string tmpdir = Poco::Path::temp();
     if (config().configfile.find(tmpdir) == 0)
         Poco::File(config().configfile).remove();
 
-    return new InterProcessServer(this->getId());
+    return new InterProcessServer(*this, callback);
 }
 
-InterProcessClient * Process::launchInstance(bool suspended)
+InterProcessClient * Process::launchInstance()
 {
-    if (suspended)
-        this->updateStateSuspended();
-
     // create temporary config file
     string config_path = Poco::Path::temp();
     config_path += "vtproc_" + toString<int>(context().process) + ".conf";
@@ -112,7 +114,7 @@ InterProcessClient * Process::launchInstance(bool suspended)
         Poco::ProcessHandle hproc = Poco::Process::launch("vtmodule", args);
         VTLOG_DEBUG("Launched PID " + toString<Poco::ProcessHandle::PID>(hproc.id()));
 
-        return new InterProcessClient(this->getId(), hproc, this->getInstancePort());
+        return new InterProcessClient(*this, hproc);
     }
     catch(exception& e) {
         VTLOG_ERROR("Failed to launch process : " +
@@ -127,16 +129,12 @@ InterProcessClient * Process::launchInstance(bool suspended)
 
 vtapi::InterProcessClient *vtapi::Process::connectToInstance()
 {
-    return new InterProcessClient(this->getId(),
-                                  this->getInstancePID(),
-                                  this->getInstancePort());
+    return new InterProcessClient(*this);
 }
 
 bool Process::isInstanceRunning()
 {
-    return InterProcessClient(this->getId(),
-                              this->getInstancePID(),
-                              this->getInstancePort()).isRunning();
+    return InterProcessClient(*this).isRunning();
 }
 
 Dataset *Process::getParentDataset()

@@ -24,6 +24,11 @@ using namespace std;
 namespace vtapi {
 
 
+Task::Task(const Task &copy)
+    : Task(dynamic_cast<const Commons&>(copy))
+{
+}
+
 Task::Task(const Commons& commons, const string& name)
     : KeyValues(commons)
 {

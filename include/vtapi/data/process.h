@@ -30,6 +30,8 @@ class ImageFolder;
 class Video;
 class Task;
 class Method;
+class InterProcessServer;
+class InterProcessClient;
 
 
 /**
@@ -47,6 +49,12 @@ class Method;
 class Process : protected KeyValues
 {
 public:
+    /**
+     * @brief Copy constructor
+     * @param copy original object
+     */
+    Process(const Process& copy);
+
     /**
      * Construct process object for iterating through VTApi processes
      * If a specific name is set, object will represent one process only
@@ -87,16 +95,16 @@ public:
     /**
      * @brief Initializes current process as this process's instance
      * Call this before first next()
+     * @param callback callback on received command
      * @return object for registering interprocess communication with clients, NULL on error
      */
-    InterProcessServer * initializeInstance();
+    InterProcessServer * initializeInstance(InterProcessServer::fnCommandCallback callback);
 
     /**
      * @brief Launches this process' instance and connects to it
-     * @param suspended start process in suspended state (use InterProcessClient to unpause it)
      * @return object for interprocess communication with the instance, NULL on error
      */
-    InterProcessClient * launchInstance(bool suspended);
+    InterProcessClient * launchInstance();
 
     /**
      * @brief Connects to this process' already running instance
@@ -245,7 +253,6 @@ protected:
 
 private:
     Process() = delete;
-    Process(const Process&) = delete;
     Process& operator=(const Process&) = delete;
 };
 

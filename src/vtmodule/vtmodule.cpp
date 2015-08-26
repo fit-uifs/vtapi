@@ -11,6 +11,12 @@ using namespace vtapi;
 using namespace std;
 
 
+void commandCallback(InterProcessServer::Command command)
+{
+
+}
+
+
 int main(int argc, char *argv[])
 {
     int ret = 0;
@@ -23,7 +29,7 @@ int main(int argc, char *argv[])
 
         shared_ptr<Process> prs(vtapi.getRunnableProcess());
         if (prs) {
-            shared_ptr<InterProcessServer> srv(prs->initializeInstance());
+            shared_ptr<InterProcessServer> srv(prs->initializeInstance(commandCallback));
 
             // get library path
             shared_ptr<Method> met(prs->getParentMethod());
