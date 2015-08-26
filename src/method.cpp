@@ -24,6 +24,11 @@ using namespace std;
 namespace vtapi {
 
 
+Method::Method(const Method &copy)
+    : Method(dynamic_cast<const Commons&>(copy))
+{
+}
+
 Method::Method(const Commons& commons, const string& name)
     : KeyValues(commons)
 {

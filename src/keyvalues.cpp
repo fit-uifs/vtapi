@@ -19,6 +19,10 @@ using namespace std;
 
 namespace vtapi {
 
+KeyValues::KeyValues(const KeyValues &copy)
+    : KeyValues(dynamic_cast<const Commons&>(copy))
+{
+}
 
 KeyValues::KeyValues(const Commons& commons, const string& selection)
     : Commons(commons, false), _select(commons), _update(NULL)

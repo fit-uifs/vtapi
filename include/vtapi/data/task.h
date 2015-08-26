@@ -38,6 +38,12 @@ class Task : protected KeyValues
 {
 public:
     /**
+     * @brief Copy constructor
+     * @param copy original object
+     */
+    Task(const Task& copy);
+
+    /**
      * Construct task object for iterating through VTApi tasks
      * If a specific name is set, object will represent one task only
      * @param commons base Commons object
@@ -184,7 +190,6 @@ protected:
     
 private:
     Task() = delete;
-    Task(const Task&) = delete;
     Task& operator=(const Task&) = delete;
 };
 

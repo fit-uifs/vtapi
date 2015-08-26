@@ -43,6 +43,12 @@ class Sequence : protected KeyValues
 {
 public:
     /**
+     * @brief Copy constructor
+     * @param copy original object
+     */
+    Sequence(const Sequence& copy);
+
+    /**
      * Construct sequence object for iterating through VTApi sequences (video/imagefolder)
      * If a specific name is set, object will represent one sequence only
      * @param commons base Commons object
@@ -129,7 +135,6 @@ protected:
 
 private:
     Sequence() = delete;
-    Sequence(const Sequence&) = delete;
     Sequence& operator=(const Sequence&) = delete;
 };
 
@@ -151,6 +156,12 @@ private:
 class ImageFolder : public Sequence
 {
 public:
+    /**
+     * @brief Copy constructor
+     * @param copy original object
+     */
+    ImageFolder(const ImageFolder& copy);
+
     /**
      * Construct image folder object for iterating through VTApi image folders
      * If a specific name is set, object will represent one image folder only
@@ -175,7 +186,6 @@ public:
     
 private:
     ImageFolder() = delete;
-    ImageFolder(const Sequence&) = delete;
     ImageFolder& operator=(const ImageFolder&) = delete;
 };
 
@@ -196,6 +206,12 @@ private:
 class Video : public Sequence
 {
 public:
+    /**
+     * @brief Copy constructor
+     * @param copy original object
+     */
+    Video(const Video& copy);
+
     /**
      * Construct video object for iterating through VTApi videos
      * If a specific name is set, object will represent one video only
@@ -280,7 +296,6 @@ private:
     cv::VideoCapture _capture;   /**< Video file capture */
 
     Video() = delete;
-    Video(const Video&) = delete;
     Video& operator=(const Video&) = delete;
 };
 

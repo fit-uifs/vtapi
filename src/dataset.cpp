@@ -23,6 +23,11 @@ using namespace std;
 namespace vtapi {
 
 
+Dataset::Dataset(const Dataset &copy)
+    : Dataset(dynamic_cast<const Commons&>(copy))
+{
+}
+
 Dataset::Dataset(const Commons& commons, const string& name)
     : KeyValues(commons)
 {

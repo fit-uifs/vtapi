@@ -44,6 +44,12 @@ public:
     Update* _update; /**< Update to update new data */
 
     /**
+     * @brief Copy constructor
+     * @param copy original object
+     */
+    KeyValues(const KeyValues& copy);
+
+    /**
      * Constructor of base KeyValues object representing generic DB tuples
      * @param orig base Commons object
      * @param selection specific DB table
@@ -574,7 +580,6 @@ protected:
 
 private:
     KeyValues() = delete;
-    KeyValues(const KeyValues&) = delete;
     KeyValues& operator=(const KeyValues&) = delete;
 };
 

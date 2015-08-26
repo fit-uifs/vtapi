@@ -24,6 +24,11 @@ namespace vtapi {
 //================================ SEQUENCE ====================================
 
 
+Sequence::Sequence(const Sequence &copy)
+    : Sequence(dynamic_cast<const Commons&>(copy))
+{
+}
+
 Sequence::Sequence(const Commons& commons, const string& name)
     : KeyValues(commons)
 {
@@ -133,6 +138,11 @@ bool Sequence::preUpdate()
 
 //============================== IMAGE FOLDER ===================================
 
+ImageFolder::ImageFolder(const ImageFolder &copy)
+    : ImageFolder(dynamic_cast<const Commons&>(copy))
+{
+}
+
 ImageFolder::ImageFolder(const Commons& commons, const string& name)
     : Sequence(commons, name)
 {
@@ -151,6 +161,11 @@ bool ImageFolder::next()
 }
 
 //================================= VIDEO ======================================
+
+Video::Video(const Video &copy)
+    : Video(dynamic_cast<const Commons&>(copy))
+{
+}
 
 Video::Video(const Commons& commons, const string& name)
     : Sequence(commons, name)

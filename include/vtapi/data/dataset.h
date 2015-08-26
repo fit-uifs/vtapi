@@ -45,6 +45,13 @@ class Process;
 class Dataset : protected KeyValues
 {
 public:
+
+    /**
+     * @brief Copy constructor
+     * @param copy original object
+     */
+    Dataset(const Dataset& copy);
+
     /**
      * Construct dataset object for iterating through VTApi datasets
      * If a specific name is set, object will represent one dataset only
@@ -258,7 +265,6 @@ protected:
     
 private:
     Dataset() = delete;
-    Dataset(const Dataset&) = delete;
     Dataset& operator=(const Dataset&) = delete;
 };
 

@@ -38,6 +38,12 @@ class Method : protected KeyValues
 {
 public:
     /**
+     * @brief Copy constructor
+     * @param copy original object
+     */
+    Method(const Method& copy);
+
+    /**
      * Construct method object for iterating through VTApi methods
      * If a specific name is set, object will represent one method only
      * @param commons base Commons object
@@ -128,7 +134,6 @@ protected:
     
 private:
     Method() = delete;
-    Method(const Method&) = delete;
     Method& operator=(const Method&) = delete;
 };
 
