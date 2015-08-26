@@ -861,13 +861,13 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
 
       IF _usert = TRUE THEN
         _stmt := _stmt || 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
+        
+        _stmt := _stmt || 'CREATE TRIGGER ' || quote_ident(_reqoutname || '_provide_realtime') || '
+                             BEFORE INSERT OR UPDATE
+                             ON ' || __outname || '
+                             FOR EACH ROW
+                             EXECUTE PROCEDURE public.trg_interval_provide_realtime();';
       END IF;
-      
-      _stmt := _stmt || 'CREATE TRIGGER ' || quote_ident(_reqoutname || '_provide_realtime') || '
-                           BEFORE INSERT OR UPDATE
-                           ON ' || __outname || '
-                           FOR EACH ROW
-                           EXECUTE PROCEDURE public.trg_interval_provide_realtime();';
 
 
     -- task' output table maybe exists - it is needed to check the presence of columns required by method
