@@ -367,6 +367,7 @@ string PGQueryBuilder::getMethodCreateQuery(
                                             const MethodParams params_definition,
                                             const string& description)
 {
+    //TODO: creating methods
     return "";
 }
 
@@ -377,6 +378,8 @@ string PGQueryBuilder::getMethodDeleteQuery(const string& name)
     q += def_fnc_ds_delete;
     q += '(';
     q += escapeLiteral(name);
+    q += ',';
+    q += "TRUE";
     q += ");";
 
     return q;

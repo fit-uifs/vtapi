@@ -23,28 +23,41 @@ SET search_path = demo, pg_catalog;
 
 
 -- delete demo modules
-SELECT public.VT_method_delete('demo1');
-SELECT public.VT_method_delete('demo2');
+SELECT public.VT_method_delete('demo1', TRUE);
+SELECT public.VT_method_delete('demo2', TRUE);
 
 -- insert demo modules
-SELECT public.VT_method_add('demo1', '{"(features_array,real[],out,,,,)", "(features_mat,public.cvmat,out,,,,)"}', '{"(param1,int,true,50,[-100\\,100],)", "(param2,double,true,0.5,[-1.0\\,1.0],)"}', TRUE, 'auto-generated demo method #1');
-SELECT public.VT_method_add('demo2', '{"(features_array,real[],in,,,,)", "(features_mat,public.cvmat,in,,,,)", "(event,public.vtevent,out,true,,{4},)"}', '{"(video,string,true,,,)"}', TRUE, 'auto-generated demo method #2');
+SELECT public.VT_method_add(
+    'demo1',
+    '{"(features_array,real[],out,,,,)", "(features_mat,public.cvmat,out,,,,)"}',
+    '{"(param1,int,true,50,[-100\\,100],)", "(param2,double,true,0.5,[-1.0\\,1.0],)"}',
+    FALSE,
+    'auto-generated demo method #1',
+    NULL);
+SELECT public.VT_method_add(
+    'demo2',
+    '{"(features_array,real[],in,,,,)", "(features_mat,public.cvmat,in,,,,)",
+    "(event,public.vtevent,out,true,,{4},)"}', '{"(video,string,true,,,)"}',
+    TRUE,
+    'auto-generated demo method #2',
+    NULL);
 
 -- delete tasks
-SELECT public.VT_task_delete('task_demo2_1');
-SELECT public.VT_task_delete('task_demo2_2');
-SELECT public.VT_task_delete('task_demo1_1');
-SELECT public.VT_task_delete('task_demo1_2');
-SELECT public.VT_task_delete('task_demo1_3', TRUE);
-SELECT public.VT_task_delete('task_demo2_3'); -- not needed => returns FALSE because "task_demo1_3" was forced   (in case, if it was not dropped whole dataset at the beggining of demo-schema.sql)
+SELECT public.VT_task_delete('task_demo2_1', TRUE, 'demo');
+SELECT public.VT_task_delete('task_demo2_2', TRUE, 'demo');
+SELECT public.VT_task_delete('task_demo1_1', TRUE, 'demo');
+SELECT public.VT_task_delete('task_demo1_2', TRUE, 'demo');
+SELECT public.VT_task_delete('task_demo1_3', TRUE, 'demo');
+ -- not needed => returns FALSE because "task_demo1_3" was forced (in case, if it was not dropped whole dataset at the beggining of demo-schema.sql)
+SELECT public.VT_task_delete('task_demo2_3', TRUE, 'demo');
 
 -- create tasks with their output tables (3 tasks per module; 1st module is prerequisity for 2nd module)
-SELECT public.VT_task_create('task_demo1_1', 'demo1', '{param1:-53,param2:-0.8}');
-SELECT public.VT_task_create('task_demo1_2', 'demo1', '{param1:0,param2:1.0}');
-SELECT public.VT_task_create('task_demo1_3', 'demo1', '{param1:11,param2:0.76}');
-SELECT public.VT_task_create('task_demo2_1', 'demo2', '{video:video3}', 'task_demo1_1');
-SELECT public.VT_task_create('task_demo2_2', 'demo2', '{video:video1}', 'task_demo1_2');
-SELECT public.VT_task_create('task_demo2_3', 'demo2', '{video:video3}', 'task_demo1_3');
+SELECT public.VT_task_create('task_demo1_1', 'demo1', '{param1:-53,param2:-0.8}', NULL, NULL, 'demo');
+SELECT public.VT_task_create('task_demo1_2', 'demo1', '{param1:0,param2:1.0}', NULL, NULL, 'demo');
+SELECT public.VT_task_create('task_demo1_3', 'demo1', '{param1:11,param2:0.76}', NULL, NULL, 'demo');
+SELECT public.VT_task_create('task_demo2_1', 'demo2', '{video:video3}', 'task_demo1_1', NULL, 'demo');
+SELECT public.VT_task_create('task_demo2_2', 'demo2', '{video:video1}', 'task_demo1_2', NULL, 'demo');
+SELECT public.VT_task_create('task_demo2_3', 'demo2', '{video:video3}', 'task_demo1_3', NULL, 'demo');
 
 ---------------------------------------------------
 

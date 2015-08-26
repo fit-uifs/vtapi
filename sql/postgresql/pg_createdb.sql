@@ -31,7 +31,7 @@ CREATE SCHEMA IF NOT EXISTS public;
 -- DROP all VTApi objects
 -------------------------------------
 
--- TODO: what if this doesn't exist??
+-- TODO: what if this function doesn't exist yet?
 SELECT VT_dataset_drop_all();
 
 
@@ -57,7 +57,7 @@ DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 
 -- TODO: it still crashes here
 --DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
-DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR, BOOLEAN) CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_task_create(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_task_delete(VARCHAR, BOOLEAN, VARCHAR) CASCADE;
@@ -217,7 +217,7 @@ CREATE TABLE methods_params (
 --   * Dataset is already registered, but _dslocation, _friendly_name or _description is different than in DB => returns -1
 --   * There already exist some parts of dataset and some parts not exist => INTERRUPTED with INCONSISTENCY EXCEPTION
 --   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCHAR, _friendly_name VARCHAR DEFAULT NULL, _description TEXT DEFAULT NULL) 
+CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCHAR, _friendly_name VARCHAR, _description TEXT) 
   RETURNS INT AS 
   $VT_dataset_create$
   DECLARE
@@ -558,7 +558,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
 --   * Successful addition of a method => returns TRUE
 --   * Method with the same name is already available => returns FALSE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[], _mparams METHODPARAMTYPE[], _usert BOOLEAN DEFAULT FALSE, _mfriendly_name VARCHAR DEFAULT NULL, _description TEXT DEFAULT NULL)
+CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[], _mparams METHODPARAMTYPE[], _usert BOOLEAN, _mfriendly_name VARCHAR, _description TEXT)
   RETURNS BOOLEAN AS
   $VT_method_add$
   DECLARE
@@ -665,7 +665,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
 --   * Method with the same name is no longer available => returns FALSE
 --   * If deletion is not forced and methods' dependencies exist => INTERRUPTED with EXCEPTION
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEFAULT FALSE)
+CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN)
   RETURNS BOOLEAN AS
   $VT_method_delete$
   DECLARE
@@ -715,7 +715,7 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN DEF
 -- Function behavior:
 --   * Task' output table succesfully added => returns TRUE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VARCHAR, _params VARCHAR DEFAULT NULL, _taskprereq VARCHAR DEFAULT NULL, _reqoutname VARCHAR DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VARCHAR, _params VARCHAR, _taskprereq VARCHAR, _reqoutname VARCHAR, _dsname VARCHAR)
   RETURNS BOOLEAN AS
   $VT_task_create$
   DECLARE
@@ -770,6 +770,8 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     IF _namespaceoid IS NULL THEN
       RAISE EXCEPTION 'Dataset "%" does not exist.', _dsname;
     END IF;
+
+    EXECUTE 'SET search_path=' || quote_ident(_dsname);
     
     -- check if method exists
     EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
@@ -779,7 +781,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     
     -- check if inkeys of task' method are already defined as outkeys of preprequisity task' method
     IF _taskprereq IS NOT NULL THEN
-      EXECUTE 'SELECT mtname FROM ' || _dsname || '.tasks WHERE taskname = ' || quote_literal(_taskprereq) INTO _prereqmtname;
+      EXECUTE 'SELECT mtname FROM tasks WHERE taskname = ' || quote_literal(_taskprereq) INTO _prereqmtname;
       EXECUTE 'SELECT COUNT(*)
                FROM (
                  SELECT keyname, typname
@@ -961,14 +963,16 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
 
     END IF;
 
-    EXECUTE _stmt;
-    EXECUTE _idxstmt;
+    IF _stmt <> '' THEN
+      EXECUTE _stmt;
+      EXECUTE _idxstmt;
+    END IF;
     
-    EXECUTE 'INSERT INTO ' || _dsname || '.tasks(taskname, mtname, params, outputs)
+    EXECUTE 'INSERT INTO tasks(taskname, mtname, params, outputs)
                VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_mtname) || ', ' || quote_nullable(_params) || ', ''' || __outname || '''::regclass);';
                
     IF _taskprereq IS NOT NULL THEN
-      EXECUTE 'INSERT INTO ' || _dsname || '.rel_tasks_tasks_prerequisities VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_taskprereq) || ');';
+      EXECUTE 'INSERT INTO rel_tasks_tasks_prerequisities VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_taskprereq) || ');';
     END IF;
     
     RETURN TRUE;
@@ -992,7 +996,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
 --   * If deletion is not forced and tasks' dependencies exist => INTERRUPTED with EXCEPTION
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_task_delete (_taskname VARCHAR, _force BOOLEAN DEFAULT FALSE, _dsname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION VT_task_delete (_taskname VARCHAR, _force BOOLEAN, _dsname VARCHAR)
   RETURNS BOOLEAN AS
   $VT_task_delete$
   DECLARE
@@ -1003,24 +1007,26 @@ CREATE OR REPLACE FUNCTION VT_task_delete (_taskname VARCHAR, _force BOOLEAN DEF
       _dsname := current_schema();
     END IF;
 
+    EXECUTE 'SET search_path=' || quote_ident(_dsname);
+
     IF _dsname IN ('public', 'pg_catalog') THEN
       RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
     END IF;
 
 
-    EXECUTE 'SELECT COUNT(*) FROM ' || quote_ident(_dsname) || '.tasks WHERE taskname = ' || quote_literal(_taskname) INTO _controlcount;
+    EXECUTE 'SELECT COUNT(*) FROM tasks WHERE taskname = ' || quote_literal(_taskname) INTO _controlcount;
     IF _controlcount <> 1 THEN
       RETURN FALSE;
     END IF;
 
     IF _force = FALSE THEN
-      EXECUTE 'SELECT COUNT(*) FROM ' || quote_ident(_dsname) || '.rel_tasks_tasks_prerequisities WHERE taskprereq = ' || quote_literal(_taskname) INTO _controlcount;
+      EXECUTE 'SELECT COUNT(*) FROM rel_tasks_tasks_prerequisities WHERE taskprereq = ' || quote_literal(_taskname) INTO _controlcount;
       IF _controlcount > 0 THEN
         RAISE EXCEPTION 'Can not delete task "%" due to dependent tasks in dataset "%".', _taskname, _dsname;
       END IF;
     END IF;
     
-    EXECUTE 'DELETE FROM ' || quote_ident(_dsname) || '.tasks WHERE taskname = ' || quote_literal(_taskname);
+    EXECUTE 'DELETE FROM tasks WHERE taskname = ' || quote_literal(_taskname);
     RETURN TRUE;
 
     EXCEPTION WHEN OTHERS THEN
@@ -1034,7 +1040,7 @@ CREATE OR REPLACE FUNCTION VT_task_delete (_taskname VARCHAR, _force BOOLEAN DEF
 -- TASK OUTPUT: support for index creation
 -- Function behavior:
 --   * Returns SQL command for index creation
-CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NAME, _typname REGTYPE, _keypart INT DEFAULT NULL, _dsname VARCHAR DEFAULT NULL)
+CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NAME, _typname REGTYPE, _keypart INT, _dsname VARCHAR)
   RETURNS VARCHAR AS
   $VT_task_output_idxquery$
   DECLARE
@@ -1046,6 +1052,8 @@ CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NA
     IF _dsname IS NULL THEN
       _dsname := current_schema();
     END IF;
+
+    EXECUTE 'SET search_path=' || quote_ident(_dsname);
 
     __idxcol := quote_ident(_keyname);
     
@@ -1065,7 +1073,7 @@ CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NA
     
     -- TODO GIST index 4 3D geometry?
     -- TODO _idxtype & _idxops - is it needed & useful?
-    RETURN 'CREATE INDEX ' || quote_ident(_idxname) || ' ON ' || quote_ident(_dsname) || '.' || quote_ident(_tblname) || ' ' || _stmt || ' (' || __idxcol || ');';
+    RETURN 'CREATE INDEX ' || quote_ident(_idxname) || ' ON ' || quote_ident(_tblname) || ' ' || _stmt || ' (' || __idxcol || ');';
     
     EXCEPTION WHEN OTHERS THEN
       RAISE WARNING 'It seems, that indexing of "%" type (above key "%") is not supported by VTApi at this moment. If you would like to index this key, try to contact VTApi team. (Details: ERROR %: %)', _typname, _keyname, SQLSTATE, SQLERRM;
