@@ -161,7 +161,7 @@ CREATE TABLE datasets (
     dslocation VARCHAR NOT NULL,
     friendly_name VARCHAR,
     description TEXT,
-    created TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
+    created TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() at time zone 'utc'),
     CONSTRAINT dataset_pk PRIMARY KEY (dsname)
 );
 
@@ -171,7 +171,7 @@ CREATE TABLE methods (
     usert   BOOLEAN   DEFAULT FALSE,
     friendly_name VARCHAR,
     description TEXT,
-    created TIMESTAMP WITHOUT TIME ZONE DEFAULT now(),
+    created TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() at time zone 'utc'),
     CONSTRAINT methods_pk PRIMARY KEY (mtname)
 );
 
@@ -468,7 +468,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       vid_fps double precision,
       vid_speed  double precision  DEFAULT 1,
       vid_time timestamp without time zone,
-      created timestamp without time zone DEFAULT now(),
+      created timestamp without time zone DEFAULT (now() at time zone 'utc'),
       comment text DEFAULT NULL,
       CONSTRAINT sequences_pk PRIMARY KEY (seqname)
     );
@@ -480,7 +480,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       mtname     NAME      NOT NULL,
       params     VARCHAR   DEFAULT NULL,
       outputs    REGCLASS,
-      created    TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
+      created    TIMESTAMP WITHOUT TIME ZONE   DEFAULT (now() at time zone 'utc'),
       CONSTRAINT tasks_pk PRIMARY KEY (taskname),
       CONSTRAINT mtname_fk FOREIGN KEY (mtname)
         REFERENCES public.methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
@@ -495,7 +495,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       state public.pstate DEFAULT '(created,0,,)',
       ipc_pid int DEFAULT 0,
       ipc_port int DEFAULT 0,
-      created timestamp without time zone DEFAULT now(),
+      created timestamp without time zone DEFAULT (now() at time zone 'utc'),
       CONSTRAINT processes_pk PRIMARY KEY (prsid)
     );
     CREATE INDEX processes_taskname_idx ON processes(taskname);
@@ -526,11 +526,11 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
     -- table for recording which sequences has been processed for task
     CREATE TABLE rel_tasks_sequences_done (
       taskname   NAME      NOT NULL,
-      prsid      INT       NOT NULL,
       seqname    NAME      NOT NULL,
+      prsid      INT       NOT NULL,
       is_done    BOOLEAN   DEFAULT FALSE,
-      started    TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
-      finished   TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
+      started    TIMESTAMP WITHOUT TIME ZONE   DEFAULT (now() at time zone 'utc'),
+      finished   TIMESTAMP WITHOUT TIME ZONE,
       CONSTRAINT rel_tasks_sequences_done_pk PRIMARY KEY (taskname, seqname),
       CONSTRAINT taskname_fk FOREIGN KEY (taskname)
         REFERENCES tasks(taskname) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -849,7 +849,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
 
       _stmt := 'CREATE TABLE ' || __outname || '('
                   || _stmt ||
-               '  created       TIMESTAMP WITHOUT TIME ZONE   DEFAULT now(),
+               '  created       TIMESTAMP WITHOUT TIME ZONE   DEFAULT (now() at time zone ''utc''),
                   CONSTRAINT ' || quote_ident(_reqoutname || '_pk') || ' PRIMARY KEY (id),
                   CONSTRAINT taskname_fk FOREIGN KEY (taskname)
                     REFERENCES tasks(taskname) ON UPDATE CASCADE ON DELETE CASCADE,
@@ -1121,7 +1121,7 @@ CREATE OR REPLACE FUNCTION trg_interval_provide_realtime ()
           _fps = _fps / _speed;
         END IF;
 
-        NEW.sec_length := (NEW.t2 - NEW.t1) / _fps;
+        NEW.sec_length := (NEW.t2 - NEW.t1 + 1) / _fps;
         NEW.rt_start := _rt_start + (NEW.t1 / _fps) * '1 second'::interval;
       END IF;
       RETURN NEW;
