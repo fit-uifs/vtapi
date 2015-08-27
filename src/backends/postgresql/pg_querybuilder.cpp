@@ -772,6 +772,7 @@ bool PGQueryBuilder::whereStringList(const string &key, const list<string> &valu
         if (listval.length() > 1) listval += ',';
         listval += escapeLiteral(value);
     }
+    if (listval.length() < 2) listval += "\'\'";
     listval += ')';
 
     _listWhere.push_back(WHERE_ITEM(exp, oper, listval));
@@ -786,6 +787,7 @@ bool PGQueryBuilder::whereIntList(const string &key, const list<int> &values, co
         if (listval.length() > 1) listval += ',';
         listval += escapeLiteral(toString<int>(value));
     }
+    if (listval.length() < 2) listval += "\'\'";
     listval += ')';
 
     _listWhere.push_back(WHERE_ITEM(exp, oper, listval));
