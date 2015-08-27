@@ -397,6 +397,12 @@ bool KeyValues::updateString(const string& key, const string& value)
     return _update->setString(key, value);
 }
 
+bool KeyValues::updateBool(const string &key, bool value)
+{
+    this->preUpdate();
+    return _update->setBool(key, value);
+}
+
 bool KeyValues::updateInt(const string& key, int value)
 {
     this->preUpdate();

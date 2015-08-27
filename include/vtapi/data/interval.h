@@ -109,6 +109,12 @@ public:
     bool getRealStartEndTime(time_t *t1, time_t *t2);
     
     /**
+     * @brief Gets event length in seconds
+     * @return seconds
+     */
+    double getLengthSeconds();
+
+    /**
      * Sets interval's start/end time
      * @param t1 start time
      * @param t2 end time

@@ -223,7 +223,7 @@ void ProcessInstance::close(bool wait)
     }
 }
 
-ProcessParams& operator=(const ProcessInstance& copy)
+TaskParams& operator=(const ProcessInstance& copy)
 {
     close();
 

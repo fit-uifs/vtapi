@@ -7,6 +7,33 @@
 
 namespace vtapi {
 
+template <typename T>
+class TaskParam : public BaseParam
+{
+public:
+
+    explicit TaskParam(const T& value)
+        : BaseParam(toParamType(value)), m_value(value) { }
+
+    explicit TaskParam(T&& value)
+        : BaseParam(toParamType(value)), m_value(std::move(value)) { }
+
+    virtual ~TaskParam() { }
+
+    const T& value() const
+    {
+        return m_value;
+    }
+
+    std::string toString() const
+    {
+        return vtapi::toString<T>(m_value);
+    }
+
+private:
+    T m_value;
+} ;
+
 
 class TaskParams : public BaseParams
 {

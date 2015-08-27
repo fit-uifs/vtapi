@@ -73,10 +73,6 @@ Task::Task(const Commons& commons, const list<string>& names)
     context().method.clear();
 }
 
-Task::~Task()
-{
-}
-
 bool Task::next()
 {
     if (KeyValues::next()) {
@@ -146,47 +142,19 @@ string Task::getOutputDataTable()
     return this->getString(def_col_task_outputs);
 }
 
+TaskProgress *Task::loadTaskProgress()
+{
+    return new TaskProgress(*this, context().task);
+}
+
+TaskProgress *Task::loadTaskProgress(const list<string>& seqnames)
+{
+    return new TaskProgress(*this, context().task, seqnames);
+}
+
 Interval *Task::loadOutputData()
 {
     return new Interval(*this, this->getOutputDataTable());
-}
-
-bool vtapi::Task::isSequenceFinished(const string &seqname)
-{
-    KeyValues kv(*this, def_tab_tasks_seq);
-    kv._select.whereString(def_col_tsd_taskname, context().task);
-    kv._select.whereString(def_col_tsd_seqname, seqname);
-    kv._select.whereBool(def_col_tsd_isdone, true);
-
-    return kv.next();
-}
-
-Sequence *Task::loadSequencesInProgress()
-{
-    KeyValues kv(*this, def_tab_tasks_seq);
-    kv._select.whereString(def_col_tsd_taskname, context().task);
-    kv._select.whereBool(def_col_tsd_isdone, false);
-
-    list<string> seqnames;
-    while (kv.next()) {
-        seqnames.push_back(kv.getString(def_col_tsd_seqname));
-    }
-
-    return new Sequence(*this, seqnames);
-}
-
-Sequence *Task::loadSequencesFinished()
-{
-    KeyValues kv(*this, def_tab_tasks_seq);
-    kv._select.whereString(def_col_tsd_taskname, context().task);
-    kv._select.whereBool(def_col_tsd_isdone, true);
-
-    list<string> seqnames;
-    while (kv.next()) {
-        seqnames.push_back(kv.getString(def_col_tsd_seqname));
-    }
-
-    return new Sequence(*this, seqnames);
 }
 
 Process* Task::loadProcesses(int id)

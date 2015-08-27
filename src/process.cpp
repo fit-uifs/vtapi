@@ -127,7 +127,7 @@ InterProcessClient * Process::launchInstance()
 }
 
 
-vtapi::InterProcessClient *vtapi::Process::connectToInstance()
+InterProcessClient *Process::connectToInstance()
 {
     return new InterProcessClient(*this);
 }
@@ -149,14 +149,17 @@ Dataset *Process::getParentDataset()
     }
 }
 
+string Process::getParentTaskName()
+{
+    if (!context().task.empty())
+        return context().task;
+    else
+        return this->getString(def_col_prs_taskname);
+}
+
 Task *Process::getParentTask()
 {
-    string taskname;
-    if (!context().task.empty())
-        taskname = context().task;
-    else
-        taskname = this->getString(def_col_prs_taskname);
-
+    string taskname = getParentTaskName();
     if (!taskname.empty()) {
         Task *t = new Task(*this, taskname);
         if (t->next()) {
@@ -172,20 +175,37 @@ Task *Process::getParentTask()
     }
 }
 
+string vtapi::Process::getParentMethodName()
+{
+    string mtname;
+    Task *ts = getParentTask();
+    if (ts) {
+        mtname = ts->getParentMethodName();
+        delete ts;
+    }
+
+    return mtname;
+}
+
 Method *Process::getParentMethod()
 {
-    Task *t = getParentTask();
-    if (t) {
-        Method *m = t->getParentMethod();
-        delete t;
-        return m;
+    string mtname = this->getParentMethodName();
+    if (!mtname.empty()) {
+        Method *m = new Method(*this, mtname);
+        if (m->next()) {
+            return m;
+        }
+        else {
+            delete m;
+            return NULL;
+        }
     }
     else {
         return NULL;
     }
 }
 
-vtapi::Video *vtapi::Process::loadAssignedVideos()
+Video *Process::loadAssignedVideos()
 {
     list<string> seqnames;
     KeyValues kv(*this, def_tab_processes_seq);
@@ -197,38 +217,7 @@ vtapi::Video *vtapi::Process::loadAssignedVideos()
     return new Video(*this, seqnames);
 }
 
-bool vtapi::Process::lockAssignedSequence(const string &seqname)
-{
-    if (!seqname.empty())
-        return NULL;
-
-    KeyValues kv(*this, def_tab_tasks_seq);
-    kv._select.whereString(def_col_tsd_taskname, context().task);
-    kv._select.whereString(def_col_tsd_seqname, seqname);
-    if (kv.next()) {
-        return NULL;
-    }
-    else {
-        Insert i(*this, def_tab_tasks_seq);
-        i.keyString(def_col_tsd_taskname, context().task);
-        i.keyString(def_col_tsd_seqname, seqname);
-        i.keyBool(def_col_tsd_isdone, false);
-        if (i.execute()) {
-            Sequence *s = new Sequence(*this, seqname);
-            if (s->next()) {
-                return s;
-            }
-            else {
-                delete s;
-                return NULL;
-            }
-        }
-        else
-            return NULL;
-    }
-}
-
-vtapi::ImageFolder *vtapi::Process::loadAssignedImageFolders()
+ImageFolder *Process::loadAssignedImageFolders()
 {
     list<string> seqnames;
     KeyValues kv(*this, def_tab_processes_seq);
@@ -238,6 +227,29 @@ vtapi::ImageFolder *vtapi::Process::loadAssignedImageFolders()
     }
 
     return new ImageFolder(*this, seqnames);
+}
+
+TaskProgress *Process::lockAssignedSequence(const string &seqname)
+{
+    if (!seqname.empty() && !TaskProgress(*this, this->getParentTaskName(), seqname).next()) {
+        Insert i(*this, def_tab_tasks_seq);
+        i.keyString(def_col_tsd_taskname, this->getParentTaskName());
+        i.keyString(def_col_tsd_seqname, seqname);
+        i.keyInt(def_col_tsd_prsid, context().process);
+        if (i.execute()) {
+            TaskProgress *prog = new TaskProgress(*this, this->getParentTaskName(), seqname);
+            if (!prog->next()) vt_destruct(prog);
+            return prog;
+        }
+    }
+
+    return NULL;
+}
+
+bool Process::unlockAssignedSequence(const string &seqname)
+{
+    //TODO: unlock sequence
+    //Query();
 }
 
 

@@ -51,8 +51,10 @@ const std::string def_col_prss_seqname = "seqname";
 
 const std::string def_col_tsd_taskname = "taskname";
 const std::string def_col_tsd_seqname = "seqname";
+const std::string def_col_tsd_prsid = "prsid";
 const std::string def_col_tsd_isdone = "is_done";
-
+const std::string def_col_tsd_started = "started";
+const std::string def_col_tsd_finished = "finished";
 
 const std::string def_col_seq_name = "seqname";
 const std::string def_col_seq_location = "seqlocation";

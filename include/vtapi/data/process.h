@@ -17,6 +17,7 @@
 #include "dataset.h"
 #include "sequence.h"
 #include "task.h"
+#include "taskprogress.h"
 #include "method.h"
 #include "processstate.h"
 #include "../common/interproc.h"
@@ -29,6 +30,7 @@ class Sequence;
 class ImageFolder;
 class Video;
 class Task;
+class TaskProgress;
 class Method;
 class InterProcessServer;
 class InterProcessClient;
@@ -129,10 +131,22 @@ public:
     Dataset *getParentDataset();
 
     /**
+     * @brief Gets name of parent task object
+     * @return parent task object name
+     */
+    std::string getParentTaskName();
+
+    /**
      * @brief Gets parent task object
      * @return task object (initialized)
      */
     Task *getParentTask();
+
+    /**
+     * @brief Gets name of parent method object
+     * @return parent method object name
+     */
+    std::string getParentMethodName();
 
     /**
      * @brief Gets parent method object
@@ -155,9 +169,16 @@ public:
     /**
      * @brief Locks sequence for processing by this process
      * @param seqname sequence name to lock
-     * @return true on succesful lock
+     * @return task progress object to update on sequence done, NULL on failed lock
      */
-    bool lockAssignedSequence(const std::string &seqname);
+    TaskProgress *lockAssignedSequence(const std::string &seqname);
+
+    /**
+     * @brief Make the sequence available to processing by other processes
+     * @param seqname sequence name to unlock
+     * @return success
+     */
+    bool unlockAssignedSequence(const std::string &seqname);
 
     //////////////////////////////////////////////////
     // getters - SELECT

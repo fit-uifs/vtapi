@@ -7,33 +7,6 @@ using namespace std;
 
 namespace vtapi {
 
-template <typename T>
-class ProcessParam : public BaseParam
-{
-public:
-
-    explicit ProcessParam(const T& value)
-        : BaseParam(toParamType(value)), m_value(value) { }
-
-    explicit ProcessParam(T&& value)
-        : BaseParam(toParamType(value)), m_value(std::move(value)) { }
-
-    virtual ~ProcessParam() { }
-
-    const T& value() const
-    {
-        return m_value;
-    }
-
-    std::string toString() const
-    {
-        return vtapi::toString<T>(m_value);
-    }
-
-private:
-    T m_value;
-} ;
-
 
 TaskParams::TaskParams()
 : BaseParams()
@@ -68,7 +41,7 @@ bool TaskParams::get(const std::string& key, T& value) const
 {
     const auto it = m_data.find(key);
     if (it != m_data.end()) {
-        auto param = dynamic_cast< ProcessParam<T>* > (it->second);
+        auto param = dynamic_cast< TaskParam<T>* > (it->second);
         if (param) {
             value = param->value();
             return true;
@@ -108,10 +81,10 @@ void TaskParams::add(const std::string& key, const T& value)
     const auto it = m_data.find(key);
     if (it != m_data.end()) {
         delete it->second;
-        it->second = new ProcessParam<T>(value);
+        it->second = new TaskParam<T>(value);
     }
     else {
-        m_data[key] = new ProcessParam<T>(value);
+        m_data[key] = new TaskParam<T>(value);
     }
 }
 
@@ -121,10 +94,10 @@ void TaskParams::add(const std::string& key, T&& value)
     const auto it = m_data.find(key);
     if (it != m_data.end()) {
         delete it->second;
-        it->second = new ProcessParam<T>(std::move(value));
+        it->second = new TaskParam<T>(std::move(value));
     }
     else {
-        m_data[key] = new ProcessParam<T>(std::move(value));
+        m_data[key] = new TaskParam<T>(std::move(value));
     }
 }
 

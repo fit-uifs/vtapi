@@ -148,6 +148,11 @@ bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
     return bRet;
 }
 
+double Interval::getLengthSeconds()
+{
+    return this->getFloat8(def_col_int_seclength);
+}
+
 bool Interval::preUpdate()
 {
     bool ret = KeyValues::preUpdate(context().selection);

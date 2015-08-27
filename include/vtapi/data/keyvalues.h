@@ -433,72 +433,6 @@ public:
      */
     void *getBlob(const int col, int &size);
 
-    // =============== ADDERS (Insert) ========================================
-
-//    /**
-//     * Adds a new string to a specified key
-//     * @param key     column key to insert
-//     * @param value   new string value of the key
-//     * @return success
-//     */
-//    bool addString(const std::string& key, const std::string& value);
-//    /**
-//     * Adds a new integer value to a specified key
-//     * @param key     column key to insert
-//     * @param value   new integer value of the key
-//     * @return success
-//     */
-//    bool addInt(const std::string& key, int value);
-//    /**
-//     * Adds a new integer array to a specified key
-//     * @param key     column key to insert
-//     * @param value   new integer array of the key
-//     * @param size    size of the array of integer values
-//     * @return success
-//     */
-//    bool addIntA(const std::string& key, int* value, int size);
-//    /**
-//     * Adds a new float value to a specified key
-//     * @param key     column key to insert
-//     * @param value   new float value of the key
-//     * @return success
-//     */
-//    bool addFloat(const std::string& key, float value);
-//    /**
-//     * Adds a new float array to a specified key
-//     * @param key     column key to insert
-//     * @param value   new float array of the key
-//     * @param size    size of the array of float values
-//     * @return success
-//     */
-//    bool addFloatA(const std::string& key, float* value, int size);
-//    /**
-//     * Adds a new timestamp to a specified key
-//     * @param key       column key to insert
-//     * @param value     new timestamp
-//     * @return success
-//     */
-//    bool addTimestamp(const std::string& key, const time_t& value);
-//    /**
-//     * Adds a new OpenCV matrix (cv::Mat) to a specified key
-//     * @param key     column key to insert
-//     * @param value   new OpenCV matrix (cv::Mat) of the key
-//     * @return success
-//     */
-//    bool addCvMat(const std::string& key, cv::Mat& value);
-//    /**
-//     * Adds a new IntervalEvent value to a specied key
-//     * @param key     column key to insert
-//     * @param value   new IntervalEvent value of the key
-//     * @return success
-//     */
-//    bool addIntervalEvent(const std::string& key, const IntervalEvent& value);
-//    /**
-//     * Executes SQL INSERT command
-//     * @return success
-//     */
-//    virtual bool addExecute();
-    
     // =============== SETTERS (Update) ========================================
 
     /**
@@ -508,6 +442,13 @@ public:
      * @return success
      */
     bool updateString(const std::string& key, const std::string& value);
+    /**
+     * Sets a new boolean value of a specified key
+     * @param key     column key to update
+     * @param value   new integer value of the key
+     * @return success
+     */
+    bool updateBool(const std::string& key, bool value);
     /**
      * Sets a new integer value of a specified key
      * @param key     column key to update

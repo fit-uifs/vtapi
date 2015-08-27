@@ -21,6 +21,7 @@
 #include "method.h"
 #include "process.h"
 #include "taskparams.h"
+#include "taskprogress.h"
 #include "intervaloutput.h"
 
 namespace vtapi {
@@ -31,6 +32,7 @@ class Interval;
 class Method;
 class Process;
 class TaskParams;
+class TaskProgress;
 class IntervalOutput;
 
 
@@ -59,8 +61,6 @@ public:
      */
     Task(const Commons& commons, const std::list<std::string>& names);
 
-    ~Task();
-    
     using KeyValues::count;
     using KeyValues::print;
     using KeyValues::printAll;
@@ -95,41 +95,35 @@ public:
     Method *getParentMethod();
 
     /**
-     * Gets tasks which should be completed before running this one
-     * @return task object representing prerequisite tasks for iteration
-     */
-    Task *loadPrerequisiteTasks();
-
-    /**
      * @brief Gets output data table name for this task
      * @return table name
      */
     std::string getOutputDataTable();
 
     /**
+     * @brief Gets information on task's progress for all sequences
+     * @return progress object for iteration
+     */
+    TaskProgress *loadTaskProgress();
+
+    /**
+     * @brief Gets information on task's progress for specified sequences
+     * @param seqnames names of sequences to check for progress
+     * @return progress object for iteration
+     */
+    TaskProgress *loadTaskProgress(const std::list<std::string>& seqnames);
+
+    /**
+     * Gets tasks which should be completed before running this one
+     * @return task object representing prerequisite tasks for iteration
+     */
+    Task *loadPrerequisiteTasks();
+
+    /**
      * Gets output intervals of this process
      * @return output intervals for iteration
      */
     Interval *loadOutputData();
-
-    /**
-     * @brief Checks if sequence has been done by this task
-     * @param seqname sequence to be checked
-     * @return boolean
-     */
-    bool isSequenceFinished(const std::string &seqname);
-
-    /**
-     * @brief Loads sequences "in progress" for iteration
-     * @return sequence object for iteration
-     */
-    Sequence *loadSequencesInProgress();
-
-    /**
-     * @brief Loads finished sequences for iteration
-     * @return sequence object for iteration
-     */
-    Sequence *loadSequencesFinished();
 
     /**
      * Loads method's processes for iteration

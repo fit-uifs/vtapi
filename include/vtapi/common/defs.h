@@ -63,7 +63,10 @@ extern const std::string def_col_prss_seqname;
 
 extern const std::string def_col_tsd_taskname;
 extern const std::string def_col_tsd_seqname;
+extern const std::string def_col_tsd_prsid;
 extern const std::string def_col_tsd_isdone;
+extern const std::string def_col_tsd_started;
+extern const std::string def_col_tsd_finished;
 
 extern const std::string def_col_seq_name;
 extern const std::string def_col_seq_location;

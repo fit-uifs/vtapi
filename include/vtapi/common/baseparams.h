@@ -104,6 +104,13 @@ public:
     { return has(key, PARAMTYPE_DOUBLEVECTOR); }
     
     /**
+     * @brief Get base params data
+     * @return map
+     */
+    const std::map<std::string, BaseParam *> &data() const
+    { return m_data; }
+
+    /**
      * Is map empty?
      * @return boolean value
      */
