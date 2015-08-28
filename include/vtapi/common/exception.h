@@ -31,6 +31,14 @@ private:
     Exception() = delete;
 };
 
+class RuntimeException : public Exception
+{
+public:
+    RuntimeException(const std::string &error)
+        : Exception("RuntimeException", error) {}
+    virtual ~RuntimeException() noexcept {}
+};
+
 class BadConfigurationException : public Exception
 {
 public:
