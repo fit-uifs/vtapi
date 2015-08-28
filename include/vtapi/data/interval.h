@@ -45,7 +45,7 @@ public:
      * @param commons     shared Commons object
      * @param selection   specific name of a selection table
      */
-    Interval(const Commons& commons, const std::string& selection = "intervals");
+    Interval(const Commons& commons, const std::string& selection);
 
     /**
      * Destructor
@@ -203,8 +203,8 @@ public:
      * @param selection   specific name of a selection table
      */
     Image(const Commons& commons,
-          const std::string& name = std::string(),
-          const std::string& selection = "intervals");
+          const std::string& selection,
+          const std::string& name = std::string());
 
     /*
      * Moves to next image

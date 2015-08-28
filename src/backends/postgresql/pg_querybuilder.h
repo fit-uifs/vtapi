@@ -13,7 +13,7 @@ namespace vtapi {
 class PGQueryBuilder : public QueryBuilder
 {
 public:
-    PGQueryBuilder(PGConnection &connection, const std::string& init_string);
+    explicit PGQueryBuilder(PGConnection &connection);
     ~PGQueryBuilder();
 
     void reset() override;
@@ -23,28 +23,30 @@ public:
     void *duplicateQueryParam(void *param) override;
 
     std::string getGenericQuery() override;
-    std::string getSelectQuery(const std::string& groupby, const std::string& orderby, const int limit, const int offset) override;
+    std::string getSelectQuery(const std::string& groupby,
+                               const std::string& orderby,
+                               int limit,
+                               int offset) override;
     std::string getInsertQuery() override;
     std::string getUpdateQuery() override;
+    std::string getDeleteQuery() override;
     std::string getCountQuery() override;
     std::string getBeginQuery() override;
     std::string getCommitQuery() override;
     std::string getRollbackQuery() override;
-    std::string getDatasetCreateQuery(
-        const std::string& name,
-        const std::string& location,
-        const std::string& friendly_name,
-        const std::string& description) override;
+    std::string getDatasetCreateQuery(const std::string& name,
+                                      const std::string& location,
+                                      const std::string& friendly_name,
+                                      const std::string& description) override;
     std::string getDatasetResetQuery(const std::string& name) override;
     std::string getDatasetDeleteQuery(const std::string& name) override;
-    std::string getMethodCreateQuery(
-        const std::string& name,
-        const MethodKeys keys_definition,
-        const MethodParams params_definition,
-        const std::string& description) override;
+    std::string getMethodCreateQuery(const std::string& name,
+                                     const MethodKeys keys_definition,
+                                     const MethodParams params_definition,
+                                     const std::string& description) override;
     std::string getMethodDeleteQuery(const std::string& name) override;
-    std::string getSequenceDeleteQuery(const std::string& name) override;
     std::string getTaskCreateQuery(const std::string& name,
+                                   const std::string& dsname,
                                    const std::string& mtname,
                                    const std::string& params,
                                    const std::string& prereq_task,
@@ -65,7 +67,7 @@ public:
     bool keyFloat8A(const std::string& key, double* values, const int size, const std::string& from) override;
     bool keySeqtype(const std::string& key, const std::string& value, const std::string& from) override;
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from) override;
-    bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from) override;
+    bool keyProcessStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from) override;
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from) override;
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) override;
     bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from) override;
@@ -76,7 +78,7 @@ public:
     bool whereFloat(const std::string& key, const float value, const std::string& oper, const std::string& from) override;
     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper, const std::string& from) override;
     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper, const std::string& from) override;
-    bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper, const std::string& from) override;
+    bool whereProcessStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper, const std::string& from) override;
     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper, const std::string& from) override;
     bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper, const std::string& from) override;
     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper, const std::string& from) override;
@@ -85,53 +87,57 @@ public:
     bool whereIntList(const std::string& key, const std::list<int>& values, const std::string& oper, const std::string& from) override;
 
 private:
-    typedef struct _MAIN_ITEM
+    class MainItem
     {
-        TKey            key;            /**< table column */
-        unsigned int    idParam;        /**< bind value ID (PGparam used) */
+    public:
+        std::string _key;
+        std::string _table;
+        unsigned int _id_param;
 
-        _MAIN_ITEM(const std::string& key,
-                   const std::string& table,
-                   const unsigned int idParam)
-        : key("", key, 1, table), idParam(idParam) { }
-    } MAIN_ITEM;
-    typedef std::list<MAIN_ITEM>    MAIN_LIST;
-    typedef MAIN_LIST::iterator     MAIN_LIST_IT;
+        MainItem(const std::string& key,
+                 const std::string& table,
+                 const unsigned int id_param)
+        : _key(key), _table(table), _id_param(id_param) { }
+    };
 
-    typedef struct _WHERE_ITEM
+    class WhereItem
     {
-        TKey            key;            /**< key(is expression if idParam = 0) + table */
-        std::string     oper;           /**< operator */
-        std::string     value;          /**< explicit value (PGparam not used) */
-        unsigned int    idParam;        /**< bind value ID (PGparam used) */
+    public:
+        std::string _key;
+        std::string _table;
+        std::string _oper;
+        std::string _value;     // non-empty => explicit value, PGparam is not used
+        unsigned int _id_param; // non-zero => PGparam is used
 
-        _WHERE_ITEM(const std::string& key,
-                    const std::string& table,
-                    const std::string& oper,
-                    const unsigned int idParam)
-            : key("", key, 1, table), oper(oper), idParam(idParam)
-        { }
+        // construct item using PGparam
+        WhereItem(const std::string& key,
+                  const std::string& table,
+                  const std::string& oper,
+                  const unsigned int id_param)
+            : _key(key), _table(table), _oper(oper), _id_param(id_param) {}
 
-        _WHERE_ITEM(const std::string& exp,
-                    const std::string& oper,
-                    const std::string& value)
-            : key("", exp, 1, ""), oper(oper), value(value), idParam(0)
-        { }
-    } WHERE_ITEM;
-    typedef std::list<WHERE_ITEM>   WHERE_LIST;
-    typedef WHERE_LIST::iterator    WHERE_LIST_IT;
+        // construct item using explicit value (key includes table)
+        WhereItem(const std::string& key,
+                  const std::string& oper,
+                  const std::string& value)
+            : _key(key), _oper(oper), _value(value), _id_param(0) {}
+    };
 
-    WHERE_LIST      _listWhere;        /**< list of WHERE clause items */
-    MAIN_LIST       _listMain;         /**< list of items for main query part */
-    uint            _cntParam;         /**< keys counter */
+    std::list<MainItem> _listMain;      /**< list of items for main query part */
+    std::list<WhereItem> _listWhere;    /**< list of WHERE clause items */
+    uint _cntParam;                     /**< keys counter */
 
 
-    std::string constructTable(const std::string& table = "", const std::string& schema = "");
-    std::string constructColumn(const std::string& column, const std::string& table = "");
+    std::string constructTable(const std::string& table = std::string(),
+                               const std::string& schema = std::string());
+    std::string constructColumn(const std::string& column,
+                                const std::string& table = std::string());
     std::string constructColumnNoTable(const std::string& column);
     std::string constructAlias(const std::string& column);
     std::string escapeIdent(const std::string& ident);
     std::string escapeLiteral(const std::string& literal);
+
+    std::string constructWhereClause();
 
     PGtimestamp UnixTimeToTimestamp(const time_t& utime);
     std::string UnixTimeToTimestampString(const time_t& utime);

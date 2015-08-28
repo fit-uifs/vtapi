@@ -138,23 +138,26 @@ bool IntervalOutput::setIntervalEvent(const string &key, const IntervalEvent &va
 bool IntervalOutput::commit()
 {
     bool ret = true;
-    bool transaction = false;
 
-    if (QueryBeginTransaction(*this).execute())
-        transaction = true;
+    if (_inserts.size() > 0) {
+        bool transaction = false;
 
-    for (auto insert : _inserts) {
-        if (!(ret = insert->execute())) break;
+        if (QueryBeginTransaction(*this).execute())
+            transaction = true;
+
+        for (auto insert : _inserts) {
+            if (!(ret = insert->execute())) break;
+        }
+
+        if (transaction) {
+            if (ret)
+                QueryCommitTransaction(*this).execute();
+            else
+                QueryRollbackTransaction(*this).execute();
+        }
+
+        if (ret) discard();
     }
-
-    if (transaction) {
-        if (ret)
-            QueryCommitTransaction(*this).execute();
-        else
-            QueryRollbackTransaction(*this).execute();
-    }
-
-    if (ret) discard();
 
     return ret;
 }

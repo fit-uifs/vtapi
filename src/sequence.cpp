@@ -30,7 +30,7 @@ Sequence::Sequence(const Sequence &copy)
 }
 
 Sequence::Sequence(const Commons& commons, const string& name)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_sequences)
 {
     if (context().dataset.empty())
         throw BadConfigurationException("dataset not specified");
@@ -38,22 +38,20 @@ Sequence::Sequence(const Commons& commons, const string& name)
     if (!name.empty())
         context().sequence = name;
 
-    _select.from(def_tab_sequences, def_col_all);
-    _select.orderBy(def_col_seq_name);
+    select().setOrderBy(def_col_seq_name);
     
     if (!context().sequence.empty())
-        _select.whereString(def_col_seq_name, context().sequence);
+        select().whereString(def_col_seq_name, context().sequence);
 }
 
 Sequence::Sequence(const Commons& commons, const list<string>& names)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_sequences)
 {
     if (context().dataset.empty())
-        VTLOG_WARNING("Dataset is not specified");
-    
-    _select.from(def_tab_sequences, def_col_all);
+        throw BadConfigurationException("dataset not specified");
 
-    _select.whereStringInList(def_col_seq_name, names);
+    select().setOrderBy(def_col_seq_name);
+    select().whereStringInList(def_col_seq_name, names);
 }
 
 Sequence::~Sequence()
@@ -128,12 +126,7 @@ bool Sequence::updateComment(const std::string& comment)
 
 bool Sequence::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(def_tab_sequences);
-    if (ret) {
-        ret &= _update->whereString(def_col_seq_name, context().sequence);
-    }
-
-    return ret;
+    return update().whereString(def_col_seq_name, context().sequence);
 }
 
 //============================== IMAGE FOLDER ===================================
@@ -146,13 +139,13 @@ ImageFolder::ImageFolder(const ImageFolder &copy)
 ImageFolder::ImageFolder(const Commons& commons, const string& name)
     : Sequence(commons, name)
 {
-    _select.whereSeqtype(def_col_seq_type, def_val_images);
+    select().whereSeqtype(def_col_seq_type, def_val_images);
 }
 
 ImageFolder::ImageFolder(const Commons& commons, const list<string>& names)
     : Sequence(commons, names)
 {
-    _select.whereSeqtype(def_col_seq_type, def_val_images);
+    select().whereSeqtype(def_col_seq_type, def_val_images);
 }
 
 bool ImageFolder::next()
@@ -170,13 +163,13 @@ Video::Video(const Video &copy)
 Video::Video(const Commons& commons, const string& name)
     : Sequence(commons, name)
 {
-    _select.whereSeqtype(def_col_seq_type, def_val_video);
+    select().whereSeqtype(def_col_seq_type, def_val_video);
 }
 
 Video::Video(const Commons& commons, const list<string>& names)
     : Sequence(commons, names)
 {
-    _select.whereSeqtype(def_col_seq_type, def_val_video);
+    select().whereSeqtype(def_col_seq_type, def_val_video);
 }
 
 Video::~Video()

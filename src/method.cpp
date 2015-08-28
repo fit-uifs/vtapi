@@ -30,24 +30,22 @@ Method::Method(const Method &copy)
 }
 
 Method::Method(const Commons& commons, const string& name)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_methods)
 {
     if (!name.empty())
         context().method = name;
     
-    _select.from(def_tab_methods, def_col_all);
-    _select.orderBy(def_col_mt_name);
+    select().setOrderBy(def_col_mt_name);
     
     if (!context().method.empty())
-        _select.whereString(def_col_mt_name, context().method);
+        select().whereString(def_col_mt_name, context().method);
 }
 
 Method::Method(const Commons& commons, const list<string>& names)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_methods)
 {
-    _select.from(def_tab_methods, def_col_all);
-
-    _select.whereStringInList(def_col_mt_name, names);
+    select().setOrderBy(def_col_mt_name);
+    select().whereStringInList(def_col_mt_name, names);
 }
 
 Method::~Method()
@@ -125,12 +123,7 @@ bool vtapi::Method::deleteTask(const string &dsname, const string &taskname)
 
 bool Method::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(def_tab_methods);
-    if (ret) {
-        ret &= _update->whereString(def_col_mt_name, context().method);
-    }
-
-    return ret;
+    return update().whereString(def_col_mt_name, context().method);
 }
 
 }

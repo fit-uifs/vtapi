@@ -12,7 +12,7 @@ class SLQueryBuilder : public QueryBuilder
 {
 public:
 
-    SLQueryBuilder(SLConnection &connection, const std::string& init_string);
+    explicit SLQueryBuilder(SLConnection &connection);
     ~SLQueryBuilder();
 
     void reset() override;
@@ -22,28 +22,30 @@ public:
     void *duplicateQueryParam(void *param) override;
 
     std::string getGenericQuery() override;
-    std::string getSelectQuery(const std::string& groupby, const std::string& orderby, const int limit, const int offset) override;
+    std::string getSelectQuery(const std::string& groupby,
+                               const std::string& orderby,
+                               int limit,
+                               int offset) override;
     std::string getInsertQuery() override;
     std::string getUpdateQuery() override;
+    std::string getDeleteQuery() override;
     std::string getCountQuery() override;
     std::string getBeginQuery() override;
     std::string getCommitQuery() override;
     std::string getRollbackQuery() override;
-    std::string getDatasetCreateQuery(
-        const std::string& name,
-        const std::string& location,
-        const std::string& friendly_name,
-        const std::string& description) override;
+    std::string getDatasetCreateQuery(const std::string& name,
+                                      const std::string& location,
+                                      const std::string& friendly_name,
+                                      const std::string& description) override;
     std::string getDatasetResetQuery(const std::string& name) override;
     std::string getDatasetDeleteQuery(const std::string& name) override;
-    std::string getMethodCreateQuery(
-        const std::string& name,
-        const MethodKeys keys_definition,
-        const MethodParams params_definition,
+    std::string getMethodCreateQuery(const std::string& name,
+                                     const MethodKeys keys_definition,
+                                     const MethodParams params_definition,
         const std::string& description) override;
     std::string getMethodDeleteQuery(const std::string& name) override;
-    std::string getSequenceDeleteQuery(const std::string& name) override;
     std::string getTaskCreateQuery(const std::string& name,
+                                   const std::string& dsname,
                                    const std::string& mtname,
                                    const std::string& params,
                                    const std::string& prereq_task,
@@ -64,7 +66,7 @@ public:
     bool keyFloat8A(const std::string& key, double* values, const int size, const std::string& from) override;
     bool keySeqtype(const std::string& key, const std::string& value, const std::string& from) override;
     bool keyInouttype(const std::string& key, const std::string& value, const std::string& from) override;
-    bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from) override;
+    bool keyProcessStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from) override;
     bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from) override;
     bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from) override;
     bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from) override;
@@ -75,7 +77,7 @@ public:
     bool whereFloat(const std::string& key, const float value, const std::string& oper, const std::string& from) override;
     bool whereSeqtype(const std::string& key, const std::string& value, const std::string& oper, const std::string& from) override;
     bool whereInouttype(const std::string& key, const std::string& value, const std::string& oper, const std::string& from) override;
-    bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper, const std::string& from) override;
+    bool whereProcessStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper, const std::string& from) override;
     bool whereTimestamp(const std::string& key, const time_t& value, const std::string& oper, const std::string& from) override;
     bool whereTimeRange(const std::string& key_start, const std::string& key_length, const time_t& value_start, const uint value_length, const std::string& oper, const std::string& from) override;
     bool whereRegion(const std::string& key, const IntervalEvent::box& value, const std::string& oper, const std::string& from) override;

@@ -15,11 +15,10 @@ Connection * SLBackend::createConnection(const string& connection_string) const
     return new SLConnection(connection_string);
 }
 
-QueryBuilder * SLBackend::createQueryBuilder(Connection &connection,
-                                             const string& init_string) const
+QueryBuilder * SLBackend::createQueryBuilder(Connection &connection) const
 {
     SLConnection &slconnection = dynamic_cast<SLConnection&>(connection);
-    return new SLQueryBuilder(slconnection, init_string);
+    return new SLQueryBuilder(slconnection);
 }
 
 ResultSet *SLBackend::createResultSet(DBTYPES_MAP *dbtypes) const

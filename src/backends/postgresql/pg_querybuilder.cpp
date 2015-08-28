@@ -7,7 +7,6 @@
 #define DEF_NO_SCHEMA   "!NO_SCHEMA!"
 #define DEF_NO_TABLE    "!NO_TABLE!"
 #define DEF_NO_COLUMN   "!NO_COLUMN!"
-#define DEF_NO_VALUES   "!NO_VALUES!"
 #define DEF_NO_QUERY    "!NO_QUERY!"
 
 
@@ -15,8 +14,8 @@ using namespace std;
 
 namespace vtapi {
 
-PGQueryBuilder::PGQueryBuilder(PGConnection &connection, const string& init_string)
-    : QueryBuilder (connection, init_string)
+PGQueryBuilder::PGQueryBuilder(PGConnection &connection)
+    : QueryBuilder (connection)
 {
     _cntParam = 0;
 }
@@ -66,100 +65,46 @@ string PGQueryBuilder::getGenericQuery()
 
 string PGQueryBuilder::getSelectQuery(const string& groupby, const string& orderby, const int limit, const int offset)
 {
-    string queryString;
+    string tablesStr;
+    string columnsStr;
+    set<string> setTables;
 
-    // use initialization string if specified
-    if (!_init_string.empty()) {
-        queryString = _init_string;
-
-        // replace trailing ;
-        for (int i = queryString.length() - 1; i >= 0 && queryString[i] == ';'; i--) {
-            queryString[i] = ' ';
-        }
+    // select * from default table if not specified otherwise
+    if (_listMain.empty()) {
+        columnsStr = '*';
+        tablesStr = constructTable(_defaultTable);
     }
-        // otherwise use keys to construct tables/columns part of the query
+    // or go through keys, construct tables/columns
     else {
-        string tableStr;
-        string tablesStr;
-        string columnsStr;
-        set<string> setTables;
-
-        // go through keys, construct tables/columns
-        for (MAIN_LIST_IT it = _listMain.begin(); it != _listMain.end(); it++) {
-            TKey &key = (*it).key;
-
+        for (MainItem & item : _listMain) {
             // add column after SELECT
-            string col  = constructColumn(key.m_key, key.m_from);
-            if (!columnsStr.empty()) {
+            if (!columnsStr.empty())
                 columnsStr += ',';
-            }
-            columnsStr += col;
-            if (key.m_key[0] != '*') {
-                columnsStr += " AS " + constructAlias(key.m_key);
-            }
+            columnsStr += constructColumn(item._key, item._table);
+            columnsStr += " AS " + constructAlias(item._key);
 
             // add table after FROM
-            string tab = constructTable(key.m_from);
+            string tab = constructTable(item._table);
             if (setTables.count(tab) == 0) {
-                if (!tablesStr.empty()) tablesStr += ',';
+                if (!tablesStr.empty())
+                    tablesStr += ',';
                 tablesStr += tab;
                 setTables.insert(tab);
             }
         }
-
-        bool bError = columnsStr.empty() || tablesStr.empty();
-        if (columnsStr.empty()) columnsStr  = DEF_NO_COLUMN;
-        if (tablesStr.empty())  tablesStr   = DEF_NO_TABLE;
-
-        queryString = "SELECT " + columnsStr + "\nFROM " + tablesStr;
-
-        if (bError) {
-            VTLOG_WARNING( "incomplete query: " + queryString);
-            return DEF_NO_QUERY;
-        }
     }
 
-    // construct WHERE clause
-    if (!_listWhere.empty()) {
-        string whereStr;
-
-        for (WHERE_LIST_IT it = _listWhere.begin(); it != _listWhere.end(); it++) {
-            TKey &key = (*it).key;
-
-            if (!whereStr.empty()) whereStr += "\nAND\n";
-
-            // bind key to PGparam value
-            if ((*it).idParam > 0) {
-                whereStr += constructColumn(key.m_key, key.m_from);
-                whereStr += ' ' + (*it).oper + ' ';
-                whereStr += '$' + toString<unsigned int>((*it).idParam);
-            }
-                // use key as custom expression
-            else {
-                whereStr += (key.m_key);
-                whereStr += ' ' + (*it).oper + ' ';
-                whereStr += (*it).value;
-            }
-        }
-
-        if (!whereStr.empty()) {
-            queryString += "\nWHERE\n" + whereStr;
-        }
-    }
-
-    // construct rest of the query
-    if (!groupby.empty()) {
+    string queryString = "SELECT " + columnsStr;
+    queryString += "\nFROM " + tablesStr;
+    queryString += constructWhereClause();
+    if (!groupby.empty())
         queryString += "\nGROUP BY " + groupby;
-    }
-    if (!orderby.empty()) {
+    if (!orderby.empty())
         queryString += "\nORDER BY " + orderby;
-    }
-    if (limit > 0) {
+    if (limit > 0)
         queryString += "\nLIMIT " + toString<int>(limit);
-    }
-    if (offset > 0) {
+    if (offset > 0)
         queryString += "\nOFFSET " + toString<int>(offset);
-    }
     queryString += ';';
 
     return queryString;
@@ -167,41 +112,32 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
 
 string PGQueryBuilder::getInsertQuery()
 {
-    if (!_init_string.empty()) {
-        return _init_string;
+    string tabStr = constructTable(_defaultTable);
+    string intoStr;
+    string valuesStr;
+
+    if (_listMain.empty()) {
+        VTLOG_ERROR("No values for INSERT query on table: " + tabStr);
+        return DEF_NO_QUERY;
     }
     else {
-        string &tab = _defaultTable;
-        string tableStr;
-        string intoStr;
-        string valuesStr;
-
         // construct columns/values part of the query
-        for (MAIN_LIST_IT it = _listMain.begin(); it != _listMain.end(); it++) {
-            TKey &key = (*it).key;
+        for (MainItem & item : _listMain) {
+            if (!item._table.empty())
+                tabStr = constructTable(item._table);
 
-            if (!key.m_from.empty()) tab = key.m_from;
-
-            if (it != _listMain.begin()) intoStr += ',';
-            intoStr     += escapeIdent(key.m_key);
-
-            if (it != _listMain.begin()) valuesStr += ',';
-            valuesStr   += '$' + toString<unsigned int>((*it).idParam);
+            if (!intoStr.empty()) {
+                intoStr += ',';
+                valuesStr += ',';
+            }
+            intoStr += escapeIdent(item._key);
+            valuesStr += '$' + toString<unsigned int>(item._id_param);
         }
-
-        bool bError = tab.empty() || intoStr.empty() || valuesStr.empty();
-        if (intoStr.empty())    intoStr  = DEF_NO_COLUMN;
-        if (valuesStr.empty())  valuesStr = DEF_NO_VALUES;
-
-        tableStr = constructTable(tab);
 
         // construct query
-        string queryString = "INSERT INTO " + tableStr + "(" + intoStr + ")\nVALUES(" + valuesStr + ");";
-
-        if (bError) {
-            VTLOG_WARNING( "incomplete query: " + queryString);
-            return DEF_NO_QUERY;
-        }
+        string queryString = "INSERT INTO " + tabStr;
+        queryString += '(' + intoStr + ')';
+        queryString += "\nVALUES(" + valuesStr + ");";
 
         return queryString;
     }
@@ -209,87 +145,74 @@ string PGQueryBuilder::getInsertQuery()
 
 string PGQueryBuilder::getUpdateQuery()
 {
-    string queryString;
+    // otherwise use keys to construct tables/columns part of the query
+    string tabStr = constructTable(_defaultTable);
+    string setStr;
 
-    // use initialization string if specified
-    if (!_init_string.empty()) {
-        queryString = _init_string;
-
-        // replace trailing ; with spaces
-        for (int i = queryString.length() - 1; i >= 0; i--) {
-            queryString[i] = ' ';
-        }
+    if (_listMain.empty()) {
+        VTLOG_ERROR("No columns to SET in UPDATE query on table: " + tabStr);
+        return DEF_NO_QUERY;
     }
-        // otherwise use keys to construct tables/columns part of the query
     else {
-        string &tab = _defaultTable;
-        string tableStr;
-        string setStr;
-
         // construct set part of the query
-        for (MAIN_LIST_IT it = _listMain.begin(); it != _listMain.end(); it++) {
-            TKey &key = (*it).key;
+        for (MainItem & item : _listMain) {
+            if (!item._table.empty())
+                tabStr = constructTable(item._table);
 
-            if (!key.m_from.empty()) tab = key.m_from;
+            if (!setStr.empty())
+                setStr += ',';
 
-            if (!setStr.empty()) setStr += ',';
-            setStr += constructColumnNoTable(key.m_key) + "=$" + toString<unsigned int>((*it).idParam);
+            setStr += constructColumnNoTable(item._key);
+            setStr += "=$";
+            setStr += toString<unsigned int>(item._id_param);
         }
 
-        bool bError = tab.empty() || setStr.empty();
-        if (setStr.empty()) setStr = DEF_NO_COLUMN;
-
-        tableStr = constructTable(tab);
-
-        queryString = "UPDATE " + tableStr + "\nSET " + setStr;
-
-        if (bError) {
-            VTLOG_WARNING( "incomplete query: " + queryString);
+        // disallow accidental set on all rows
+        string where = constructWhereClause();
+        if (where.empty()) {
+            VTLOG_ERROR("UPDATE query without WHERE on table: " + tabStr);
             return DEF_NO_QUERY;
         }
-    }
+        else {
+            string queryString = "UPDATE " + tabStr;
+            queryString += "\nSET " + setStr;
+            queryString += constructWhereClause();
+            queryString += ';';
 
-    // construct WHERE clause
-    if (!_listWhere.empty()) {
-        string whereStr;
-
-        for (WHERE_LIST_IT it = _listWhere.begin(); it != _listWhere.end(); it++) {
-            TKey &key = (*it).key;
-
-            if (!whereStr.empty()) whereStr += " AND ";
-
-            if ((*it).idParam > 0) {
-                whereStr += constructColumn(key.m_key, key.m_from);
-                whereStr += ' ' + (*it).oper + ' ';
-                whereStr += "$" + toString<int>((*it).idParam);
-            }
-            else {
-                whereStr += (key.m_key);
-                whereStr += ' ' + (*it).oper + ' ';
-                whereStr += (*it).value;
-            }
-        }
-
-        if (!whereStr.empty()) {
-            queryString += "\nWHERE\n" + whereStr;
+            return queryString;
         }
     }
+}
 
-    queryString += ";";
+string PGQueryBuilder::getDeleteQuery()
+{
+    string tabStr = constructTable(_defaultTable);
 
-    return queryString;
+    // disallow accidental wipe
+    string where = constructWhereClause();
+    if (where.empty()) {
+        VTLOG_ERROR("DELETE query without WHERE on table: " + tabStr);
+        return DEF_NO_QUERY;
+    }
+    else {
+        string queryString = "DELETE FROM " + tabStr;
+        queryString += where;
+        queryString += ';';
+
+        return queryString;
+    }
 }
 
 string PGQueryBuilder::getCountQuery()
 {
-    string queryString = getSelectQuery("", "", 0, 0);
+    string queryString = getSelectQuery(string(), string(), 0, 0);
     size_t fromPos = queryString.find("\nFROM ");
 
     if (fromPos != string::npos) {
         return "SELECT COUNT(*) AS count" + queryString.substr(fromPos);
     }
     else {
-        VTLOG_WARNING("Failed to get COUNT query");
+        VTLOG_ERROR("Failed to get COUNT query");
         return DEF_NO_QUERY;
     }
 }
@@ -385,21 +308,8 @@ string PGQueryBuilder::getMethodDeleteQuery(const string& name)
     return q;
 }
 
-string PGQueryBuilder::getSequenceDeleteQuery(const string &name)
-{
-    string q;
-    q += "DELETE FROM ";
-    q += constructTable(def_tab_sequences);
-    q += " WHERE ";
-    q += escapeIdent(def_col_seq_name);
-    q += " = ";
-    q += escapeLiteral(name);
-    q += ";";
-
-    return q;
-}
-
 string PGQueryBuilder::getTaskCreateQuery(const string &name,
+                                          const string& dsname,
                                           const string& mtname,
                                           const string &params,
                                           const string& prereq_task,
@@ -419,7 +329,7 @@ string PGQueryBuilder::getTaskCreateQuery(const string &name,
     q += ',';
     q += outputs.empty() ? "NULL" : escapeLiteral(outputs);
     q += ',';
-    q += escapeLiteral(_defaultSchema);
+    q += escapeLiteral(dsname);
     q += ");";
 
     return q;
@@ -458,7 +368,7 @@ bool PGQueryBuilder::keySingleValue(const string& key, T value, const char *type
         idParam = addToParam(type, value);
         if (!idParam) break;
 
-        _listMain.push_back(MAIN_ITEM(key, from, idParam));
+        _listMain.push_back(MainItem(key, from, idParam));
     } while (0);
 
     return (idParam > 0);
@@ -485,7 +395,7 @@ bool PGQueryBuilder::keyArray(const string& key, T* values, const int size,
         idParam = addToParam(type_arr, &arr);
         if (!idParam) break;
 
-        _listMain.push_back(MAIN_ITEM(key, from, idParam));
+        _listMain.push_back(MainItem(key, from, idParam));
     } while (0);
 
     if (arr.param) PQparamClear(arr.param);
@@ -499,8 +409,9 @@ bool PGQueryBuilder::keyFrom(const string& table, const string& column)
         return false;
     }
     else {
-        if (_defaultTable.empty()) _defaultTable = table;
-        _listMain.push_back(MAIN_ITEM(column, table, 0));
+        if (_defaultTable.empty())
+            _defaultTable = table;
+        _listMain.push_back(MainItem(column, table, 0));
         return true;
     }
 }
@@ -529,7 +440,7 @@ bool PGQueryBuilder::keyStringA(const string& key, string* values, const int siz
         idParam = addToParam("%varchar[]", &arr);
         if (!idParam) break;
 
-        _listMain.push_back(MAIN_ITEM(key, from, idParam));
+        _listMain.push_back(MainItem(key, from, idParam));
     } while (0);
 
     if (arr.param) PQparamClear(arr.param);
@@ -582,7 +493,7 @@ bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const 
     return checkInouttype(value) && keySingleValue(key, value.c_str(), "%public.inouttype", from);
 }
 
-bool PGQueryBuilder::keyPStatus(const string& key, ProcessState::STATUS_T value, const string& from)
+bool PGQueryBuilder::keyProcessStatus(const string& key, ProcessState::STATUS_T value, const string& from)
 {
     return (value != ProcessState::STATUS_NONE) && keySingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", from);
 }
@@ -675,7 +586,7 @@ bool PGQueryBuilder::whereSingleValue(const string& key, T value, const char *ty
         idParam = addToParam(type, value);
         if (!idParam) break;
 
-        _listWhere.push_back(WHERE_ITEM(key, from, oper, idParam));
+        _listWhere.push_back(WhereItem(key, from, oper, idParam));
     } while (0);
 
     return (idParam > 0);
@@ -711,7 +622,7 @@ bool PGQueryBuilder::whereInouttype(const string& key, const string& value, cons
     return checkInouttype(value) && whereSingleValue(key, value.c_str(), "%public.inouttype", oper, from);
 }
 
-bool PGQueryBuilder::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
+bool PGQueryBuilder::whereProcessStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
 {
     return value != ProcessState::STATUS_NONE &&
             whereSingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", oper, from);
@@ -741,7 +652,7 @@ bool PGQueryBuilder::whereTimeRange(const string& key_start, const string& key_l
         "public.tsrange(" + constructColumn(key_start, from) + ',' +
         constructColumn(key_length, from) + ')';
 
-        _listWhere.push_back(WHERE_ITEM(exp, oper, value));
+        _listWhere.push_back(WhereItem(exp, oper, value));
     } while (0);
 
     return bRet;
@@ -755,7 +666,7 @@ bool PGQueryBuilder::whereRegion(const string& key, const IntervalEvent::box& va
 bool PGQueryBuilder::whereExpression(const string& expression, const string& value, const string& oper)
 {
     if (!expression.empty() && !value.empty()) {
-        _listWhere.push_back(WHERE_ITEM(expression, oper, value));
+        _listWhere.push_back(WhereItem(expression, oper, value));
         return true;
     }
     else {
@@ -775,7 +686,7 @@ bool PGQueryBuilder::whereStringList(const string &key, const list<string> &valu
     if (listval.length() < 2) listval += "\'\'";
     listval += ')';
 
-    _listWhere.push_back(WHERE_ITEM(exp, oper, listval));
+    _listWhere.push_back(WhereItem(exp, oper, listval));
 }
 
 bool PGQueryBuilder::whereIntList(const string &key, const list<int> &values, const string &oper, const string &from)
@@ -790,7 +701,7 @@ bool PGQueryBuilder::whereIntList(const string &key, const list<int> &values, co
     if (listval.length() < 2) listval += "\'\'";
     listval += ')';
 
-    _listWhere.push_back(WHERE_ITEM(exp, oper, listval));
+    _listWhere.push_back(WhereItem(exp, oper, listval));
 }
 
 template<typename T>
@@ -818,9 +729,10 @@ string PGQueryBuilder::constructTable(const string& table, const string& schema)
 
     // no table specified
     if (tab.empty()) {
+        VTLOG_ERROR("No table was specified for query");
         return DEF_NO_TABLE;
     }
-        // no DB schema in table name, use function arg or default schema
+    // no DB schema in table name, use function arg or default schema
     else if (tab.find('.') == string::npos) {
         if (!schema.empty()) {
             return schema + '.' + tab;
@@ -829,10 +741,11 @@ string PGQueryBuilder::constructTable(const string& table, const string& schema)
             return _defaultSchema + '.' + tab;
         }
         else {
+            VTLOG_ERROR("No schema was specified for query");
             return DEF_NO_SCHEMA + '.' + tab;
         }
     }
-        // DB schema in table name
+    // DB schema in table name
     else {
         return tab;
     }
@@ -841,6 +754,7 @@ string PGQueryBuilder::constructTable(const string& table, const string& schema)
 string PGQueryBuilder::constructColumn(const string& column, const string& table)
 {
     if (column.empty()) {
+        VTLOG_ERROR("No column was specified for query");
         return DEF_NO_COLUMN;
     }
     else if (column[0] == '*') {
@@ -868,12 +782,15 @@ string PGQueryBuilder::constructColumn(const string& column, const string& table
             }
             else {
                 string col = column.substr(startPos, string::npos);
-                if (col.empty()) col = DEF_NO_COLUMN;
+                if (col.empty()) {
+                    VTLOG_ERROR("No column was specified for query");
+                    col = DEF_NO_COLUMN;
+                }
 
                 return tab + '.' + escapeIdent(col);
             }
         }
-            // escape column part
+        // escape column part
         else {
             string col;
             if (startPos == 0) {
@@ -882,7 +799,10 @@ string PGQueryBuilder::constructColumn(const string& column, const string& table
             else {
                 col = column.substr(startPos, charPos - startPos);
             }
-            if (col.empty()) col = DEF_NO_COLUMN;
+            if (col.empty()) {
+                VTLOG_ERROR("No column was specified for query");
+                col = DEF_NO_COLUMN;
+            }
 
             // composite members are accessed through comma, special escape
             if (column[charPos] == ',') {
@@ -902,7 +822,9 @@ string PGQueryBuilder::constructColumnNoTable(const string& column)
 {
     size_t charPos = column.find_first_of(",.");
     if (charPos > 0 && charPos < column.length() - 1) {
-        return escapeIdent(column.substr(0, charPos)) + '.' + escapeIdent(column.substr(charPos + 1, string::npos));
+        return escapeIdent(column.substr(0, charPos)) +
+                '.' +
+                escapeIdent(column.substr(charPos + 1, string::npos));
     }
     else {
         return escapeIdent(column);
@@ -916,7 +838,9 @@ string PGQueryBuilder::constructAlias(const string& column)
 
 string PGQueryBuilder::escapeIdent(const string& ident)
 {
-    char *escaped = PQescapeIdentifier((PGconn *) _connection.getConnectionObject(), ident.c_str(), ident.length());
+    char *escaped = PQescapeIdentifier((PGconn *) _connection.getConnectionObject(),
+                                       ident.c_str(),
+                                       ident.length());
     string ret = escaped;
     PQfreemem(escaped);
     return ret;
@@ -924,10 +848,42 @@ string PGQueryBuilder::escapeIdent(const string& ident)
 
 string PGQueryBuilder::escapeLiteral(const string& literal)
 {
-    char *escaped = PQescapeLiteral((PGconn *) _connection.getConnectionObject(), literal.c_str(), literal.length());
+    char *escaped = PQescapeLiteral((PGconn *)_connection.getConnectionObject(),
+                                    literal.c_str(),
+                                    literal.length());
     string ret = escaped;
     PQfreemem(escaped);
     return ret;
+}
+
+string PGQueryBuilder::constructWhereClause()
+{
+    string where;
+
+    if (!_listWhere.empty()) {
+        for (WhereItem & item : _listWhere) {
+
+            if (!where.empty()) where += "\nAND\n";
+
+            // bind key to PGparam value
+            if (item._id_param > 0) {
+                where += constructColumn(item._key, item._table);
+                where += ' ' + item._oper + ' ';
+                where += '$' + toString<unsigned int>(item._id_param);
+            }
+            // use key as custom expression
+            else {
+                where += item._key;
+                where += ' ' + item._oper + ' ';
+                where += item._value;
+            }
+        }
+
+        if (!where.empty())
+            where = "\nWHERE\n" + where;
+    }
+
+    return where;
 }
 
 PGtimestamp PGQueryBuilder::UnixTimeToTimestamp(const time_t& utime)

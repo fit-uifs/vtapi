@@ -15,6 +15,7 @@
 #include <vtapi/common/global.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/queries/insert.h>
+#include <vtapi/queries/delete.h>
 #include <vtapi/queries/predefined.h>
 #include <vtapi/data/dataset.h>
 
@@ -29,25 +30,23 @@ Dataset::Dataset(const Dataset &copy)
 }
 
 Dataset::Dataset(const Commons& commons, const string& name)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_datasets)
 {
     // set the dataset name
     if (!name.empty())
         context().dataset = name;
     
-    _select.from(def_tab_datasets, def_col_all);
-    _select.orderBy(def_col_ds_name);
+    select().setOrderBy(def_col_ds_name);
     
     if (!context().dataset.empty())
-        _select.whereString(def_col_ds_name, context().dataset);
+        select().whereString(def_col_ds_name, context().dataset);
 }
 
 Dataset::Dataset(const Commons& commons, const list<string>& names)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_datasets)
 {
-    _select.from(def_tab_datasets, def_col_all);
-
-    _select.whereStringInList(def_col_ds_name, names);
+    select().setOrderBy(def_col_ds_name);
+    select().whereStringInList(def_col_ds_name, names);
 }
 
 bool Dataset::next()
@@ -282,12 +281,13 @@ Process *Dataset::loadProcesses(const list<int> &ids)
     return (new Process(*this, ids));
 }
 
-bool vtapi::Dataset::deleteSequence(const string &seqname)
+bool Dataset::deleteSequence(const string &seqname)
 {
-    return QuerySequenceDelete(*this, seqname).execute();
+    Delete d(*this, def_tab_sequences);
+    return d.whereString(def_col_seq_name, seqname) && d.execute();
 }
 
-bool vtapi::Dataset::deleteTask(const string &taskname)
+bool Dataset::deleteTask(const string &taskname)
 {
     return QueryTaskDelete(*this, this->getName(), taskname).execute();
 }
@@ -295,12 +295,7 @@ bool vtapi::Dataset::deleteTask(const string &taskname)
 
 bool Dataset::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(def_tab_datasets);
-    if (ret) {
-        ret &= _update->whereString(def_col_ds_name, context().dataset);
-    }
-    
-    return ret;
+    return update().whereString(def_col_ds_name, context().dataset);
 }
 
 }

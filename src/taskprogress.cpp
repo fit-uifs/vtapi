@@ -12,7 +12,7 @@ namespace vtapi {
 TaskProgress::TaskProgress(const Commons &commons,
                            const string& taskname,
                            const string& seqname)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_tasks_seq)
 {
     if (context().dataset.empty())
         throw BadConfigurationException("dataset not specified");
@@ -23,20 +23,18 @@ TaskProgress::TaskProgress(const Commons &commons,
     if (!seqname.empty())
         context().sequence = seqname;
 
-    _select.from(def_tab_tasks_seq, def_col_all);
-
     if(!context().task.empty())
-        _select.whereString(def_col_tsd_taskname, context().task);
+        select().whereString(def_col_tsd_taskname, context().task);
 
     if (!context().sequence.empty())
-        _select.whereString(def_col_tsd_seqname, context().sequence);
+        select().whereString(def_col_tsd_seqname, context().sequence);
 }
 
 
 TaskProgress::TaskProgress(const Commons &commons,
                            const string& taskname,
                            const list<string> &seqnames)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_tasks_seq)
 {
     if (context().dataset.empty())
         throw BadConfigurationException("dataset not specified");
@@ -44,12 +42,10 @@ TaskProgress::TaskProgress(const Commons &commons,
     if (!taskname.empty())
         context().task = taskname;
 
-    _select.from(def_tab_tasks_seq, def_col_all);
-
     if(!context().task.empty())
-        _select.whereString(def_col_tsd_taskname, context().task);
+        select().whereString(def_col_tsd_taskname, context().task);
 
-    _select.whereStringInList(def_col_tsd_seqname, seqnames);
+    select().whereStringInList(def_col_tsd_seqname, seqnames);
 }
 
 bool TaskProgress::next()
@@ -124,13 +120,8 @@ bool TaskProgress::updateIsDone(bool value)
 
 bool TaskProgress::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(def_tab_tasks_seq);
-    if (ret) {
-        ret &= _update->whereString(def_col_tsd_taskname, context().task);
-        ret &= _update->whereString(def_col_tsd_seqname, context().sequence);
-    }
-
-    return ret;
+    return update().whereString(def_col_tsd_taskname, context().task) &&
+            update().whereString(def_col_tsd_seqname, context().sequence);
 }
 
 }

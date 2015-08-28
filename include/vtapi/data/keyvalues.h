@@ -40,28 +40,18 @@ namespace vtapi {
 class KeyValues : public Commons
 {
 public:
-    Select _select; /**< Select for select queries (usually pre-filled by the constructor) */
-    Update* _update; /**< Update to update new data */
-
-    /**
-     * @brief Copy constructor
-     * @param copy original object
-     */
-    KeyValues(const KeyValues& copy);
-
     /**
      * Constructor of base KeyValues object representing generic DB tuples
      * @param orig base Commons object
      * @param selection specific DB table
      */
-    KeyValues(const Commons& orig, const std::string& selection = std::string());
+    KeyValues(const Commons& orig, const std::string& selection);
 
     /**
      * This destroys the KeyValues
      * It raises warning when there was something left not-excecuted (some collaborants left)
      */
     virtual ~KeyValues();
-
 
     /**
      * The most used function of the VTApi - next (row)
@@ -87,6 +77,18 @@ public:
      * @return list of keys
      */
     TKeys* getKeys();
+
+    /**
+     * @brief Select query object accessor
+     * @return select object
+     */
+    Select & select();
+
+    /**
+     * @brief Update query object accessor
+     * @return update object
+     */
+    Update & update();
 
     /**
      * Prints a current tuple of resultset
@@ -513,14 +515,18 @@ public:
      * Executes SQL UPDATE command
      * @return success
      */
-    virtual bool updateExecute();
+    bool updateExecute();
 
 protected:
     virtual bool preUpdate();
-    bool preUpdate(const std::string& table);
 
 private:
+    Select _select; /**< Select object for select queries (usually pre-filled by the constructor) */
+    Update* _update; /**< Update object to update new data */
+
+
     KeyValues() = delete;
+    KeyValues(const KeyValues& copy) = delete;
     KeyValues& operator=(const KeyValues&) = delete;
 };
 

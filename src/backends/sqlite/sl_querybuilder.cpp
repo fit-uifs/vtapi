@@ -13,8 +13,8 @@ using namespace std;
 
 namespace vtapi {
 
-SLQueryBuilder::SLQueryBuilder(SLConnection &connection, const string& init_string)
-    : QueryBuilder (connection, init_string)
+SLQueryBuilder::SLQueryBuilder(SLConnection &connection)
+    : QueryBuilder (connection)
 {
     _pquery_param  = createQueryParam();
 }
@@ -238,6 +238,11 @@ string SLQueryBuilder::getUpdateQuery()
     return queryString;
 }
 
+string SLQueryBuilder::getDeleteQuery()
+{
+    return "";
+}
+
 string SLQueryBuilder::getCountQuery()
 {
     string queryString;
@@ -301,12 +306,8 @@ string SLQueryBuilder::getMethodDeleteQuery(const string& name)
     return "";
 }
 
-string SLQueryBuilder::getSequenceDeleteQuery(const string &name)
-{
-    return "";
-}
-
 string SLQueryBuilder::getTaskCreateQuery(const string &name,
+                                          const string& dsname,
                                           const string& mtname,
                                           const string &params,
                                           const string& prereq_task,
@@ -446,7 +447,7 @@ bool SLQueryBuilder::keyInouttype(const string& key, const string& value, const 
     }
 }
 
-bool SLQueryBuilder::keyPStatus(const string& key, ProcessState::STATUS_T value, const string& from)
+bool SLQueryBuilder::keyProcessStatus(const string& key, ProcessState::STATUS_T value, const string& from)
 {
     if (key.empty() || value == ProcessState::STATUS_NONE) return false;
     else {
@@ -553,7 +554,7 @@ bool SLQueryBuilder::whereInouttype(const string& key, const string& value, cons
     }
 }
 
-bool SLQueryBuilder::wherePStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
+bool SLQueryBuilder::whereProcessStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
 {
     if (key.empty() || value == ProcessState::STATUS_NONE) return false;
     else {

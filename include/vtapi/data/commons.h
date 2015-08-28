@@ -97,8 +97,6 @@ public:
      */
     CONTEXT &context();
 
-protected:
-
     /**
      * @brief backend interface accessor
      * @return backend interface
@@ -111,6 +109,7 @@ protected:
      */
     Connection& connection();
 
+protected:
     /**
      * @brief Loads configuration into commons
      * @param config source configuration

@@ -30,7 +30,7 @@ Task::Task(const Task &copy)
 }
 
 Task::Task(const Commons& commons, const string& name)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_tasks)
 {
     if (context().dataset.empty())
         throw BadConfigurationException("dataset not specified");
@@ -38,37 +38,41 @@ Task::Task(const Commons& commons, const string& name)
     if (!name.empty())
         context().task = name;
     
-    // list columns, because of outputs::text
-    _select.from(def_tab_tasks, def_col_task_name);
-    _select.from(def_tab_tasks, def_col_task_mtname);
-    _select.from(def_tab_tasks, def_col_task_params);
-    _select.from(def_tab_tasks, def_col_task_outputs + "::text");
-    _select.from(def_tab_tasks, def_col_task_created);
-    _select.orderBy(def_col_task_name);
+    // normally SELECT selects all columns implicitly
+    // but we can't handle regclass => specify explicitly
+    select().from(def_tab_tasks, def_col_task_name);
+    select().from(def_tab_tasks, def_col_task_mtname);
+    select().from(def_tab_tasks, def_col_task_params);
+    select().from(def_tab_tasks, def_col_task_outputs + "::text");
+    select().from(def_tab_tasks, def_col_task_created);
+
+    select().setOrderBy(def_col_task_name);
     
     if (!context().task.empty()) {
-        _select.whereString(def_col_task_name, context().task);
+        select().whereString(def_col_task_name, context().task);
     }
     else {
         if (!context().method.empty())
-            _select.whereString(def_col_task_mtname, context().method);
+            select().whereString(def_col_task_mtname, context().method);
     }
 }
 
 Task::Task(const Commons& commons, const list<string>& names)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_tasks)
 {
     if (context().dataset.empty())
-        VTLOG_WARNING("Dataset is not specified");
+        throw BadConfigurationException("dataset not specified");
     
-    // list columns, because of outputs::text
-    _select.from(def_tab_tasks, def_col_task_name);
-    _select.from(def_tab_tasks, def_col_task_mtname);
-    _select.from(def_tab_tasks, def_col_task_params);
-    _select.from(def_tab_tasks, def_col_task_outputs + "::text");
-    _select.from(def_tab_tasks, def_col_task_created);
+    // normally SELECT selects all columns implicitly
+    // but we can't handle regclass => specify explicitly
+    select().from(def_tab_tasks, def_col_task_name);
+    select().from(def_tab_tasks, def_col_task_mtname);
+    select().from(def_tab_tasks, def_col_task_params);
+    select().from(def_tab_tasks, def_col_task_outputs + "::text");
+    select().from(def_tab_tasks, def_col_task_created);
 
-    _select.whereStringInList(def_col_task_name, names);
+    select().setOrderBy(def_col_task_name);
+    select().whereStringInList(def_col_task_name, names);
     
     context().method.clear();
 }
@@ -77,7 +81,6 @@ bool Task::next()
 {
     if (KeyValues::next()) {
         context().task = this->getName();
-        context().selection = this->getString(def_col_task_outputs);
         return true;
     }
     else {
@@ -127,7 +130,7 @@ Method *Task::getParentMethod()
 Task *Task::loadPrerequisiteTasks()
 {
     KeyValues kv(*this, def_tab_tasks_prereq);
-    kv._select.whereString(def_col_tprq_taskname, context().task);
+    kv.select().whereString(def_col_tprq_taskname, context().task);
 
     list<string> tasknames;
     while(kv.next()) {
@@ -185,7 +188,9 @@ Process* Task::createProcess(const list<string>& seqnames)
         retval &= insert.keyString(def_col_prs_taskname, context().task);
 
         if (retval && (retval = insert.execute())) {
-            if (retval = QueryLastInsertedId(*this).execute(prsid)) {
+            QueryLastInsertedId q(*this);
+            if (retval = q.execute()) {
+                prsid = q.getLastId();
                 for (auto & item : seqnames) {
                     Insert insert2(*this, def_tab_processes_seq);
                     retval &= insert2.keyInt(def_col_prss_prsid, prsid);
@@ -231,12 +236,7 @@ string Task::constructName(const string &mtname, const TaskParams &params)
 
 bool Task::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(def_tab_tasks);
-    if (ret) {
-        ret &= _update->whereString(def_col_task_name, context().task);
-    }
-
-    return ret;
+    return update().whereString(def_col_task_name, context().task);
 }
 
 }

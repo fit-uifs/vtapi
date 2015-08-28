@@ -32,38 +32,14 @@ public:
     /**
      * Constructor
      * @param connection connection object
-     * @param initString initialization string (query/table or empty)
      */
-    QueryBuilder(Connection& connection, const std::string& init_string)
-    : _connection(connection), _init_string(init_string), _pquery_param(NULL)
-    {}
+    explicit QueryBuilder(Connection& connection)
+        : _connection(connection), _pquery_param(NULL) {}
 
     /**
      * Virtual destructor - destroy implementation first
      */
     virtual ~QueryBuilder() { }
-
-    /**
-     * Resets query builder to initial state
-     */
-    virtual void reset() = 0;
-
-    /**
-     * Create new query param structure, remember to destroQueryParam() it
-     * @return new query param object
-     */
-    virtual void *createQueryParam() = 0;
-
-    /**
-     * Destroys query param structure
-     */
-    virtual void destroyQueryParam(void *param) = 0;
-
-    /**
-     * Duplicates existing query param structure, destroys the old one
-     * @return new query param object
-     */
-    virtual void *duplicateQueryParam(void *param) = 0;
 
     /**
      * Gets object for parametrized queries
@@ -92,6 +68,28 @@ public:
      */
     void useDefaultTable(const std::string& table)
     { _defaultTable = table; }
+
+    /**
+     * Resets query builder to initial state
+     */
+    virtual void reset() = 0;
+
+    /**
+     * Create new query param structure, remember to destroQueryParam() it
+     * @return new query param object
+     */
+    virtual void *createQueryParam() = 0;
+
+    /**
+     * Destroys query param structure
+     */
+    virtual void destroyQueryParam(void *param) = 0;
+
+    /**
+     * Duplicates existing query param structure, destroys the old one
+     * @return new query param object
+     */
+    virtual void *duplicateQueryParam(void *param) = 0;
 
     /**
      * Gets query from initialization string
@@ -124,6 +122,12 @@ public:
      * @return UPDATE query string
      */
     virtual std::string getUpdateQuery() = 0;
+
+    /**
+     * @brief Builds DELETE query
+     * @return DELETE query string
+     */
+    virtual std::string getDeleteQuery() = 0;
 
     /**
      * Builds SELECT COUNT(*) query
@@ -165,9 +169,8 @@ public:
 
     virtual std::string getMethodDeleteQuery(const std::string& name) = 0;
 
-    virtual std::string getSequenceDeleteQuery(const std::string& name) = 0;
-
     virtual std::string getTaskCreateQuery(const std::string& name,
+                                           const std::string& dsname,
                                            const std::string& mtname,
                                            const std::string& params,
                                            const std::string& prereq_task,
@@ -309,7 +312,7 @@ public:
      * @param from selection (table; this is optional)
      * @return success
      */
-    virtual bool keyPStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from) = 0;
+    virtual bool keyProcessStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& from) = 0;
 
     /**
      * This is a persistent function to add keys (columns) and values
@@ -415,7 +418,7 @@ public:
      * @param from table where the key is situated
      * @return success
      */
-    virtual bool wherePStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper, const std::string& from) = 0;
+    virtual bool whereProcessStatus(const std::string& key, ProcessState::STATUS_T value, const std::string& oper, const std::string& from) = 0;
     /**
      * This is a WHERE statement construction class for timestamp
      * It can be called several times.
@@ -475,6 +478,7 @@ public:
      * @return success
      */
     virtual bool whereIntList(const std::string& key, const std::list<int>& values, const std::string& oper, const std::string& from) = 0;
+
 
 protected:
     Connection  &_connection;    /**< connection object */

@@ -21,11 +21,9 @@ public:
     /**
      * @brief Creates query building object
      * @param connection previously created database connection object
-     * @param init_string init string (full query or default table)
      * @return new query building object
      */
-    virtual QueryBuilder *createQueryBuilder(Connection &connection,
-                                             const std::string& init_string) const = 0;
+    virtual QueryBuilder *createQueryBuilder(Connection &connection) const = 0;
 
     /**
      * @brief Creates result set object

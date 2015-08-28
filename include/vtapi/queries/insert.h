@@ -40,16 +40,16 @@ class Insert : public Query
 public:
     /**
      * Constructor of an INSERT query object
-     * @param commons      configuration object of Commons class
-     * @param initString   default table into which to insert / full SQL query
+     * @param commons configuration object of Commons class
+     * @param table table into which to insert
      */
-    Insert(const Commons& commons, const std::string& initString = std::string());
+    Insert(const Commons& commons, const std::string& table);
     
     /**
      * Gets INSERT query string
      * @return query string
      */
-    std::string getQuery();
+    std::string getQuery() override;
     
     /**
      * This is a persistent function to add string value to a key
@@ -59,7 +59,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyString(const std::string& key, const std::string& value, const std::string& from = std::string());
+    bool keyString(const std::string& key, const std::string& value);
     
     /**
      * This is a persistent function to add string values (string array) to a key
@@ -70,7 +70,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyStringA(const std::string& key, std::string* values, const int size, const std::string& from = std::string());
+    bool keyStringA(const std::string& key, std::string* values, const int size);
     
     /**
      * @brief Add bool value
@@ -79,7 +79,7 @@ public:
      * @param from selection table (optional)
      * @return success
      */
-    bool keyBool(const std::string& key, bool value, const std::string& from = std::string());
+    bool keyBool(const std::string& key, bool value);
 
     /**
      * This is a persistent function to add integer value to a key
@@ -89,7 +89,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyInt(const std::string& key, int value, const std::string& from = std::string());
+    bool keyInt(const std::string& key, int value);
     
     /**
      * This is a persistent function to add integer values (integer array) to a key
@@ -100,7 +100,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyIntA(const std::string& key, int* values, const int size, const std::string& from = std::string());
+    bool keyIntA(const std::string& key, int* values, const int size);
     
     /**
      * This is a persistent function to add float value to a key
@@ -110,7 +110,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyFloat(const std::string& key, float value, const std::string& from = std::string());
+    bool keyFloat(const std::string& key, float value);
 
     /**
      * This is a persistent function to add float values (float array) to a key
@@ -121,7 +121,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyFloatA(const std::string& key, float* values, const int size, const std::string& from = std::string());
+    bool keyFloatA(const std::string& key, float* values, const int size);
 
     /**
      * This is a persistent function to add float value to a key
@@ -131,7 +131,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyFloat8(const std::string& key, double value, const std::string& from = std::string());
+    bool keyFloat8(const std::string& key, double value);
 
     /**
      * This is a persistent function to add float values (float array) to a key
@@ -142,7 +142,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyFloat8A(const std::string& key, double* values, const int size, const std::string& from = std::string());
+    bool keyFloat8A(const std::string& key, double* values, const int size);
     
     /**
      * This is a persistent function to add seqtype value to a key
@@ -152,7 +152,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keySeqtype(const std::string& key, const std::string& value, const std::string& from = std::string());
+    bool keySeqtype(const std::string& key, const std::string& value);
     
     /**
      * This is a persistent function to add inouttype value to a key
@@ -162,7 +162,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyInouttype(const std::string& key, const std::string& value, const std::string& from = std::string());
+    bool keyInouttype(const std::string& key, const std::string& value);
     
     /**
      * This is a persistent function to add timestamp value to a key
@@ -172,7 +172,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyTimestamp(const std::string& key, const time_t& value, const std::string& from = std::string());
+    bool keyTimestamp(const std::string& key, const time_t& value);
     
     /**
      * This is a persistent function to add cv::Mat value to a key
@@ -182,7 +182,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyCvMat(const std::string& key, const cv::Mat& value, const std::string& from = std::string());
+    bool keyCvMat(const std::string& key, const cv::Mat& value);
     
     /**
      * This is a persistent function to add IntervalEvent value to a key
@@ -192,7 +192,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyIntervalEvent(const std::string& key, const IntervalEvent& value, const std::string& from = std::string());
+    bool keyIntervalEvent(const std::string& key, const IntervalEvent& value);
     
     /**
      * This is a persistent function to add ProcessState value to a key
@@ -202,7 +202,7 @@ public:
      * @return success
      * @note It may be called several times.
      */
-    bool keyProcessState(const std::string& key, const ProcessState& value, const std::string& from = std::string());
+    bool keyProcessState(const std::string& key, const ProcessState& value);
 
 private:
     Insert() = delete;

@@ -19,28 +19,35 @@
 namespace vtapi {
 
 
-class QueryBeginTransaction : public Query
+class QueryPredefined : public Query
 {
 public:
-    QueryBeginTransaction (const Commons& commons);
+    QueryPredefined(const Commons& commons);
+    virtual ~QueryPredefined();
 };
 
-class QueryCommitTransaction : public Query
+class QueryBeginTransaction : public QueryPredefined
 {
 public:
-    QueryCommitTransaction (const Commons& commons);
+    QueryBeginTransaction(const Commons& commons);
 };
 
-class QueryRollbackTransaction : public Query
+class QueryCommitTransaction : public QueryPredefined
 {
 public:
-    QueryRollbackTransaction (const Commons& commons);
+    QueryCommitTransaction(const Commons& commons);
 };
 
-class QueryDatasetCreate : public Query
+class QueryRollbackTransaction : public QueryPredefined
 {
 public:
-    QueryDatasetCreate (
+    QueryRollbackTransaction(const Commons& commons);
+};
+
+class QueryDatasetCreate : public QueryPredefined
+{
+public:
+    QueryDatasetCreate(
         const Commons& commons,
         const std::string& name,
         const std::string& location,
@@ -48,42 +55,38 @@ public:
         const std::string& description);
 };
 
-class QueryDatasetReset : public Query
+class QueryDatasetReset : public QueryPredefined
 {
 public:
-     QueryDatasetReset(const Commons& commons, const std::string& name);
+     QueryDatasetReset(const Commons& commons,
+                       const std::string& name);
 };
 
-class QueryDatasetDelete : public Query
+class QueryDatasetDelete : public QueryPredefined
 {
 public:
-     QueryDatasetDelete(const Commons& commons, const std::string& name);
+     QueryDatasetDelete(const Commons& commons,
+                        const std::string& name);
 };
 
-class QueryMethodCreate : public Query
+class QueryMethodCreate : public QueryPredefined
 {
 public:
-    QueryMethodCreate (
-        const Commons& commons,
-        const std::string& name,
-        const MethodKeys keys_definition,
-        const MethodParams params_definition,
-        const std::string& description);
+    QueryMethodCreate (const Commons& commons,
+                       const std::string& name,
+                       const MethodKeys keys_definition,
+                       const MethodParams params_definition,
+                       const std::string& description);
 };
 
-class QueryMethodDelete : public Query
+class QueryMethodDelete : public QueryPredefined
 {
 public:
-    QueryMethodDelete(const Commons& commons, const std::string& name);
+    QueryMethodDelete(const Commons& commons,
+                      const std::string& name);
 } ;
 
-class QuerySequenceDelete : public Query
-{
-public:
-    QuerySequenceDelete(const Commons& commons, const std::string& name);
-} ;
-
-class QueryTaskCreate : public Query
+class QueryTaskCreate : public QueryPredefined
 {
 public:
     QueryTaskCreate(const Commons& commons,
@@ -95,7 +98,7 @@ public:
                     const std::string& outputs);
 };
 
-class QueryTaskDelete : public Query
+class QueryTaskDelete : public QueryPredefined
 {
 public:
     QueryTaskDelete(const Commons& commons,
@@ -103,12 +106,15 @@ public:
                     const std::string &taskname);
 };
 
-class QueryLastInsertedId : public Query
+class QueryLastInsertedId : public QueryPredefined
 {
 public:
     QueryLastInsertedId(const Commons& commons);
-    bool execute(int &returned_id);
+    bool execute() override;
+    int getLastId();
 
+private:
+    int _last_id;
 };
 
 

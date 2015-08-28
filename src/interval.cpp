@@ -25,21 +25,17 @@ namespace vtapi {
 //================================= INTERVAL ===================================
 
 Interval::Interval(const Commons& commons, const string& selection)
-    : KeyValues(commons)
+    : KeyValues(commons, selection)
 {
     if (context().dataset.empty())
         throw BadConfigurationException("dataset not specified");
 
-    if (!selection.empty())
-        context().selection = selection;
-
-    _select.from(context().selection , def_col_all);
-    _select.orderBy(def_col_int_id);
+    select().setOrderBy(def_col_int_id);
 
     if (!context().sequence.empty())
-        _select.whereString(def_col_int_seqname, context().sequence);
+        select().whereString(def_col_int_seqname, context().sequence);
     if (!context().task.empty())
-        _select.whereString(def_col_int_taskname, context().task);
+        select().whereString(def_col_int_taskname, context().task);
 }
 
 Interval::~Interval()
@@ -155,12 +151,7 @@ double Interval::getLengthSeconds()
 
 bool Interval::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(context().selection);
-    if (ret) {
-        ret &= _update->whereInt(def_col_int_id, this->getId());
-    }
-
-    return ret;
+    return update().whereInt(def_col_int_id, this->getId());
 }
 bool Interval::updateStartEndTime(const int t1, const int t2)
 {
@@ -169,48 +160,49 @@ bool Interval::updateStartEndTime(const int t1, const int t2)
 
 bool Interval::filterById(const int id)
 {
-    return _select.whereInt(def_col_int_id, id);
+    return select().whereInt(def_col_int_id, id);
 }
 bool Interval::filterBySequence(const string& seqname)
 {
-    return _select.whereString(def_col_int_seqname, seqname);
+    return select().whereString(def_col_int_seqname, seqname);
 }
 
 bool Interval::filterBySequences(const std::list<string> &seqnames)
 {
-    return _select.whereStringInList(def_col_int_seqname, seqnames);
+    return select().whereStringInList(def_col_int_seqname, seqnames);
 }
 
 bool Interval::filterByTask(const string& taskname)
 {
-    return _select.whereString(def_col_int_taskname, taskname);
+    return select().whereString(def_col_int_taskname, taskname);
 }
 
 bool Interval::filterByDuration(const float t_low, const float t_high)
 {
     return
-        _select.whereFloat(def_col_int_seclength, t_low, ">=") &&
-        _select.whereFloat(def_col_int_seclength, t_high, "<=");
+        select().whereFloat(def_col_int_seclength, t_low, ">=") &&
+        select().whereFloat(def_col_int_seclength, t_high, "<=");
 }
 
 bool Interval::filterByTimeRange(const time_t t_low, const time_t t_high)
 {
-    return _select.whereTimeRange(def_col_int_rtstart, def_col_int_seclength, t_low, t_high - t_low, "&&");
+    return select().whereTimeRange(def_col_int_rtstart, def_col_int_seclength, t_low, t_high - t_low, "&&");
 }
 
 bool Interval::filterByRegion(const IntervalEvent::box& region)
 {
-    return _select.whereRegion("event,region", region, "&&");
+    return select().whereRegion("event,region", region, "&&");
 }
 
 //=================================== IMAGE ====================================
 
-Image::Image(const Commons& commons, const string& name, const string& selection)
+Image::Image(const Commons& commons,
+             const string& selection,
+             const string& name)
     : Interval(commons, selection)
 {
     if (!name.empty())
-        _select.whereString(def_col_int_imglocation, name);
-    
+        select().whereString(def_col_int_imglocation, name);
 }
 
 bool Image::next()

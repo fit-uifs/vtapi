@@ -15,11 +15,10 @@ Connection * PGBackend::createConnection(const string& connection_string) const
     return new PGConnection(connection_string);
 }
 
-QueryBuilder * PGBackend::createQueryBuilder(Connection &connection,
-                                             const string& init_string) const
+QueryBuilder * PGBackend::createQueryBuilder(Connection &connection) const
 {
     PGConnection &pgconnection = dynamic_cast<PGConnection&>(connection);
-    return new PGQueryBuilder(pgconnection, init_string);
+    return new PGQueryBuilder(pgconnection);
 }
 
 ResultSet *PGBackend::createResultSet(DBTYPES_MAP *dbtypes) const

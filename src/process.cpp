@@ -18,6 +18,7 @@
 #include <vtapi/common/global.h>
 #include <vtapi/common/exception.h>
 #include <vtapi/common/defs.h>
+#include <vtapi/queries/delete.h>
 #include <vtapi/data/process.h>
 
 using namespace std;
@@ -31,7 +32,7 @@ Process::Process(const Process &copy)
 }
 
 Process::Process(const Commons& commons, int id)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_processes)
 {
     if (context().dataset.empty())
         throw BadConfigurationException("dataset not specified");
@@ -39,27 +40,25 @@ Process::Process(const Commons& commons, int id)
     if (id != 0)
         context().process = id;
     
-    _select.from(def_tab_processes, def_col_all);
-    _select.orderBy(def_col_prs_prsid);
+    select().setOrderBy(def_col_prs_prsid);
     
     if (context().process != 0) {
-        _select.whereInt(def_col_prs_prsid, context().process);
+        select().whereInt(def_col_prs_prsid, context().process);
     }
     else {
         if (!context().task.empty())
-            _select.whereString(def_col_prs_taskname, context().task);
+            select().whereString(def_col_prs_taskname, context().task);
     }
 }
 
 Process::Process(const Commons& commons, const list<int>& ids)
-    : KeyValues(commons)
+    : KeyValues(commons, def_tab_processes)
 {
     if (context().dataset.empty())
-        VTLOG_WARNING("Dataset is not specified");
+        throw BadConfigurationException("dataset not specified");
     
-    _select.from(def_tab_processes, def_col_all);
-
-    _select.whereIntInList(def_col_prs_prsid, ids);
+    select().setOrderBy(def_col_prs_prsid);
+    select().whereIntInList(def_col_prs_prsid, ids);
     
     context().task.clear();
 }
@@ -209,7 +208,7 @@ Video *Process::loadAssignedVideos()
 {
     list<string> seqnames;
     KeyValues kv(*this, def_tab_processes_seq);
-    kv._select.whereInt(def_col_prss_prsid, context().process);
+    kv.select().whereInt(def_col_prss_prsid, context().process);
     while(kv.next()) {
         seqnames.push_back(kv.getString(def_col_prss_seqname));
     }
@@ -221,7 +220,7 @@ ImageFolder *Process::loadAssignedImageFolders()
 {
     list<string> seqnames;
     KeyValues kv(*this, def_tab_processes_seq);
-    kv._select.whereInt(def_col_prss_prsid, context().process);
+    kv.select().whereInt(def_col_prss_prsid, context().process);
     while(kv.next()) {
         seqnames.push_back(kv.getString(def_col_prss_seqname));
     }
@@ -248,8 +247,10 @@ TaskProgress *Process::lockAssignedSequence(const string &seqname)
 
 bool Process::unlockAssignedSequence(const string &seqname)
 {
-    //TODO: unlock sequence
-    //Query();
+    Delete d(*this, def_tab_tasks_seq);
+    return d.whereString(def_col_tsd_taskname, this->getParentTaskName()) &&
+            d.whereString(def_col_tsd_seqname, seqname) &&
+            d.execute();
 }
 
 
@@ -283,12 +284,7 @@ int Process::getInstancePort()
 
 bool Process::preUpdate()
 {
-    bool ret = KeyValues::preUpdate(def_tab_processes);
-    if (ret) {
-        ret &= _update->whereInt(def_col_prs_prsid, context().process);
-    }
-
-    return ret;
+    return update().whereInt(def_col_prs_prsid, context().process);
 }
 
 bool Process::updateState(const ProcessState& state)
@@ -361,7 +357,7 @@ bool Process::updateInstancePort(int port)
 
 void Process::filterByTask(const string &taskname)
 {
-    _select.whereString(def_col_prs_taskname, taskname);
+    select().whereString(def_col_prs_taskname, taskname);
 }
 
 
