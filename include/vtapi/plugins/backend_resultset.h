@@ -35,12 +35,6 @@ public:
     virtual ~ResultSet() { }
 
     /**
-     * Destroy old result object and replace it with new one
-     * @param res new result object
-     */
-    virtual void newResult(void *res) = 0;
-
-    /**
      * Gets current row position within result set
      * @return row position
      */
@@ -59,6 +53,12 @@ public:
      */
     void incPosition()
     { _pos++; }
+
+    /**
+     * Destroy old result object and replace it with new one
+     * @param res new result object
+     */
+    virtual void newResult(void *res) = 0;
 
     /**
      * Gets number of rows within result set

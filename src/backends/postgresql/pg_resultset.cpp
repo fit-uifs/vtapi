@@ -72,15 +72,14 @@ TKeys* PGResultSet::getKeys()
 
 string PGResultSet::getKeyType(const int col)
 {
-    string type;
     if (_pdbtypes) {
         DBTYPES_MAP::iterator it = _pdbtypes->find(PQftype(PGRES, col));
         if (it != _pdbtypes->end()) {
-            type = (*it).second.name;
+            return (*it).second.name;
         }
     }
 
-    return type;
+    return string();
 }
 
 short PGResultSet::getKeyTypeLength(const int col, const short def)
@@ -98,7 +97,16 @@ short PGResultSet::getKeyTypeLength(const int col, const short def)
 
 int PGResultSet::getKeyIndex(const string& key)
 {
-    return PGRES ? PQfnumber(PGRES, key.c_str()) : -1;
+    if (!PGRES) {
+        VTLOG_ERROR("Result set doesn't exist, failed to find table key: " + key);
+        return -1;
+    }
+    else {
+        int idx = PQfnumber(PGRES, key.c_str());
+        if (idx < 0)
+            VTLOG_ERROR("Failed to find table key: " + key);
+        return idx;
+    }
 }
 
 // =============== SINGLE VALUES / ARRAYS / VECTORS TEMPLATES ===================
@@ -107,8 +115,15 @@ template<typename TDB, typename TOUT>
 TOUT PGResultSet::getSingleValue(const int col, const char *def)
 {
     TDB value = { 0 };
-    if (!PQgetf(PGRES, _pos, def, col, &value)) {
-        VTLOG_WARNING(string("Value is not a ") + def);
+
+    if (_pos < 0) {
+        VTLOG_ERROR("Result set not initialized, failed to get value");
+    }
+    else if (col < 0) {
+        VTLOG_ERROR("Invalid column, failed to get value");
+    }
+    else if (!PQgetf(PGRES, _pos, def, col, &value)) {
+        VTLOG_ERROR(string("Value is not a ") + def);
     }
 
     return (TOUT) value;
@@ -123,8 +138,17 @@ TOUT *PGResultSet::getArray(const int col, int& size, const char *def)
     do {
         char defArr[128];
         sprintf(defArr, "%s[]", def);
-        if (!PQgetf(PGRES, _pos, defArr, col, &tmp)) {
-            VTLOG_WARNING( string("Value is not an array of ") + def);
+
+        if (_pos < 0) {
+            VTLOG_ERROR("Result set not initialized, failed to get value");
+            break;
+        }
+        else if (col < 0) {
+            VTLOG_ERROR("Invalid column, failed to get value");
+            break;
+        }
+        else if (!PQgetf(PGRES, _pos, defArr, col, &tmp)) {
+            VTLOG_ERROR( string("Value is not an array of ") + def);
             break;
         }
 
@@ -137,7 +161,7 @@ TOUT *PGResultSet::getArray(const int col, int& size, const char *def)
         for (int i = 0; i < size; i++) {
             TDB value = { 0 };
             if (!PQgetf(tmp.res, i, def, 0, &value)) {
-                VTLOG_WARNING( string("Unexpected value in array of ") + def);
+                VTLOG_ERROR( string("Unexpected value in array of ") + def);
                 vt_destructall(values);
                 break;
             }
@@ -162,8 +186,15 @@ vector<TOUT> *PGResultSet::getVector(const int col, const char *def)
     do {
         char defArr[128];
         sprintf(defArr, "%s[]", def);
-        if (!PQgetf(PGRES, _pos, defArr, col, &tmp)) {
-            VTLOG_WARNING( string("Value is not an array of ") + def);
+
+        if (_pos < 0) {
+            VTLOG_ERROR("Result set not initialized, failed to get value");
+        }
+        else if (col < 0) {
+            VTLOG_ERROR("Invalid column, failed to get value");
+        }
+        else if (!PQgetf(PGRES, _pos, defArr, col, &tmp)) {
+            VTLOG_ERROR( string("Value is not an array of ") + def);
             break;
         }
 
@@ -176,7 +207,7 @@ vector<TOUT> *PGResultSet::getVector(const int col, const char *def)
         for (int i = 0; i < size; i++) {
             TDB value = { 0 };
             if (!PQgetf(tmp.res, i, def, 0, &value)) {
-                VTLOG_WARNING( string("Unexpected value in array of ") + def);
+                VTLOG_ERROR( string("Unexpected value in array of ") + def);
                 vt_destruct(values);
                 break;
             }
