@@ -40,8 +40,6 @@ extern const std::string def_tab_tasks_prereq;
 extern const std::string def_tab_processes_seq;
 extern const std::string def_tab_tasks_seq;
 
-extern const std::string def_col_all;
-
 extern const std::string def_col_ds_name;
 extern const std::string def_col_ds_fname;
 extern const std::string def_col_ds_location;

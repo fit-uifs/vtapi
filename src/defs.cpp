@@ -27,8 +27,6 @@ const std::string def_tab_processes_seq = "rel_processes_sequences_assigned";
 const std::string def_tab_tasks_seq = "rel_tasks_sequences_done";
 
 
-const std::string def_col_all = "*";
-
 const std::string def_col_ds_name = "dsname";
 const std::string def_col_ds_fname = "friendly_name";
 const std::string def_col_ds_location = "dslocation";
