@@ -16,6 +16,7 @@
 
 namespace vtapi {
 
+#define DEF_SELECT_LIMIT     10000   // SELECT query limit
 
 extern const std::string def_val_video;
 extern const std::string def_val_images;
