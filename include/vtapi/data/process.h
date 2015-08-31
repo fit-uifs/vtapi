@@ -12,7 +12,6 @@
 
 #pragma once
  
-#include <list>
 #include "keyvalues.h"
 #include "dataset.h"
 #include "sequence.h"
@@ -69,19 +68,11 @@ public:
      * Construct process object for iterating through VTApi processes
      * Object will represent set of processes specified by their names
      * @param commons base Commons object
-     * @param names list of method processes
+     * @param names vector of method processes
      */
-    Process(const Commons& commons, const std::list<int>& ids);
-
-    /**
-     * Destructor
-     */
-    virtual ~Process();
+    Process(const Commons& commons, const std::vector<int>& ids);
     
     using KeyValues::count;
-    using KeyValues::print;
-    using KeyValues::printAll;
-    using KeyValues::printKeys;
 
     /**
      * Individual next() for processes, updates process and selection
@@ -112,13 +103,13 @@ public:
      * @brief Connects to this process' already running instance
      * @return object for interprocess communication with the instance, NULL on error
      */
-    InterProcessClient * connectToInstance();
+    InterProcessClient * connectToInstance() const;
 
     /**
      * @brief Is this process's instance currently running
      * @return success
      */
-    bool isInstanceRunning();
+    bool isInstanceRunning() const;
 
     //////////////////////////////////////////////////
     // getters - associated objects
@@ -128,57 +119,53 @@ public:
      * @brief Gets parent dataset object
      * @return dataset object (initialized)
      */
-    Dataset *getParentDataset();
+    Dataset *getParentDataset() const;
 
     /**
      * @brief Gets name of parent task object
      * @return parent task object name
      */
-    std::string getParentTaskName();
+    std::string getParentTaskName() const;
 
     /**
      * @brief Gets parent task object
      * @return task object (initialized)
      */
-    Task *getParentTask();
+    Task *getParentTask() const;
 
     /**
      * @brief Gets name of parent method object
      * @return parent method object name
      */
-    std::string getParentMethodName();
+    std::string getParentMethodName() const;
 
     /**
      * @brief Gets parent method object
      * @return method object (initialized)
      */
-    Method *getParentMethod();
+    Method *getParentMethod() const;
 
     /**
      * @brief Loads image folders which should be processed
      * @return image folders object for iteration
      */
-    ImageFolder *loadAssignedImageFolders();
+    ImageFolder *loadAssignedImageFolders() const;
 
     /**
      * @brief Loads videos which should be processed
      * @return videos object for iteration
      */
-    Video *loadAssignedVideos();
+    Video *loadAssignedVideos() const;
 
     /**
-     * @brief Locks sequence for processing by this process
+     * @brief Acquires lock on sequence for processing by this process
+     * Call updateIsDone(true) on TaskProgress object to mark sequence as done.
+     * Call updateIsDone(false) on TaskProgress object to mark sequence as being processed.
+     * Or delete TaskProgress object without calling updateIsDone() to unlock sequence.
      * @param seqname sequence name to lock
      * @return task progress object to update on sequence done, NULL on failed lock
      */
-    TaskProgress *lockAssignedSequence(const std::string &seqname);
-
-    /**
-     * @brief Make the sequence available to processing by other processes
-     * @param seqname sequence name to unlock
-     * @return success
-     */
-    bool unlockAssignedSequence(const std::string &seqname);
+    TaskProgress *acquireSequenceLock(const std::string &seqname) const;
 
     //////////////////////////////////////////////////
     // getters - SELECT
@@ -188,26 +175,32 @@ public:
      * Gets a process ID
      * @return process ID
      */
-    int getId();
+    int getId() const;
 
     /**
      * Gets detailed process state
      * @return process state object
      */
-    ProcessState *getState();
+    ProcessState getState() const;
 
     /**
      * @brief Gets system PID value of running instance
      * @return PID
      */
-    int getInstancePID();
+    int getInstancePID() const;
 
     /**
-     * @brief Gets instance's listenting port for IPC
-     * @return port
+     * @brief Gets instance's base name for IPC
+     * @return base instance name
      */
-    int getInstancePort();
+    std::string getInstanceName() const;
     
+    /**
+     * @brief Gets time when sequence was added to dataset
+     * @return timestamp
+     */
+    std::chrono::system_clock::time_point getCreatedTime() const;
+
     //////////////////////////////////////////////////
     // updaters - UPDATE
     //////////////////////////////////////////////////
@@ -215,9 +208,10 @@ public:
     /**
      * Sets custom process state
      * @param state process state
+     * @param execute calls updateExecute() right away
      * @return success
      */
-    bool updateState(const ProcessState& state);
+    bool updateState(const ProcessState& state, bool execute);
 
     /**
      * Sets process status as RUNNING
@@ -225,7 +219,7 @@ public:
      * @param currentItem currently processed item
      * @return success
      */
-    bool updateStateRunning(float progress, const std::string& currentItem);
+    bool updateStateRunning(double progress, const std::string& currentItem);
 
     /**
      * Sets process status as SUSPENDED (paused)
@@ -254,11 +248,11 @@ public:
     bool updateInstancePID(int pid);
 
     /**
-     * @brief Sets instance's listening port
-     * @param port listening port
+     * @brief Sets instance's base name for IPC
+     * @param name IPC name
      * @return success
      */
-    bool updateInstancePort(int port);
+    bool updateInstanceName(const std::string & name);
 
     //////////////////////////////////////////////////
     // filters/utilities
@@ -270,7 +264,7 @@ public:
     void filterByTask(const std::string& taskname);
 
 protected:
-    virtual bool preUpdate();
+    bool preUpdate() override;
 
 private:
     Process() = delete;

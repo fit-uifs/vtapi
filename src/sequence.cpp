@@ -32,26 +32,26 @@ Sequence::Sequence(const Sequence &copy)
 Sequence::Sequence(const Commons& commons, const string& name)
     : KeyValues(commons, def_tab_sequences)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty() || _context.datasetLocation.empty())
         throw BadConfigurationException("dataset not specified");
     
     if (!name.empty())
-        context().sequence = name;
+        _context.sequence = name;
 
-    select().setOrderBy(def_col_seq_name);
+    _select.setOrderBy(def_col_seq_name);
     
-    if (!context().sequence.empty())
-        select().whereString(def_col_seq_name, context().sequence);
+    if (!_context.sequence.empty())
+        _select.querybuilder().whereString(def_col_seq_name, _context.sequence);
 }
 
-Sequence::Sequence(const Commons& commons, const list<string>& names)
+Sequence::Sequence(const Commons& commons, const vector<string>& names)
     : KeyValues(commons, def_tab_sequences)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty() || _context.datasetLocation.empty())
         throw BadConfigurationException("dataset not specified");
 
-    select().setOrderBy(def_col_seq_name);
-    select().whereStringInList(def_col_seq_name, names);
+    _select.setOrderBy(def_col_seq_name);
+    _select.querybuilder().whereStringVector(def_col_seq_name, names);
 }
 
 Sequence::~Sequence()
@@ -60,8 +60,8 @@ Sequence::~Sequence()
 bool Sequence::next()
 {
     if (KeyValues::next()) {
-        context().sequence = this->getName();
-        context().sequenceLocation = this->getLocation();
+        _context.sequence = this->getName();
+        _context.sequenceLocation = this->getLocation();
         return true;
     }
     else {
@@ -69,7 +69,7 @@ bool Sequence::next()
     }
 }
 
-Dataset *Sequence::getParentDataset()
+Dataset *Sequence::getParentDataset() const
 {
     Dataset *d = new Dataset(*this);
     if (d->next()) {
@@ -81,52 +81,51 @@ Dataset *Sequence::getParentDataset()
     }
 }
 
-string Sequence::getName()
+string Sequence::getName() const
 {
     return this->getString(def_col_seq_name);
 }
 
-string Sequence::getType()
+string Sequence::getType() const
 {
     return this->getString(def_col_seq_type);
 }
 
-string Sequence::getLocation()
+string Sequence::getLocation() const
 {
     return this->getString(def_col_seq_location);
 }
 
-string Sequence::getComment()
+unsigned int Sequence::getLength() const
+{
+    return this->getInt(def_col_seq_length);
+}
+
+string Sequence::getComment() const
 {
     return this->getString(def_col_seq_comment);
 }
 
-std::string Sequence::getDataLocation()
+string Sequence::getDataLocation() const
 {
-    if (context().datasetLocation.empty()) {
-        Dataset *d = getParentDataset();
-        context().datasetLocation = d->getLocation();
-        delete d;
-    }
-    
     return config().datasets_dir + Poco::Path::separator() +
-            context().datasetLocation + Poco::Path::separator() +
-            context().sequenceLocation;
+            _context.datasetLocation + Poco::Path::separator() +
+            _context.sequenceLocation;
 }
 
-time_t vtapi::Sequence::getCreatedTime()
+chrono::system_clock::time_point Sequence::getCreatedTime() const
 {
     return this->getTimestamp(def_col_seq_created);
 }
 
-bool Sequence::updateComment(const std::string& comment)
+bool Sequence::updateComment(const string& comment)
 {
     return this->updateString(def_col_seq_comment, comment);
 }
 
 bool Sequence::preUpdate()
 {
-    return update().whereString(def_col_seq_name, context().sequence);
+    return update().querybuilder().whereString(def_col_seq_name, _context.sequence);
 }
 
 //============================== IMAGE FOLDER ===================================
@@ -139,13 +138,13 @@ ImageFolder::ImageFolder(const ImageFolder &copy)
 ImageFolder::ImageFolder(const Commons& commons, const string& name)
     : Sequence(commons, name)
 {
-    select().whereSeqtype(def_col_seq_type, def_val_images);
+    _select.querybuilder().whereSeqtype(def_col_seq_type, def_val_images);
 }
 
-ImageFolder::ImageFolder(const Commons& commons, const list<string>& names)
+ImageFolder::ImageFolder(const Commons& commons, const vector<string>& names)
     : Sequence(commons, names)
 {
-    select().whereSeqtype(def_col_seq_type, def_val_images);
+    _select.querybuilder().whereSeqtype(def_col_seq_type, def_val_images);
 }
 
 bool ImageFolder::next()
@@ -163,13 +162,13 @@ Video::Video(const Video &copy)
 Video::Video(const Commons& commons, const string& name)
     : Sequence(commons, name)
 {
-    select().whereSeqtype(def_col_seq_type, def_val_video);
+    _select.querybuilder().whereSeqtype(def_col_seq_type, def_val_video);
 }
 
-Video::Video(const Commons& commons, const list<string>& names)
+Video::Video(const Commons& commons, const vector<string>& names)
     : Sequence(commons, names)
 {
-    select().whereSeqtype(def_col_seq_type, def_val_video);
+    _select.querybuilder().whereSeqtype(def_col_seq_type, def_val_video);
 }
 
 Video::~Video()
@@ -212,29 +211,24 @@ cv::Mat Video::getNextFrame()
     return frame;
 }
 
-size_t Video::getLength()
-{
-    return getInt(def_col_seq_vidlength);
-}
-
-double Video::getFPS()
+double Video::getFPS() const
 {
     return getFloat8(def_col_seq_vidfps);
 }
 
-double vtapi::Video::getSpeed()
+double vtapi::Video::getSpeed() const
 {
     return getFloat8(def_col_seq_vidspeed);
 }
 
-time_t Video::getRealStartTime()
+chrono::system_clock::time_point Video::getRealStartTime() const
 {
     return getTimestamp(def_col_seq_vidtime);
 }
 
-bool Video::updateRealStartTime(const time_t& starttime)
+bool Video::updateRealStartTime(const chrono::system_clock::time_point& starttime)
 {
-    return (updateTimestamp(def_col_seq_vidtime, starttime) && updateExecute());
+    return (updateTimestamp(def_col_seq_vidtime, starttime));
 }
 
 }

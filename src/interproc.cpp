@@ -1,9 +1,5 @@
 
 #include <csignal>
-#include <Poco/Net/SocketAddress.h>
-#include <Poco/Net/StreamSocket.h>
-#include <Poco/Net/SocketStream.h>
-#include <Poco/Net/ServerSocket.h>
 #include <vtapi/common/global.h>
 #include <vtapi/data/process.h>
 #include <vtapi/common/interproc.h>
@@ -114,28 +110,28 @@ void InterProcessServer::serverProc(InterProcessServer *context)
 
 void InterProcessServer::serverLoop()
 {
-    Poco::Net::ServerSocket srv;
+//    Poco::Net::ServerSocket srv;
 
-    {
-        std::lock_guard<std::mutex> lk(_server_ready_mtx);
-        int port = def_server_port;
+//    {
+//        std::lock_guard<std::mutex> lk(_server_ready_mtx);
+//        int port = def_server_port;
 
-        do {
-            try
-            {
-                srv.bind(Poco::Net::SocketAddress("127.0.0.1", port));
-                _server_port = port;
-            }
-            catch(...)
-            {
-                port++;
-            }
-        } while (_server_port == 0);
-    }
+//        do {
+//            try
+//            {
+//                srv.bind(Poco::Net::SocketAddress("127.0.0.1", port));
+//                _server_port = port;
+//            }
+//            catch(...)
+//            {
+//                port++;
+//            }
+//        } while (_server_port == 0);
+//    }
 
-    srv.listen();
+//    srv.listen();
 
-    _server_ready_cv.notify_all();
+//    _server_ready_cv.notify_all();
 
 //    for (;;) {
 //        Poco::Net::Socket::SocketList readList, writeList, exceptList;

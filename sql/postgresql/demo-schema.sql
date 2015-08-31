@@ -62,7 +62,7 @@ SELECT public.VT_task_create('task_demo2_3', 'demo2', '{video:video3}', 'task_de
 ---------------------------------------------------
 
 -- insert videos
-INSERT INTO sequences (seqname, seqlocation, seqtyp, vid_length, vid_fps, vid_speed, vid_time, comment) VALUES
+INSERT INTO sequences (seqname, seqlocation, seqtyp, seqlength, vid_fps, vid_speed, vid_time, comment) VALUES
     ('video1', 'video1.mpg', 'video', 5207, 29.97, 1, '2015-04-01 04:05:06', 'pre-generated'),
     ('video2', 'video2.mpg', 'video', 6499, 29.97, 1, '2015-04-01 05:06:07', 'pre-generated'),
     ('video3', 'video3.mpg', 'video', 1648, 25, 1, '2015-04-01 06:07:08', 'pre-generated');

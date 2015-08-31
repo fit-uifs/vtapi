@@ -97,12 +97,13 @@ private:
     bool            _log_warnings; /**< Log warnings */
     bool            _log_debug;    /**< Log debug messages */
     
+    Logger();
 
     /**
      * Gets a timestamp for logging
      * @return string value with timestamp
      */
-    std::string timestamp();
+    std::string timestamp() const;
     
     /**
      * Outputs line to specified stream
@@ -113,7 +114,6 @@ private:
     
     // forbidden stuff
     
-    Logger() {}
     Logger (const Logger&) = delete;
     void operator=(const Logger&) = delete;
 };

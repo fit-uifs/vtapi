@@ -464,7 +464,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       seqname name NOT NULL,
       seqlocation character varying,
       seqtyp public.seqtype,
-      vid_length integer,
+      seqlength integer,
       vid_fps double precision,
       vid_speed  double precision  DEFAULT 1,
       vid_time timestamp without time zone,
@@ -494,7 +494,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       taskname name NOT NULL,
       state public.pstate DEFAULT '(created,0,,)',
       ipc_pid int DEFAULT 0,
-      ipc_port int DEFAULT 0,
+      ipc_name varchar,
       created timestamp without time zone DEFAULT (now() at time zone 'utc'),
       CONSTRAINT processes_pk PRIMARY KEY (prsid)
     );

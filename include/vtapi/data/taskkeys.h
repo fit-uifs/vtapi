@@ -5,7 +5,7 @@
 
 namespace vtapi {
 
-class MethodKeys
+class TaskKeyDefinitions
 {
 public:
     

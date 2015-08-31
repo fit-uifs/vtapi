@@ -16,6 +16,7 @@
 #include <vtapi/common/defs.h>
 #include <vtapi/data/sequence.h>
 #include <vtapi/data/interval.h>
+#include <utility>
 
 using namespace std;
 
@@ -27,15 +28,15 @@ namespace vtapi {
 Interval::Interval(const Commons& commons, const string& selection)
     : KeyValues(commons, selection)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
 
-    select().setOrderBy(def_col_int_id);
+    _select.setOrderBy(def_col_int_id);
 
-    if (!context().sequence.empty())
-        select().whereString(def_col_int_seqname, context().sequence);
-    if (!context().task.empty())
-        select().whereString(def_col_int_taskname, context().task);
+    if (!_context.sequence.empty())
+        _select.querybuilder().whereString(def_col_int_seqname, _context.sequence);
+    if (!_context.task.empty())
+        _select.querybuilder().whereString(def_col_int_taskname, _context.task);
 }
 
 Interval::~Interval()
@@ -43,10 +44,18 @@ Interval::~Interval()
 
 bool Interval::next()
 {
-    return KeyValues::next();
+    bool ret = KeyValues::next();
+
+    // destroy parent sequence if it changed
+    if (ret) {
+        if (_pparent_vid && _pparent_vid->getName() != this->getParentSequenceName())
+            _pparent_vid.reset();
+    }
+
+    return ret;
 }
 
-Dataset *Interval::getParentDataset()
+Dataset *Interval::getParentDataset() const
 {
     Dataset *d = new Dataset(*this);
     if (d->next()) {
@@ -58,11 +67,11 @@ Dataset *Interval::getParentDataset()
     }
 }
 
-Task *Interval::getParentTask()
+Task *Interval::getParentTask() const
 {
     string taskname;
-    if (!context().task.empty())
-        taskname = context().task;
+    if (!_context.task.empty())
+        taskname = _context.task;
     else
         taskname = this->getString(def_col_int_taskname);
 
@@ -81,16 +90,16 @@ Task *Interval::getParentTask()
     }
 }
 
-string Interval::getParentSequenceName()
+string Interval::getParentSequenceName() const
 {
     string seqname;
-    if (!context().sequence.empty())
-        return context().sequence;
+    if (!_context.sequence.empty())
+        return _context.sequence;
     else
         return this->getString(def_col_int_seqname);
 }
 
-Sequence *Interval::getParentSequence()
+Sequence *Interval::getParentSequence() const
 {
     string seqname = getParentSequenceName();
 
@@ -109,89 +118,123 @@ Sequence *Interval::getParentSequence()
     }
 }
 
-int Interval::getId()
+int Interval::getId() const
 {
     return this->getInt(def_col_int_id);
 }
 
-int Interval::getStartTime()
+unsigned int Interval::getStartTime() const
 {
     return this->getInt(def_col_int_t1);
 }
 
-int Interval::getEndTime()
+unsigned int Interval::getEndTime() const
 {
     return this->getInt(def_col_int_t2);
 }
 
-bool Interval::getRealStartEndTime(time_t *t1, time_t *t2)
+chrono::system_clock::time_point Interval::getRealStartTime()
 {
-    bool bRet = false;
-    Video *vid = new Video(*this, getParentSequenceName());
-
-    if (vid->next()) {
-        time_t start = vid->getRealStartTime();
-        double fps = vid->getFPS();
-
-        if (start && fps) {
-            *t1 = start + (time_t)(this->getStartTime() / fps);
-            *t2 = start + (time_t) (this->getEndTime() / fps);
-            bRet = true;
-        }
+    if (!_pparent_vid) {
+        _pparent_vid = std::make_shared<Video>(*this, this->getParentSequenceName());
+        if (!_pparent_vid) return chrono::system_clock::time_point();
     }
-    delete vid;
-    
-    return bRet;
+
+    chrono::system_clock::time_point start = _pparent_vid->getRealStartTime();
+    double fps = _pparent_vid->getFPS();
+    double speed = _pparent_vid->getSpeed();
+
+    if (start.time_since_epoch() > chrono::seconds::zero() && fps > 0) {
+        double sec = this->getStartTime() * speed / fps;
+        return start + chrono::microseconds(static_cast<chrono::microseconds::rep>(sec * 1000 * 1000));
+    }
+    else {
+        return chrono::system_clock::time_point();
+    }
 }
 
-double Interval::getLengthSeconds()
+chrono::system_clock::time_point Interval::getRealEndTime()
+{
+    if (!_pparent_vid) {
+        _pparent_vid = std::make_shared<Video>(*this, this->getParentSequenceName());
+        if (!_pparent_vid) return chrono::system_clock::time_point();
+    }
+
+    chrono::system_clock::time_point start = _pparent_vid->getRealStartTime();
+    double fps = _pparent_vid->getFPS();
+    double speed = _pparent_vid->getSpeed();
+
+    if (start.time_since_epoch() > chrono::seconds::zero() && fps > 0) {
+        double sec = (this->getEndTime() + 1) * speed / fps;
+        return start + chrono::microseconds(static_cast<chrono::microseconds::rep>(sec * 1000 * 1000));
+    }
+    else {
+        return chrono::system_clock::time_point();
+    }
+}
+
+double Interval::getLengthSeconds() const
 {
     return this->getFloat8(def_col_int_seclength);
 }
 
 bool Interval::preUpdate()
 {
-    return update().whereInt(def_col_int_id, this->getId());
+    return update().querybuilder().whereInt(def_col_int_id, this->getId());
 }
-bool Interval::updateStartEndTime(const int t1, const int t2)
+
+bool Interval::updateStartTime(unsigned int t1)
 {
-    return (updateInt(def_col_int_t1, t1) && updateInt(def_col_int_t2, t2) && updateExecute());
+    return this->updateInt(def_col_int_t1, t1);
+}
+
+bool Interval::updateEndTime(unsigned int t2)
+{
+    return this->updateInt(def_col_int_t2, t2);
 }
 
 bool Interval::filterById(const int id)
 {
-    return select().whereInt(def_col_int_id, id);
+    return _select.querybuilder().whereInt(def_col_int_id, id);
 }
 bool Interval::filterBySequence(const string& seqname)
 {
-    return select().whereString(def_col_int_seqname, seqname);
+    return _select.querybuilder().whereString(def_col_int_seqname, seqname);
 }
 
-bool Interval::filterBySequences(const std::list<string> &seqnames)
+bool Interval::filterBySequences(const vector<string> &seqnames)
 {
-    return select().whereStringInList(def_col_int_seqname, seqnames);
+    return _select.querybuilder().whereStringVector(def_col_int_seqname, seqnames);
 }
 
 bool Interval::filterByTask(const string& taskname)
 {
-    return select().whereString(def_col_int_taskname, taskname);
+    return _select.querybuilder().whereString(def_col_int_taskname, taskname);
 }
 
-bool Interval::filterByDuration(const float t_low, const float t_high)
+bool Interval::filterByDuration(const chrono::microseconds & dur_low,
+                                const chrono::microseconds & dur_high)
 {
+    double d_low = static_cast<double>(dur_low.count()) / (1000 * 1000);
+    double d_high = static_cast<double>(dur_high.count()) / (1000 * 1000);
+
     return
-        select().whereFloat(def_col_int_seclength, t_low, ">=") &&
-        select().whereFloat(def_col_int_seclength, t_high, "<=");
+        _select.querybuilder().whereFloat8(def_col_int_seclength, d_low, ">=") &&
+        _select.querybuilder().whereFloat8(def_col_int_seclength, d_high, "<=");
 }
 
-bool Interval::filterByTimeRange(const time_t t_low, const time_t t_high)
+bool Interval::filterByTimeRange(const chrono::system_clock::time_point & t_low,
+                                 const chrono::system_clock::time_point & t_high)
 {
-    return select().whereTimeRange(def_col_int_rtstart, def_col_int_seclength, t_low, t_high - t_low, "&&");
+    return _select.querybuilder().whereTimeRange(def_col_int_rtstart,
+                                                 def_col_int_seclength,
+                                                 t_low,
+                                                 t_high);
 }
 
-bool Interval::filterByRegion(const IntervalEvent::box& region)
+bool Interval::filterByRegion(const Box& region)
 {
-    return select().whereRegion("event,region", region, "&&");
+    return _select.querybuilder().whereRegion("event,region", region, "&&");
 }
 
 //=================================== IMAGE ====================================
@@ -202,7 +245,7 @@ Image::Image(const Commons& commons,
     : Interval(commons, selection)
 {
     if (!name.empty())
-        select().whereString(def_col_int_imglocation, name);
+        _select.querybuilder().whereString(def_col_int_imglocation, name);
 }
 
 bool Image::next()
@@ -214,21 +257,21 @@ bool Image::next()
 
 string Image::getDataLocation()
 {
-    if (context().datasetLocation.empty()) {
+    if (_context.datasetLocation.empty()) {
         Dataset *d = getParentDataset();
-        context().datasetLocation = d->getLocation();
+        _context.datasetLocation = d->getLocation();
         delete d;
     }
 
-    if (context().sequenceLocation.empty()) {
+    if (_context.sequenceLocation.empty()) {
         Sequence *s = getParentSequence();
-        context().sequenceLocation = s->getLocation();
+        _context.sequenceLocation = s->getLocation();
         delete s;
     }
 
     return config().datasets_dir + Poco::Path::separator() +
-            context().datasetLocation + Poco::Path::separator() +
-            context().sequenceLocation  + Poco::Path::separator() +
+            _context.datasetLocation + Poco::Path::separator() +
+            _context.sequenceLocation  + Poco::Path::separator() +
             this->getString(def_col_int_imglocation);
 }
 

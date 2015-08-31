@@ -12,11 +12,6 @@
 
 #pragma once
 
-#include <ctime>
-#include <list>
-#include "../data/processstate.h"
-#include "../data/intervalevent.h"
-#include "../data/commons.h"
 #include "query.h"
 
 namespace vtapi {
@@ -34,70 +29,79 @@ namespace vtapi {
  * 
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
-class Select : public QueryWhere
+class Select : public Query
 {
 public:
     /**
      * Constructor of a SELECT query object
+     * @param table default table to SELECT FROM
      * @param commons configuration object of Commons class
      */
-    Select(const Commons& commons, const std::string &table);
-    
+    Select(const Commons& commons, const std::string &table)
+        : Query(commons, table, true), _limit(0), _offset(0) {}
+
     /**
      * Gets SELECT query string
      * @return query string
      */
-    std::string getQuery() override;
+    std::string getQuery() const override
+    { return _pquerybuilder->getSelectQuery(_groupby, _orderby, _limit, _offset); }
     
     /**
      * Executes SELECT query and fetches result
      * @return success
      */
-    bool execute() override;
+    bool execute() override
+    { return _connection.fetch(this->getQuery(), _pquerybuilder->getQueryParam(), resultset()) >= 0; }
     
     /**
      * Shifts offset, executes SELECT query and fetches result
      * @return success
      */
-    bool executeNext();
+    bool executeNext()
+    {
+        _offset += _limit;
+        return this->execute();
+    }
     
     /**
-     * This is used to specify a table for FROM statement and a column list for SELECT statement
+     * This is used to specify a table for FROM statement and a column vector for SELECT statement
      * @param table    table to select
      * @param column   column for select
      * @return success
      * @note It may be called more times.
      */
-    bool from(const std::string& table, const std::string& column);
+    bool from(const std::string& table, const std::string& column)
+    { return _pquerybuilder->keyFrom(table, column); }
 
     /**
      * Sets number of rows to be fetched by LIMIT section of query
      * @param limit   number of rows to be fetched
      */
-    void setLimit(const int limit);
+    void setLimit(int limit)
+    { _limit = limit; }
     
     /**
      * Order result set by key (possibly including ASC/DESC)
      * @param key key to order resultset by
      */
-    void setOrderBy(const std::string& key);
+    void setOrderBy(const std::string& key)
+    { _orderby = key; }
 
     /**
      * GROUP BY clause (one column only)
      * @param key key to group by
      */
-    void setGroupBy(const std::string& key);
+    void setGroupBy(const std::string& key)
+    { _groupby = key; }
 
 private:
-    std::string _groupby;    /**< String used for the GROUP BY statement */
-    std::string _orderby;    /**< String used for the ORDER BY statement */
-
-    int _limit;      /**< Specify a size (a number of rows) of the resultset */
-    int _offset;     /**< Specify an index of row, where the resultset starts */
+    int _limit;             /**< LIMIT value */
+    int _offset;            /**< OFFSET value */
+    std::string _orderby;   /**< ORDER BY value  */
+    std::string _groupby;   /**< GROUP BY value */
     
     Select() = delete;
-    Select(const Select&) = delete;
-    Select& operator=(const Select&) = delete;
 };
 
 } // namespace vtapi

@@ -13,8 +13,6 @@
 
 #pragma once
 
-#include <ctime>
-#include <string>
 #include "keyvalues.h"
 #include "dataset.h"
 #include "interval.h"
@@ -60,9 +58,9 @@ public:
      * Construct sequence object for iterating through VTApi sequences (video/imagefolder)
      * Object will represent set of sequences specified by their names
      * @param commons base Commons object
-     * @param names list of sequences names
+     * @param names vector of sequences names
      */
-    Sequence(const Commons& commons, const std::list<std::string>& names);
+    Sequence(const Commons& commons, const std::vector<std::string>& names);
     
     /**
      * Destructor
@@ -70,9 +68,6 @@ public:
     virtual ~Sequence();
     
     using KeyValues::count;
-    using KeyValues::print;
-    using KeyValues::printAll;
-    using KeyValues::printKeys;
 
     /**
      * Moves to a next sequence and sets sequence name and location varibles
@@ -85,43 +80,49 @@ public:
      * @brief Gets parent dataset object
      * @return dataset object (initialized)
      */
-    Dataset *getParentDataset();
+    Dataset *getParentDataset() const;
 
     /**
      * Gets a sequence name
      * @return string value with the name of the sequence
      */
-    std::string getName();
+    std::string getName() const;
     
     /**
      * Gets a sequence type
      * @return string value [video|images|data]
      */
-    std::string getType();
+    std::string getType() const;
     
     /**
      * Gets sequence location relative to dataset location
      * @return location of the current sequence
      */
-    std::string getLocation();
+    std::string getLocation() const;
+
+    /**
+     * @brief Gets sequence length (# of frames in video or images in folder)
+     * @return size
+     */
+    unsigned int getLength() const;
 
     /**
      * Gets sequence comment
      * @return string value
      */
-    std::string getComment();
+    std::string getComment() const;
 
     /**
      * Gets full path to sequence location
      * @return full path
      */
-    std::string getDataLocation();
+    std::string getDataLocation() const;
     
     /**
      * @brief Gets time when sequence was added to dataset
      * @return timestamp
      */
-    time_t getCreatedTime();
+    std::chrono::system_clock::time_point getCreatedTime() const;
 
     /**
      * Sets video's comment
@@ -131,7 +132,7 @@ public:
     bool updateComment(const std::string& comment);
 
 protected:
-    bool preUpdate();
+    virtual bool preUpdate() override;
 
 private:
     Sequence() = delete;
@@ -174,16 +175,16 @@ public:
      * Construct image folder object for iterating through VTApi image folders
      * Object will represent set of image folders specified by their names
      * @param commons base Commons object
-     * @param names list of image folders names
+     * @param names vector of image folders names
      */
-    ImageFolder(const Commons& commons, const std::list<std::string>& names);
+    ImageFolder(const Commons& commons, const std::vector<std::string>& names);
 
     /**
      * Individual next() for image folder
      * @return success
      */
     bool next() override;
-    
+
 private:
     ImageFolder() = delete;
     ImageFolder& operator=(const ImageFolder&) = delete;
@@ -224,9 +225,9 @@ public:
      * Construct video object for iterating through VTApi videos
      * Object will represent set of videos specified by their names
      * @param commons base Commons object
-     * @param names list of sequences videos
+     * @param names vector of sequences videos
      */
-    Video(const Commons& commons, const std::list<std::string>& names);
+    Video(const Commons& commons, const std::vector<std::string>& names);
 
     /**
      * Destructor
@@ -263,34 +264,28 @@ public:
     cv::Mat getNextFrame();
     
     /**
-     * Gets video length in frames
-     * @return video length in frames
-     */
-    size_t getLength();
-    
-    /**
      * Gets video FPS rate
      * @return FPS
      */
-    double getFPS();
+    double getFPS() const;
 
     /**
      * @brief Gets video speed (0-1)
      * @return  speed
      */
-    double getSpeed();
+    double getSpeed() const;
     
     /**
      * Gets video real-world start time
      * @return start time
      */
-    time_t getRealStartTime();
+    std::chrono::system_clock::time_point getRealStartTime() const;
     
     /**
      * Sets video real-world start time
      * @return success
      */
-    bool updateRealStartTime(const time_t& starttime);
+    bool updateRealStartTime(const std::chrono::system_clock::time_point &starttime);
 
 private:
     cv::VideoCapture _capture;   /**< Video file capture */

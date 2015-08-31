@@ -34,43 +34,40 @@ Process::Process(const Process &copy)
 Process::Process(const Commons& commons, int id)
     : KeyValues(commons, def_tab_processes)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
     
     if (id != 0)
-        context().process = id;
+        _context.process = id;
     
-    select().setOrderBy(def_col_prs_prsid);
+    _select.setOrderBy(def_col_prs_prsid);
     
-    if (context().process != 0) {
-        select().whereInt(def_col_prs_prsid, context().process);
+    if (_context.process != 0) {
+        _select.querybuilder().whereInt(def_col_prs_prsid, _context.process);
     }
     else {
-        if (!context().task.empty())
-            select().whereString(def_col_prs_taskname, context().task);
+        if (!_context.task.empty())
+            _select.querybuilder().whereString(def_col_prs_taskname, _context.task);
     }
 }
 
-Process::Process(const Commons& commons, const list<int>& ids)
+Process::Process(const Commons& commons, const vector<int>& ids)
     : KeyValues(commons, def_tab_processes)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
     
-    select().setOrderBy(def_col_prs_prsid);
-    select().whereIntInList(def_col_prs_prsid, ids);
+    _select.setOrderBy(def_col_prs_prsid);
+    _select.querybuilder().whereIntVector(def_col_prs_prsid, ids);
     
-    context().task.clear();
+    _context.task.clear();
 }
-
-Process::~Process()
-{}
 
 bool Process::next()
 {
     bool ret = KeyValues::next();
     if (ret) {
-        context().process = this->getId();
+        _context.process = this->getId();
         return true;
     }
     else {
@@ -93,7 +90,7 @@ InterProcessClient * Process::launchInstance()
 {
     // create temporary config file
     string config_path = Poco::Path::temp();
-    config_path += "vtproc_" + toString<int>(context().process) + ".conf";
+    config_path += "vtproc_" + toString<int>(_context.process) + ".conf";
 
     // serialize configuration to temp directory
     Poco::AutoPtr<Poco::Util::PropertyFileConfiguration> config(
@@ -108,7 +105,7 @@ InterProcessClient * Process::launchInstance()
     // try launching vtmodule
     try {
         VTLOG_DEBUG("Launching process... " +
-                    toString<int>(context().process) + ";" + config_path);
+                    toString<int>(_context.process) + ";" + config_path);
 
         Poco::ProcessHandle hproc = Poco::Process::launch("vtmodule", args);
         VTLOG_DEBUG("Launched PID " + toString<Poco::ProcessHandle::PID>(hproc.id()));
@@ -117,7 +114,7 @@ InterProcessClient * Process::launchInstance()
     }
     catch(exception& e) {
         VTLOG_ERROR("Failed to launch process : " +
-                    toString<int>(context().process) + ";" + e.what());
+                    toString<int>(_context.process) + ";" + e.what());
         Poco::File(config_path).remove();
         updateStateError(e.what());
     }
@@ -126,17 +123,17 @@ InterProcessClient * Process::launchInstance()
 }
 
 
-InterProcessClient *Process::connectToInstance()
+InterProcessClient *Process::connectToInstance()  const
 {
     return new InterProcessClient(*this);
 }
 
-bool Process::isInstanceRunning()
+bool Process::isInstanceRunning() const
 {
     return InterProcessClient(*this).isRunning();
 }
 
-Dataset *Process::getParentDataset()
+Dataset *Process::getParentDataset() const
 {
     Dataset *d = new Dataset(*this);
     if (d->next()) {
@@ -148,15 +145,15 @@ Dataset *Process::getParentDataset()
     }
 }
 
-string Process::getParentTaskName()
+string Process::getParentTaskName() const
 {
-    if (!context().task.empty())
-        return context().task;
+    if (!_context.task.empty())
+        return _context.task;
     else
         return this->getString(def_col_prs_taskname);
 }
 
-Task *Process::getParentTask()
+Task *Process::getParentTask() const
 {
     string taskname = getParentTaskName();
     if (!taskname.empty()) {
@@ -174,7 +171,7 @@ Task *Process::getParentTask()
     }
 }
 
-string vtapi::Process::getParentMethodName()
+string vtapi::Process::getParentMethodName() const
 {
     string mtname;
     Task *ts = getParentTask();
@@ -186,7 +183,7 @@ string vtapi::Process::getParentMethodName()
     return mtname;
 }
 
-Method *Process::getParentMethod()
+Method *Process::getParentMethod() const
 {
     string mtname = this->getParentMethodName();
     if (!mtname.empty()) {
@@ -204,11 +201,11 @@ Method *Process::getParentMethod()
     }
 }
 
-Video *Process::loadAssignedVideos()
+Video *Process::loadAssignedVideos() const
 {
-    list<string> seqnames;
+    vector<string> seqnames;
     KeyValues kv(*this, def_tab_processes_seq);
-    kv.select().whereInt(def_col_prss_prsid, context().process);
+    kv._select.querybuilder().whereInt(def_col_prss_prsid, _context.process);
     while(kv.next()) {
         seqnames.push_back(kv.getString(def_col_prss_seqname));
     }
@@ -216,11 +213,11 @@ Video *Process::loadAssignedVideos()
     return new Video(*this, seqnames);
 }
 
-ImageFolder *Process::loadAssignedImageFolders()
+ImageFolder *Process::loadAssignedImageFolders() const
 {
-    list<string> seqnames;
+    vector<string> seqnames;
     KeyValues kv(*this, def_tab_processes_seq);
-    kv.select().whereInt(def_col_prss_prsid, context().process);
+    kv._select.querybuilder().whereInt(def_col_prss_prsid, _context.process);
     while(kv.next()) {
         seqnames.push_back(kv.getString(def_col_prss_seqname));
     }
@@ -228,16 +225,17 @@ ImageFolder *Process::loadAssignedImageFolders()
     return new ImageFolder(*this, seqnames);
 }
 
-TaskProgress *Process::lockAssignedSequence(const string &seqname)
+TaskProgress *Process::acquireSequenceLock(const string &seqname) const
 {
     if (!seqname.empty() && !TaskProgress(*this, this->getParentTaskName(), seqname).next()) {
         Insert i(*this, def_tab_tasks_seq);
-        i.keyString(def_col_tsd_taskname, this->getParentTaskName());
-        i.keyString(def_col_tsd_seqname, seqname);
-        i.keyInt(def_col_tsd_prsid, context().process);
+        i.querybuilder().keyString(def_col_tsd_taskname, this->getParentTaskName());
+        i.querybuilder().keyString(def_col_tsd_seqname, seqname);
+        i.querybuilder().keyInt(def_col_tsd_prsid, _context.process);
         if (i.execute()) {
-            TaskProgress *prog = new TaskProgress(*this, this->getParentTaskName(), seqname);
-            if (!prog->next()) vt_destruct(prog);
+            TaskProgress *prog = new TaskProgress(*this, this->getParentTaskName(), seqname, true);
+            if (!prog->next())
+                vt_destruct(prog);
             return prog;
         }
     }
@@ -245,37 +243,33 @@ TaskProgress *Process::lockAssignedSequence(const string &seqname)
     return NULL;
 }
 
-bool Process::unlockAssignedSequence(const string &seqname)
-{
-    Delete d(*this, def_tab_tasks_seq);
-    return d.whereString(def_col_tsd_taskname, this->getParentTaskName()) &&
-            d.whereString(def_col_tsd_seqname, seqname) &&
-            d.execute();
-}
-
-
 //////////////////////////////////////////////////
 // getters - SELECT
 //////////////////////////////////////////////////
 
-int Process::getId()
+int Process::getId() const
 {
     return this->getInt(def_col_prs_prsid);
 }
 
-ProcessState *Process::getState()
+ProcessState Process::getState() const
 {
     return this->getProcessState(def_col_prs_state);
 }
 
-int Process::getInstancePID()
+int Process::getInstancePID() const
 {
     return this->getInt(def_col_prs_pid);
 }
 
-int Process::getInstancePort()
+std::string Process::getInstanceName() const
 {
-    return this->getInt(def_col_prs_port);
+    return this->getString(def_col_prs_ipcname);
+}
+
+chrono::system_clock::time_point Process::getCreatedTime() const
+{
+    return this->getTimestamp(def_col_prs_created);
 }
 
 //////////////////////////////////////////////////
@@ -284,10 +278,10 @@ int Process::getInstancePort()
 
 bool Process::preUpdate()
 {
-    return update().whereInt(def_col_prs_prsid, context().process);
+    return update().querybuilder().whereInt(def_col_prs_prsid, _context.process);
 }
 
-bool Process::updateState(const ProcessState& state)
+bool Process::updateState(const ProcessState& state, bool execute)
 {
     bool retval = true;
     
@@ -297,12 +291,12 @@ bool Process::updateState(const ProcessState& state)
     {
     case ProcessState::STATUS_RUNNING:
         retval &= updateFloat(def_col_prs_pstate_progress, state.progress);
-        retval &= updateString(def_col_prs_pstate_curritem, state.currentItem);
+        retval &= updateString(def_col_prs_pstate_curritem, state.current_item);
         break;
     case ProcessState::STATUS_FINISHED:
         break;
     case ProcessState::STATUS_ERROR:
-        retval &= updateString(def_col_prs_pstate_errmsg, state.lastError);
+        retval &= updateString(def_col_prs_pstate_errmsg, state.last_error);
         break;
     case ProcessState::STATUS_SUSPENDED:
         break;
@@ -311,34 +305,30 @@ bool Process::updateState(const ProcessState& state)
         break;
     }
 
-    if (retval) {
+    if (retval && execute)
         retval = updateExecute();
-    }
-    else {
-        preUpdate();
-    }
 
     return retval;
 }
 
-bool Process::updateStateRunning(float progress, const string& currentItem)
+bool Process::updateStateRunning(double progress, const string& currentItem)
 {
-    return updateState(ProcessState(ProcessState::STATUS_RUNNING, progress, currentItem));
+    return updateState(ProcessState(ProcessState::STATUS_RUNNING, progress, currentItem), true);
 }
 
 bool Process::updateStateSuspended()
 {
-    return updateState(ProcessState(ProcessState::STATUS_SUSPENDED, 0, string()));
+    return updateState(ProcessState(ProcessState::STATUS_SUSPENDED, 0, string()), true);
 }
 
 bool Process::updateStateFinished()
 {
-    return updateState(ProcessState(ProcessState::STATUS_FINISHED, 0, string()));
+    return updateState(ProcessState(ProcessState::STATUS_FINISHED, 0, string()), true);
 }
 
 bool Process::updateStateError(const string& lastError)
 {
-    return updateState(ProcessState(ProcessState::STATUS_ERROR, 0, lastError));
+    return updateState(ProcessState(ProcessState::STATUS_ERROR, 0, lastError), true);
 }
 
 bool Process::updateInstancePID(int pid)
@@ -346,9 +336,9 @@ bool Process::updateInstancePID(int pid)
     return this->updateInt(def_col_prs_pid, pid);
 }
 
-bool Process::updateInstancePort(int port)
+bool Process::updateInstanceName(const string &name)
 {
-    return this->updateInt(def_col_prs_port, port);
+    return this->updateString(def_col_prs_ipcname, name);
 }
 
 //////////////////////////////////////////////////
@@ -357,7 +347,7 @@ bool Process::updateInstancePort(int port)
 
 void Process::filterByTask(const string &taskname)
 {
-    select().whereString(def_col_prs_taskname, taskname);
+    _select.querybuilder().whereString(def_col_prs_taskname, taskname);
 }
 
 

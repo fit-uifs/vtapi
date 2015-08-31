@@ -3,6 +3,7 @@
 #include <vtapi/common/global.h>
 #include <vtapi/common/exception.h>
 #include <vtapi/common/defs.h>
+#include <vtapi/queries/delete.h>
 #include <vtapi/queries/predefined.h>
 #include <vtapi/data/intervaloutput.h>
 
@@ -13,126 +14,53 @@ namespace vtapi {
 
 IntervalOutput::IntervalOutput(const Commons &commons,
                                const string &sequence,
-                               const string &output)
-    : Commons(commons, false)
+                               const string &output,
+                               unsigned int cache_limit)
+    : Commons(commons, false), _cache_limit(cache_limit)
 {
     if (!sequence.empty())
-        context().sequence = sequence;
+        _context.sequence = sequence;
     if (!output.empty())
-        context().selection = output;
+        _context.selection = output;
 
-    if (context().dataset.empty() ||
-        context().task.empty() ||
-        context().sequence.empty() ||
-        context().selection.empty())
+    if (_context.dataset.empty() ||
+        _context.task.empty() ||
+        _context.sequence.empty() ||
+        _context.selection.empty())
     {
         string error = "cannot create interval output without dataset, task, sequence or output table";
         throw BadConfigurationException(error);
     }
 }
 
-
-IntervalOutput::~IntervalOutput()
-{
-    discard();
-}
-
 bool IntervalOutput::newInterval(int t1, int t2)
 {
     bool ret = true;
 
-    Insert *insert = new Insert(*this, context().selection);
-    ret &= insert->keyString(def_col_int_taskname, context().task);
-    ret &= insert->keyString(def_col_int_seqname, context().sequence);
-    ret &= insert->keyInt(def_col_int_t1, t1);
-    ret &= insert->keyInt(def_col_int_t2, t2);
+    if (_cache_limit > 0 && _inserts.size() >= _cache_limit)
+        ret = this->commit();
 
-    if (ret)
-        _inserts.push_back(insert);
-    else
-        vt_destruct(insert);
+    if (ret) {
+        _inserts.push_back(std::shared_ptr<Insert>(new Insert(*this, _context.selection)));
+        Insert & i = last_insert();
+
+        ret &= i.querybuilder().keyString(def_col_int_taskname, _context.task);
+        ret &= i.querybuilder().keyString(def_col_int_seqname, _context.sequence);
+        ret &= i.querybuilder().keyInt(def_col_int_t1, t1);
+        ret &= i.querybuilder().keyInt(def_col_int_t2, t2);
+
+        if (!ret) _inserts.pop_back();
+    }
 
     return ret;
 }
 
-bool IntervalOutput::setString(const string &key, const string &value)
+Insert & IntervalOutput::last_insert()
 {
     if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyString(key, value);
-}
+        throw RuntimeException("Invalid interval INSERT: call newInterval() first");
 
-bool IntervalOutput::setStringArray(const string &key, string *values, int size)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyStringA(key, values, size);
-}
-
-bool IntervalOutput::setBool(const string &key, bool value)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyBool(key, value);
-}
-
-bool IntervalOutput::setInt(const string &key, int value)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyInt(key, value);
-}
-
-bool IntervalOutput::setIntArray(const string &key, int *values, int size)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyIntA(key, values, size);
-}
-
-bool IntervalOutput::setFloat(const string &key, double value)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyFloat8(key, value);
-}
-
-bool IntervalOutput::setFloatArray(const string &key, double *values, int size)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyFloat8A(key, values, size);
-}
-
-bool IntervalOutput::setTimestamp(const string &key, const time_t value)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyTimestamp(key, value);
-}
-
-bool IntervalOutput::setCvMat(const string &key, const cv::Mat &value)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyCvMat(key, value);
-}
-
-bool IntervalOutput::setIntervalEvent(const string &key, const IntervalEvent &value)
-{
-    if (_inserts.empty())
-        return false;
-    else
-        return _inserts.back()->keyIntervalEvent(key, value);
+    return *_inserts.back();
 }
 
 bool IntervalOutput::commit()
@@ -140,10 +68,7 @@ bool IntervalOutput::commit()
     bool ret = true;
 
     if (_inserts.size() > 0) {
-        bool transaction = false;
-
-        if (QueryBeginTransaction(*this).execute())
-            transaction = true;
+        bool transaction = QueryBeginTransaction(*this).execute();
 
         for (auto insert : _inserts) {
             if (!(ret = insert->execute())) break;
@@ -156,17 +81,26 @@ bool IntervalOutput::commit()
                 QueryRollbackTransaction(*this).execute();
         }
 
-        if (ret) discard();
+        if (ret) discard(true);
     }
 
     return ret;
 }
 
-void IntervalOutput::discard()
+bool IntervalOutput::discard(bool only_cached)
 {
-    for (auto insert : _inserts)
-        delete insert;
+    bool ret = true;
+
     _inserts.clear();
+
+    if (!only_cached) {
+        Delete d(*this, _context.selection);
+        ret &= d.querybuilder().whereString(def_col_int_taskname, _context.task);
+        ret &= d.querybuilder().whereString(def_col_int_seqname, _context.sequence);
+        if (ret) ret &= d.execute();
+    }
+
+    return ret;
 }
 
 

@@ -3,6 +3,7 @@
 
 namespace vtapi {
 
+const int def_select_limit = 10000;
 
 const std::string def_val_video = "video";
 const std::string def_val_images = "images";
@@ -57,7 +58,7 @@ const std::string def_col_tsd_finished = "finished";
 const std::string def_col_seq_name = "seqname";
 const std::string def_col_seq_location = "seqlocation";
 const std::string def_col_seq_type = "seqtyp";
-const std::string def_col_seq_vidlength = "vid_length";
+const std::string def_col_seq_length = "seqlength";
 const std::string def_col_seq_vidfps = "vid_fps";
 const std::string def_col_seq_vidspeed = "vid_speed";
 const std::string def_col_seq_vidtime = "vid_time";
@@ -78,7 +79,7 @@ const std::string def_col_prs_prsid = "prsid";
 const std::string def_col_prs_taskname = "taskname";
 const std::string def_col_prs_state = "state";
 const std::string def_col_prs_pid = "ipc_pid";
-const std::string def_col_prs_port = "ipc_port";
+const std::string def_col_prs_ipcname = "ipc_name";
 const std::string def_col_prs_created = "created";
 
 const std::string def_col_prs_pstate_status = "state,status";

@@ -41,12 +41,12 @@ private:
 class InterProcessServer : public InterProcessBase
 {
 public:
-    typedef enum
+    enum Command
     {
         CommandSuspend,
         CommandResume,
         CommandStop
-    } Command;
+    };
 
     typedef void (*fnCommandCallback)(Command command);
 

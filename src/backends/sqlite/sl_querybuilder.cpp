@@ -13,38 +13,25 @@ using namespace std;
 
 namespace vtapi {
 
-SLQueryBuilder::SLQueryBuilder(SLConnection &connection)
-    : QueryBuilder (connection)
-{
-    _pquery_param  = createQueryParam();
-}
-
-SLQueryBuilder::~SLQueryBuilder()
-{
-    destroyQueryParam(_pquery_param);
-    destroyKeys();
-}
 
 void SLQueryBuilder::reset()
 {
-    _opers.clear();
-    destroyKeys();
     destroyQueryParam(_pquery_param);
 }
 
-void *SLQueryBuilder::createQueryParam()
+void *SLQueryBuilder::createQueryParam() const
 {
     return (void*) new SLparam();
 }
 
-void SLQueryBuilder::destroyQueryParam(void *param)
+void SLQueryBuilder::destroyQueryParam(void *param) const
 {
     if (param) {
         delete (SLparam *) param;
     }
 }
 
-void *SLQueryBuilder::duplicateQueryParam(void *param)
+void *SLQueryBuilder::duplicateQueryParam(void *param) const
 {
     if (param) {
         SLparam *p = (SLparam *) createQueryParam();
@@ -56,550 +43,367 @@ void *SLQueryBuilder::duplicateQueryParam(void *param)
     }
 }
 
-void SLQueryBuilder::destroyKeys()
+string SLQueryBuilder::getGenericQuery() const
 {
-    for (TKeyValues::iterator it = _keyValuesMain.begin(); it != _keyValuesMain.end(); ++it) {
-        vt_destruct(*it);
-    }
-    for (TKeyValues::iterator it = _keyValuesWhere.begin(); it != _keyValuesWhere.end(); ++it) {
-        vt_destruct(*it);
-    }
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getGenericQuery()
+string SLQueryBuilder::getSelectQuery(const string &groupby, const string &orderby, int limit, int offset) const
 {
-    ((SLparam *) _pquery_param)->database = _defaultSchema;
-    return _init_string;
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getSelectQuery(const string& groupby, const string& orderby,
-                                      const int limit, const int offset)
+string SLQueryBuilder::getInsertQuery() const
 {
-    string queryString;
-    string columnsStr;
-    string tablesStr;
-    string whereStr;
-
-    ((SLparam *) _pquery_param)->database = _defaultSchema;
-    if (this->_keyValuesMain.empty()) return _init_string; // in case of a direct query
-
-    // go through keys
-    for (int i = 0; i < _keyValuesMain.size(); i++) {
-        string tmpTable  = !_keyValuesMain[i]->m_from.empty() ? _keyValuesMain[i]->m_from : _defaultTable;
-        string tmpColumn = _keyValuesMain[i]->m_key;
-        size_t dotPos    = tmpTable.find(".");
-        bool addTable    = true;
-
-        // get escaped table
-        if (dotPos != string::npos && dotPos != tmpTable.length() - 1) {
-            tmpTable = tmpTable.substr(dotPos + 1, string::npos);
-        }
-        tmpTable = this->escapeIdent(tmpTable);
-        // get and add escaped column
-        if (tmpColumn.empty() || tmpColumn.compare("*") == 0) {
-            columnsStr += tmpTable + ".*, ";
-        }
-        else {
-            columnsStr += tmpTable + "." + this->escapeIdent(tmpColumn);
-            columnsStr += " AS " + this->escapeLiteral(tmpColumn) + ", ";
-        }
-        // check if table already exists
-        for (int j = 0; j < i; j++) {
-            if (_keyValuesMain[i]->m_from.compare(_keyValuesMain[j]->m_from) == 0 ||
-            (_keyValuesMain[i]->m_from.empty() && _keyValuesMain[j]->m_from.empty())) {
-                addTable = false;
-                break;
-            }
-        }
-        // add table
-        if (addTable) {
-            tablesStr += tmpTable + ", ";
-        }
-    }
-    // erase commas
-    if (!columnsStr.empty())    columnsStr.erase(columnsStr.length() - 2);
-    if (!tablesStr.empty())     tablesStr.erase(tablesStr.length() - 2);
-
-    // construct main part of the query
-    queryString = "SELECT " + columnsStr + "\n FROM " + tablesStr;
-    if (tablesStr.empty() || columnsStr.empty()) {
-        VTLOG_ERROR("Incomplete query : " + queryString);
-    }
-    // construct WHERE and the rest of it all
-    for (int i = 0; i < _keyValuesWhere.size(); i++) {
-        if (!whereStr.empty()) whereStr += " AND ";
-        whereStr += this->escapeColumn(_keyValuesWhere[i]->m_key, _keyValuesWhere[i]->m_from);
-        whereStr += _opers[i];
-        whereStr += escapeLiteral(_keyValuesWhere[i]->getValue());
-    }
-    if (!whereStr.empty()) {
-        queryString += "\n WHERE " + whereStr;
-    }
-
-    if (!groupby.empty()) {
-        queryString += "\n GROUP BY " + groupby;
-    }
-
-    if (!orderby.empty()) {
-        queryString += "\n ORDER BY " + orderby;
-    }
-    if (limit > 0) {
-        queryString += "\n LIMIT " + toString<int>(limit);
-    }
-
-    if (offset > 0) {
-        queryString += "\n OFFSET " + toString<int>(offset);
-    }
-    queryString += ";";
-    return (queryString);
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getInsertQuery()
+string SLQueryBuilder::getUpdateQuery() const
 {
-    string queryString;
-    string dstTable;
-    string intoStr;
-    string valuesStr;
-    size_t dotPos;
-
-    ((SLparam *) _pquery_param)->database = _defaultSchema;
-    if (this->_keyValuesMain.empty()) return _init_string; // in case of a direct query
-
-    // in case we're lazy, we have the table specified in initString or selection
-    dstTable = (!_init_string.empty()) ? _init_string : _defaultTable;
-
-    // go through keys
-    for (int i = 0; i < this->_keyValuesMain.size(); ++i) {
-        if (dstTable.empty()) dstTable = this->_keyValuesMain[i]->m_from;
-        intoStr     += escapeIdent(this->_keyValuesMain[i]->m_key) + ", ";
-        valuesStr   += escapeLiteral(_keyValuesMain[i]->getValue()) + ", ";
-    }
-    // this is to remove ending separators
-    intoStr.erase(intoStr.length() - 2);
-    valuesStr.erase(valuesStr.length() - 2);
-
-    dotPos = dstTable.find(".");
-    // add the dataset selected and escape table
-    if (dotPos == string::npos) {
-        dstTable = escapeColumn(dstTable, _defaultSchema);
-    }
-    else {
-        dstTable = escapeColumn(dstTable.substr(dotPos + 1, string::npos), _defaultSchema);
-    }
-    queryString = "INSERT INTO " + dstTable + " (" + intoStr + ")\n VALUES (" + valuesStr + ");";
-    return queryString;
-    return "";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getUpdateQuery()
+string SLQueryBuilder::getDeleteQuery() const
 {
-    string queryString;
-    string dstTable;
-    string setStr;
-    string whereStr;
-    size_t dotPos;
-
-    ((SLparam *) _pquery_param)->database = _defaultSchema;
-    if (this->_keyValuesMain.empty()) return _init_string; // in case of a direct query
-
-    // in case we're lazy, we have the table specified in initString or selection
-    dstTable = (!_init_string.empty()) ? _init_string : _defaultTable;
-
-    // go through keys
-    for (int i = 0; i < this->_keyValuesMain.size(); ++i) {
-        if (dstTable.empty()) dstTable = this->_keyValuesMain[i]->m_from;
-        setStr  += escapeIdent(this->_keyValuesMain[i]->m_key);
-        setStr  += "=" + escapeLiteral(_keyValuesMain[i]->getValue()) + ", ";
-    }
-    // this is to remove ending separators
-    setStr.erase(setStr.length() - 2);
-
-    dotPos = dstTable.find(".");
-    // add the dataset selected and escape table
-    if (dotPos == string::npos) {
-        dstTable = escapeColumn(dstTable, _defaultSchema);
-    }
-    else {
-        dstTable = escapeColumn(dstTable.substr(dotPos + 1, string::npos), _defaultSchema);
-    }
-    //construct main part of the query
-    queryString = "UPDATE " + dstTable + "\n SET " + setStr;
-    // construct WHERE clause
-    for (int i = 0; i < _keyValuesWhere.size(); i++) {
-        if (!whereStr.empty()) whereStr += " AND ";
-        whereStr += this->escapeColumn(_keyValuesWhere[i]->m_key, _keyValuesWhere[i]->m_from);
-        whereStr += _opers[i];
-        whereStr += escapeLiteral(_keyValuesWhere[i]->getValue());
-    }
-    if (!whereStr.empty()) {
-        queryString += "\n WHERE " + whereStr;
-    }
-    queryString += ";";
-    return queryString;
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getDeleteQuery()
+string SLQueryBuilder::getCountQuery() const
 {
-    return "";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getCountQuery()
+string SLQueryBuilder::getBeginQuery() const
 {
-    string queryString;
-
-    //    size_t fromPos = initString.find(" FROM ");
-    //    if (fromPos != string::npos) {
-    //        queryString = "SELECT COUNT(*) AS count" + initString.substr(fromPos);
-    //    }
-    //    else {
-    //        queryString = DEF_NO_QUERY;
-    //    }
-
-    return queryString;
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getBeginQuery()
+string SLQueryBuilder::getCommitQuery() const
 {
-    return "BEGIN TRANSACTION;";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getCommitQuery()
+string SLQueryBuilder::getRollbackQuery() const
 {
-    return "COMMIT TRANSACTION;";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getRollbackQuery()
+string SLQueryBuilder::getDatasetCreateQuery(const string &name, const string &location, const string &friendly_name, const string &description) const
 {
-    return "ROLLBACK TRANSACTION;";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getDatasetCreateQuery(
-                                             const string& name,
-                                             const string& location,
-                                             const string& friendly_name,
-                                             const string& description)
+string SLQueryBuilder::getDatasetResetQuery(const string &name) const
 {
-    return "";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getDatasetResetQuery(const string& name)
+string SLQueryBuilder::getDatasetDeleteQuery(const string &name) const
 {
-    return "";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getDatasetDeleteQuery(const string& name)
+string SLQueryBuilder::getMethodCreateQuery(const string &name, const TaskKeyDefinitions &keys_definition, const TaskParamDefinitions &params_definition, const string &description) const
 {
-    return "";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getMethodCreateQuery(
-                                            const string& name,
-                                            const MethodKeys keys_definition,
-                                            const MethodParams params_definition,
-                                            const string& description)
+string SLQueryBuilder::getMethodDeleteQuery(const string &name) const
 {
-    return "";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getMethodDeleteQuery(const string& name)
+string SLQueryBuilder::getTaskCreateQuery(const string &name, const string &dsname, const string &mtname, const string &params, const string &prereq_task, const string &outputs) const
 {
-    return "";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getTaskCreateQuery(const string &name,
-                                          const string& dsname,
-                                          const string& mtname,
-                                          const string &params,
-                                          const string& prereq_task,
-                                          const string &outputs)
+string SLQueryBuilder::getTaskDeleteQuery(const string &dsname, const string &taskname) const
 {
-    return "";
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
-string SLQueryBuilder::getTaskDeleteQuery(const string &dsname,
-                                          const string &taskname)
+string SLQueryBuilder::getLastInsertedIdQuery() const
 {
-    return "";
-}
-
-string SLQueryBuilder::getLastInsertedIdQuery()
-{
-    return "";
-}
-
-bool SLQueryBuilder::keyFrom(const string& table, const string& column)
-{
-    if (column.empty()) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("", column, "", table);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::keyString(const string& key, const string& value, const string& from)
-{
-    if (key.empty() || value.empty()) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("text", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::keyStringA(const string& key, string* values, const int size, const string& from)
-{
-    if (key.empty() || !values || size <= 0) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("textA", key, values, size, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return string();
 }
 
 bool SLQueryBuilder::keyBool(const string &key, bool value, const string &from)
 {
-    if (key.empty()) return false;
-    else {
-        TKeyValue<bool> *tk = new TKeyValue<bool>("bool", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyInt(const string& key, int value, const string& from)
+bool SLQueryBuilder::keyChar(const string &key, char value, const string &from)
 {
-    if (key.empty()) return false;
-    else {
-        TKeyValue<int> *tk = new TKeyValue<int>("integer", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyIntA(const string& key, int* values, const int size, const string& from)
+bool SLQueryBuilder::keyString(const string &key, const string &value, const string &from)
 {
-    if (key.empty() || !values || size <= 0) return false;
-    else {
-        TKeyValue<int> *tk = new TKeyValue<int>("integerA", key, values, size, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyFloat(const string& key, float value, const string& from)
+bool SLQueryBuilder::keyStringVector(const string &key, const std::vector<string> &values, const string &from)
 {
-    if (key.empty()) return false;
-    else {
-        TKeyValue<float> *tk = new TKeyValue<float>("float", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyFloatA(const string& key, float* values, const int size, const string& from)
+bool SLQueryBuilder::keyInt(const string &key, int value, const string &from)
 {
-    if (key.empty() || !values || size <= 0) return false;
-    else {
-        TKeyValue<float> *tk = new TKeyValue<float>("floatA", key, values, size, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::keyIntVector(const string &key, const std::vector<int> &values, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::keyInt8(const string &key, long long value, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::keyInt8Vector(const string &key, const std::vector<long long> &values, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::keyFloat(const string &key, float value, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::keyFloatVector(const string &key, const std::vector<float> &values, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
 bool SLQueryBuilder::keyFloat8(const string &key, double value, const string &from)
 {
-    if (key.empty()) return false;
-    else {
-        TKeyValue<double> *tk = new TKeyValue<double>("float8", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyFloat8A(const string &key, double *values, const int size, const string &from)
+bool SLQueryBuilder::keyFloat8Vector(const string &key, const std::vector<double> &values, const string &from)
 {
-    if (key.empty() || !values || size <= 0) return false;
-    else {
-        TKeyValue<double> *tk = new TKeyValue<double>("float8A", key, values, size, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keySeqtype(const string& key, const string& value, const string& from)
+bool SLQueryBuilder::keyTimestamp(const string &key, const chrono::_V2::system_clock::time_point &value, const string &from)
 {
-    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("seqtype", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyInouttype(const string& key, const string& value, const string& from)
+bool SLQueryBuilder::keyCvMat(const string &key, const cv::Mat &value, const string &from)
 {
-    if (key.empty() || value.empty() || !this->checkInouttype(value)) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("inouttype", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyProcessStatus(const string& key, ProcessState::STATUS_T value, const string& from)
+bool SLQueryBuilder::keyPoint(const string &key, Point value, const string &from)
 {
-    if (key.empty() || value == ProcessState::STATUS_NONE) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("pstatus", key, ProcessState::toStatusString(value), from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from)
+bool SLQueryBuilder::keyPointVector(const string &key, const std::vector<Point> &values, const string &from)
 {
-    if (key.empty()) return false;
-    else {
-        TKeyValue<time_t> *tk = new TKeyValue<time_t>("timestamp", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const string& from)
+bool SLQueryBuilder::keyIntervalEvent(const string &key, const IntervalEvent &value, const string &from)
 {
-    if (key.empty()) return false;
-    else {
-        TKeyValue<cv::Mat> *tk = new TKeyValue<cv::Mat>("cvmat", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& value, const string& from)
+bool SLQueryBuilder::keyProcessStatus(const string &key, ProcessState::Status value, const string &from)
 {
-    if (key.empty()) return false;
-    else {
-        TKeyValue<IntervalEvent> *tk = new TKeyValue<IntervalEvent>("vtevent", key, value, from);
-        _keyValuesMain.push_back(tk);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
-bool SLQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from)
+bool SLQueryBuilder::keyBlob(const string &key, const std::vector<char> &data, const string &from)
 {
-    if (key.empty() || value.empty()) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("text", key, value, from);
-        _keyValuesWhere.push_back(tk);
-        if (value.compare("NULL") == 0 || value.compare("NOT NULL") == 0) _opers.push_back(" IS ");
-        else _opers.push_back(oper);
-        return true;
-    }
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::keySeqtype(const string &key, const string &value, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::keyInouttype(const string &key, const string &value, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
 }
 
 bool SLQueryBuilder::whereBool(const string &key, bool value, const string &oper, const string &from)
 {
-    if (key.empty()) return false;
-    else {
-        TKeyValue<bool> *tk = new TKeyValue<bool>("bool", key, value, from);
-        _keyValuesWhere.push_back(tk);
-        _opers.push_back(oper);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from)
-{
-    if (key.empty()) return false;
-    else {
-        TKeyValue<int> *tk = new TKeyValue<int>("integer", key, value, from);
-        _keyValuesWhere.push_back(tk);
-        _opers.push_back(oper);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::whereFloat(const string& key, const float value, const string& oper, const string& from)
-{
-    if (key.empty()) return false;
-    else {
-        TKeyValue<float> *tk = new TKeyValue<float>("float", key, value, from);
-        _keyValuesWhere.push_back(tk);
-        _opers.push_back(oper);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::whereSeqtype(const string& key, const string& value, const string& oper, const string& from)
-{
-    if (key.empty() || value.empty() || !this->checkSeqtype(value)) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("seqtype", key, value, from);
-        _keyValuesWhere.push_back(tk);
-        _opers.push_back(oper);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::whereInouttype(const string& key, const string& value, const string& oper, const string& from)
-{
-    if (key.empty() || value.empty() || !this->checkInouttype(value)) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("inouttype", key, value, from);
-        _keyValuesWhere.push_back(tk);
-        _opers.push_back(oper);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::whereProcessStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
-{
-    if (key.empty() || value == ProcessState::STATUS_NONE) return false;
-    else {
-        TKeyValue<string> *tk = new TKeyValue<string>("pstatus", key, ProcessState::toStatusString(value), from);
-        _keyValuesWhere.push_back(tk);
-        _opers.push_back(oper);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
-{
-    if (key.empty()) return false;
-    else {
-        TKeyValue<time_t> *tk = new TKeyValue<time_t>("timestamp", key, value, from);
-        _keyValuesWhere.push_back(tk);
-        _opers.push_back(oper);
-        return true;
-    }
-}
-
-bool SLQueryBuilder::whereTimeRange(const string& key_start, const string& key_length, const time_t& value_start, const uint value_length, const string& oper, const string& from)
-{
+    throw RuntimeException("unimplemented");
     return false;
 }
 
-bool SLQueryBuilder::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from)
+bool SLQueryBuilder::whereChar(const string &key, char value, const string &oper, const string &from)
 {
+    throw RuntimeException("unimplemented");
     return false;
 }
 
-bool SLQueryBuilder::whereExpression(const string& expression, const string& value, const string& oper)
+bool SLQueryBuilder::whereString(const string &key, const string &value, const string &oper, const string &from)
 {
+    throw RuntimeException("unimplemented");
     return false;
 }
 
-bool SLQueryBuilder::whereStringList(const string &key, const std::list<string> &values, const string &oper, const string &from)
+bool SLQueryBuilder::whereStringVector(const string &key, const std::vector<string> &values, const string &oper, const string &from)
 {
+    throw RuntimeException("unimplemented");
     return false;
 }
 
-bool SLQueryBuilder::whereIntList(const string &key, const std::list<int> &values, const string &oper, const string &from)
+bool SLQueryBuilder::whereInt(const string &key, int value, const string &oper, const string &from)
 {
+    throw RuntimeException("unimplemented");
     return false;
 }
+
+bool SLQueryBuilder::whereIntVector(const string &key, const std::vector<int> &values, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereInt8(const string &key, long long value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereInt8Vector(const string &key, const std::vector<long long> &values, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereFloat(const string &key, float value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereFloatVector(const string &key, const std::vector<float> &values, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereFloat8(const string &key, double value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereFloat8Vector(const string &key, const std::vector<double> &values, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereTimestamp(const string &key, const chrono::_V2::system_clock::time_point &value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+
+}
+
+bool SLQueryBuilder::wherePoint(const string &key, Point value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+
+}
+
+bool SLQueryBuilder::wherePointVector(const string &key, const std::vector<Point> &values, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+
+}
+
+bool SLQueryBuilder::whereProcessStatus(const string &key, ProcessState::Status value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+
+}
+
+bool SLQueryBuilder::whereTimeRange(const string &key_start, const string &key_length, const chrono::_V2::system_clock::time_point &value_start, const chrono::_V2::system_clock::time_point &value_end, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+
+}
+
+bool SLQueryBuilder::whereRegion(const string &key, const Box &value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+
+}
+
+bool SLQueryBuilder::whereExpression(const string &expression, const string &value, const string &oper)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereSeqtype(const string &key, const string &value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereInouttype(const string &key, const string &value, const string &oper, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+
 
 string SLQueryBuilder::escapeColumn(const string& key, const string& table)
 {

@@ -5,22 +5,13 @@
 #include "pg_resultset.h"
 
 #define PGRES ((PGresult *)_res)
-
+#define CHECK_PGRES\
+    if (!PGRES) throw RuntimeException("Result set uninitialized, call next()?");
 
 using namespace std;
 
 namespace vtapi {
 
-
-PGResultSet::PGResultSet(DBTYPES_MAP *dbtypes)
-    : ResultSet(dbtypes)
-{
-}
-
-PGResultSet::~PGResultSet()
-{
-    clear();
-}
 
 void PGResultSet::newResult(void *res)
 {
@@ -28,17 +19,19 @@ void PGResultSet::newResult(void *res)
     _res = res;
 }
 
-int PGResultSet::countRows()
+int PGResultSet::countRows() const
 {
-    return PGRES ? PQntuples(PGRES) : -1;
+    CHECK_PGRES;
+    return PQntuples(PGRES);
 }
 
-int PGResultSet::countCols()
+int PGResultSet::countCols() const
 {
-    return PGRES ? PQnfields(PGRES) : -1;
+    CHECK_PGRES;
+    return PQnfields(PGRES);
 }
 
-bool PGResultSet::isOk()
+bool PGResultSet::isOk() const
 {
     return PGRES ? true : false;
 }
@@ -51,204 +44,194 @@ void PGResultSet::clear()
     }
 }
 
-TKey PGResultSet::getKey(int col)
+TKey PGResultSet::getKey(int col) const
 {
-    string name = PQfname(PGRES, col);
-    string type = getKeyType(col);
-
-    return TKey(type, name, 0, "");
+    CHECK_PGRES;
+    return TKey(getKeyType(col), PQfname(PGRES, col), string());
 }
 
-TKeys* PGResultSet::getKeys()
+TKeys PGResultSet::getKeys() const
 {
-    TKeys* keys = new TKeys;
+    CHECK_PGRES;
+    TKeys keys;
 
     int cols = PQnfields(PGRES);
-    for (int col = 0; col < cols; col++) {
-        keys->push_back(getKey(col));
-    }
+    for (int col = 0; col < cols; col++)
+        keys.push_back(getKey(col));
+
     return keys;
 }
 
-string PGResultSet::getKeyType(const int col)
+string PGResultSet::getKeyType(int col) const
 {
-    if (_pdbtypes) {
-        DBTYPES_MAP::iterator it = _pdbtypes->find(PQftype(PGRES, col));
-        if (it != _pdbtypes->end()) {
-            return (*it).second.name;
-        }
-    }
-
-    return string();
+    CHECK_PGRES;
+    return _dbtypes.type(PQftype(PGRES, col))._name;
 }
 
-short PGResultSet::getKeyTypeLength(const int col, const short def)
+short PGResultSet::getKeyTypeLength(int col, short def) const
 {
-    short length = def;
-    if (_pdbtypes) {
-        DBTYPES_MAP_IT it = _pdbtypes->find(PQftype(PGRES, col));
-        if (it != _pdbtypes->end()) {
-            length = DBTYPE_GETLENGTH((*it).second.type);
-        }
-    }
-
-    return length;
+    CHECK_PGRES;
+    return _dbtypes.type(PQftype(PGRES, col))._length;
 }
 
-int PGResultSet::getKeyIndex(const string& key)
+int PGResultSet::getKeyIndex(const string& key) const
 {
-    if (!PGRES) {
-        VTLOG_ERROR("Result set doesn't exist, failed to find table key: " + key);
-        return -1;
-    }
-    else {
-        int idx = PQfnumber(PGRES, key.c_str());
-        if (idx < 0)
-            VTLOG_ERROR("Failed to find table key: " + key);
-        return idx;
-    }
+    CHECK_PGRES;
+
+    int idx = PQfnumber(PGRES, key.c_str());
+    if (idx < 0) throw RuntimeException("Failed to find key: " + key);
+    return idx;
 }
 
-// =============== SINGLE VALUES / ARRAYS / VECTORS TEMPLATES ===================
+// =============== SINGLE VALUES / VECTORS TEMPLATES ===================
 
 template<typename TDB, typename TOUT>
-TOUT PGResultSet::getSingleValue(const int col, const char *def)
+TOUT PGResultSet::getSingleValue(int col, const char *def) const
 {
+    CHECK_PGRES;
     TDB value = { 0 };
 
     if (_pos < 0) {
-        VTLOG_ERROR("Result set not initialized, failed to get value");
+        throw RuntimeException("Failed to get value: result set position is invalid");
     }
     else if (col < 0) {
-        VTLOG_ERROR("Invalid column, failed to get value");
+        throw RuntimeException("Failed to get value: colum index is invalid");
     }
     else if (!PQgetf(PGRES, _pos, def, col, &value)) {
-        VTLOG_ERROR(string("Value is not a ") + def);
+        string type = getKeyType(col);
+        throw RuntimeException(string("Failed to get value: type mismatch ") + def + "!=" + type);
     }
 
-    return (TOUT) value;
+    return static_cast<TOUT>(value);
 }
 
 template<typename TDB, typename TOUT>
-TOUT *PGResultSet::getArray(const int col, int& size, const char *def)
+vector<TOUT> PGResultSet::getVector(int col, const char *def) const
 {
-    TOUT *values = NULL;
+    CHECK_PGRES;
+    vector<TOUT> values;
     PGarray tmp = { 0 };
 
-    do {
-        char defArr[128];
+    try
+    {
+        char defArr[64];
         sprintf(defArr, "%s[]", def);
 
         if (_pos < 0) {
-            VTLOG_ERROR("Result set not initialized, failed to get value");
-            break;
+            throw RuntimeException("Failed to get value: result set position is invalid");
         }
         else if (col < 0) {
-            VTLOG_ERROR("Invalid column, failed to get value");
-            break;
+            throw RuntimeException("Failed to get value: colum index is invalid");
         }
         else if (!PQgetf(PGRES, _pos, defArr, col, &tmp)) {
-            VTLOG_ERROR( string("Value is not an array of ") + def);
-            break;
-        }
-
-        size = PQntuples(tmp.res);
-        if (size == 0) break;
-
-        values = new TOUT [size];
-        if (!values) break;
-
-        for (int i = 0; i < size; i++) {
-            TDB value = { 0 };
-            if (!PQgetf(tmp.res, i, def, 0, &value)) {
-                VTLOG_ERROR( string("Unexpected value in array of ") + def);
-                vt_destructall(values);
-                break;
-            }
-            else {
-                values[i] = (TOUT) value;
-            }
-        }
-    } while (0);
-
-    if (!values) size = 0;
-    if (tmp.res) PQclear(tmp.res);
-
-    return values;
-}
-
-template<typename TDB, typename TOUT>
-vector<TOUT> *PGResultSet::getVector(const int col, const char *def)
-{
-    vector<TOUT> *values = NULL;
-    PGarray tmp = { 0 };
-
-    do {
-        char defArr[128];
-        sprintf(defArr, "%s[]", def);
-
-        if (_pos < 0) {
-            VTLOG_ERROR("Result set not initialized, failed to get value");
-        }
-        else if (col < 0) {
-            VTLOG_ERROR("Invalid column, failed to get value");
-        }
-        else if (!PQgetf(PGRES, _pos, defArr, col, &tmp)) {
-            VTLOG_ERROR( string("Value is not an array of ") + def);
-            break;
+            string type = getKeyType(col);
+            throw RuntimeException(string("Failed to get value: type mismatch ") + def + "!=" + type);
         }
 
         int size = PQntuples(tmp.res);
-        if (size == 0) break;
-
-        values = new vector<TOUT>;
-        if (!values) break;
-
+        values.resize(size);
         for (int i = 0; i < size; i++) {
-            TDB value = { 0 };
-            if (!PQgetf(tmp.res, i, def, 0, &value)) {
-                VTLOG_ERROR( string("Unexpected value in array of ") + def);
-                vt_destruct(values);
-                break;
-            }
-            else {
-                values->push_back((TOUT) value);
-            }
+            TDB value;
+            if (!PQgetf(tmp.res, i, def, 0, &value))
+                throw RuntimeException(string("Failed to get value: unexpected value in array of: ") + def);
+            else
+                values[i] = static_cast<TOUT>(value);
         }
-    } while (0);
-
-    if (tmp.res) PQclear(tmp.res);
+    }
+    catch (RuntimeException &e)
+    {
+        if (tmp.res) PQclear(tmp.res);
+        throw;
+    }
 
     return values;
 }
 
-// =============== GETTERS FOR CHAR, CHAR ARRAYS AND STRINGS ===================
 
-char PGResultSet::getChar(const int col)
-{
-    return getSingleValue<PGchar, char>(col, "%char");
-}
+// =============== GETTERS  ===============
 
-string PGResultSet::getString(const int col)
-{
-    // no conversions with libpqtypes, just get the value
-    char *value = PQgetvalue(PGRES, _pos, col);
-    return value ? value : "";
-}
 
-// =============== GETTERS FOR INTEGERS OR ARRAYS OF INTEGERS ==================
-
-bool PGResultSet::getBool(const int col)
+bool PGResultSet::getBool(int col) const
 {
     return getSingleValue<PGbool, bool>(col, "%bool");
 }
 
-int PGResultSet::getInt(const int col)
+char PGResultSet::getChar(int col) const
 {
-    return (int) getInt8(col);
+    return getSingleValue<PGchar, char>(col, "%char");
 }
 
-long long PGResultSet::getInt8(const int col)
+string PGResultSet::getString(int col) const
+{
+    CHECK_PGRES;
+    string value;
+
+    if (_pos < 0) {
+        throw RuntimeException("Failed to get value: result set position is invalid");
+    }
+    else if (col < 0) {
+        throw RuntimeException("Failed to get value: colum index is invalid");
+    }
+    else {
+        char *tmp = PQgetvalue(PGRES, _pos, col);
+        if (tmp) value = tmp;
+    }
+
+    return value;
+}
+
+vector<string> PGResultSet::getStringVector(int col) const
+{
+    // TODO: string vector
+    return vector<string>();
+}
+
+int PGResultSet::getInt(int col) const
+{
+    return static_cast<int>(getInt8(col));
+}
+
+vector<int> PGResultSet::getIntVector(int col) const
+{
+    vector<int> values;
+
+    switch (getKeyTypeLength(col, 4))
+    {
+    case -1:    // numeric
+    {
+        int size = 0;
+        vector<PGnumeric> vals = getVector<PGnumeric, PGnumeric>(col, "%numeric");
+        values.resize(vals.size());
+        for (int i = 0; i < size; i++)
+            values[i] = std::atoi(vals[i]);
+        break;
+    }
+    case 2:
+    {
+        values = getVector<PGint2, int>(col, "%int2");
+        break;
+    }
+    case 4:
+    {
+        values = getVector<PGint4, int>(col, "%int4");
+        break;
+    }
+    case 8:
+    {
+        values = getVector<PGint8, int>(col, "%int8");
+        break;
+    }
+    default:
+    {
+        throw RuntimeException("Value has unknown length");
+        break;
+    }
+    }
+
+    return values;
+}
+
+long long PGResultSet::getInt8(int col) const
 {
     long long value = 0;
 
@@ -277,7 +260,7 @@ long long PGResultSet::getInt8(const int col)
     }
     default:
     {
-        VTLOG_WARNING("Value has unknown length");
+        throw RuntimeException("Value has unknown length");
         break;
     }
     }
@@ -285,153 +268,18 @@ long long PGResultSet::getInt8(const int col)
     return value;
 }
 
-int* PGResultSet::getIntA(const int col, int& size)
+vector<long long> PGResultSet::getInt8Vector(int col) const
 {
-    int *values = NULL;
-
-    switch (getKeyTypeLength(col, 4))
-    {
-    case -1:    // numeric
-    {
-        PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
-        if (vals) {
-            if (!(values = new int[size])) break;
-            for (int i = 0; i < size; i++) {
-                values[i] = atoi(vals[i]);
-            }
-            vt_destructall(vals);
-        }
-        break;
-    }
-    case 2:
-    {
-        values = getArray<PGint2, int>(col, size, "%int2");
-        break;
-    }
-    case 4:
-    {
-        values = getArray<PGint4, int>(col, size, "%int4");
-        break;
-    }
-    case 8:
-    {
-        values = getArray<PGint8, int>(col, size, "%int8");
-        break;
-    }
-    default:
-    {
-        VTLOG_WARNING("Value has unknown length");
-        break;
-    }
-    }
-
-    return values;
-}
-
-vector<int>* PGResultSet::getIntV(const int col)
-{
-    vector<int> *values = NULL;
-
-    switch (getKeyTypeLength(col, 4))
-    {
-    case -1:    // numeric
-    {
-        int size = 0;
-        PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
-        if (vals) {
-            if (!(values = new vector<int>)) break;
-            for (int i = 0; i < size; i++) {
-                values->push_back(atoi(vals[i]));
-            }
-            vt_destructall(vals);
-        }
-        break;
-    }
-    case 2:
-    {
-        values = getVector<PGint2, int>(col, "%int2");
-        break;
-    }
-    case 4:
-    {
-        values = getVector<PGint4, int>(col, "%int4");
-        break;
-    }
-    case 8:
-    {
-        values = getVector<PGint8, int>(col, "%int8");
-        break;
-    }
-    default:
-    {
-        VTLOG_WARNING("Value has unknown length");
-        break;
-    }
-    }
-
-    return values;
-}
-
-long long* PGResultSet::getInt8A(const int col, int& size)
-{
-    long long *values = NULL;
+    vector<long long> values;
 
     switch (getKeyTypeLength(col, 4))
     {
     case -1: // numeric
     {
-        PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
-        if (vals) {
-            if (!(values = new long long[size])) break;
-            for (int i = 0; i < size; i++) {
-                values[i] = atoll(vals[i]);
-            }
-            vt_destructall(vals);
-        }
-        break;
-    }
-    case 2:
-    {
-        values = getArray<PGint2, long long>(col, size, "%int2");
-        break;
-    }
-    case 4:
-    {
-        values = getArray<PGint4, long long>(col, size, "%int4");
-        break;
-    }
-    case 8:
-    {
-        values = getArray<PGint8, long long>(col, size, "%int8");
-        break;
-    }
-    default:
-    {
-        VTLOG_WARNING("Value has unknown length");
-        break;
-    }
-    }
-
-    return values;
-}
-
-vector<long long>* PGResultSet::getInt8V(const int col)
-{
-    vector<long long> *values = NULL;
-
-    switch (getKeyTypeLength(col, 4))
-    {
-    case -1: // numeric
-    {
-        int size = 0;
-        PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
-        if (vals) {
-            if (!(values = new vector<long long>)) break;
-            for (int i = 0; i < size; i++) {
-                values->push_back(atoll(vals[i]));
-            }
-            vt_destructall(vals);
-        }
+        vector<PGnumeric> vals = getVector<PGnumeric, PGnumeric>(col, "%numeric");
+        values.resize(vals.size());
+        for (int i = 0; i < vals.size(); i++)
+            values[i] = std::atoll(vals[i]);
         break;
     }
     case 2:
@@ -451,7 +299,7 @@ vector<long long>* PGResultSet::getInt8V(const int col)
     }
     default:
     {
-        VTLOG_WARNING("Value has unknown length");
+        throw RuntimeException("Value has unknown length");
         break;
     }
     }
@@ -459,14 +307,47 @@ vector<long long>* PGResultSet::getInt8V(const int col)
     return values;
 }
 
-// =============== GETTERS FOR FLOATS OR ARRAYS OF FLOATS ======================
-
-float PGResultSet::getFloat(const int col)
+float PGResultSet::getFloat(int col) const
 {
-    return (float) getFloat8(col);
+    return static_cast<float>(getFloat8(col));
 }
 
-double PGResultSet::getFloat8(const int col)
+
+vector<float> PGResultSet::getFloatVector(int col) const
+{
+    vector<float> values;
+
+    switch (getKeyTypeLength(col, 4))
+    {
+    case -1:    // numeric
+    {
+        vector<PGnumeric> vals = getVector<PGnumeric, PGnumeric>(col, "%numeric");
+        values.resize(vals.size());
+        for (int i = 0; i < vals.size(); i++)
+            values[i] = static_cast<float>(std::atof(vals[i]));
+        break;
+    }
+    case 4:
+    {
+        values = getVector<PGfloat4, float>(col, "%float4");
+        break;
+    }
+    case 8:
+    {
+        values = getVector<PGfloat8, float>(col, "%float8");
+        break;
+    }
+    default:
+    {
+        throw RuntimeException("Value has unknown length");
+        break;
+    }
+    }
+
+    return values;
+}
+
+double PGResultSet::getFloat8(int col) const
 {
     double value = 0.0;
 
@@ -490,7 +371,7 @@ double PGResultSet::getFloat8(const int col)
     }
     default:
     {
-        VTLOG_WARNING("Value has unknown length");
+        throw RuntimeException("Value has unknown length");
         break;
     }
     }
@@ -498,138 +379,18 @@ double PGResultSet::getFloat8(const int col)
     return value;
 }
 
-float* PGResultSet::getFloatA(const int col, int& size)
+vector<double> PGResultSet::getFloat8Vector(int col) const
 {
-    float *values = NULL;
+    vector<double> values;
 
     switch (getKeyTypeLength(col, 4))
     {
     case -1:    // numeric
     {
-        PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
-        if (vals) {
-            if (!(values = new float[size])) break;
-            for (int i = 0; i < size; i++) {
-                values[i] = (float) atof(vals[i]);
-            }
-            vt_destructall(vals);
-        }
-        break;
-    }
-    case 4:
-    {
-        values = getArray<PGfloat4, float>(col, size, "%float4");
-        break;
-    }
-    case 8:
-    {
-        values = getArray<PGfloat8, float>(col, size, "%float8");
-        break;
-    }
-    default:
-    {
-        VTLOG_WARNING("Value has unknown length");
-        break;
-    }
-    }
-
-    return values;
-}
-
-vector<float>* PGResultSet::getFloatV(const int col)
-{
-    vector<float> *values = NULL;
-
-    switch (getKeyTypeLength(col, 4))
-    {
-    case -1:    // numeric
-    {
-        int size = 0;
-        PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
-        if (vals) {
-            if (!(values = new vector<float>)) break;
-            for (int i = 0; i < size; i++) {
-                values->push_back((float) atof(vals[i]));
-            }
-            vt_destructall(vals);
-        }
-        break;
-    }
-    case 4:
-    {
-        values = getVector<PGfloat4, float>(col, "%float4");
-        break;
-    }
-    case 8:
-    {
-        values = getVector<PGfloat8, float>(col, "%float8");
-        break;
-    }
-    default:
-    {
-        VTLOG_WARNING("Value has unknown length");
-        break;
-    }
-    }
-
-    return values;
-}
-
-double* PGResultSet::getFloat8A(const int col, int& size)
-{
-    double *values = NULL;
-
-    switch (getKeyTypeLength(col, 4))
-    {
-    case -1:    // numeric
-    {
-        PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
-        if (vals) {
-            if (!(values = new double[size])) break;
-            for (int i = 0; i < size; i++) {
-                values[i] = atof(vals[i]);
-            }
-            vt_destructall(vals);
-        }
-        break;
-    }
-    case 4:
-    {
-        values = getArray<PGfloat4, double>(col, size, "%float4");
-        break;
-    }
-    case 8:
-    {
-        values = getArray<PGfloat8, double>(col, size, "%float8");
-        break;
-    }
-    default:
-    {
-        VTLOG_WARNING("Value has unknown length");
-        break;
-    }
-    }
-
-    return values;
-}
-
-vector<double>* PGResultSet::getFloat8V(const int col)
-{
-    vector<double> *values = NULL;
-
-    switch (getKeyTypeLength(col, 4))
-    {
-    case -1:    // numeric
-    {
-        int size = 0;
-        PGnumeric *vals = getArray<PGnumeric, PGnumeric>(col, size, "%numeric");
-        if (vals) {
-            if (!(values = new vector<double>)) break;
-            for (int i = 0; i < size; i++) {
-                values->push_back(atof(vals[i]));
-            }
-            vt_destructall(vals);
-        }
+        vector<PGnumeric> vals = getVector<PGnumeric, PGnumeric>(col, "%numeric");
+        values.resize(vals.size());
+        for (int i = 0; i < vals.size(); i++)
+            values[i] = atof(vals[i]);
         break;
     }
     case 4:
@@ -644,7 +405,7 @@ vector<double>* PGResultSet::getFloat8V(const int col)
     }
     default:
     {
-        VTLOG_WARNING("Value has unknown length");
+        throw RuntimeException("Value has unknown length");
         break;
     }
     }
@@ -652,81 +413,11 @@ vector<double>* PGResultSet::getFloat8V(const int col)
     return values;
 }
 
-cv::Mat *PGResultSet::getCvMat(const int col)
-{
-    PGresult *matres    = NULL;
-    cv::Mat *mat        = NULL;
-    PGarray mat_dims_arr = { 0 };
-    int *mat_dim_sizes  = NULL;
-
-    do {
-        // get cvmat structure
-        matres = getSingleValue<PGresult*, PGresult*>(col, "%public.cvmat");
-        if (!matres) break;
-
-        // get cvmat members
-        PGint4 mat_type = 0;
-        PGbytea mat_data_bytea = { 0 };
-        if (! PQgetf(matres, 0, "%int4 %int4[] %bytea",
-                         0, &mat_type, 1, &mat_dims_arr, 2, &mat_data_bytea)) {
-            VTLOG_WARNING("Cannot get cvmat header");
-            break;
-        }
-
-        // create dimensions array
-        int mat_dims = PQntuples(mat_dims_arr.res);
-        if (!mat_dims) break;
-
-        mat_dim_sizes = new int[mat_dims];
-        if (!mat_dim_sizes) break;
-
-        for (int i = 0; i < mat_dims; i++) {
-            PQgetf(mat_dims_arr.res, i, "%int4", 0, &mat_dim_sizes[i]);
-        }
-
-        // create matrix
-        mat = new cv::Mat(mat_dims, mat_dim_sizes, mat_type);
-        if (!mat) {
-            VTLOG_WARNING("Failed to create cv::Mat");
-            break;
-        }
-
-        // copy matrix data
-        memcpy(mat->data, mat_data_bytea.data, mat_data_bytea.len);
-    } while (0);
-
-    if (mat_dims_arr.res) PQclear(mat_dims_arr.res);
-    vt_destructall(mat_dim_sizes);
-    if (matres) PQclear(matres);
-
-    return mat;
-}
-
-// =============== GETTERS - GEOMETRIC TYPES ===============================
-Point PGResultSet::getPoint(const int col)
-{
-    PGpoint pt = getSingleValue<PGpoint, PGpoint>(col, "%point");
-    return *(reinterpret_cast<Point*>(&pt));
-}
-
-Point* PGResultSet::getPointA(const int col, int& size)
-{
-    return reinterpret_cast<Point*>(getArray<PGpoint, PGpoint>(col, size, "%point"));
-}
-
-vector<Point>*  PGResultSet::getPointV(const int col)
-{
-    return reinterpret_cast< vector<Point>* >(getVector<PGpoint, PGpoint>(col, "%point"));
-}
-
-// =============== GETTERS - TIMESTAMP =========================================
-
-time_t PGResultSet::getTimestamp(const int col)
+chrono::system_clock::time_point PGResultSet::getTimestamp(int col) const
 {
     PGtimestamp pgts = getSingleValue<PGtimestamp, PGtimestamp>(col, "%timestamp");
-
-    struct tm ts = { 0 };
-    ts.tm_year  = pgts.date.year;
+    std::tm ts = { 0 };
+    ts.tm_year  = pgts.date.year - 1900;
     ts.tm_mon   = pgts.date.mon;
     ts.tm_mday  = pgts.date.mday;
     ts.tm_hour  = pgts.time.hour;
@@ -734,255 +425,291 @@ time_t PGResultSet::getTimestamp(const int col)
     ts.tm_sec   = pgts.time.sec;
     ts.tm_zone  = "GMT0";
 
-    return timegm(&ts);
+    return chrono::system_clock::from_time_t(timegm(&ts)) + chrono::microseconds(pgts.time.usec);
 }
 
-IntervalEvent *PGResultSet::getIntervalEvent(const int col)
+cv::Mat *PGResultSet::getCvMat(int col) const
 {
-    PGresult *evres     = NULL;
-    IntervalEvent *event = NULL;
+    PGresult *matres    = NULL;
+    cv::Mat *mat        = NULL;
+    PGarray mat_dims_arr = { 0 };
 
-    do {
+    try
+    {
+        // get cvmat structure
+        matres = getSingleValue<PGresult*, PGresult*>(col, "%public.cvmat");
+        if (matres) {
+            // get cvmat members
+            PGint4 mat_type = 0;
+            PGbytea mat_data_bytea = { 0 };
+            if (!PQgetf(matres, 0, "%int4 %int4[] %bytea",
+                         0, &mat_type, 1, &mat_dims_arr, 2, &mat_data_bytea))
+                throw RuntimeException("Cannot get cvmat header");
+
+            // create dimensions array
+            int mat_dims = PQntuples(mat_dims_arr.res);
+            if (!mat_dims) throw RuntimeException("CvMat has no dimensions");
+
+            vector<int> mat_dim_sizes(mat_dims);
+            for (int i = 0; i < mat_dims; i++) {
+                if (!PQgetf(mat_dims_arr.res, i, "%int4", 0, &mat_dim_sizes[i]))
+                    throw RuntimeException("Failed to get value: unexpected value in CvMat dimensions");
+            }
+
+            // create matrix
+            mat = new cv::Mat(mat_dims, mat_dim_sizes.data(), mat_type);
+            if (!mat) throw RuntimeException("Failed to create cv::Mat");
+
+            // copy matrix data
+            memcpy(mat->data, mat_data_bytea.data, mat_data_bytea.len);
+
+            PQclear(mat_dims_arr.res);
+            PQclear(matres);
+        }
+    }
+    catch (RuntimeException &e)
+    {
+        if (mat_dims_arr.res)
+            PQclear(mat_dims_arr.res);
+        if (matres)
+            PQclear(matres);
+        throw;
+    }
+
+    return mat;
+}
+
+Point PGResultSet::getPoint(int col) const
+{
+    PGpoint pt = getSingleValue<PGpoint, PGpoint>(col, "%point");
+    return Point(pt.x, pt.y);
+}
+
+vector<Point> PGResultSet::getPointVector(int col) const
+{
+    vector<PGpoint> pts = getVector<PGpoint, PGpoint>(col, "%point");
+    // TODO: optimalize point vector
+    vector<Point> ret(pts.size());
+    for (size_t i = 0; i < pts.size(); i++)
+        ret[i] = Point(pts[i].x, pts[i].y);
+
+    return ret;
+}
+
+IntervalEvent PGResultSet::getIntervalEvent(int col) const
+{
+    PGresult *evres = NULL;
+    IntervalEvent event;
+
+    try
+    {
         // get event structure
         evres = getSingleValue<PGresult*, PGresult*>(col, "%public.vtevent");
-        if (!evres) break;
+        if (evres) {
+            // get event members
+            PGint4 ev_group_id = 0;
+            PGint4 ev_class_id = 0;
+            PGbool ev_is_root = false;
+            PGfloat8 ev_score = 0.0;
+            PGbox ev_region = { 0 };
+            PGbytea ev_data = { 0 };
+            if (!PQgetf(evres, 0, "%int4 %int4 %bool %box %float8 %bytea",
+                         0, &ev_group_id, 1, &ev_class_id, 2, &ev_is_root,
+                         3, &ev_region, 4, &ev_score, 5, &ev_data))
+                throw RuntimeException("Failed to get value: unexpected value in event header");
 
-        // get event members
-        PGint4 ev_group_id = 0, ev_class_id = 0;
-        PGbool ev_is_root = false;
-        PGbox ev_region = { 0 };
-        PGfloat8 ev_score = 0.0;
-        PGbytea ev_data = { 0 };
-        if (! PQgetf(evres, 0, "%int4 %int4 %bool %box %float8 %bytea",
-                         0, &ev_group_id, 1, &ev_class_id, 2, &ev_is_root, 3, &ev_region, 4, &ev_score, 5, &ev_data)) {
-            VTLOG_WARNING("Cannot get vtevent header");
-            break;
+            event.group_id = ev_group_id;
+            event.class_id = ev_class_id;
+            event.is_root = ev_is_root;
+            event.score = ev_score;
+            event.region = IntervalEvent::Box(ev_region.high.x, ev_region.high.y,
+                                              ev_region.low.x, ev_region.low.y);
+            if (ev_data.len > 0)
+                event.user_data = vector<char>(ev_data.data, ev_data.data + ev_data.len);
+
+            PQclear(evres);
         }
-
-        // create event
-        event = new IntervalEvent();
-        if (!event) {
-            VTLOG_WARNING("Failed to create IntervalEvent");
-            break;
-        }
-
-        event->group_id = ev_group_id;
-        event->class_id = ev_class_id;
-        event->is_root = ev_is_root;
-        memcpy(&event->region, &ev_region, sizeof (ev_region));
-        event->score = ev_score;
-        event->user_data_size = ev_data.len;
-        event->SetUserData(ev_data.data, ev_data.len);
-    } while (0);
-
-    if (evres) PQclear(evres);
+    }
+    catch(RuntimeException &e)
+    {
+        if (evres) PQclear(evres);
+        throw;
+    }
 
     return event;
 }
 
-ProcessState *PGResultSet::getProcessState(const int col)
+ProcessState PGResultSet::getProcessState(int col) const
 {
-    PGresult *psres     = NULL;
-    ProcessState *pstate = NULL;
+    PGresult *psres = NULL;
+    ProcessState pstate;
 
-    do {
+    try
+    {
         // get process state structure
         psres = getSingleValue<PGresult*, PGresult*>(col, "%public.pstate");
-        if (!psres) break;
+        if (psres) {
+            // get event members
+            PGvarchar ps_status = NULL, ps_curritem = NULL, ps_lasterror = NULL;
+            PGfloat4 ps_progress = 0;
+            if (! PQgetf(psres, 0, "%public.pstatus %float4 %varchar %varchar",
+                         0, &ps_status, 1, &ps_progress,
+                         2, &ps_curritem, 3, &ps_lasterror))
+                throw RuntimeException("Failed to get value: unexpected value in pstate header");
 
-        // get event members
-        PGvarchar ps_status = NULL, ps_curritem = NULL, ps_lasterror = NULL;
-        PGfloat4 ps_progress = 0;
-        if (! PQgetf(psres, 0, "%public.pstatus %float4 %varchar %varchar",
-                         0, &ps_status, 1, &ps_progress, 2, &ps_curritem, 3, &ps_lasterror)) {
-            VTLOG_WARNING("Cannot get pstate header");
-            break;
+            if (ps_status)
+                pstate.status = pstate.toStatusValue(ps_status);
+            if (ps_curritem)
+                pstate.current_item = ps_curritem;
+            if (ps_lasterror)
+                pstate.last_error = ps_lasterror;
+            pstate.progress = ps_progress;
+
+            PQclear(psres);
         }
-
-        // create event
-        pstate = new ProcessState();
-        if (!pstate) {
-            VTLOG_WARNING("Failed to create ProcessState");
-            break;
-        }
-
-        if (ps_status)   pstate->status = pstate->toStatusValue(ps_status);
-        if (ps_curritem) pstate->currentItem = ps_curritem;
-        if (ps_lasterror)pstate->lastError = ps_lasterror;
-        pstate->progress = ps_progress;
-
-    } while (0);
-
-    if (psres) PQclear(psres);
+    }
+    catch(RuntimeException &e)
+    {
+        if (psres) PQclear(psres);
+        throw;
+    }
 
     return pstate;
 }
 
-// ========================= GETTERS - OTHER ==================================
-
-void *PGResultSet::getBlob(const int col, int &size)
+vector<char> PGResultSet::getBlob(int col) const
 {
     PGbytea value = getSingleValue<PGbytea, PGbytea>(col, "%bytea");
-    size = value.len;
-
-    return (void *) value.data;
+    if (value.len > 0)
+        return vector<char>(value.data, value.data + value.len);
+    else
+        return vector<char>();
 }
 
-// =======================UNIVERSAL GETTER=====================================
-
-
-#define GET_AND_SERIALIZE_VALUE(FUNC) \
-{\
-    ret = toString(FUNC(col));\
-}
-#define GET_AND_SERIALIZE_VALUE_ALLOC(TYPE,FUNC) \
-{\
-    TYPE *value = FUNC(col);\
-    if (value) {\
-        ret = toString(*value);\
-        delete value;\
-    }\
-}
-#define GET_AND_SERIALIZE_PTR(TYPE, FUNC) \
-{\
-    int size = 0;\
-    TYPE *value = FUNC(col, size);\
-    if (value) {\
-        ret = toString(value, size, 0);\
-    }\
-}
-#define GET_AND_SERIALIZE_ARRAY(TYPE, FUNC) \
-{\
-    int size = 0;\
-    TYPE *values = FUNC(col, size);\
-    if (values) {\
-        ret = toString(values, size, 0);\
-        vt_destructall(values);\
-    }\
-}
-#define GET_AND_SERIALIZE_VALUE_AND_ARRAY(TYPE, FUNC) \
-{\
-    if (DBTYPE_HASFLAG(dbtype, DBTYPE_FLAG_ARRAY)) {\
-        GET_AND_SERIALIZE_ARRAY(TYPE, FUNC ## A);\
-    }\
-    else {\
-        GET_AND_SERIALIZE_VALUE(FUNC);\
-    }\
-}
-
-string PGResultSet::getValue(const int col)
+string PGResultSet::getValue(int col) const
 {
+    CHECK_PGRES;
     string ret;
 
-    DBTYPE dbtype = 0;
-    if (_pdbtypes) {
-        DBTYPES_MAP_IT it = _pdbtypes->find(PQftype(PGRES, col));
-        if (it != _pdbtypes->end()) {
-            dbtype = (*it).second.type;
-        }
-    }
+    const DatabaseTypes::TypeDefinition & type = _dbtypes.type(PQftype(PGRES, col));
 
-    switch (DBTYPE_GETCATEGORY(dbtype))
+    switch (type._category)
     {
-    case DBTYPE_STRING:
+    case DatabaseTypes::CATEGORY_STRING:
     {
-        GET_AND_SERIALIZE_VALUE(getString);
+        if (type._flags & DatabaseTypes::FLAG_ARRAY)
+            ret = toString(getStringVector(col));
+        else
+            ret = getString(col);
         break;
     }
-    case DBTYPE_INT:
+    case DatabaseTypes::CATEGORY_INT:
     {
-        GET_AND_SERIALIZE_VALUE_AND_ARRAY(long long, getInt8);
+        if (type._flags & DatabaseTypes::FLAG_ARRAY)
+            ret = toString(getInt8Vector(col));
+        else
+            ret = toString(getInt8(col));
         break;
     }
-    case DBTYPE_FLOAT:
+    case DatabaseTypes::CATEGORY_FLOAT:
     {
-        GET_AND_SERIALIZE_VALUE_AND_ARRAY(double, getFloat8);
+        if (type._flags & DatabaseTypes::FLAG_ARRAY)
+            ret = toString(getFloat8Vector(col));
+        else
+            ret = toString(getFloat8(col));
         break;
     }
-    case DBTYPE_BOOLEAN:
+    case DatabaseTypes::CATEGORY_BOOLEAN:
     {
-        GET_AND_SERIALIZE_VALUE(getBool);
+        ret = toString(getBool(col));
         break;
     }
-    case DBTYPE_BLOB:
+    case DatabaseTypes::CATEGORY_BLOB:
     {
-        GET_AND_SERIALIZE_PTR(void, getBlob);
+        ret = toString(getBlob(col));
         break;
     }
-    case DBTYPE_TIMESTAMP:
+    case DatabaseTypes::CATEGORY_TIMESTAMP:
     {
-        GET_AND_SERIALIZE_VALUE(getTimestamp);
+        ret = toString(getTimestamp(col));
         break;
     }
-    case DBTYPE_GEO_POINT:
+    case DatabaseTypes::CATEGORY_GEO_POINT:
     {
-        GET_AND_SERIALIZE_VALUE_AND_ARRAY(Point, getPoint);
+        if (type._flags & DatabaseTypes::FLAG_ARRAY)
+            ret = toString(getPointVector(col));
+        else
+            ret = toString(getPoint(col));
         break;
     }
-    case DBTYPE_GEO_LSEG:
-    {
-        break;
-    }
-    case DBTYPE_GEO_PATH:
-    {
-        break;
-    }
-    case DBTYPE_GEO_BOX:
-    {
-        break;
-    }
-    case DBTYPE_GEO_POLYGON:
-    {
-        break;
-    }
-    case DBTYPE_GEO_LINE:
+    case DatabaseTypes::CATEGORY_GEO_LSEG:
     {
         break;
     }
-    case DBTYPE_GEO_CIRCLE:
+    case DatabaseTypes::CATEGORY_GEO_PATH:
     {
         break;
     }
-    case DBTYPE_GEO_GEOMETRY:
+    case DatabaseTypes::CATEGORY_GEO_BOX:
+    {
+        break;
+    }
+    case DatabaseTypes::CATEGORY_GEO_POLYGON:
+    {
+        break;
+    }
+    case DatabaseTypes::CATEGORY_GEO_LINE:
+    {
+        break;
+    }
+    case DatabaseTypes::CATEGORY_GEO_CIRCLE:
+    {
+        break;
+    }
+    case DatabaseTypes::CATEGORY_GEO_GEOMETRY:
     {
         // PostGIS geometry type
         break;
     }
-    case DBTYPE_UD_SEQTYPE:
+    case DatabaseTypes::CATEGORY_UD_SEQTYPE:
     {
-        GET_AND_SERIALIZE_VALUE(getString);
+        ret = getString(col);
         break;
     }
-    case DBTYPE_UD_INOUTTYPE:
+    case DatabaseTypes::CATEGORY_UD_INOUTTYPE:
     {
-        GET_AND_SERIALIZE_VALUE(getString);
+        ret = getString(col);
         break;
     }
-    case DBTYPE_UD_PSTATUS:
+    case DatabaseTypes::CATEGORY_UD_PSTATUS:
     {
-        GET_AND_SERIALIZE_VALUE(getString);
+        ret = getString(col);
         break;
     }
-    case DBTYPE_UD_CVMAT:
+    case DatabaseTypes::CATEGORY_UD_CVMAT:
     {
-        GET_AND_SERIALIZE_VALUE_ALLOC(cv::Mat, getCvMat);
+        cv::Mat * mat = getCvMat(col);
+        if (mat) {
+            ret = toString(*mat);
+            delete mat;
+        }
         break;
     }
-    case DBTYPE_UD_EVENT:
+    case DatabaseTypes::CATEGORY_UD_EVENT:
     {
-        GET_AND_SERIALIZE_VALUE_ALLOC(IntervalEvent, getIntervalEvent);
+        ret = toString(getIntervalEvent(col));
         break;
     }
-    case DBTYPE_UD_PSTATE:
+    case DatabaseTypes::CATEGORY_UD_PSTATE:
     {
-        GET_AND_SERIALIZE_VALUE_ALLOC(ProcessState, getProcessState);
+        ret = toString(getProcessState(col));
         break;
     }
-    case DBTYPE_REF_TYPE:
+    case DatabaseTypes::CATEGORY_REF_TYPE:
     {
         break;
     }
-    case DBTYPE_REF_CLASS:
+    case DatabaseTypes::CATEGORY_REF_CLASS:
     {
         break;
     }

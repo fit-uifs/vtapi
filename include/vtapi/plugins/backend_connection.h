@@ -1,8 +1,8 @@
 #pragma once
 
-#include <string>
-#include "../common/types.h"
+#include "../common/dbtypes.h"
 #include "backend_resultset.h"
+#include <string>
 
 
 namespace vtapi {
@@ -19,18 +19,6 @@ class Connection
 {
 public:
     /**
-     * Constructor
-     * @param connectionInfo initial connection string @see vtapi.conf
-     */
-    explicit Connection(const std::string& connectionInfo)
-        : _connInfo(connectionInfo) {}
-
-    /**
-     * Virtual destructor
-     */
-    virtual ~Connection() { }
-
-    /**
      * Performs connection to database, may load dbtypes information
      * @return success
      */
@@ -39,13 +27,13 @@ public:
     /**
      * Disconnects from database
      */
-    virtual void disconnect () = 0;
+    virtual void disconnect() = 0;
 
     /**
      * Checks database connection
      * @return success
      */
-    virtual bool isConnected () = 0;
+    virtual bool isConnected() const = 0;
 
     /**
      * Executes query without fetching any result set
@@ -64,30 +52,59 @@ public:
      */
     virtual int fetch(const std::string& query, void *param, ResultSet &resultSet) = 0;
 
+
+    // ////////////////////////////////////////////////////////////////////////
+    // IMPLEMENTED METHODS
+    // ////////////////////////////////////////////////////////////////////////
+
+
+    /**
+     * Constructor
+     * @param connectionInfo initial connection string @see vtapi.conf
+     */
+    explicit Connection(const std::string& connection_info)
+        : _connection_info(connection_info), _conn(NULL) {}
+
+    virtual ~Connection() {}
+
     /**
      * Gets database connection object
      * @return
      */
-    virtual void* getConnectionObject() = 0;
+    inline void* getConnectionObject()
+    { return _conn; }
+
+    /**
+     * Gets const database connection object
+     * @return
+     */
+    inline const void* getConnectionObject() const
+    { return _conn; }
 
     /**
      * Gets map of preloaded database types
      * @return reference to type map
      */
-    DBTYPES_MAP *getDBTypes()
-    { return &this->_dbtypes; }
+    inline const DatabaseTypes & getDBTypes() const
+    { return this->_dbtypes; }
 
     /**
      * Returns last error message
      * @return error message
      */
-    std::string getErrorMessage()
-    { return this->_errorMessage; }
+    inline const std::string getErrorMessage() const
+    { return this->_error_message; }
 
 protected:
-    std::string _connInfo;      /**< connection string to access the database */
-    std::string _errorMessage;   /**< error message string */
-    DBTYPES_MAP _dbtypes;        /**< map of database types definitions */
+    void *_conn;                    /**< connection object */
+    std::string _connection_info;   /**< connection string to access the database */
+    std::string _error_message;     /**< error message string */
+    DatabaseTypes _dbtypes;         /**< map of database types definitions */
+
+private:
+    Connection() = delete;
+    Connection(const Connection&) = delete;
+    Connection & operator=(const Connection&) = delete;
 };
 
 

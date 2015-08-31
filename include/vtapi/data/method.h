@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include <list>
 #include "keyvalues.h"
 #include "task.h"
 #include "taskparams.h"
@@ -55,19 +54,11 @@ public:
      * Construct method object for iterating through VTApi methods
      * Object will represent set of methods specified by their names
      * @param commons base Commons object
-     * @param names list of method names
+     * @param names vector of method names
      */
-    Method(const Commons& commons, const std::list<std::string>& names);
-
-    /**
-     * Destructor
-     */
-    virtual ~Method();
+    Method(const Commons& commons, const std::vector<std::string>& names);
     
     using KeyValues::count;
-    using KeyValues::print;
-    using KeyValues::printAll;
-    using KeyValues::printKeys;
 
     /**
      * Moves to a next method and set a method name and its methodkeys variables
@@ -80,19 +71,25 @@ public:
      * Gets a name of the current method
      * @return string value with the name of the method
      */
-    std::string getName();
+    std::string getName() const;
     
+    /**
+     * Gets object containing method parameters definitions
+     * @return task parameters map
+     */
+    TaskParamDefinitions getParamDefinitions() const;
+
     /**
      * Gets description of the current method
      * @return description of the current dataset
      */
-    std::string getDescription();
+    std::string getDescription() const;
 
     /**
      * @brief Gets absolute path to method library
      * @return path
      */
-    std::string getPluginPath();
+    std::string getPluginPath() const;
 
     /**
      * Sets method's description
@@ -112,14 +109,14 @@ public:
     Task *createTask(const std::string& dsname,
                      const TaskParams& params,
                      const std::string& prereq_task,
-                     const std::string& outputs = std::string());
+                     const std::string& outputs = std::string()) const;
     
     /**
      * Loads method's processing tasks for iteration
      * @param name task name (no name = all tasks)
      * @return pointer to the new Task object, NULL on error
      */
-    Task* loadTasks(const std::string& name = std::string());
+    Task* loadTasks(const std::string& name = std::string()) const;
 
     /**
      * @brief Deletes task with given name
@@ -127,10 +124,10 @@ public:
      * @param taskname task name to delete
      * @return succesful delete
      */
-    bool deleteTask(const std::string &dsname, const std::string &taskname);
+    bool deleteTask(const std::string &dsname, const std::string &taskname) const;
 
 protected:
-    virtual bool preUpdate();
+    bool preUpdate() override;
     
 private:
     Method() = delete;

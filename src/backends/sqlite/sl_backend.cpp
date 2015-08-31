@@ -21,10 +21,9 @@ QueryBuilder * SLBackend::createQueryBuilder(Connection &connection) const
     return new SLQueryBuilder(slconnection);
 }
 
-ResultSet *SLBackend::createResultSet(DBTYPES_MAP *dbtypes) const
+ResultSet *SLBackend::createResultSet(const DatabaseTypes &dbtypes) const
 {
-    (dbtypes);
-    return new SLResultSet();
+    return new SLResultSet(dbtypes);
 }
 
 

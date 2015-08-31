@@ -9,7 +9,7 @@ namespace vtapi {
 
 static const struct
 {
-    ProcessState::STATUS_T status;
+    ProcessState::Status status;
     const char *str;
 }
 status_map[] = {
@@ -17,17 +17,9 @@ status_map[] = {
     { ProcessState::STATUS_RUNNING,     "running" },
     { ProcessState::STATUS_SUSPENDED,   "suspended" },
     { ProcessState::STATUS_FINISHED,    "finished" },
-    { ProcessState::STATUS_ERROR,       "error" },
-    { ProcessState::STATUS_NONE,        NULL },
+    { ProcessState::STATUS_ERROR,       "error" }
 };
 
-
-
-ProcessState::ProcessState()
-{
-    status = STATUS_NONE;
-    progress = 0.0;
-}
 
 ProcessState::ProcessState(const std::string& stateString)
 {
@@ -42,31 +34,14 @@ ProcessState::ProcessState(const std::string& stateString)
     {
         status      = toStatusValue(stateString.substr(pos+1,pos2-pos-1));
         progress    = atof(stateString.substr(pos2+1,pos3-pos2-1).c_str());
-        currentItem = stateString.substr(pos3+1, pos4-pos3-1);
-        lastError   = stateString.substr(pos4+1, pos5-pos4-1);
+        current_item = stateString.substr(pos3+1, pos4-pos3-1);
+        last_error   = stateString.substr(pos4+1, pos5-pos4-1);
     }        
 }
 
-ProcessState::ProcessState(STATUS_T status, float progress, const std::string& item)
+ProcessState::Status ProcessState::toStatusValue(const string& status_string)
 {
-    this->status = status;
-    this->progress = progress;
-    
-    if (status == STATUS_RUNNING) {
-        this->currentItem = item;
-    }
-    else {
-        this->lastError = item;
-    }
-}
-
-ProcessState::~ProcessState()
-{
-}
-
-ProcessState::STATUS_T ProcessState::toStatusValue(const string& status_string)
-{
-    STATUS_T status = STATUS_NONE;
+    Status status = STATUS_CREATED;
     
     for (int i = 0; status_map[i].str; i++) {
         if (status_string.compare(status_map[i].str) == 0) {
@@ -78,7 +53,7 @@ ProcessState::STATUS_T ProcessState::toStatusValue(const string& status_string)
     return status;
 }
 
-string ProcessState::toStatusString(STATUS_T status)
+string ProcessState::toStatusString(Status status)
 {
     string status_string;
 

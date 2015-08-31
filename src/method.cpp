@@ -33,29 +33,25 @@ Method::Method(const Commons& commons, const string& name)
     : KeyValues(commons, def_tab_methods)
 {
     if (!name.empty())
-        context().method = name;
+        _context.method = name;
     
-    select().setOrderBy(def_col_mt_name);
+    _select.setOrderBy(def_col_mt_name);
     
-    if (!context().method.empty())
-        select().whereString(def_col_mt_name, context().method);
+    if (!_context.method.empty())
+        _select.querybuilder().whereString(def_col_mt_name, _context.method);
 }
 
-Method::Method(const Commons& commons, const list<string>& names)
+Method::Method(const Commons& commons, const vector<string>& names)
     : KeyValues(commons, def_tab_methods)
 {
-    select().setOrderBy(def_col_mt_name);
-    select().whereStringInList(def_col_mt_name, names);
+    _select.setOrderBy(def_col_mt_name);
+    _select.querybuilder().whereStringVector(def_col_mt_name, names);
 }
-
-Method::~Method()
-{}
-
 
 bool Method::next()
 {
     if (KeyValues::next()) {
-        context().method = this->getName();
+        _context.method = this->getName();
         return true;
     }
     else {
@@ -63,17 +59,17 @@ bool Method::next()
     }
 }
 
-string Method::getName()
+string Method::getName() const
 {
     return this->getString(def_col_mt_name);
 }
 
-string Method::getDescription()
+string Method::getDescription() const
 {
     return this->getString(def_col_mt_description);
 }
 
-string Method::getPluginPath()
+string Method::getPluginPath() const
 {
     return config().modules_dir + Poco::Path::separator() +
             "libvtmodule_" + this->getName() + Poco::SharedLibrary::suffix();
@@ -87,7 +83,7 @@ bool Method::updateDescription(const string& description)
 Task *Method::createTask(const string& dsname,
                  const TaskParams& params,
                  const string& prereq_task,
-                 const string& outputs)
+                 const string& outputs) const
 {
     Task *ts = NULL;
     string name = Task::constructName(this->getName(), params);
@@ -111,19 +107,19 @@ Task *Method::createTask(const string& dsname,
     return ts;
 }
 
-Task* Method::loadTasks(const string& name)
+Task* Method::loadTasks(const string& name) const
 {
     return (new Task(*this, name));
 }
 
-bool vtapi::Method::deleteTask(const string &dsname, const string &taskname)
+bool Method::deleteTask(const string &dsname, const string &taskname) const
 {
     return QueryTaskDelete(*this, dsname, taskname).execute();
 }
 
 bool Method::preUpdate()
 {
-    return update().whereString(def_col_mt_name, context().method);
+    return update().querybuilder().whereString(def_col_mt_name, _context.method);
 }
 
 }

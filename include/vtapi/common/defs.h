@@ -16,7 +16,7 @@
 
 namespace vtapi {
 
-#define DEF_SELECT_LIMIT     10000   // SELECT query limit
+extern const int def_select_limit;   // SELECT query limit
 
 extern const std::string def_val_video;
 extern const std::string def_val_images;
@@ -70,7 +70,7 @@ extern const std::string def_col_tsd_finished;
 extern const std::string def_col_seq_name;
 extern const std::string def_col_seq_location;
 extern const std::string def_col_seq_type;
-extern const std::string def_col_seq_vidlength;
+extern const std::string def_col_seq_length;
 extern const std::string def_col_seq_vidfps;
 extern const std::string def_col_seq_vidspeed;
 extern const std::string def_col_seq_vidtime;
@@ -91,7 +91,7 @@ extern const std::string def_col_prs_prsid;
 extern const std::string def_col_prs_taskname;
 extern const std::string def_col_prs_state;
 extern const std::string def_col_prs_pid;
-extern const std::string def_col_prs_port;
+extern const std::string def_col_prs_ipcname;
 extern const std::string def_col_prs_created;
 
 extern const std::string def_col_prs_pstate_status;

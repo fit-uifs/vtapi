@@ -14,48 +14,34 @@ using namespace std;
 
 namespace vtapi {
 
-PGQueryBuilder::PGQueryBuilder(PGConnection &connection)
-    : QueryBuilder (connection)
-{
-    _cntParam = 0;
-}
-
-PGQueryBuilder::~PGQueryBuilder()
-{
-    destroyQueryParam(_pquery_param);
-}
 
 void PGQueryBuilder::reset()
 {
     _listMain.clear();
     _listWhere.clear();
-    _cntParam = 0;
+    _cnt_param = 0;
     destroyQueryParam(_pquery_param);
 }
 
-void *PGQueryBuilder::createQueryParam()
+void *PGQueryBuilder::createQueryParam() const
 {
-    return (void*) PQparamCreate((PGconn *) _connection.getConnectionObject());
+    return (void*)PQparamCreate((PGconn *)_connection.getConnectionObject());
 }
 
-void PGQueryBuilder::destroyQueryParam(void *param)
+void PGQueryBuilder::destroyQueryParam(void *param) const
 {
-    if (param) {
-        PQparamClear((PGparam *) param);
-    }
+    if (param) PQparamClear((PGparam *)param);
 }
 
-void *PGQueryBuilder::duplicateQueryParam(void *param)
+void *PGQueryBuilder::duplicateQueryParam(void *param) const
 {
-    if (param) {
+    if (param)
         return PQparamDup((PGparam *) param);
-    }
-    else {
+    else
         return NULL;
-    }
 }
 
-string PGQueryBuilder::getGenericQuery()
+string PGQueryBuilder::getGenericQuery() const
 {
     if (_init_string.empty())
         VTLOG_WARNING("Empty query");
@@ -63,7 +49,8 @@ string PGQueryBuilder::getGenericQuery()
     return _init_string;
 }
 
-string PGQueryBuilder::getSelectQuery(const string& groupby, const string& orderby, const int limit, const int offset)
+string PGQueryBuilder::getSelectQuery(const string& groupby, const string& orderby,
+                                      int limit, int offset) const
 {
     string tablesStr;
     string columnsStr;
@@ -76,7 +63,7 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
     }
     // or go through keys, construct tables/columns
     else {
-        for (MainItem & item : _listMain) {
+        for (const MainItem & item : _listMain) {
             // add column after SELECT
             if (!columnsStr.empty())
                 columnsStr += ',';
@@ -110,7 +97,7 @@ string PGQueryBuilder::getSelectQuery(const string& groupby, const string& order
     return queryString;
 }
 
-string PGQueryBuilder::getInsertQuery()
+string PGQueryBuilder::getInsertQuery() const
 {
     string tabStr = constructTable(_defaultTable);
     string intoStr;
@@ -122,7 +109,7 @@ string PGQueryBuilder::getInsertQuery()
     }
     else {
         // construct columns/values part of the query
-        for (MainItem & item : _listMain) {
+        for (const MainItem & item : _listMain) {
             if (!item._table.empty())
                 tabStr = constructTable(item._table);
 
@@ -143,7 +130,7 @@ string PGQueryBuilder::getInsertQuery()
     }
 }
 
-string PGQueryBuilder::getUpdateQuery()
+string PGQueryBuilder::getUpdateQuery() const
 {
     // otherwise use keys to construct tables/columns part of the query
     string tabStr = constructTable(_defaultTable);
@@ -155,7 +142,7 @@ string PGQueryBuilder::getUpdateQuery()
     }
     else {
         // construct set part of the query
-        for (MainItem & item : _listMain) {
+        for (const MainItem & item : _listMain) {
             if (!item._table.empty())
                 tabStr = constructTable(item._table);
 
@@ -184,7 +171,7 @@ string PGQueryBuilder::getUpdateQuery()
     }
 }
 
-string PGQueryBuilder::getDeleteQuery()
+string PGQueryBuilder::getDeleteQuery() const
 {
     string tabStr = constructTable(_defaultTable);
 
@@ -203,7 +190,7 @@ string PGQueryBuilder::getDeleteQuery()
     }
 }
 
-string PGQueryBuilder::getCountQuery()
+string PGQueryBuilder::getCountQuery() const
 {
     string queryString = getSelectQuery(string(), string(), 0, 0);
     size_t fromPos = queryString.find("\nFROM ");
@@ -217,26 +204,25 @@ string PGQueryBuilder::getCountQuery()
     }
 }
 
-string PGQueryBuilder::getBeginQuery()
+string PGQueryBuilder::getBeginQuery() const
 {
     return "BEGIN;";
 }
 
-string PGQueryBuilder::getCommitQuery()
+string PGQueryBuilder::getCommitQuery() const
 {
     return "COMMIT;";
 }
 
-string PGQueryBuilder::getRollbackQuery()
+string PGQueryBuilder::getRollbackQuery() const
 {
     return "ROLLBACK;";
 }
 
-string PGQueryBuilder::getDatasetCreateQuery(
-                                             const string& name,
+string PGQueryBuilder::getDatasetCreateQuery(const string& name,
                                              const string& location,
                                              const string& friendly_name,
-                                             const string& description)
+                                             const string& description) const
 {
     //SELECT public.VT_dataset_create('demo', 'demo/', 'Pre-generated dataset', 'This dataset is for demonstration purposes only');
 
@@ -256,7 +242,7 @@ string PGQueryBuilder::getDatasetCreateQuery(
     return q;
 }
 
-string PGQueryBuilder::getDatasetResetQuery(const string& name)
+string PGQueryBuilder::getDatasetResetQuery(const string& name) const
 {
     //SELECT public.VT_dataset_truncate('demo');
 
@@ -270,7 +256,7 @@ string PGQueryBuilder::getDatasetResetQuery(const string& name)
     return q;
 }
 
-string PGQueryBuilder::getDatasetDeleteQuery(const string& name)
+string PGQueryBuilder::getDatasetDeleteQuery(const string& name) const
 {
     //SELECT public.VT_dataset_drop('demo');
 
@@ -284,17 +270,16 @@ string PGQueryBuilder::getDatasetDeleteQuery(const string& name)
     return q;
 }
 
-string PGQueryBuilder::getMethodCreateQuery(
-                                            const string& name,
-                                            const MethodKeys keys_definition,
-                                            const MethodParams params_definition,
-                                            const string& description)
+string PGQueryBuilder::getMethodCreateQuery(const string& name,
+                                            const TaskKeyDefinitions &keys_definition,
+                                            const TaskParamDefinitions &params_definition,
+                                            const string &description) const
 {
     //TODO: creating methods
     return "";
 }
 
-string PGQueryBuilder::getMethodDeleteQuery(const string& name)
+string PGQueryBuilder::getMethodDeleteQuery(const string& name) const
 {
     string q;
     q += "SELECT ";
@@ -313,7 +298,7 @@ string PGQueryBuilder::getTaskCreateQuery(const string &name,
                                           const string& mtname,
                                           const string &params,
                                           const string& prereq_task,
-                                          const string &outputs)
+                                          const string &outputs) const
 {
     string q;
     q += "SELECT ";
@@ -336,7 +321,7 @@ string PGQueryBuilder::getTaskCreateQuery(const string &name,
 }
 
 string PGQueryBuilder::getTaskDeleteQuery(const string &dsname,
-                                          const string &taskname)
+                                          const string &taskname) const
 {
     string q;
     q += "SELECT ";
@@ -352,13 +337,16 @@ string PGQueryBuilder::getTaskDeleteQuery(const string &dsname,
     return q;
 }
 
-string PGQueryBuilder::getLastInsertedIdQuery()
+string PGQueryBuilder::getLastInsertedIdQuery() const
 {
     return "SELECT lastval();";
 }
 
 template<typename T>
-bool PGQueryBuilder::keySingleValue(const string& key, T value, const char *type, const string& from)
+bool PGQueryBuilder::keySingleValue(const string& key,
+                                    const T& value,
+                                    const char *type,
+                                    const string& from)
 {
     uint idParam = 0;
 
@@ -375,20 +363,23 @@ bool PGQueryBuilder::keySingleValue(const string& key, T value, const char *type
 }
 
 template<typename T>
-bool PGQueryBuilder::keyArray(const string& key, T* values, const int size,
-                              const char *type, const char* type_arr, const string& from)
+bool PGQueryBuilder::keyVector(const string& key,
+                              const vector<T>& values,
+                              const char *type,
+                              const char* type_arr,
+                              const string& from)
 {
     uint idParam = 0;
     PGarray arr = { 0 };
 
     do {
-        if (key.empty() || !values || size <= 0) break;
+        if (key.empty() || values.empty()) break;
 
-        arr.param = PQparamCreate((PGconn *) _connection.getConnectionObject());
+        arr.param = PQparamCreate((PGconn *)_connection.getConnectionObject());
         if (!arr.param) break;
 
         // put the array elements
-        for (int i = 0; i < size; ++i) {
+        for (int i = 0; i < values.size(); ++i) {
             PQputf(arr.param, type, values[i]);
         }
 
@@ -416,41 +407,26 @@ bool PGQueryBuilder::keyFrom(const string& table, const string& column)
     }
 }
 
+bool PGQueryBuilder::keyBool(const string &key, bool value, const string &from)
+{
+    return keySingleValue(key, value, "%bool", from);
+}
+
+bool PGQueryBuilder::keyChar(const string &key, char value, const string &from)
+{
+    return keySingleValue(key, value, "%char", from);
+}
+
 bool PGQueryBuilder::keyString(const string& key, const string& value, const string& from)
 {
     return keySingleValue(key, value.c_str(), "%varchar", from);
 }
 
-bool PGQueryBuilder::keyStringA(const string& key, string* values, const int size, const string& from)
+bool PGQueryBuilder::keyStringVector(const string& key, const vector<string>& values, const string& from)
 {
-    uint idParam = 0;
-    PGarray arr = { 0 };
-
-    do {
-        if (key.empty() || !values || size <= 0) break;
-
-        arr.param = PQparamCreate((PGconn *) _connection.getConnectionObject());
-        if (!arr.param) break;
-
-        // put the array elements
-        for (int i = 0; i < size; ++i) {
-            PQputf(arr.param, "%varchar", (PGvarchar) values[i].c_str());
-        }
-
-        idParam = addToParam("%varchar[]", &arr);
-        if (!idParam) break;
-
-        _listMain.push_back(MainItem(key, from, idParam));
-    } while (0);
-
-    if (arr.param) PQparamClear(arr.param);
-
-    return (idParam > 0);
-}
-
-bool PGQueryBuilder::keyBool(const string &key, bool value, const string &from)
-{
-    return keySingleValue(key, value, "%bool", from);
+    //TODO: string vector
+    return false;
+    //return keyVector(key, values, "%varchar", from);
 }
 
 bool PGQueryBuilder::keyInt(const string& key, int value, const string& from)
@@ -458,9 +434,19 @@ bool PGQueryBuilder::keyInt(const string& key, int value, const string& from)
     return keySingleValue(key, value, "%int4", from);
 }
 
-bool PGQueryBuilder::keyIntA(const string& key, int* values, const int size, const string& from)
+bool PGQueryBuilder::keyIntVector(const string& key, const vector<int> &values, const string& from)
 {
-    return keyArray(key, values, size, "%int4", "%int4[]", from);
+    return keyVector(key, values, "%int4", "%int4[]", from);
+}
+
+bool PGQueryBuilder::keyInt8(const string& key, long long value, const string& from)
+{
+    return keySingleValue(key, value, "%int8", from);
+}
+
+bool PGQueryBuilder::keyInt8Vector(const string& key, const vector<long long> &values, const string& from)
+{
+    return keyVector(key, values, "%int8", "%int8[]", from);
 }
 
 bool PGQueryBuilder::keyFloat(const string& key, float value, const string& from)
@@ -468,37 +454,22 @@ bool PGQueryBuilder::keyFloat(const string& key, float value, const string& from
     return keySingleValue(key, value, "%float4", from);
 }
 
-bool PGQueryBuilder::keyFloatA(const string& key, float* values, const int size, const string& from)
+bool PGQueryBuilder::keyFloatVector(const string& key, const vector<float> &values, const string& from)
 {
-    return keyArray(key, values, size, "%float4", "%float4[]", from);
+    return keyVector(key, values, "%float4", "%float4[]", from);
 }
 
-bool PGQueryBuilder::keyFloat8(const string &key, double value, const string &from)
+bool PGQueryBuilder::keyFloat8(const string& key, double value, const string& from)
 {
     return keySingleValue(key, value, "%float8", from);
 }
 
-bool PGQueryBuilder::keyFloat8A(const string &key, double *values, const int size, const string &from)
+bool PGQueryBuilder::keyFloat8Vector(const string& key, const vector<double> &values, const string& from)
 {
-    return keyArray(key, values, size, "%float8", "%float8[]", from);
+    return keyVector(key, values, "%float8", "%float8[]", from);
 }
 
-bool PGQueryBuilder::keySeqtype(const string& key, const string& value, const string& from)
-{
-    return checkSeqtype(value) && keySingleValue(key, value.c_str(), "%public.seqtype", from);
-}
-
-bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const string& from)
-{
-    return checkInouttype(value) && keySingleValue(key, value.c_str(), "%public.inouttype", from);
-}
-
-bool PGQueryBuilder::keyProcessStatus(const string& key, ProcessState::STATUS_T value, const string& from)
-{
-    return (value != ProcessState::STATUS_NONE) && keySingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", from);
-}
-
-bool PGQueryBuilder::keyTimestamp(const string& key, const time_t& value, const string& from)
+bool PGQueryBuilder::keyTimestamp(const string& key, const std::chrono::system_clock::time_point &value, const string& from)
 {
     PGtimestamp ts = UnixTimeToTimestamp(value);
     return keySingleValue(key, &ts, "%timestamp", from);
@@ -512,7 +483,7 @@ bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const str
 
     do {
         // create dimensions array
-        mat_dims.param = PQparamCreate((PGconn *) _connection.getConnectionObject());
+        mat_dims.param = PQparamCreate((PGconn *)_connection.getConnectionObject());
         if (!mat_dims.param) {
             ret = false;
             break;
@@ -546,6 +517,21 @@ bool PGQueryBuilder::keyCvMat(const string& key, const cv::Mat& value, const str
     return ret;
 }
 
+bool PGQueryBuilder::keyPoint(const string& key, Point value, const string& from)
+{
+    PGpoint pt = { value.x, value.y };
+    return keySingleValue(key, &pt, "%point", from);
+}
+
+bool PGQueryBuilder::keyPointVector(const string& key, const vector<Point> &values, const string& from)
+{
+    //TODO: point vector (must pass pointers)
+    vector<PGpoint*>pts;
+//    for (size_t i = 0; i < values.size(); i++)
+//        pts[i] = { values[i].x, values[i].y };
+    return keyVector(key, pts, "%point", "%point[]", from);
+}
+
 bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& value, const string& from)
 {
     bool ret = true;
@@ -553,7 +539,7 @@ bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& va
 
     do {
         // user data
-        PGbytea data = { (int) value.user_data_size, (char*) value.user_data };
+        PGbytea data = { (int) value.user_data.size(), (char*) value.user_data.data() };
 
         // create interval event composite
         event = PQparamCreate((PGconn *) _connection.getConnectionObject());
@@ -575,8 +561,29 @@ bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& va
     return ret;
 }
 
+bool PGQueryBuilder::keyProcessStatus(const string& key, ProcessState::Status value, const string& from)
+{
+    return keySingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", from);
+}
+
+bool PGQueryBuilder::keyBlob(const string& key, const vector<char> &data, const string &from)
+{
+    PGbytea bytea = { static_cast<int>(data.size()), const_cast<char*>(data.data()) };
+    return keySingleValue(key, &bytea, "%bytea", from);
+}
+
+bool PGQueryBuilder::keySeqtype(const string& key, const string& value, const string& from)
+{
+    return checkSeqtype(value) && keySingleValue(key, value.c_str(), "%public.seqtype", from);
+}
+
+bool PGQueryBuilder::keyInouttype(const string& key, const string& value, const string& from)
+{
+    return checkInouttype(value) && keySingleValue(key, value.c_str(), "%public.inouttype", from);
+}
+
 template<typename T>
-bool PGQueryBuilder::whereSingleValue(const string& key, T value, const char *type, const string& oper, const string& from)
+bool PGQueryBuilder::whereSingleValue(const string& key, const T& value, const char *type, const string& oper, const string& from)
 {
     uint idParam = 0;
 
@@ -592,9 +599,19 @@ bool PGQueryBuilder::whereSingleValue(const string& key, T value, const char *ty
     return (idParam > 0);
 }
 
-bool PGQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from)
+template<typename T>
+string PGQueryBuilder::serializeVector(const vector<T>& values)
 {
-    return whereSingleValue(key, value.c_str(), "%varchar", oper, from);
+    string listval;
+    listval += '(';
+    for (size_t i = 0; i < values.size(); i++) {
+        if (listval.length() > 1) listval += ',';
+        listval += escapeLiteral(toString(values[i]));
+    }
+    if (listval.length() < 2) listval += "\'\'";
+    listval += ')';
+
+    return listval;
 }
 
 bool PGQueryBuilder::whereBool(const string &key, bool value, const string &oper, const string &from)
@@ -602,39 +619,100 @@ bool PGQueryBuilder::whereBool(const string &key, bool value, const string &oper
     return whereSingleValue(key, value, "%bool", oper, from);
 }
 
-bool PGQueryBuilder::whereInt(const string& key, const int value, const string& oper, const string& from)
+bool PGQueryBuilder::whereChar(const string &key, char value, const string &oper, const string &from)
+{
+    return whereSingleValue(key, value, "%char", oper, from);
+}
+
+bool PGQueryBuilder::whereString(const string& key, const string& value, const string& oper, const string& from)
+{
+    return whereSingleValue(key, value.c_str(), "%varchar", oper, from);
+}
+
+bool PGQueryBuilder::whereStringVector(const string &key, const vector<string> &values, const string &oper, const string &from)
+{
+    string exp = constructColumn(key, from);
+    string listval = serializeVector(values);
+    _listWhere.push_back(WhereItem(exp, oper, listval));
+}
+
+bool PGQueryBuilder::whereInt(const string& key, int value, const string& oper, const string& from)
 {
     return whereSingleValue(key, value, "%int4", oper, from);
 }
 
-bool PGQueryBuilder::whereFloat(const string& key, const float value, const string& oper, const string& from)
+bool PGQueryBuilder::whereIntVector(const string &key, const vector<int> &values, const string &oper, const string &from)
+{
+    string exp = constructColumn(key, from);
+    string listval = serializeVector(values);
+    _listWhere.push_back(WhereItem(exp, oper, listval));
+}
+
+bool PGQueryBuilder::whereInt8(const string& key, long long value, const string& oper, const string& from)
+{
+    return whereSingleValue(key, value, "%int8", oper, from);
+}
+
+bool PGQueryBuilder::whereInt8Vector(const string &key, const vector<long long> &values, const string &oper, const string &from)
+{
+    string exp = constructColumn(key, from);
+    string listval = serializeVector(values);
+    _listWhere.push_back(WhereItem(exp, oper, listval));
+}
+
+bool PGQueryBuilder::whereFloat(const string& key, float value, const string& oper, const string& from)
 {
     return whereSingleValue(key, value, "%float4", oper, from);
 }
 
-bool PGQueryBuilder::whereSeqtype(const string& key, const string& value, const string& oper, const string& from)
+bool PGQueryBuilder::whereFloatVector(const string &key, const vector<float> &values, const string &oper, const string &from)
 {
-    return checkSeqtype(value) && whereSingleValue(key, value.c_str(), "%public.seqtype", oper, from);
+    string exp = constructColumn(key, from);
+    string listval = serializeVector(values);
+    _listWhere.push_back(WhereItem(exp, oper, listval));
 }
 
-bool PGQueryBuilder::whereInouttype(const string& key, const string& value, const string& oper, const string& from)
+bool PGQueryBuilder::whereFloat8(const string& key, double value, const string& oper, const string& from)
 {
-    return checkInouttype(value) && whereSingleValue(key, value.c_str(), "%public.inouttype", oper, from);
+    return whereSingleValue(key, value, "%float8", oper, from);
 }
 
-bool PGQueryBuilder::whereProcessStatus(const string& key, ProcessState::STATUS_T value, const string& oper, const string& from)
+bool PGQueryBuilder::whereFloat8Vector(const string &key, const vector<double> &values, const string &oper, const string &from)
 {
-    return value != ProcessState::STATUS_NONE &&
-            whereSingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", oper, from);
+    string exp = constructColumn(key, from);
+    string listval = serializeVector(values);
+    _listWhere.push_back(WhereItem(exp, oper, listval));
 }
 
-bool PGQueryBuilder::whereTimestamp(const string& key, const time_t& value, const string& oper, const string& from)
+bool PGQueryBuilder::whereTimestamp(const string& key, const std::chrono::system_clock::time_point& value, const string& oper, const string& from)
 {
     PGtimestamp ts = UnixTimeToTimestamp(value);
     return whereSingleValue(key, &ts, "%timestamp", oper, from);
 }
 
-bool PGQueryBuilder::whereTimeRange(const string& key_start, const string& key_length, const time_t& value_start, const uint value_length, const string& oper, const string& from)
+bool PGQueryBuilder::wherePoint(const string& key, Point value, const string& oper, const string& from)
+{
+    PGpoint pt = { value.x, value.y };
+    return whereSingleValue(key, &pt, "%point", oper, from);
+}
+
+bool PGQueryBuilder::wherePointVector(const string &key, const vector<Point> &values, const string &oper, const string &from)
+{
+    //TODO: point vector
+   return false;
+}
+
+bool PGQueryBuilder::whereProcessStatus(const string& key, ProcessState::Status value, const string& oper, const string& from)
+{
+    return whereSingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", oper, from);
+}
+
+bool PGQueryBuilder::whereTimeRange(const string& key_start,
+                                    const string& key_length,
+                                    const chrono::system_clock::time_point &value_start,
+                                    const chrono::system_clock::time_point &value_end,
+                                    const string& oper,
+                                    const string& from)
 {
     bool bRet = true;
 
@@ -644,13 +722,10 @@ bool PGQueryBuilder::whereTimeRange(const string& key_start, const string& key_l
             break;
         }
 
-        string exp =
-        "'[" + UnixTimeToTimestampString(value_start) + ',' +
-        UnixTimeToTimestampString(value_start + value_length) + "]'";
-
-        string value =
-        "public.tsrange(" + constructColumn(key_start, from) + ',' +
-        constructColumn(key_length, from) + ')';
+        string exp = "'[" + toString(value_start) + ',' + toString(value_end) + "]'";
+        string value = "public.tsrange(" +
+                constructColumn(key_start, from) + ',' +
+                constructColumn(key_length, from) + ')';
 
         _listWhere.push_back(WhereItem(exp, oper, value));
     } while (0);
@@ -658,9 +733,10 @@ bool PGQueryBuilder::whereTimeRange(const string& key_start, const string& key_l
     return bRet;
 }
 
-bool PGQueryBuilder::whereRegion(const string& key, const IntervalEvent::box& value, const string& oper, const string& from)
+bool PGQueryBuilder::whereRegion(const string& key, const Box& value, const string& oper, const string& from)
 {
-    return whereSingleValue(key, &value, "%box", oper, from);
+    PGbox box = { { value.high.x, value.high.y }, { value.low.x, value.low.y } };
+    return whereSingleValue(key, &box, "%box", oper, from);
 }
 
 bool PGQueryBuilder::whereExpression(const string& expression, const string& value, const string& oper)
@@ -674,56 +750,37 @@ bool PGQueryBuilder::whereExpression(const string& expression, const string& val
     }
 }
 
-bool PGQueryBuilder::whereStringList(const string &key, const list<string> &values, const string &oper, const string &from)
+bool PGQueryBuilder::whereSeqtype(const string& key, const string& value, const string& oper, const string& from)
 {
-    string exp = constructColumn(key, from);
-    string listval;
-    listval += '(';
-    for (auto const& value : values) {
-        if (listval.length() > 1) listval += ',';
-        listval += escapeLiteral(value);
-    }
-    if (listval.length() < 2) listval += "\'\'";
-    listval += ')';
-
-    _listWhere.push_back(WhereItem(exp, oper, listval));
+    return checkSeqtype(value) && whereSingleValue(key, value.c_str(), "%public.seqtype", oper, from);
 }
 
-bool PGQueryBuilder::whereIntList(const string &key, const list<int> &values, const string &oper, const string &from)
+bool PGQueryBuilder::whereInouttype(const string& key, const string& value, const string& oper, const string& from)
 {
-    string exp = constructColumn(key, from);
-    string listval ;
-    listval += '(';
-    for (auto const& value : values) {
-        if (listval.length() > 1) listval += ',';
-        listval += escapeLiteral(toString<int>(value));
-    }
-    if (listval.length() < 2) listval += "\'\'";
-    listval += ')';
-
-    _listWhere.push_back(WhereItem(exp, oper, listval));
+    return checkInouttype(value) && whereSingleValue(key, value.c_str(), "%public.inouttype", oper, from);
 }
+
 
 template<typename T>
-unsigned int PGQueryBuilder::addToParam(const char* type, T value)
+unsigned int PGQueryBuilder::addToParam(const char* type, const T& value)
 {
     uint ret = 0;
 
     do {
         if (!_pquery_param && !(_pquery_param = createQueryParam())) break;
 
-        if (PQputf((PGparam *) _pquery_param, type, value) == 0) {
-            VTLOG_WARNING( "Failed to add value to query: " + toString<T>(value));
+        if (PQputf((PGparam *)_pquery_param, type, value) == 0) {
+            VTLOG_WARNING("Failed to add value to query: " + toString<T>(value));
             break;
         }
 
-        ret = ++_cntParam;
+        ret = ++_cnt_param;
     } while (0);
 
     return ret;
 }
 
-string PGQueryBuilder::constructTable(const string& table, const string& schema)
+string PGQueryBuilder::constructTable(const string& table, const string& schema) const
 {
     const string& tab = (!table.empty() ? table : _defaultTable);
 
@@ -751,7 +808,7 @@ string PGQueryBuilder::constructTable(const string& table, const string& schema)
     }
 }
 
-string PGQueryBuilder::constructColumn(const string& column, const string& table)
+string PGQueryBuilder::constructColumn(const string& column, const string& table) const
 {
     if (column.empty()) {
         VTLOG_ERROR("No column was specified for query");
@@ -818,7 +875,7 @@ string PGQueryBuilder::constructColumn(const string& column, const string& table
     }
 }
 
-string PGQueryBuilder::constructColumnNoTable(const string& column)
+string PGQueryBuilder::constructColumnNoTable(const string& column) const
 {
     size_t charPos = column.find_first_of(",.");
     if (charPos > 0 && charPos < column.length() - 1) {
@@ -831,12 +888,12 @@ string PGQueryBuilder::constructColumnNoTable(const string& column)
     }
 }
 
-string PGQueryBuilder::constructAlias(const string& column)
+string PGQueryBuilder::constructAlias(const string& column) const
 {
     return column.substr(0, column.find_first_of(":[(,."));
 }
 
-string PGQueryBuilder::escapeIdent(const string& ident)
+string PGQueryBuilder::escapeIdent(const string& ident) const
 {
     char *escaped = PQescapeIdentifier((PGconn *) _connection.getConnectionObject(),
                                        ident.c_str(),
@@ -846,7 +903,7 @@ string PGQueryBuilder::escapeIdent(const string& ident)
     return ret;
 }
 
-string PGQueryBuilder::escapeLiteral(const string& literal)
+string PGQueryBuilder::escapeLiteral(const string& literal) const
 {
     char *escaped = PQescapeLiteral((PGconn *)_connection.getConnectionObject(),
                                     literal.c_str(),
@@ -856,12 +913,12 @@ string PGQueryBuilder::escapeLiteral(const string& literal)
     return ret;
 }
 
-string PGQueryBuilder::constructWhereClause()
+string PGQueryBuilder::constructWhereClause() const
 {
     string where;
 
     if (!_listWhere.empty()) {
-        for (WhereItem & item : _listWhere) {
+        for (const WhereItem & item : _listWhere) {
 
             if (!where.empty()) where += "\nAND\n";
 
@@ -886,31 +943,24 @@ string PGQueryBuilder::constructWhereClause()
     return where;
 }
 
-PGtimestamp PGQueryBuilder::UnixTimeToTimestamp(const time_t& utime)
+PGtimestamp PGQueryBuilder::UnixTimeToTimestamp(const chrono::system_clock::time_point & utime) const
 {
-    PGtimestamp ret = { 0 };
-    struct tm* ts = gmtime(&utime);
+    std::time_t tmp = chrono::system_clock::to_time_t(utime);
+    std::tm ts = *std::gmtime(&tmp);
 
-    ret.date.year = ts->tm_year + 1900;
-    ret.date.mon  = ts->tm_mon;
-    ret.date.mday = ts->tm_mday;
-    ret.time.hour = ts->tm_hour;
-    ret.time.min  = ts->tm_min;
-    ret.time.sec  = ts->tm_sec;
+    PGtimestamp ret = { 0 };
+    ret.date.year = ts.tm_year + 1900;
+    ret.date.mon  = ts.tm_mon;
+    ret.date.mday = ts.tm_mday;
+    ret.time.hour = ts.tm_hour;
+    ret.time.min  = ts.tm_min;
+    ret.time.sec  = ts.tm_sec;
+
+    auto secs = chrono::duration_cast<chrono::seconds>(utime.time_since_epoch());
+    auto usecs = chrono::duration_cast<chrono::microseconds>(utime.time_since_epoch());
+    ret.time.usec = chrono::duration_cast<chrono::microseconds>(usecs - secs).count();
 
     return ret;
-}
-
-string PGQueryBuilder::UnixTimeToTimestampString(const time_t& utime)
-{
-    struct tm* ts = gmtime(&utime);
-    char buffer[64];
-
-    sprintf(buffer, "%d-%02d-%02d %02d:%02d:%02d",
-            ts->tm_year + 1900, ts->tm_mon + 1, ts->tm_mday,
-            ts->tm_hour, ts->tm_min, ts->tm_sec);
-
-    return buffer;
 }
 
 }

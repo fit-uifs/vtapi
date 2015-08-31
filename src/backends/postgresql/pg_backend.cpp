@@ -21,7 +21,7 @@ QueryBuilder * PGBackend::createQueryBuilder(Connection &connection) const
     return new PGQueryBuilder(pgconnection);
 }
 
-ResultSet *PGBackend::createResultSet(DBTYPES_MAP *dbtypes) const
+ResultSet *PGBackend::createResultSet(const DatabaseTypes &dbtypes) const
 {
     return new PGResultSet(dbtypes);
 }

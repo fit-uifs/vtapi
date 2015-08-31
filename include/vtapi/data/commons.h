@@ -12,10 +12,11 @@
 
 #pragma once
 
-#include <string>
 #include <Poco/Util/AbstractConfiguration.h>
 #include <Poco/ClassLoader.h>
 #include "../plugins/backend_interface.h"
+#include <string>
+#include <memory>
 
 namespace vtapi {
 
@@ -36,37 +37,6 @@ namespace vtapi {
 class Commons
 {
 public:
-    // global configuration (shared by pointer between all objects)
-    typedef struct _CONFIG
-    {
-        std::string     configfile;         /**< VTApi config file path */
-        std::string     datasets_dir;       /**< Folder with datasets */
-        std::string     modules_dir;        /**< Folder with module binaries */
-        std::string     connection;         /**< Connection string (URI://[string]) */
-        bool            log_errors;         /**< Enables logging error messages */
-        bool            log_warnings;       /**< Enables logging warning messages */
-        bool            log_debug;          /**< Enables logging debug messages */
-        std::string     logfile;            /**< Path to log file (empty => stdout/stderr) */
-
-        _CONFIG();
-    } CONFIG;
-
-    // local context (each object owns its copy)
-    typedef struct _CONTEXT
-    {
-        std::string     datasetLocation;    /**< Current dataset location */
-        std::string     sequenceLocation;   /**< Current sequence location */
-        std::string     dataset;            /**< Current dataset name */
-        std::string     sequence;           /**< Current sequence name */
-        std::string     selection;          /**< Current selection name */
-        std::string     method;             /**< Current method name */
-        int             process;            /**< Current process ID */
-        std::string     task;               /**< Current task name */
-
-        _CONTEXT();
-    } CONTEXT;
-
-
     /**
      * @brief Commons Construct shared configuration object from configuration map
      * @param config configuration object
@@ -78,38 +48,73 @@ public:
      * @param orig original object
      * @param new_copy do full copy including configuration and connection
      */
-    Commons(const Commons& orig, bool new_copy);
+    Commons(const Commons &orig, bool new_copy);
 
     /**
      * Destructor
      */
     virtual ~Commons();
 
+protected:
+    /**
+     * @brief Global configuration (shared between all objects)
+     */
+    class Config
+    {
+    public:
+        std::string     configfile;         /**< VTApi config file path */
+        std::string     datasets_dir;       /**< Folder with datasets */
+        std::string     modules_dir;        /**< Folder with module binaries */
+        std::string     connection;         /**< Connection string (URI://[string]) */
+        bool            log_errors;         /**< Enables logging error messages */
+        bool            log_warnings;       /**< Enables logging warning messages */
+        bool            log_debug;          /**< Enables logging debug messages */
+        std::string     logfile;            /**< Path to log file (empty => stdout/stderr) */
+
+        Config() : log_errors(false), log_warnings(false), log_debug(false) {}
+    };
+
+    /**
+     * @brief Local context - each object owns its copy
+     */
+    class Context
+    {
+    public:
+        std::string     datasetLocation;    /**< Current dataset location */
+        std::string     sequenceLocation;   /**< Current sequence location */
+        std::string     dataset;            /**< Current dataset name */
+        std::string     sequence;           /**< Current sequence name */
+        std::string     selection;          /**< Current selection name */
+        std::string     method;             /**< Current method name */
+        int             process;            /**< Current process ID */
+        std::string     task;               /**< Current task name */
+
+        Context() : process(0) {}
+    };
+
+    Context _context;   /**< Local context for VTApi objects */
+
     /**
      * @brief configuration accessor
      * @return config
      */
-    const CONFIG& config() const;
-
-    /**
-     * @brief local context accessor
-     * @return context
-     */
-    CONTEXT &context();
+    const Config &config() const
+    { return *_pconfig; }
 
     /**
      * @brief backend interface accessor
      * @return backend interface
      */
-    const IBackendInterface& backend() const;
+    const IBackendInterface &backend() const
+    { return *_pbackend; }
 
     /**
      * @brief connection accessor
      * @return connection
      */
-    Connection& connection();
+    Connection &connection()
+    { return *_pconnection; }
 
-protected:
     /**
      * @brief Loads configuration into commons
      * @param config source configuration
@@ -123,13 +128,12 @@ protected:
     void saveConfig(Poco::Util::AbstractConfiguration &config) const;
 
 private:
-    CONFIG          *_pconfig;              /**< Global configuration */
-    CONTEXT         _context;               /**< Local context for VTApi objects */
-    IBackendInterface *_pbackend;           /**< Backend library interface */
-    Connection      *_pconnection;          /**< Database connection object */
+    std::shared_ptr<Config> _pconfig;               /**< Global configuration */
+    std::shared_ptr<IBackendInterface> _pbackend;   /**< Backend library interface */
+    std::shared_ptr<Connection> _pconnection;       /**< Database connection object */
+    std::shared_ptr< Poco::ClassLoader<IBackendInterface> > _ploader;  /** backend library loader/unloader */
 
-    bool _is_owner;                         /**< owns its resources */
-    Poco::ClassLoader<IBackendInterface> *_ploader;   /** backend library loader/unloader */
+    bool _is_owner;                                 /**< owns its resources */
 
     void loadBackend();
     void unloadBackend();
@@ -139,6 +143,8 @@ private:
     Commons(const Commons&) = delete;
     Commons& operator=(const Commons&) = delete;
 
+    friend class Query;
+    friend class VTApi;
 };
 
 } // namespace vtapi

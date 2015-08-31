@@ -1,6 +1,6 @@
 /**
  * @file
- * @brief   Definition of serialization and deserialization functions
+ * @brief   Definition of serialization functions
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
@@ -12,17 +12,18 @@
 
 #pragma once
 
-#include <ctime>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <opencv2/opencv.hpp>
-#include "types.h"
 #include "../data/intervalevent.h"
 #include "../data/processstate.h"
+#include <chrono>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <vector>
+#include <opencv2/opencv.hpp>
 
 namespace vtapi {
     
+
 /**
  * @brief A generic function to convert any numeric type to string
  * (any numeric type, e.g. int, float, double, etc.)
@@ -39,43 +40,48 @@ inline std::string toString(const T& value)
 }
 
 /**
- * @brief A generic function to convert any array of supported types to string
- * @param values   array of numeric values
- * @param size input array size
- * @param limit limit of array elements to serialize
- * @return string containing the serialized result
- */
-template <class T>
-inline std::string toString(const T* values, const int size, const int limit)
-{
-    std::string str;
-    int lim = (limit && limit < size) ? limit : size;
-    str += '[';
-    for (int i = 0; i < lim; i++) {
-        str += toString(values[i]);
-        if (i < lim - 1)  str += ',';
-    }
-    str += ']';
-    
-    return str;
-}
-
-/**
  * @brief A generic function to convert any vector of supported types to string
  * @param values vector of values
  * @param limit limit array of elements to serialize
  * @return string containing the serialized result
  */
 template <class T>
-inline std::string toString(const std::vector<T>& values, const int limit)
+inline std::string toString(const std::vector<T>& values, int limit)
 {
-    return toString(values.data(), (int) values.size(), limit);
+    std::string str;
+    int lim = (limit && limit < values.size()) ? limit : values.size();
+    str += '[';
+    for (int i = 0; i < lim; i++) {
+        str += toString<T>(values[i]);
+        if (i < lim - 1)  str += ',';
+    }
+    str += ']';
+
+    return str;
 }
 
 // specialized toString
 
 template <>
+inline std::string toString< std::vector<std::string> > (const std::vector<std::string>& values)
+{
+    return toString(values, 0);
+}
+
+template <>
 inline std::string toString< std::vector<int> > (const std::vector<int>& values)
+{
+    return toString(values, 0);
+}
+
+template <>
+inline std::string toString< std::vector<long long> > (const std::vector<long long>& values)
+{
+    return toString(values, 0);
+}
+
+template <>
+inline std::string toString< std::vector<float> > (const std::vector<float>& values)
 {
     return toString(values, 0);
 }
@@ -87,34 +93,50 @@ inline std::string toString< std::vector<double> > (const std::vector<double>& v
 }
 
 template <>
+inline std::string toString< std::vector<Point> > (const std::vector<Point>& values)
+{
+    return toString(values, 0);
+}
+
+template <>
+inline std::string toString < std::vector<char> >(const std::vector<char>& values)
+{
+    return "";
+
+    //TODO: serialize binary data
+    //return base64_encode(data, data_size);
+}
+
+template <>
 inline std::string toString <std::string>(const std::string& value)
 {
     return value;
 }
 
 template <>
-inline std::string toString <void>(const void* data, const int data_size, const int limit)
+inline std::string toString <std::chrono::system_clock::time_point>(const std::chrono::system_clock::time_point& value)
 {
-    return "";
+    std::time_t tmp = std::chrono::system_clock::to_time_t(value);
+    std::tm ts = *std::gmtime(&tmp);
 
-    //TODO: serialize void
-    //return base64_encode(data, data_size);
+    auto secs = std::chrono::duration_cast<std::chrono::seconds>(value.time_since_epoch());
+    auto usecs = std::chrono::duration_cast<std::chrono::microseconds>(value.time_since_epoch());
+
+    std::ostringstream oss;
+    oss << std::setfill('0') <<
+           std::setw(4) << ts.tm_year + 1900 << '-' <<
+           std::setw(2) << ts.tm_mon << '-' <<
+           std::setw(2) << ts.tm_mday << ' ' <<
+           std::setw(2) << ts.tm_hour << ':' <<
+           std::setw(2) << ts.tm_min << ':' <<
+           std::setw(2) << ts.tm_sec << '.' <<
+           std::chrono::duration_cast<std::chrono::microseconds>(usecs - secs).count();
+
+    return oss.str();
 }
 
 template <>
-inline std::string toString <time_t>(const time_t& value)
-{
-    struct tm *ts = gmtime(&value);
-    ts->tm_year -= 1900;
-
-    char buff[20];
-    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", ts);
-
-    return buff;
-}
-
-template <>
-inline std::string toString <IntervalEvent::point>(const IntervalEvent::point& value)
+inline std::string toString <IntervalEvent::Point>(const IntervalEvent::Point& value)
 {
     std::ostringstream ostr;
     ostr << '(' << value.x << ',' << value.y << ')';
@@ -123,7 +145,7 @@ inline std::string toString <IntervalEvent::point>(const IntervalEvent::point& v
 }
 
 template <>
-inline std::string toString <IntervalEvent::box>(const IntervalEvent::box& value)
+inline std::string toString <IntervalEvent::Box>(const IntervalEvent::Box& value)
 {
     std::string str;
     str = '(' + toString(value.high) + ',' + toString(value.low) + ')';
@@ -135,32 +157,26 @@ template <>
 inline std::string toString <IntervalEvent>(const IntervalEvent& value)
 {
     std::ostringstream ostr;
-    ostr << '(' << value.group_id << ',' << value.class_id << ',' << value.is_root << ','
-    << toString(value.region) << ',' << value.score << ','
-    << toString(value.user_data, value.user_data_size, 0) << ')';
+    ostr << '(' <<
+            value.group_id << ',' <<
+            value.class_id << ',' <<
+            value.is_root << ',' <<
+            toString(value.region) << ',' <<
+            value.score << ',' <<
+            toString(value.user_data) << ')';
 
     return ostr.str();
-}
-
-template <>
-inline std::string toString <Point>(const Point& value)
-{
-    return toString<IntervalEvent::point>((const IntervalEvent::point&)value);
-}
-
-template <>
-inline std::string toString <Box>(const Box& value)
-{
-    return toString<IntervalEvent::box>((const IntervalEvent::box&)value);
 }
 
 template <>
 inline std::string toString <ProcessState>(const ProcessState& value)
 {
     std::ostringstream ostr;
-    ostr << '(' << ProcessState::toStatusString(value.status) << ','
-        << value.progress << ',' << value.currentItem << ','
-        << value.lastError << ')';
+    ostr << '(' <<
+            ProcessState::toStatusString(value.status) << ',' <<
+            value.progress << ',' <<
+            value.current_item << ',' <<
+            value.last_error << ')';
 
     return ostr.str();
 }
@@ -238,97 +254,4 @@ inline std::string toString <cv::Mat>(const cv::Mat& value)
 }
 
 
-/**
- * @brief Converts time string (yyyy-mm-dd hh:mm:ss) to timestamp
- * @param value   time string
- * @return timestamp
- */
-inline time_t toTimestamp(const std::string& value)
-{
-    struct tm ts = {0};
-    sscanf(value.c_str(), "%d-%d-%d %d:%d:%d", &ts.tm_year, &ts.tm_mon, &ts.tm_mday, &ts.tm_hour, &ts.tm_min, &ts.tm_sec);
-    ts.tm_year -= 1900;
-    
-    return mktime(&ts);
-}
-
-/**
- * @brief Generic conversion from string to array representation
- * @param buffer   input string
- * @param size     output value only: array size
- * @return array of values
- */
-template<class T>
-inline T* deserializeA(const char *buffer, int& size) {
-    T *ret  = NULL;
-    std::string valStr   = std::string(buffer);     
-    
-    if ((valStr.find('[', 0) == 0) && (valStr.find(']', 0) == valStr.length()-1)) {
-        size_t leftPos  = 1;
-        size_t nextPos  = 1;
-        size            = 1;
-        leftPos         = valStr.find(',', 1);
-        while ( leftPos != std::string::npos) {
-            size++;
-            leftPos     = valStr.find(',', leftPos+1);
-        }
-        
-        ret         = new T[size];
-        leftPos     = 1;
-        for (int i = 0; i < size; i++) {
-            nextPos = valStr.find_first_of(",]", leftPos+1);
-            std::stringstream(valStr.substr(leftPos, nextPos-leftPos)) >> ret[i];
-            leftPos     = nextPos + 1;
-        }
-        
-    }
-    else {
-        ret     = new T[1];
-        size    = 1;
-        std::stringstream(valStr) >> ret[0];
-    }
-
-    return ret;
-}
-
-/**
- * @brief Generic conversion from string to vector representation
- * @param buffer   input string
- * @return vector of values
- */
-template<class T>
-inline std::vector<T>* deserializeV(const char *buffer) {
-    std::vector<T> *ret  = NULL;
-    std::string valStr   = std::string(buffer);
-
-    if ((valStr.find('[', 0) == 0) && (valStr.find(']', 0) == valStr.length()-1)) {
-        size_t leftPos  = 1;
-        size_t nextPos  = 1;
-        int size        = 1;
-        leftPos         = valStr.find(',', 1);
-        while ( leftPos != std::string::npos) {
-            size++;
-            leftPos     = valStr.find(',', leftPos+1);
-        }
-
-        ret         = new std::vector<T>;
-        leftPos     = 1;
-        for (int i = 0; i < size; i++) {
-            T val;
-            nextPos = valStr.find_first_of(",]", leftPos+1);
-            std::stringstream(valStr.substr(leftPos, nextPos-leftPos)) >> val;
-            ret->push_back(val);
-            leftPos     = nextPos + 1;
-        }
-
-    }
-    else {
-        T val;
-        ret = new std::vector<T>;        
-        std::stringstream(valStr) >> val;
-        ret->push_back(val);
-    }
-
-    return ret;
-}
 }

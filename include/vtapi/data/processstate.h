@@ -31,30 +31,42 @@ namespace vtapi {
 class ProcessState
 {
 public:
-    typedef enum _STATUS_T
+    enum Status
     {
-        STATUS_NONE,        /**< invalid status */
         STATUS_CREATED,     /**< process has been newly registered but not yet started */
         STATUS_RUNNING,     /**< process is currently working */
         STATUS_SUSPENDED,   /**< process is currently in paused state */
         STATUS_FINISHED,    /**< process has finished succesfully */
         STATUS_ERROR        /**< process has finished with an error */
-    } STATUS_T;
+    };
     
 
-    ProcessState();
+    //TODO: process state header only
+
+    ProcessState()
+        : status(STATUS_CREATED), progress(0) {}
+
+    explicit ProcessState(Status status,
+                          double progress = 0.0,
+                          const std::string& item = std::string())
+        : status(status), progress(progress)
+    {
+        if (status == STATUS_RUNNING)
+            current_item = item;
+        else if (status == STATUS_ERROR)
+            last_error = item;
+    }
+
     explicit ProcessState(const std::string& stateString);
-    explicit ProcessState(STATUS_T status, float progress = 0, const std::string& item = std::string());
-    virtual ~ProcessState();
 
-    static STATUS_T toStatusValue(const std::string& status_string);
-    static std::string toStatusString(STATUS_T status);
+    static Status toStatusValue(const std::string& status_string);
+    static std::string toStatusString(Status status);
 
     
-    STATUS_T status;            /**< current process status */
-    float progress;             /**< process progress (0-100) */
-    std::string currentItem;    /**< currently processed item */
-    std::string lastError;      /**< last error message */
+    Status status;              /**< current process status */
+    double progress;            /**< process progress (0-100) */
+    std::string current_item;   /**< currently processed item */
+    std::string last_error;     /**< last error message */
 };
 
 }

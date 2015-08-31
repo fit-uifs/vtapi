@@ -7,35 +7,25 @@
 #define SL_DB_SUFFIX ".db"
 #define SL_DB_PUBLIC "public"
 
+#define SLCONN ((sqlite3*)_conn)
 
 using namespace std;
 
 namespace vtapi {
 
 
-SLConnection::SLConnection(const string& connection_string)
-    : Connection(connection_string)
-{
-    _conn = NULL;
-}
-
-SLConnection::~SLConnection()
-{
-    disconnect();
-}
-
 bool SLConnection::connect ()
 {
     bool retval = true;
 
-    fixSlashes(_connInfo);
-    string dbname = _connInfo + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
+    fixSlashes(_connection_info);
+    string dbname = _connection_info + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
 
     VTLOG_DEBUG("Connecting to DB... " + dbname);
 
-    sqlite3_open_v2(dbname.c_str(), &_conn, SQLITE_OPEN_READWRITE, NULL);
+    sqlite3_open_v2(dbname.c_str(), (sqlite3**)&_conn, SQLITE_OPEN_READWRITE, NULL);
     if (!(retval = isConnected())) {
-        VTLOG_ERROR(sqlite3_errmsg(_conn));
+        VTLOG_ERROR(sqlite3_errmsg(SLCONN));
         disconnect();
     }
 
@@ -44,18 +34,18 @@ bool SLConnection::connect ()
 
 void SLConnection::disconnect ()
 {
-    if (_conn) {
+    if (SLCONN) {
         VTLOG_DEBUG("Disconnecting DB...");
 
-        sqlite3_close(_conn);
+        sqlite3_close(SLCONN);
     }
 }
 
-bool SLConnection::isConnected ()
+bool SLConnection::isConnected () const
 {
-    if (_conn) {
+    if (SLCONN) {
         int cur, high;
-        int ret = sqlite3_db_status(_conn, SQLITE_DBSTATUS_SCHEMA_USED,
+        int ret = sqlite3_db_status(SLCONN, SQLITE_DBSTATUS_SCHEMA_USED,
                                         &cur, &high, false);
         return ret == SQLITE_OK;
     }
@@ -72,24 +62,24 @@ bool SLConnection::execute(const string& query, void *param)
 
     VTLOG_DEBUG(query);
 
-    _errorMessage.clear();
+    _error_message.clear();
 
     retval = attachDatabase (sl_param->database);
     if (!retval) {
-        _errorMessage = "Database " + sl_param->database + " couldn't have been attached.";
-        VTLOG_ERROR(_errorMessage);
+        _error_message = "Database " + sl_param->database + " couldn't have been attached.";
+        VTLOG_ERROR(_error_message);
     }
     else {
-        retval = sqlite3_exec(_conn, query.c_str(), NULL, NULL, &errmsg) == SQLITE_OK;
+        retval = sqlite3_exec(SLCONN, query.c_str(), NULL, NULL, &errmsg) == SQLITE_OK;
         if (!retval) {
             if (errmsg) {
-                _errorMessage = string(errmsg);
+                _error_message = string(errmsg);
                 sqlite3_free(errmsg);
             }
             else {
-                _errorMessage = "Query failed : " + query;
+                _error_message = "Query failed : " + query;
             }
-            VTLOG_ERROR(_errorMessage);
+            VTLOG_ERROR(_error_message);
         }
     }
 
@@ -106,14 +96,14 @@ int SLConnection::fetch(const string& query, void *param, ResultSet &resultSet)
 
     VTLOG_DEBUG(query);
 
-    _errorMessage.clear();
+    _error_message.clear();
 
     if (!attachDatabase (sl_param->database)) {
-        _errorMessage = "Database " + sl_param->database + " couldn't have been attached.";
-        VTLOG_ERROR(_errorMessage);
+        _error_message = "Database " + sl_param->database + " couldn't have been attached.";
+        VTLOG_ERROR(_error_message);
     }
     else {
-        retquery = sqlite3_get_table(_conn, query.c_str(), &(sl_res->res),
+        retquery = sqlite3_get_table(SLCONN, query.c_str(), &(sl_res->res),
                                          &(sl_res->rows), &(sl_res->cols), &errmsg);
         resultSet.newResult((void *) sl_res);
         if (retquery == SQLITE_OK) {
@@ -121,25 +111,20 @@ int SLConnection::fetch(const string& query, void *param, ResultSet &resultSet)
         }
         else {
             if (errmsg) {
-                _errorMessage = string(errmsg);
+                _error_message = string(errmsg);
                 sqlite3_free(errmsg);
             }
             else {
-                _errorMessage = "Query failed : " + query;
+                _error_message = "Query failed : " + query;
             }
-            VTLOG_ERROR(_errorMessage);
+            VTLOG_ERROR(_error_message);
         }
     }
 
     return retval;
 }
 
-void* SLConnection::getConnectionObject()
-{
-    return (void *)_conn;
-}
-
-bool SLConnection::fixSlashes(string& path)
+bool SLConnection::fixSlashes(string& path) const
 {
     size_t len = path.length();
     size_t slPos = 0;
@@ -170,10 +155,10 @@ bool SLConnection::fixSlashes(string& path)
 
 bool SLConnection::attachDatabase(string& dbfile)
 {
-    if (sqlite3_db_filename(_conn, dbfile.c_str()) == NULL) {
-        string path = _connInfo + "/" + SL_DB_PREFIX + dbfile + SL_DB_SUFFIX;
+    if (sqlite3_db_filename(SLCONN, dbfile.c_str()) == NULL) {
+        string path = _connection_info + "/" + SL_DB_PREFIX + dbfile + SL_DB_SUFFIX;
         string query = "ATTACH DATABASE \'" + path + "\' AS \'" + dbfile + "\';";
-        return sqlite3_exec(_conn, query.c_str(), NULL, NULL, NULL) == SQLITE_OK;
+        return sqlite3_exec(SLCONN, query.c_str(), NULL, NULL, NULL) == SQLITE_OK;
     }
     else {
         return true;

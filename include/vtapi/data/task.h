@@ -13,7 +13,6 @@
 
 #pragma once
 
-#include <list>
 #include "keyvalues.h"
 #include "dataset.h"
 #include "sequence.h"
@@ -57,14 +56,11 @@ public:
      * Construct task object for iterating through VTApi tasks
      * Object will represent set of tasks specified by their names
      * @param commons base Commons object
-     * @param names list of method tasks
+     * @param names vector of method tasks
      */
-    Task(const Commons& commons, const std::list<std::string>& names);
+    Task(const Commons& commons, const std::vector<std::string>& names);
 
     using KeyValues::count;
-    using KeyValues::print;
-    using KeyValues::printAll;
-    using KeyValues::printKeys;
 
     /**
      * @brief Iterates to next task
@@ -80,57 +76,57 @@ public:
      * @brief Gets parent dataset object
      * @return dataset object (initialized)
      */
-    Dataset *getParentDataset();
+    Dataset *getParentDataset() const;
 
     /**
      * @brief Gets parent method name
      * @return method name
      */
-    std::string getParentMethodName();
+    std::string getParentMethodName() const;
 
     /**
      * @brief Gets parent method object
      * @return method object (initialized)
      */
-    Method *getParentMethod();
+    Method *getParentMethod() const;
 
     /**
      * @brief Gets output data table name for this task
      * @return table name
      */
-    std::string getOutputDataTable();
+    std::string getOutputDataTable() const;
 
     /**
      * @brief Gets information on task's progress for all sequences
      * @return progress object for iteration
      */
-    TaskProgress *loadTaskProgress();
+    TaskProgress *loadTaskProgress() const;
 
     /**
      * @brief Gets information on task's progress for specified sequences
      * @param seqnames names of sequences to check for progress
      * @return progress object for iteration
      */
-    TaskProgress *loadTaskProgress(const std::list<std::string>& seqnames);
+    TaskProgress *loadTaskProgress(const std::vector<std::string>& seqnames) const;
 
     /**
      * Gets tasks which should be completed before running this one
      * @return task object representing prerequisite tasks for iteration
      */
-    Task *loadPrerequisiteTasks();
+    Task *loadPrerequisiteTasks() const;
 
     /**
      * Gets output intervals of this process
      * @return output intervals for iteration
      */
-    Interval *loadOutputData();
+    Interval *loadOutputData() const;
 
     /**
      * Loads method's processes for iteration
      * @param id   process ID (0 = all processes)
      * @return process object for iteration
      */
-    Process *loadProcesses(int id = 0);
+    Process *loadProcesses(int id = 0) const;
 
     //////////////////////////////////////////////////
     // getters - SELECT
@@ -140,14 +136,19 @@ public:
      * Gets this task's name
      * @return task name
      */
-    std::string getName();
+    std::string getName() const;
     
     /**
      * Gets object containing task parameters
      * @return task parameters map
      */
-    TaskParams *getParams();
+    TaskParams getParams() const;
 
+    /**
+     * @brief Gets time when sequence was added to dataset
+     * @return timestamp
+     */
+    std::chrono::system_clock::time_point getCreatedTime() const;
     
     //////////////////////////////////////////////////
     // create - INSERT
@@ -158,14 +159,32 @@ public:
      * @param seqnames names of sequences for which to process the task
      * @return pointer to the new Process object, NULL on error
      */
-    Process* createProcess(const std::list<std::string>& seqnames);
+    Process* createProcess(const std::vector<std::string>& seqnames) const;
 
     /**
      * @brief Creates new object for outputting data
      * @param seqname output data for this sequence
      * @return interval output object, NULL on error
      */
-    IntervalOutput *createIntervalOutput(const std::string &seqname);
+    IntervalOutput *createIntervalOutput(const std::string &seqname) const;
+
+    //////////////////////////////////////////////////
+    // delete data - DELETE
+    //////////////////////////////////////////////////
+
+    /**
+     * @brief Deletes output data for one or all sequences
+     * @param seqname sequence name for which to delete data, empty for all
+     * @return success
+     */
+    bool deleteOutputData(const std::string &seqname = std::string()) const;
+
+    /**
+     * @brief Deletes output data for specified set of sequences
+     * @param seqnames sequence names for which to delete data
+     * @return success
+     */
+    bool deleteOutputData(const std::vector<std::string> &seqnames) const;
 
     //////////////////////////////////////////////////
     // misc
@@ -177,10 +196,11 @@ public:
      * @param params container
      * @return process name
      */
-    static std::string constructName(const std::string &mtname, const TaskParams &params);
+    static std::string constructName(const std::string &mtname,
+                                     const TaskParams &params);
 
 protected:
-    virtual bool preUpdate();
+    bool preUpdate() override;
     
 private:
     Task() = delete;

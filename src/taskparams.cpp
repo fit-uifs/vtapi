@@ -1,151 +1,133 @@
-#include <utility>
 #include <vtapi/common/global.h>
-#include <vtapi/common/serialize.h>
+#include <vtapi/common/deserialize.h>
 #include <vtapi/data/taskparams.h>
+#include <utility>
 
 using namespace std;
 
 namespace vtapi {
 
 
-TaskParams::TaskParams()
-: BaseParams()
-{ }
-
-TaskParams::TaskParams(TaskParams && other)
-: BaseParams()
-{
-    m_data = std::move(other.m_data);
-}
-
-TaskParams::TaskParams(const string& serialized)
-: BaseParams()
-{
-    deserialize(serialized);
-}
-
-TaskParams::~TaskParams()
-{
-    clear();
-}
-
-TaskParams& TaskParams::operator=(TaskParams&& other)
-{
-    clear();
-    m_data = std::move(other.m_data);
-    return *this;
-}
 
 template <typename T>
-bool TaskParams::get(const std::string& key, T& value) const
+bool TaskParams::get(const string& key, T& value) const
 {
-    const auto it = m_data.find(key);
-    if (it != m_data.end()) {
-        auto param = dynamic_cast< TaskParam<T>* > (it->second);
+    const auto it = _data.find(key);
+    if (it != _data.end()) {
+        auto param = dynamic_cast< TaskParamValue<T>* > (it->second.get());
         if (param) {
-            value = param->value();
+            value = param->getValue();
             return true;
         }
     }
     return false;
 }
 
-bool TaskParams::getString(const std::string& key, std::string& value) const
+template <typename T>
+void TaskParams::add(const string& key, const T& value)
 {
-    return get<std::string>(key, value);
-}
-
-bool TaskParams::getInt(const std::string& key, int& value) const
-{
-    return get<int>(key, value);
-}
-
-bool TaskParams::getDouble(const std::string& key, double& value) const
-{
-    return get<double>(key, value);
-}
-
-bool TaskParams::getIntVector(const std::string& key, std::vector<int>& value) const
-{
-    return get< std::vector<int> >(key, value);
-}
-
-bool TaskParams::getDoubleVector(const std::string& key, std::vector<double>& value) const
-{
-    return get< std::vector<double> >(key, value);
+    const auto it = _data.find(key);
+    if (it != _data.end())
+        it->second = std::make_shared< TaskParamValue<T> >(value);
+    else
+        _data[key] = std::make_shared< TaskParamValue<T> >(value);
 }
 
 template <typename T>
-void TaskParams::add(const std::string& key, const T& value)
+void TaskParams::add(const string& key, T&& value)
 {
-    const auto it = m_data.find(key);
-    if (it != m_data.end()) {
-        delete it->second;
-        it->second = new TaskParam<T>(value);
-    }
-    else {
-        m_data[key] = new TaskParam<T>(value);
-    }
+    const auto it = _data.find(key);
+    if (it != _data.end())
+        it->second = std::make_shared< TaskParamValue<T> >(std::move(value));
+    else
+        _data[key] = std::make_shared< TaskParamValue<T> >(std::move(value));
 }
 
-template <typename T>
-void TaskParams::add(const std::string& key, T&& value)
-{
-    const auto it = m_data.find(key);
-    if (it != m_data.end()) {
-        delete it->second;
-        it->second = new TaskParam<T>(std::move(value));
-    }
-    else {
-        m_data[key] = new TaskParam<T>(std::move(value));
-    }
-}
+bool TaskParams::getString(const string& key, string& value) const
+{ return get<string>(key, value); }
 
-void TaskParams::addString(const std::string& key, const std::string& value)
-{
-    add<std::string>(key, value);
-}
+bool TaskParams::getInt(const string& key, int& value) const
+{ return get<int>(key, value); }
 
-void TaskParams::addString(const std::string& key, std::string&& value)
-{
-    add<std::string>(key, std::move(value));
-}
+bool TaskParams::getDouble(const string& key, double& value) const
+{ return get<double>(key, value); }
 
-void TaskParams::addInt(const std::string& key, int value)
-{
-    add<int>(key, value);
-}
+bool TaskParams::getIntVector(const string& key, vector<int>& value) const
+{ return get< vector<int> >(key, value); }
 
-void TaskParams::addDouble(const std::string& key, double value)
-{
-    add<double>(key, value);
-}
+bool TaskParams::getDoubleVector(const string& key, vector<double>& value) const
+{ return get< vector<double> >(key, value); }
 
-void TaskParams::addIntVector(const std::string& key, const std::vector<int>& value)
-{
-    add< std::vector<int> >(key, value);
-}
 
-void TaskParams::addIntVector(const std::string& key, std::vector<int>&& value)
-{
-    add< std::vector<int> >(key, std::move(value));
-}
+template<>
+TaskParamValueBase::Type TaskParamValueString::getType() const
+{ return TaskParamValueBase::PARAMVALUE_STRING; }
 
-void TaskParams::addDoubleVector(const std::string& key, const std::vector<double>& value)
-{
-    add< std::vector<double> >(key, value);
-}
+template<>
+TaskParamValueBase::Type TaskParamValueInt::getType() const
+{ return TaskParamValueBase::PARAMVALUE_INT; }
 
-void TaskParams::addDoubleVector(const std::string& key, std::vector<double>&& value)
-{
-    add< std::vector<double> >(key, std::move(value));
-}
+template<>
+TaskParamValueBase::Type TaskParamValueDouble::getType() const
+{ return TaskParamValueBase::PARAMVALUE_DOUBLE; }
 
-void TaskParams::clear()
-{
-    for (auto &item : m_data) delete item.second;
-    m_data.clear();
-}
+template<>
+TaskParamValueBase::Type TaskParamValueIntVector::getType() const
+{ return TaskParamValueBase::PARAMVALUE_INTVECTOR; }
+
+template<>
+TaskParamValueBase::Type TaskParamValueDoubleVector::getType() const
+{ return TaskParamValueBase::PARAMVALUE_DOUBLEVECTOR; }
+
+
+template<>
+TaskParamValueBase::Type TaskParamDefinitionString::getType() const
+{ return TaskParamValueBase::PARAMVALUE_STRING; }
+
+template<>
+TaskParamValueBase::Type TaskParamDefinitionInt::getType() const
+{ return TaskParamValueBase::PARAMVALUE_INT; }
+
+template<>
+TaskParamValueBase::Type TaskParamDefinitionDouble::getType() const
+{ return TaskParamValueBase::PARAMVALUE_DOUBLE; }
+
+template<>
+TaskParamValueBase::Type TaskParamDefinitionIntVector::getType() const
+{ return TaskParamValueBase::PARAMVALUE_INTVECTOR; }
+
+template<>
+TaskParamValueBase::Type TaskParamDefinitionDoubleVector::getType() const
+{ return TaskParamValueBase::PARAMVALUE_DOUBLEVECTOR; }
+
+
+
+// param adders
+
+void TaskParams::addString(const string& key, const string & value)
+{ return add<string>(key, value); }
+
+void TaskParams::addString(const string& key, string && value)
+{ return add<string>(key, std::move(value)); }
+
+void TaskParams::addInt(const string& key, int value)
+{ return add<int>(key, value); }
+
+void TaskParams::addDouble(const string& key, double value)
+{ return add<double>(key, value); }
+
+void TaskParams::addIntVector(const string& key, const vector<int>& value)
+{ return add< vector<int> >(key, value); }
+
+void TaskParams::addIntVector(const string& key, vector<int> && value)
+{ return add< vector<int> >(key, std::move(value)); }
+
+void TaskParams::addDoubleVector(const string& key, const vector<double>& value)
+{ return add< vector<double> >(key, value); }
+
+void TaskParams::addDoubleVector(const string& key, vector<double> && value)
+{ return add< vector<double> >(key, std::move(value)); }
+
 
 string TaskParams::serialize() const
 {
@@ -153,14 +135,14 @@ string TaskParams::serialize() const
 
     ret += '{';
 
-    for (auto& kv : m_data) {
+    for (auto& kv : _data) {
         if (ret.length() > 1) ret += ',';
         ret += kv.first;
         ret += ':';
-        ret += toString<int>(kv.second->type());
+        ret += toString<int>(kv.second->getType());
         ret += ':';
         ret += '\"';
-        ret += kv.second->toString();
+        ret += kv.second->getSerialized();
         ret += '\"';
     }
 
@@ -171,11 +153,12 @@ string TaskParams::serialize() const
 
 void TaskParams::deserialize(const string& serialized)
 {
-    clear();
+    _data.clear();
 
     if (!serialized.empty() &&
-    serialized[0] == '{' &&
-    serialized[serialized.length() - 1] == '}') {
+        serialized[0] == '{' &&
+        serialized[serialized.length() - 1] == '}')
+    {
         size_t keyPos = 1;
         size_t maxPos = serialized.length() - 1;
 
@@ -202,51 +185,39 @@ void TaskParams::deserialize(const string& serialized)
 
             size_t nextKeyPos = valEndPos + 2;
 
-            deserializeParam(
-                serialized.substr(keyPos, keyLen),
-                serialized.substr(typePos, typeLen),
-                serialized.substr(valPos, valLen));
+            deserializeParam(serialized.substr(keyPos, keyLen),
+                             serialized.substr(typePos, typeLen),
+                             serialized.substr(valPos, valLen));
 
             keyPos = nextKeyPos;
         } while (keyPos < maxPos);
     }
 }
 
-void TaskParams::deserializeParam(
-    const string& key,
-    const string& type,
-    const string& val)
+void TaskParams::deserializeParam(const string& key,
+                                  const string& type,
+                                  const string& val)
 {
     try {
-        switch ((ParamType) std::stoi(type))
+        switch (static_cast<TaskParamValueBase::Type>(std::stoi(type)))
         {
-        case PARAMTYPE_NONE:
-            break;
-        case PARAMTYPE_STRING:
+        case TaskParamValueBase::PARAMVALUE_STRING:
             addString(key, val);
             break;
-        case PARAMTYPE_INT:
+        case TaskParamValueBase::PARAMVALUE_INT:
             addInt(key, std::stoi(val));
             break;
-        case PARAMTYPE_DOUBLE:
+        case TaskParamValueBase::PARAMVALUE_DOUBLE:
             addDouble(key, std::stod(val));
             break;
-        case PARAMTYPE_INTVECTOR:
+        case TaskParamValueBase::PARAMVALUE_INTVECTOR:
         {
-            std::vector<int> *vals = vtapi::deserializeV<int>(val.c_str());
-            if (vals) {
-                addIntVector(key, std::move(*vals));
-                delete vals;
-            }
+            addIntVector(key, vtapi::deserializeVector<int>(val));
             break;
         }
-        case PARAMTYPE_DOUBLEVECTOR:
+        case TaskParamValueBase::PARAMVALUE_DOUBLEVECTOR:
         {
-            std::vector<double> *vals = vtapi::deserializeV<double>(val.c_str());
-            if (vals) {
-                addDoubleVector(key, std::move(*vals));
-                delete vals;
-            }
+            addDoubleVector(key, vtapi::deserializeVector<double>(val));
             break;
         }
         }
@@ -256,7 +227,7 @@ void TaskParams::deserializeParam(
     }
 }
 
-bool TaskParams::validate(const MethodParams& definitions)
+bool TaskParams::validate(const TaskParamDefinitions& definitions)
 {
     return true;
 }

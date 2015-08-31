@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../common/types.h"
 #include "backend_connection.h"
 #include "backend_querybuilder.h"
 #include "backend_resultset.h"
@@ -11,6 +10,8 @@ namespace vtapi {
 class IBackendInterface
 {
 public:
+    virtual ~IBackendInterface() {}
+
     /**
      * @brief Creates database connection object
      * @param connection_string connection string
@@ -30,7 +31,7 @@ public:
      * @param dbtypes database types object
      * @return  new result set object
      */
-    virtual ResultSet *createResultSet(DBTYPES_MAP *dbtypes) const = 0;
+    virtual ResultSet *createResultSet(const DatabaseTypes &dbtypes) const = 0;
 };
 
 }

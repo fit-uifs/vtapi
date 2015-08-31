@@ -12,27 +12,26 @@
 
 #pragma once
 
-#include "../data/commons.h"
 #include "query.h"
 
 namespace vtapi {
 
 
-class Delete : public QueryWhere
+class Delete : public Query
 {
 public:
-    Delete(const Commons& commons, const std::string& table);
+    Delete(const Commons& commons, const std::string& table)
+        : Query(commons, table, true) {}
 
     /**
-     * Gets UPDATE query string
+     * Gets DELETE query string
      * @return query string
      */
-    std::string getQuery() override;
+    std::string getQuery() const override
+    { return _pquerybuilder->getDeleteQuery(); }
 
 private:
     Delete() = delete;
-    Delete(const Delete&) = delete;
-    Delete& operator=(const Delete&) = delete;
 };
 
 

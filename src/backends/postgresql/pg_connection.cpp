@@ -5,45 +5,34 @@
 
 #define PG_FORMAT 1   // postgres data transfer format: 0=text, 1=binary
 
+#define PGCONN ((PGconn *)_conn)
 
 using namespace std;
 
 namespace vtapi {
 
 
-PGConnection::PGConnection(const string& connection_string)
-    : Connection (connection_string)
-{
-    _conn = NULL;
-}
-
-PGConnection::~PGConnection()
-{
-    disconnect();
-    PQclearTypes(_conn);
-}
-
 bool PGConnection::connect()
 {
     bool retval = true;
 
     do {
-        VTLOG_DEBUG("Connecting to DB... " + _connInfo);
+        VTLOG_DEBUG("Connecting to DB... " + _connection_info);
         
-        _conn = PQconnectdb(_connInfo.c_str());
+        _conn = PQconnectdb(_connection_info.c_str());
         if (!(retval = isConnected())) {
-            const char *errmsgc = PQerrorMessage(_conn);
+            const char *errmsgc = PQerrorMessage(PGCONN);
             if (errmsgc)
                 VTLOG_ERROR(errmsgc);
             else
-                VTLOG_ERROR("Failed to connect to database (" + _connInfo + ")");
+                VTLOG_ERROR("Failed to connect to database (" + _connection_info + ")");
             break;
         }
 
         // set NOTICE displaying function
-        PQsetNoticeProcessor(_conn, PGConnection::noticeProcessor, NULL);
+        PQsetNoticeProcessor(PGCONN, PGConnection::noticeProcessor, NULL);
 
-        if (!(retval = PQinitTypes(_conn))) {
+        if (!(retval = PQinitTypes(PGCONN))) {
             VTLOG_ERROR("Failed to init libpqtypes");
             break;
         }
@@ -62,14 +51,15 @@ void PGConnection::disconnect ()
     if (isConnected()) {
         VTLOG_DEBUG("Disconnecting DB...");
 
-        PQfinish(_conn);
+        PQclearTypes(PGCONN);
+        PQfinish(PGCONN);
         _conn = NULL;
     }
 }
 
-bool PGConnection::isConnected ()
+bool PGConnection::isConnected () const
 {
-    return (_conn && PQstatus(_conn) == CONNECTION_OK);
+    return (PGCONN && PQstatus(PGCONN) == CONNECTION_OK);
 }
 
 bool PGConnection::execute(const string& query, void *param)
@@ -79,27 +69,27 @@ bool PGConnection::execute(const string& query, void *param)
 
     VTLOG_DEBUG(query);
 
-    _errorMessage.clear();
+    _error_message.clear();
 
     if (param)
-        pgres = PQparamExec(_conn, (PGparam *) param, query.c_str(), PG_FORMAT);
+        pgres = PQparamExec(PGCONN, (PGparam *) param, query.c_str(), PG_FORMAT);
     else
-        pgres = PQexecf(_conn, query.c_str(), PG_FORMAT);
+        pgres = PQexecf(PGCONN, query.c_str(), PG_FORMAT);
 
     if (!pgres) {
-        _errorMessage = PQgeterror();
-        VTLOG_ERROR(_errorMessage);
+        _error_message = PQgeterror();
+        VTLOG_ERROR(_error_message);
         retval = false;
     }
     else {
         int result = PQresultStatus(pgres);
         if (result == PGRES_NONFATAL_ERROR) {
-            _errorMessage = PQerrorMessage(_conn);
-            VTLOG_DEBUG(_errorMessage);
+            _error_message = PQerrorMessage(PGCONN);
+            VTLOG_DEBUG(_error_message);
         }
         else if (result != PGRES_TUPLES_OK && result != PGRES_COMMAND_OK) {
-            _errorMessage = PQerrorMessage(_conn);
-            VTLOG_ERROR(_errorMessage);
+            _error_message = PQerrorMessage(PGCONN);
+            VTLOG_ERROR(_error_message);
             retval = false;
         }
         PQclear(pgres);
@@ -115,18 +105,18 @@ int PGConnection::fetch(const string& query, void *param, ResultSet &resultSet)
 
     VTLOG_DEBUG(query);
 
-    _errorMessage.clear();
+    _error_message.clear();
 
     if (param)
-        pgres = PQparamExec(_conn, (PGparam *) param, query.c_str(), PG_FORMAT);
+        pgres = PQparamExec(PGCONN, (PGparam *) param, query.c_str(), PG_FORMAT);
     else
-        pgres = PQexecf(_conn, query.c_str(), PG_FORMAT);
+        pgres = PQexecf(PGCONN, query.c_str(), PG_FORMAT);
 
     resultSet.newResult((void *) pgres);
 
     if (!pgres) {
-        _errorMessage = PQgeterror();
-        VTLOG_ERROR(_errorMessage);
+        _error_message = PQgeterror();
+        VTLOG_ERROR(_error_message);
         retval = -1;
     }
     else {
@@ -137,18 +127,13 @@ int PGConnection::fetch(const string& query, void *param, ResultSet &resultSet)
             retval = 0;
         }
         else {
-            _errorMessage = PQerrorMessage(_conn);
-            VTLOG_ERROR(_errorMessage);
+            _error_message = PQerrorMessage(PGCONN);
+            VTLOG_ERROR(_error_message);
             retval = -1;
         }
     }
 
     return retval;
-}
-
-void* PGConnection::getConnectionObject()
-{
-    return (void *)_conn;
 }
 
 bool PGConnection::loadDBTypes()
@@ -168,11 +153,11 @@ bool PGConnection::loadDBTypes()
             {"public.pstatus", enum_put, enum_get }
             //{"public.paramtype", enum_put, enum_get}
         };
-        retval = PQregisterTypes(_conn,
-                                     PQT_USERDEFINED,
-                                     types_userdef,
-                                     sizeof (types_userdef) / sizeof (PGregisterType),
-                                     0);
+        retval = PQregisterTypes(PGCONN,
+                                 PQT_USERDEFINED,
+                                 types_userdef,
+                                 sizeof (types_userdef) / sizeof (PGregisterType),
+                                 0);
         if (!retval) {
             VTLOG_ERROR(PQgeterror());
             break;
@@ -184,11 +169,11 @@ bool PGConnection::loadDBTypes()
             {"public.vtevent", NULL, NULL },
             {"public.pstate", NULL, NULL }
         };
-        retval = PQregisterTypes(_conn,
-                                     PQT_COMPOSITE,
-                                     types_comp,
-                                     sizeof (types_comp) / sizeof (PGregisterType),
-                                     0);
+        retval = PQregisterTypes(PGCONN,
+                                 PQT_COMPOSITE,
+                                 types_comp,
+                                 sizeof (types_comp) / sizeof (PGregisterType),
+                                 0);
         if (!retval) {
             VTLOG_ERROR(PQgeterror());
             break;
@@ -197,9 +182,9 @@ bool PGConnection::loadDBTypes()
         // now load types definitions
 
         // select type info from catalog
-        pgres = PQexecf(_conn,
-                            "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type",
-                             PG_FORMAT);
+        pgres = PQexecf(PGCONN,
+                        "SELECT oid, typname, typcategory, typlen, typelem from pg_catalog.pg_type",
+                        PG_FORMAT);
         if (!pgres) {
             VTLOG_ERROR(PQgeterror());
             retval = false;
@@ -207,10 +192,10 @@ bool PGConnection::loadDBTypes()
         }
 
         // go through all types and fill dbtypes map
-        map<int, int> oid_array;    // oid of array -> oid of elem
+        map<int, int> oid_map;    // oid of array -> oid of elem
         int ntuples = PQntuples(pgres);
         for (int i = 0; i < ntuples; i++) {
-            DBTYPE_DEFINITION_T def;
+            DatabaseTypes::TypeDefinition def;
             PGint4 oid;
             PGtext name;
             PGchar cat;
@@ -220,33 +205,24 @@ bool PGConnection::loadDBTypes()
             PQgetf(pgres, i, "%oid %name %char %int2 %oid",
                        0, &oid, 1, &name, 2, &cat, 3, &length, 4, &oid_elem);
 
-            def.name = name;
-            def.type = 0;
+            def._name = name;
 
             // get type category and flags
-            short catFlags = getTypeCategoryFlags(cat, def.name);
-            if (catFlags) {
-                DBTYPE_SETFLAGS(def.type, catFlags);
-                if (DBTYPE_HASFLAG(catFlags, DBTYPE_FLAG_ARRAY)) {
-                    oid_array.insert(pair<int, int>(oid, oid_elem));
-                }
-                else {
-                    DBTYPE_SETCATEGORY(def.type, catFlags);
-                    DBTYPE_SETLENGTH(def.type, length);
-                }
-                _dbtypes.insert(DBTYPES_PAIR(oid, def));
-            }
+            getTypeCategoryFlags(cat, def._name, def._category, def._flags);
+            if (def._flags & DatabaseTypes::FLAG_ARRAY)
+                oid_map.insert(pair<int, int>(oid, oid_elem));
+            else
+                def._length = length;
+            _dbtypes.insert(oid, std::move(def));
         }
 
         // postprocess array types - set category/length of elements
-        for (map<int, int>::iterator it = oid_array.begin(); it != oid_array.end(); it++) {
-            DBTYPES_MAP_IT itArr = _dbtypes.find((*it).first);
-            DBTYPES_MAP_IT itElem = _dbtypes.find((*it).second);
-            if (itArr != _dbtypes.end() && itElem != _dbtypes.end()) {
-                DBTYPE_SETCATEGORY((*itArr).second.type, (*itElem).second.type);
-                DBTYPE_SETFLAGS((*itArr).second.type, (*itElem).second.type);
-                DBTYPE_SETLENGTH((*itArr).second.type, DBTYPE_GETLENGTH((*itElem).second.type));
-            }
+        for (const auto & oid_item : oid_map) {
+            DatabaseTypes::TypeDefinition &def_arr = _dbtypes.type(oid_item.first);
+            DatabaseTypes::TypeDefinition &def_elem = _dbtypes.type(oid_item.second);
+            def_arr._name = def_elem._name;
+            def_arr._flags |= def_elem._flags;
+            def_arr._length = def_elem._length;
         }
 
     } while (0);
@@ -256,118 +232,135 @@ bool PGConnection::loadDBTypes()
     return retval;
 }
 
-short PGConnection::getTypeCategoryFlags(char c, const string &name)
+void PGConnection::getTypeCategoryFlags(char c, const std::string &name,
+                                        short int & category, char & flags) const
 {
-    short ret = 0;
-
     switch (c)
     {
     case 'A':   // array
     {
-        DBTYPE_SETFLAGS(ret, DBTYPE_FLAG_ARRAY);
+        flags |= DatabaseTypes::FLAG_ARRAY;
         break;
     }
     case 'B':   // boolean
     {
-        if (name.compare("bool") == 0) {
-            DBTYPE_SETCATEGORY(ret, DBTYPE_BOOLEAN);
-        }
+        if (name == "bool")
+            category = DatabaseTypes::CATEGORY_BOOLEAN;
         break;
     }
     case 'C':   // composite
     {
-        if (name.compare("cvmat") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_CVMAT | DBTYPE_FLAG_USERDEFINED);
+        if (name == "cvmat") {
+            category = DatabaseTypes::CATEGORY_UD_CVMAT;
+            flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
-        else if (name.compare("vtevent") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_EVENT | DBTYPE_FLAG_USERDEFINED);
+        else if (name == "vtevent") {
+            category = DatabaseTypes::CATEGORY_UD_EVENT;
+            flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
-        else if (name.compare("pstate") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_PSTATE | DBTYPE_FLAG_USERDEFINED);
+        else if (name == "pstate") {
+            category = DatabaseTypes::CATEGORY_UD_PSTATE;
+            flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
         break;
     }
     case 'D':   // date/time
     {
-        if (name.compare("timestamp") == 0) {
-            DBTYPE_SETCATEGORY(ret, DBTYPE_TIMESTAMP);
+        if (name == "timestamp") {
+            category = DatabaseTypes::CATEGORY_TIMESTAMP;
         }
         break;
     }
     case 'E':   // enum
     {
-        if (name.compare("seqtype") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_SEQTYPE | DBTYPE_FLAG_USERDEFINED);
+        if (name == "seqtype") {
+            category = DatabaseTypes::CATEGORY_UD_SEQTYPE;
+            flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
-        else if (name.compare("inouttype") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_INOUTTYPE | DBTYPE_FLAG_USERDEFINED);
+        else if (name == "inouttype") {
+            category = DatabaseTypes::CATEGORY_UD_INOUTTYPE;
+            flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
-        else if (name.compare("pstatus") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_UD_PSTATUS | DBTYPE_FLAG_USERDEFINED);
+        else if (name == "pstatus") {
+            category = DatabaseTypes::CATEGORY_UD_PSTATUS;
+            flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
         break;
     }
     case 'G':   // geometric
     {
-        if (name.compare("point") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_POINT | DBTYPE_FLAG_GEOMETRIC);
+        if (name == "point") {
+            category = DatabaseTypes::CATEGORY_GEO_POINT;
+            flags |= DatabaseTypes::FLAG_GEOMETRIC;
         }
-        else if (name.compare("lseg") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_LSEG | DBTYPE_FLAG_GEOMETRIC);
+        else if (name == "lseg") {
+            category = DatabaseTypes::CATEGORY_GEO_LSEG;
+            flags |= DatabaseTypes::FLAG_GEOMETRIC;
         }
-        else if (name.compare("path") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_PATH | DBTYPE_FLAG_GEOMETRIC);
+        else if (name == "path") {
+            category = DatabaseTypes::CATEGORY_GEO_PATH;
+            flags |= DatabaseTypes::FLAG_GEOMETRIC;
         }
-        else if (name.compare("box") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_BOX | DBTYPE_FLAG_GEOMETRIC);
+        else if (name == "box") {
+            category = DatabaseTypes::CATEGORY_GEO_BOX;
+            flags |= DatabaseTypes::FLAG_GEOMETRIC;
         }
-        else if (name.compare("polygon") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_POLYGON | DBTYPE_FLAG_GEOMETRIC);
+        else if (name == "polygon") {
+            category = DatabaseTypes::CATEGORY_GEO_POLYGON;
+            flags |= DatabaseTypes::FLAG_GEOMETRIC;
         }
-        else if (name.compare("line") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_LINE | DBTYPE_FLAG_GEOMETRIC);
+        else if (name == "line") {
+            category = DatabaseTypes::CATEGORY_GEO_LINE;
+            flags |= DatabaseTypes::FLAG_GEOMETRIC;
         }
-        else if (name.compare("circle") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_CIRCLE | DBTYPE_FLAG_GEOMETRIC);
+        else if (name == "circle") {
+            category = DatabaseTypes::CATEGORY_GEO_CIRCLE;
+            flags |= DatabaseTypes::FLAG_GEOMETRIC;
         }
         break;
     }
     case 'N':   // numeric
     {
         if (strncmp(name.c_str(), "int", 3) == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_INT | DBTYPE_FLAG_NUMERIC);
+            category = DatabaseTypes::CATEGORY_INT;
+            flags |= DatabaseTypes::FLAG_NUMERIC;
         }
         else if (strncmp(name.c_str(), "float", 5) == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_FLOAT | DBTYPE_FLAG_NUMERIC);
+            category = DatabaseTypes::CATEGORY_FLOAT;
+            flags |= DatabaseTypes::FLAG_NUMERIC;
         }
-        else if (name.compare("numeric") == 0) {
-            DBTYPE_SETFLAGS(ret, DBTYPE_FLAG_NUMERIC);
+        else if (name == "numeric") {
+            flags |= DatabaseTypes::FLAG_NUMERIC;
         }
-        else if (name.compare("regtype") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_REF_TYPE | DBTYPE_FLAG_REFTYPE);
+        else if (name == "regtype") {
+            category = DatabaseTypes::CATEGORY_REF_TYPE;
+            flags |= DatabaseTypes::FLAG_REFTYPE;
         }
-        else if (name.compare("regclass") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_REF_CLASS | DBTYPE_FLAG_REFTYPE);
+        else if (name == "regclass") {
+            category = DatabaseTypes::CATEGORY_REF_CLASS;
+            flags |= DatabaseTypes::FLAG_REFTYPE;
         }
         break;
     }
     case 'S':   // string
     {
-        if (name.compare("char") == 0 ||
-        name.compare("varchar") == 0 ||
-        name.compare("name") == 0 ||
-        name.compare("text") == 0) {
-            DBTYPE_SETCATEGORY(ret, DBTYPE_STRING);
+        if (name == "char"||
+            name == "varchar" ||
+            name == "name" ||
+            name == "text")
+        {
+            category = DatabaseTypes::CATEGORY_STRING;
         }
         break;
     }
     case 'U':   // types with user-defined input/output
     {
-        if (name.compare("bytea") == 0) {
-            DBTYPE_SETCATEGORY(ret, DBTYPE_BLOB);
+        if (name == "bytea") {
+            category = DatabaseTypes::CATEGORY_BLOB;
         }
-        else if (name.compare("geometry") == 0) {
-            DBTYPE_SETCATEGORYFLAGS(ret, DBTYPE_GEO_GEOMETRY | DBTYPE_FLAG_GEOMETRIC);
+        else if (name == "geometry") {
+            category = DatabaseTypes::CATEGORY_GEO_GEOMETRY;
+            flags |= DatabaseTypes::FLAG_GEOMETRIC;
         }
         break;
     }
@@ -376,8 +369,6 @@ short PGConnection::getTypeCategoryFlags(char c, const string &name)
         break;
     }
     }
-
-    return ret;
 }
 
 void PGConnection::noticeProcessor(void *arg, const char *message)

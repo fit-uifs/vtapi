@@ -49,8 +49,6 @@ namespace vtapi {
 
 VTApi::VTApi(int argc, char** argv)
 {
-    _pcommons = NULL;
-
     // master configuration
     Poco::AutoPtr<LayeredConfiguration> config(new LayeredConfiguration());
     // command line configuration
@@ -97,13 +95,11 @@ VTApi::VTApi(int argc, char** argv)
         throw BadConfigurationException("failed to load config file: " + e.message());
     }
 
-    _pcommons = new Commons(*config.get());
+    _pcommons = make_shared<Commons>(*config.get());
 }
 
 VTApi::VTApi(const string& config_file)
 {
-    _pcommons = NULL;
-
     Poco::AutoPtr<PropertyFileConfiguration> file_config(new PropertyFileConfiguration());
     try
     {
@@ -114,26 +110,18 @@ VTApi::VTApi(const string& config_file)
         throw BadConfigurationException("failed to load config file: " + e.message());
     }
 
-    _pcommons = new Commons(*file_config);
+    _pcommons = make_shared<Commons>(*file_config);
 }
 
 VTApi::VTApi(const VTApi& orig)
+    : _pcommons(shared_ptr<Commons>(new Commons(*orig._pcommons, true)))
 {
-    _pcommons = NULL;
-    _pcommons =  new Commons(*orig._pcommons, true);
 }
-
-
-VTApi::~VTApi()
-{
-    vt_destruct(_pcommons);
-}
-
 
 Dataset* VTApi::createDataset(const string& name,
                               const string& location,
                               const string& friendly_name,
-                              const string& description)
+                              const string& description) const
 {
     Dataset *ds = NULL;
 
@@ -147,9 +135,9 @@ Dataset* VTApi::createDataset(const string& name,
 }
 
 Method* VTApi::createMethod(const string& name,
-                            const MethodKeys keys_definition,
-                            const MethodParams params_definition,
-                            const string& description)
+                            const TaskKeyDefinitions & keys_definition,
+                            const TaskParamDefinitions & params_definition,
+                            const string& description) const
 {
     Method *m = NULL;
 
@@ -162,59 +150,61 @@ Method* VTApi::createMethod(const string& name,
     return m;
 }
 
-Dataset* VTApi::loadDatasets(const string& name)
+Dataset* VTApi::loadDatasets(const string& name) const
 {
     return (new Dataset(*_pcommons, name));
 }
 
-Method* VTApi::loadMethods(const string& name)
+Method* VTApi::loadMethods(const string& name) const
 {
     return (new Method(*_pcommons, name));
 }
 
-Sequence* VTApi::loadSequences(const string& name)
+Sequence* VTApi::loadSequences(const string& name) const
 {
     return (new Sequence(*_pcommons, name));
 }
 
-Video* VTApi::loadVideos(const string& name)
+Video* VTApi::loadVideos(const string& name) const
 {
     return (new Video(*_pcommons, name));
 }
 
-ImageFolder* VTApi::loadImageFolders(const string& name)
+ImageFolder* VTApi::loadImageFolders(const string& name) const
 {
     return (new ImageFolder(*_pcommons, name));
 }
 
-Task* VTApi::loadTasks(const string& name)
+Task* VTApi::loadTasks(const string& name) const
 {
     return (new Task(*_pcommons, name));
 }
 
-Process* VTApi::loadProcesses(int id)
+Process* VTApi::loadProcesses(int id) const
 {
     return (new Process(*_pcommons, id));
 }
 
-bool vtapi::VTApi::deleteDataset(const string &dsname)
+bool vtapi::VTApi::deleteDataset(const string &dsname) const
 {
     return QueryDatasetDelete(*_pcommons, dsname).execute();
 }
 
-bool vtapi::VTApi::deleteMethod(const string &mtname)
+bool vtapi::VTApi::deleteMethod(const string &mtname) const
 {
     return QueryMethodDelete(*_pcommons, mtname).execute();
 }
 
-Process *VTApi::getRunnableProcess()
+Process *VTApi::getRunnableProcess() const
 {
     Process *prs = NULL;
 
-    if (_pcommons->context().process != 0) {
-        prs = new Process(*_pcommons);
-        if (prs && !prs->next())
-            vt_destruct(prs);
+    if (!_pcommons->_context.dataset.empty() && _pcommons->_context.process != 0) {
+        Dataset ds(*_pcommons);
+        if (ds.next()) {
+            prs = ds.loadProcesses();
+            if (!prs->next()) vt_destruct(prs);
+        }
     }
 
     return prs;

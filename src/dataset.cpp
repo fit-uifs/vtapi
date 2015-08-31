@@ -34,26 +34,26 @@ Dataset::Dataset(const Commons& commons, const string& name)
 {
     // set the dataset name
     if (!name.empty())
-        context().dataset = name;
+        _context.dataset = name;
     
-    select().setOrderBy(def_col_ds_name);
+    _select.setOrderBy(def_col_ds_name);
     
-    if (!context().dataset.empty())
-        select().whereString(def_col_ds_name, context().dataset);
+    if (!_context.dataset.empty())
+        _select.querybuilder().whereString(def_col_ds_name, _context.dataset);
 }
 
-Dataset::Dataset(const Commons& commons, const list<string>& names)
+Dataset::Dataset(const Commons& commons, const vector<string>& names)
     : KeyValues(commons, def_tab_datasets)
 {
-    select().setOrderBy(def_col_ds_name);
-    select().whereStringInList(def_col_ds_name, names);
+    _select.setOrderBy(def_col_ds_name);
+    _select.querybuilder().whereStringVector(def_col_ds_name, names);
 }
 
 bool Dataset::next()
 {
     if (KeyValues::next()) {
-        context().dataset = this->getName();
-        context().datasetLocation = this->getLocation();
+        _context.dataset = this->getName();
+        _context.datasetLocation = this->getLocation();
         return true;
     }
     else {
@@ -61,27 +61,27 @@ bool Dataset::next()
     }
 }
 
-string Dataset::getName()
+string Dataset::getName() const
 {
     return this->getString(def_col_ds_name);
 }
 
-string Dataset::getFriendlyName()
+string Dataset::getFriendlyName() const
 {
     return this->getString(def_col_ds_fname);
 }
 
-string Dataset::getLocation()
+string Dataset::getLocation() const
 {
     return this->getString(def_col_ds_location);
 }
 
-string Dataset::getDescription()
+string Dataset::getDescription() const
 {
     return this->getString(def_col_ds_description);
 }
 
-string vtapi::Dataset::getDataLocation()
+string vtapi::Dataset::getDataLocation() const
 {
     return config().datasets_dir + Poco::Path::separator() +
             this->getLocation();
@@ -101,16 +101,16 @@ Sequence* Dataset::createSequence(
     const string& name,
     const string& location,
     const string& type,
-    const string& comment)
+    const string& comment) const
 {
     Sequence *seq = NULL;
 
     bool retval = true;
     Insert insert(*this, def_tab_sequences);
-    retval &= insert.keyString(def_col_seq_name, name);
-    retval &= insert.keyString(def_col_seq_location, location);
-    retval &= insert.keySeqtype(def_col_seq_type, type);
-    if (!comment.empty()) retval &= insert.keyString(def_col_seq_comment, comment);
+    retval &= insert.querybuilder().keyString(def_col_seq_name, name);
+    retval &= insert.querybuilder().keyString(def_col_seq_location, location);
+    retval &= insert.querybuilder().keySeqtype(def_col_seq_type, type);
+    if (!comment.empty()) retval &= insert.querybuilder().keyString(def_col_seq_comment, comment);
     
     if (retval && insert.execute()) {
         seq = loadSequences(name);
@@ -122,16 +122,16 @@ Sequence* Dataset::createSequence(
 
 Video* Dataset::createVideo(const string& name,
                             const string& location,
-                            const time_t& realtime,
+                            const chrono::system_clock::time_point& realtime,
                             double speed,
-                            const string& comment)
+                            const string& comment) const
 {
     Video *vid = NULL;
 
     do {
         string fullpath =
                 config().datasets_dir + Poco::Path::separator() +
-                context().datasetLocation + Poco::Path::separator() +
+                _context.datasetLocation + Poco::Path::separator() +
                 location;
 
         if (!Poco::Path(fullpath).isFile()) {
@@ -156,14 +156,17 @@ Video* Dataset::createVideo(const string& name,
         
         bool retval = true;
         Insert insert(*this, def_tab_sequences);
-        retval &= insert.keyString(def_col_seq_name, name);
-        retval &= insert.keyString(def_col_seq_location, location);
-        retval &= insert.keySeqtype(def_col_seq_type, def_val_video);
-        if (!comment.empty()) retval &= insert.keyString(def_col_seq_comment, comment);
-        retval &= insert.keyInt(def_col_seq_vidlength, cnt_frames);
-        retval &= insert.keyFloat(def_col_seq_vidfps, fps);
-        if (realtime > 0) retval &= insert.keyTimestamp(def_col_seq_vidtime, realtime);
-        if (speed > 0.0) retval &= insert.keyFloat(def_col_seq_vidspeed, speed);
+        retval &= insert.querybuilder().keyString(def_col_seq_name, name);
+        retval &= insert.querybuilder().keyString(def_col_seq_location, location);
+        retval &= insert.querybuilder().keySeqtype(def_col_seq_type, def_val_video);
+        if (!comment.empty())
+            retval &= insert.querybuilder().keyString(def_col_seq_comment, comment);
+        retval &= insert.querybuilder().keyInt(def_col_seq_length, cnt_frames);
+        retval &= insert.querybuilder().keyFloat(def_col_seq_vidfps, fps);
+        if (realtime.time_since_epoch() > chrono::seconds(0))
+            retval &= insert.querybuilder().keyTimestamp(def_col_seq_vidtime, realtime);
+        if (speed > 0.0)
+            retval &= insert.querybuilder().keyFloat(def_col_seq_vidspeed, speed);
 
         if (retval && insert.execute()) {
             vid = loadVideos(name);
@@ -176,12 +179,12 @@ Video* Dataset::createVideo(const string& name,
 
 ImageFolder* Dataset::createImageFolder(const string& name,
                                         const string& location,
-                                        const string& comment)
+                                        const string& comment) const
 {
     ImageFolder *im = NULL;
     
     do {
-        string fullpath = config().datasets_dir + context().datasetLocation + location;
+        string fullpath = config().datasets_dir + _context.datasetLocation + location;
 
         if (!Poco::File(Poco::Path(fullpath)).isDirectory()) {
             VTLOG_WARNING("Cannot open folder: " + fullpath);
@@ -190,15 +193,18 @@ ImageFolder* Dataset::createImageFolder(const string& name,
 
         bool retval = true;
         Insert insert(*this, def_tab_sequences);
-        retval &= insert.keyString(def_col_seq_name, name);
-        retval &= insert.keyString(def_col_seq_location, location);
-        retval &= insert.keySeqtype(def_col_seq_type, def_val_images);
-        if (!comment.empty()) retval &= insert.keyString(def_col_seq_comment, comment);
+        retval &= insert.querybuilder().keyString(def_col_seq_name, name);
+        retval &= insert.querybuilder().keyString(def_col_seq_location, location);
+        retval &= insert.querybuilder().keySeqtype(def_col_seq_type, def_val_images);
+        if (!comment.empty()) retval &= insert.querybuilder().keyString(def_col_seq_comment, comment);
 
         if (retval && insert.execute()) {
             im = loadImageFolders(name);
             if (!im->next()) vt_destruct(im);
         }
+
+        //TODO: insert images from folder
+
     } while (0);
     
     return im;
@@ -207,7 +213,7 @@ ImageFolder* Dataset::createImageFolder(const string& name,
 vtapi::Task *Dataset::createTask(const string &mtname,
                                  const TaskParams &params,
                                  const string &prereq_task,
-                                 const string &outputs)
+                                 const string &outputs) const
 {
     Task *ts = NULL;
     string name = Task::constructName(mtname, params);
@@ -231,63 +237,63 @@ vtapi::Task *Dataset::createTask(const string &mtname,
     return ts;
 }
 
-Sequence* Dataset::loadSequences(const string& name)
+Sequence* Dataset::loadSequences(const string& name) const
 {
     return (new Sequence(*this, name));
 }
 
-Sequence *Dataset::loadSequences(const list<string> &names)
+Sequence *Dataset::loadSequences(const vector<string> &names) const
 {
     return (new Sequence(*this, names));
 }
 
-Video* Dataset::loadVideos(const string& name)
+Video* Dataset::loadVideos(const string& name) const
 {
     return (new Video(*this, name));
 }
 
-Video *Dataset::loadVideos(const list<string> &names)
+Video *Dataset::loadVideos(const vector<string> &names) const
 {
     return (new Video(*this, names));
 }
 
-ImageFolder* Dataset::loadImageFolders(const string& name)
+ImageFolder* Dataset::loadImageFolders(const string& name) const
 {
     return (new ImageFolder(*this, name));
 }
 
-ImageFolder *Dataset::loadImageFolders(const list<string> &names)
+ImageFolder *Dataset::loadImageFolders(const vector<string> &names) const
 {
     return (new ImageFolder(*this, names));
 }
 
-Task* Dataset::loadTasks(const string& name)
+Task* Dataset::loadTasks(const string& name) const
 {
     return (new Task(*this, name));
 }
 
-Task *Dataset::loadTasks(const list<string> &names)
+Task *Dataset::loadTasks(const vector<string> &names) const
 {
     return (new Task(*this, names));
 }
 
-Process* Dataset::loadProcesses(int id)
+Process* Dataset::loadProcesses(int id) const
 {
     return (new Process(*this, id));
 }
 
-Process *Dataset::loadProcesses(const list<int> &ids)
+Process *Dataset::loadProcesses(const vector<int> &ids) const
 {
     return (new Process(*this, ids));
 }
 
-bool Dataset::deleteSequence(const string &seqname)
+bool Dataset::deleteSequence(const string &seqname) const
 {
     Delete d(*this, def_tab_sequences);
-    return d.whereString(def_col_seq_name, seqname) && d.execute();
+    return d.querybuilder().whereString(def_col_seq_name, seqname) && d.execute();
 }
 
-bool Dataset::deleteTask(const string &taskname)
+bool Dataset::deleteTask(const string &taskname) const
 {
     return QueryTaskDelete(*this, this->getName(), taskname).execute();
 }
@@ -295,7 +301,7 @@ bool Dataset::deleteTask(const string &taskname)
 
 bool Dataset::preUpdate()
 {
-    return update().whereString(def_col_ds_name, context().dataset);
+    return update().querybuilder().whereString(def_col_ds_name, _context.dataset);
 }
 
 }

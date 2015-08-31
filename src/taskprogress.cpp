@@ -2,6 +2,7 @@
 #include <vtapi/common/global.h>
 #include <vtapi/common/exception.h>
 #include <vtapi/common/defs.h>
+#include <vtapi/queries/delete.h>
 #include <vtapi/data/taskprogress.h>
 
 using namespace std;
@@ -11,48 +12,59 @@ namespace vtapi {
 
 TaskProgress::TaskProgress(const Commons &commons,
                            const string& taskname,
-                           const string& seqname)
-    : KeyValues(commons, def_tab_tasks_seq)
+                           const string& seqname,
+                           bool acquired)
+    : KeyValues(commons, def_tab_tasks_seq), _acquired(acquired), _update_set(false)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
 
     if (!taskname.empty())
-        context().task = taskname;
+        _context.task = taskname;
 
     if (!seqname.empty())
-        context().sequence = seqname;
+        _context.sequence = seqname;
 
-    if(!context().task.empty())
-        select().whereString(def_col_tsd_taskname, context().task);
+    if(!_context.task.empty())
+        _select.querybuilder().whereString(def_col_tsd_taskname, _context.task);
 
-    if (!context().sequence.empty())
-        select().whereString(def_col_tsd_seqname, context().sequence);
+    if (!_context.sequence.empty())
+        _select.querybuilder().whereString(def_col_tsd_seqname, _context.sequence);
 }
 
 
 TaskProgress::TaskProgress(const Commons &commons,
                            const string& taskname,
-                           const list<string> &seqnames)
-    : KeyValues(commons, def_tab_tasks_seq)
+                           const vector<string> &seqnames)
+    : KeyValues(commons, def_tab_tasks_seq), _acquired(false), _update_set(false)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
 
     if (!taskname.empty())
-        context().task = taskname;
+        _context.task = taskname;
 
-    if(!context().task.empty())
-        select().whereString(def_col_tsd_taskname, context().task);
+    if(!_context.task.empty())
+        _select.querybuilder().whereString(def_col_tsd_taskname, _context.task);
 
-    select().whereStringInList(def_col_tsd_seqname, seqnames);
+    _select.querybuilder().whereStringVector(def_col_tsd_seqname, seqnames);
+}
+
+TaskProgress::~TaskProgress()
+{
+    if (_acquired && !_update_set) {
+        Delete d(*this, def_tab_tasks_seq);
+        d.querybuilder().whereString(def_col_tsd_taskname, _context.task);
+        d.querybuilder().whereString(def_col_tsd_seqname, _context.sequence);
+        d.execute();
+    }
 }
 
 bool TaskProgress::next()
 {
     if (KeyValues::next()) {
-        context().task = this->getTaskName();
-        context().sequence = this->getSequenceName();
+        _context.task = this->getTaskName();
+        _context.sequence = this->getSequenceName();
         return true;
     }
     else {
@@ -60,68 +72,72 @@ bool TaskProgress::next()
     }
 }
 
-string TaskProgress::getTaskName()
+string TaskProgress::getTaskName() const
 {
     return this->getString(def_col_tsd_taskname);
 }
 
-Task *TaskProgress::getTask()
+Task *TaskProgress::getTask() const
 {
     return new Task(*this, this->getTaskName());
 }
 
-int TaskProgress::getProcessId()
+int TaskProgress::getProcessId() const
 {
     return this->getInt(def_col_tsd_prsid);
 }
 
 
-Process *TaskProgress::getProcess()
+Process *TaskProgress::getProcess() const
 {
     return new Process(*this, this->getProcessId());
 }
 
-string TaskProgress::getSequenceName()
+string TaskProgress::getSequenceName() const
 {
     return this->getString(def_col_tsd_seqname);
 }
 
 
-Sequence *TaskProgress::getSequence()
+Sequence *TaskProgress::getSequence() const
 {
     return new Sequence(*this, this->getSequenceName());
 }
 
-bool TaskProgress::getIsDone()
+bool TaskProgress::getIsDone() const
 {
     return this->getBool(def_col_tsd_isdone);
 }
 
-time_t TaskProgress::getStartedTime()
+chrono::system_clock::time_point TaskProgress::getStartedTime() const
 {
     return this->getTimestamp(def_col_tsd_started);
 }
 
-
-time_t TaskProgress::getFinishedTime()
+chrono::system_clock::time_point TaskProgress::getFinishedTime() const
 {
     return this->getTimestamp(def_col_tsd_finished);
 }
 
-bool TaskProgress::updateIsDone(bool value)
+bool TaskProgress::updateIsDone(bool finished)
 {
-    time_t t;
-    std::time(&t);
+    if (!_acquired) {
+        return false;
+    }
+    else {
+        chrono::system_clock::time_point now = chrono::system_clock::now();
 
-    return this->updateBool(def_col_tsd_isdone, value) &&
-            this->updateTimestamp(def_col_tsd_finished, t) &&
-            this->updateExecute();
+        return _update_set =
+                (this->updateBool(def_col_tsd_isdone, finished) &&
+                this->updateTimestamp(def_col_tsd_finished, now) &&
+                this->updateExecute());
+    }
 }
 
 bool TaskProgress::preUpdate()
 {
-    return update().whereString(def_col_tsd_taskname, context().task) &&
-            update().whereString(def_col_tsd_seqname, context().sequence);
+    return update().querybuilder().whereString(def_col_tsd_taskname, _context.task) &&
+            update().querybuilder().whereString(def_col_tsd_seqname, _context.sequence);
 }
 
 }

@@ -30,6 +30,11 @@ Logger& Logger::instance()
     return instance;
 }
 
+Logger::Logger()
+    : _log_errors(false), _log_warnings(false), _log_debug(false)
+{}
+
+
 void Logger::config(const string& logfile, bool errors, bool warnings, bool debug)
 {
     if (_log.is_open())
@@ -101,13 +106,9 @@ void Logger::debug(const string& line, const string& where)
     }
 }
 
-string Logger::timestamp()
+string Logger::timestamp() const
 {
-    time_t timer;
-    time(&timer);
-    char timeBuffer[64];
-    strftime(timeBuffer, 64, "%Y-%m-%d %H:%M:%S", gmtime(&timer));
-    return string(timeBuffer);
+    return toString(chrono::system_clock::now());
 }
 
 void Logger::output(std::ostream & stream, const std::string& line)

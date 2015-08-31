@@ -12,8 +12,6 @@
 
 #pragma once
 
-#include <string>
-#include <list>
 #include "keyvalues.h"
 #include "sequence.h"
 #include "task.h"
@@ -64,14 +62,11 @@ public:
      * Construct dataset object for iterating through VTApi datasets
      * Object will represent set of datasets specified by their names
      * @param commons base Commons object
-     * @param names list of dataset names
+     * @param names vector of dataset names
      */
-    Dataset(const Commons& commons, const std::list<std::string>& names);
+    Dataset(const Commons& commons, const std::vector<std::string>& names);
 
     using KeyValues::count;
-    using KeyValues::print;
-    using KeyValues::printAll;
-    using KeyValues::printKeys;
 
     /**
      * Moves to a next dataset and sets dataset name and location varibles
@@ -84,31 +79,31 @@ public:
      * Gets name of the current dataset
      * @return name of the current dataset
      */
-    std::string getName();
+    std::string getName() const;
 
     /**
      * Gets dataset location relative to base location (in config file)
      * @return location of the current dataset
      */
-    std::string getLocation();
+    std::string getLocation() const;
     
     /**
      * Gets friendly name of the current dataset
      * @return friendly name of the current dataset
      */
-    std::string getFriendlyName();
+    std::string getFriendlyName() const;
 
     /**
      * Gets description of the current dataset
      * @return description of the current dataset
      */
-    std::string getDescription();
+    std::string getDescription() const;
     
     /**
      * Gets full path to sequence location
      * @return full path
      */
-    std::string getDataLocation();
+    std::string getDataLocation() const;
 
     /**
      * Sets dataset's friendly name
@@ -123,7 +118,7 @@ public:
      * @return success
      */
     bool updateDescription(const std::string& description);
-    
+
     /**
      * Creates new sequence in dataset and returns its object for iteration
      * @param name sequence name (unique)
@@ -135,7 +130,7 @@ public:
     Sequence *createSequence(const std::string& name,
                              const std::string& location,
                              const std::string& type,
-                             const std::string& comment = std::string());
+                             const std::string& comment = std::string()) const;
 
     /**
      * Creates new video in dataset and returns its object for iteration
@@ -148,9 +143,9 @@ public:
      */
     Video *createVideo(const std::string& name,
                        const std::string& location,
-                       const time_t& realtime,
+                       const std::chrono::system_clock::time_point& realtime,
                        double speed,
-                       const std::string& comment = std::string());
+                       const std::string& comment = std::string()) const;
 
     /**
      * Creates new image folder in dataset and returns its object for iteration
@@ -161,7 +156,7 @@ public:
      */
     ImageFolder *createImageFolder(const std::string& name,
                                    const std::string& location,
-                                   const std::string& comment = std::string());
+                                   const std::string& comment = std::string()) const;
     
     /**
      * @brief Creates new task for given method
@@ -174,94 +169,94 @@ public:
     Task *createTask(const std::string& mtname,
                      const TaskParams& params,
                      const std::string& prereq_task,
-                     const std::string& outputs = std::string());
+                     const std::string& outputs = std::string()) const;
 
     /**
      * Loads dataset's sequences for iteration
      * @param name   sequence name (no name = all sequences)
      * @return pointer to the new Sequence object
      */
-    Sequence *loadSequences(const std::string& name = std::string());
+    Sequence *loadSequences(const std::string& name = std::string()) const;
 
     /**
      * Loads dataset's sequences for iteration
      * @param name   sequences names
      * @return pointer to the new Sequence object
      */
-    Sequence *loadSequences(const std::list<std::string>& names);
+    Sequence *loadSequences(const std::vector<std::string>& names) const;
 
     /**
      * Loads dataset's videos (= sequences) for iteration
      * @param name   video (sequence) name (no name = all sequences)
      * @return pointer to the new Video object
      */
-    Video *loadVideos(const std::string& name = std::string());
+    Video *loadVideos(const std::string& name = std::string()) const;
 
     /**
      * Loads dataset's videos for iteration
      * @param name   videos names
      * @return pointer to the new Video object
      */
-    Video *loadVideos(const std::list<std::string>& names);
+    Video *loadVideos(const std::vector<std::string>& names) const;
 
     /**
      * Loads dataset's image folders (= sequences) for iteration
      * @param name image folder name (no name = all image folders)
      * @return pointer to the new ImageFolder object
      */
-    ImageFolder *loadImageFolders(const std::string& name = std::string());
+    ImageFolder *loadImageFolders(const std::string& name = std::string()) const;
 
     /**
      * Loads dataset's image folders for iteration
      * @param names   image folders names
      * @return pointer to the new ImageFolder object
      */
-    ImageFolder *loadImageFolders(const std::list<std::string>& names);
+    ImageFolder *loadImageFolders(const std::vector<std::string>& names) const;
 
     /**
      * Loads dataset's processing tasks for iteration
      * @param name task name (no name = all tasks)
      * @return pointer to the new Task object
      */
-    Task *loadTasks(const std::string& name = std::string());
+    Task *loadTasks(const std::string& name = std::string()) const;
     
     /**
      * Loads dataset's processing tasks for iteration
      * @param name   tasks names
      * @return pointer to the new Task object
      */
-    Task *loadTasks(const std::list<std::string>& names);
+    Task *loadTasks(const std::vector<std::string>& names) const;
 
     /**
      * Loads dataset's processes for iteration
      * @param id   process ID (0 = all processes)
      * @return pointer to the new Process object
      */
-    Process *loadProcesses(int id = 0);
+    Process *loadProcesses(int id = 0) const;
 
     /**
      * Loads dataset's processes for iteration
      * @param ids   processes IDs
      * @return pointer to the new Process object
      */
-    Process *loadProcesses(const std::list<int>& ids);
+    Process *loadProcesses(const std::vector<int>& ids) const;
 
     /**
      * @brief Deletes sequence with given name
      * @param seqname sequence name to delete
      * @return succesful delete
      */
-    bool deleteSequence(const std::string &seqname);
+    bool deleteSequence(const std::string &seqname) const;
 
     /**
      * @brief Deletes task with given name
      * @param taskname task name to delete
      * @return succesful delete
      */
-    bool deleteTask(const std::string &taskname);
+    bool deleteTask(const std::string &taskname) const;
 
 protected:
-    virtual bool preUpdate();
+    bool preUpdate() override;
     
 private:
     Dataset() = delete;

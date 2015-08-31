@@ -16,7 +16,10 @@
 #include "data/method.h"
 #include "data/sequence.h"
 #include "data/task.h"
+#include "data/taskkeys.h"
+#include "data/taskparams.h"
 #include "data/process.h"
+#include <memory>
 
 
 /**
@@ -49,12 +52,7 @@ public:
      * Copy constructor
      * @param orig
      */
-    explicit VTApi(const VTApi& orig);
-    
-    /**
-     * Destructor
-     */
-    ~VTApi();
+    VTApi(const VTApi& orig);
 
     /**
      * Creates new dataset + appropriate DB objects and returns its object for iteration
@@ -68,7 +66,7 @@ public:
         const std::string& name,
         const std::string& location,
         const std::string& friendly_name,
-        const std::string& description = std::string());
+        const std::string& description = std::string()) const;
     
     /**
      * Creates new method + appropriate DB objects and returns its object for iteration
@@ -80,23 +78,23 @@ public:
      */
     Method* createMethod(
         const std::string& name,
-        const MethodKeys keys_definition,
-        const MethodParams params_definition,
-        const std::string& description = std::string());
+        const TaskKeyDefinitions & keys_definition,
+        const TaskParamDefinitions & params_definition,
+        const std::string& description = std::string()) const;
     
     /**
      * Loads dataset(s) for iteration
      * @param name dataset name (empty => all datasets)
      * @return dataset object
      */
-    Dataset* loadDatasets(const std::string& name = std::string());
+    Dataset* loadDatasets(const std::string& name = std::string()) const;
 
     /**
      * Loads method(s) for iteration
      * @param name method name (empty => all methods)
      * @return method object
      */
-    Method* loadMethods(const std::string& name = std::string());
+    Method* loadMethods(const std::string& name = std::string()) const;
 
     /**
      * Loads default dataset's sequences for iteration
@@ -104,7 +102,7 @@ public:
      * @param name   sequence name (no name = all sequences)
      * @return pointer to the new Sequence object
      */
-    Sequence* loadSequences(const std::string& name = std::string());
+    Sequence* loadSequences(const std::string& name = std::string()) const;
 
     /**
      * Loads default dataset's videos (= sequences) for iteration
@@ -112,7 +110,7 @@ public:
      * @param name   video (sequence) name (no name = all sequences)
      * @return pointer to the new Video object
      */
-    Video* loadVideos(const std::string& name = std::string());
+    Video* loadVideos(const std::string& name = std::string()) const;
 
     /**
      * Loads default dataset's image folders (= sequences) for iteration
@@ -120,7 +118,7 @@ public:
      * @param name image folder name (no name = all image folders)
      * @return pointer to the new ImageFolder object
      */
-    ImageFolder* loadImageFolders(const std::string& name = std::string());
+    ImageFolder* loadImageFolders(const std::string& name = std::string()) const;
 
     /**
      * Loads default dataset's processing tasks for iteration
@@ -128,7 +126,7 @@ public:
      * @param name task name (no name = all tasks)
      * @return pointer to the new Task object
      */
-    Task* loadTasks(const std::string& name = std::string());
+    Task* loadTasks(const std::string& name = std::string()) const;
 
     /**
      * Loads default dataset's processes for iteration
@@ -136,30 +134,30 @@ public:
      * @param id   process ID (0 = all processes)
      * @return pointer to the new Process object
      */
-    Process* loadProcesses(int id = 0);
+    Process* loadProcesses(int id = 0) const;
 
     /**
      * @brief Deletes dataset with given name
      * @param dsname dataset name to delete
      * @return true on succesful delete
      */
-    bool deleteDataset(const std::string& dsname);
+    bool deleteDataset(const std::string& dsname) const;
 
     /**
      * @brief Deletes method with given name
      * @param mtname method name to delete
      * @return true on succesful delete
      */
-    bool deleteMethod(const std::string& mtname);
+    bool deleteMethod(const std::string& mtname) const;
 
     /**
      * @brief Instantiate current process as VTApi worker process
      * @return process object
      */
-    Process *getRunnableProcess();
+    Process *getRunnableProcess() const;
 
 private:
-    Commons* _pcommons;      /**< Commons are common objects to all vtapi objects */
+    std::shared_ptr<Commons> _pcommons; /**< Commons are common objects to all vtapi objects */
 
     VTApi() = delete;             /**< forbidden */
     VTApi& operator=(const VTApi& orig) = delete; /**< forbidden */

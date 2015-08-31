@@ -22,62 +22,39 @@ namespace vtapi {
 
 
 Commons::Commons(const Poco::Util::AbstractConfiguration &config)
+    : _pconfig(std::make_shared<Config>()), _is_owner(true)
 {
-    _is_owner = true;
-    _pconfig = new CONFIG();
-    _pbackend = NULL;
-    _pconnection = NULL;
-    _ploader = NULL;
+    // load config
+    loadConfig(config);
 
-    try {
-        // load config
-        loadConfig(config);
+    // initialize global logger
+    Logger::instance().config(_pconfig->logfile, _pconfig->log_errors,
+                              _pconfig->log_warnings, _pconfig->log_debug);
 
-        // initialize global logger
-        Logger::instance().config(_pconfig->logfile, _pconfig->log_errors,
-                                  _pconfig->log_warnings, _pconfig->log_debug);
-
-        // load backend interface + connection
-        loadBackend();
-    }
-    catch (Exception &e)
-    {
-        vt_destruct(_pconfig);
-        throw;
-    }
+    // load backend interface + connection
+    loadBackend();
 }
 
 Commons::Commons(const Commons& orig, bool new_copy)
+    : _context(orig._context), _is_owner(new_copy)
 {
-    _is_owner = new_copy;
-    _pconfig = NULL;
-    _pbackend = NULL;
-    _pconnection = NULL;
-    _ploader = NULL;
-
+    // copy config and load new backend objects
     if (new_copy) {
-        // copy config
-        _pconfig = new CONFIG(*orig._pconfig);
-
-        try
-        {
-            // load backend interface + connection
-            loadBackend();
-        }
-        catch (Exception &e)
-        {
-            vt_destruct(_pconfig);
-            throw;
-        }
+        _pconfig = std::make_shared<Config>(*orig._pconfig);
+        loadBackend();
     }
+    // copy everything
     else {
         _pconfig = orig._pconfig;
         _pbackend = orig._pbackend;
         _pconnection = orig._pconnection;
         _ploader = orig._ploader;
     }
+}
 
-    _context = orig._context;
+Commons::~Commons()
+{
+    if (_is_owner) unloadBackend();
 }
 
 void Commons::loadBackend()
@@ -88,7 +65,7 @@ void Commons::loadBackend()
     try
     {
         // load library
-        _ploader = new Poco::ClassLoader<IBackendInterface>();
+        _ploader = std::make_shared< Poco::ClassLoader<IBackendInterface> >();
         _ploader->loadLibrary(lib_name);
 
         // load plugin interface
@@ -101,11 +78,11 @@ void Commons::loadBackend()
         if (plugin_name.empty())
             throw(BackendException(lib_name, "library is not a VTApi backend plugin"));
 
-        _pbackend = _ploader->create(plugin_name);
+        // interface for creating backend-specific objects
+        _pbackend = std::shared_ptr<IBackendInterface>(_ploader->create(plugin_name));
 
         // create connection object and connect to database
-        _pconnection = _pbackend->createConnection(_pconfig->connection);
-
+        _pconnection = std::shared_ptr<Connection>(_pbackend->createConnection(_pconfig->connection));
         if (!_pconnection->connect())
             throw DatabaseConnectionException(_pconfig->connection,_pconnection->getErrorMessage());
     }
@@ -123,8 +100,8 @@ void Commons::loadBackend()
 
 void Commons::unloadBackend()
 {
-    vt_destruct(_pconnection);
-    vt_destruct(_pbackend);
+    _pconnection.reset();
+    _pbackend.reset();
     if (_ploader) {
         try
         {
@@ -134,7 +111,7 @@ void Commons::unloadBackend()
         }
         catch(Exception &e) {}
 
-        vt_destruct(_ploader);
+        _ploader.reset();
     }
 
 }
@@ -149,49 +126,6 @@ string Commons::getBackendLibName() const
     else {
         throw BadConfigurationException("invalid \'connection\' format: " + _pconfig->connection);
     }
-}
-
-Commons::~Commons()
-{
-    if (_is_owner) {
-        unloadBackend();
-        vt_destruct(_pconfig);
-    }
-}
-
-Commons::_CONFIG::_CONFIG()
-{
-    log_errors = false;
-    log_warnings = false;
-    log_debug = false;
-}
-
-Commons::_CONTEXT::_CONTEXT()
-{
-    process = 0;
-}
-
-
-const Commons::CONFIG& Commons::config() const
-{
-    return *_pconfig;
-}
-
-Commons::CONTEXT& Commons::context()
-{
-    return _context;
-}
-
-
-const IBackendInterface& Commons::backend() const
-{
-    return *_pbackend;
-}
-
-
-Connection& Commons::connection()
-{
-    return *_pconnection;
 }
 
 void Commons::loadConfig(const Poco::Util::AbstractConfiguration &config)

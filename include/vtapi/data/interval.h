@@ -22,6 +22,7 @@ namespace vtapi {
 
 class Dataset;
 class Sequence;
+class Video;
 class Task;
 
 
@@ -62,64 +63,73 @@ public:
      * @brief Gets parent dataset object
      * @return dataset object (initialized)
      */
-    Dataset *getParentDataset();
+    Dataset *getParentDataset() const;
 
     /**
      * @brief Gets parent task object
      * @return task object (initialized)
      */
-    Task *getParentTask();
+    Task *getParentTask() const;
 
     /**
      * @brief Gets parent sequence name
      * @return sequence name
      */
-    std::string getParentSequenceName();
+    std::string getParentSequenceName() const;
 
     /**
      * @brief Gets parent sequence object
      * @return sequence object (initialized)
      */
-    Sequence *getParentSequence();
+    Sequence *getParentSequence() const;
 
     /**
      * Gets interval ID
      * @return interval ID
      */
-    int getId();
+    int getId() const;
     
     /**
      * Gets a start frame of the current interval
      * @return start time
      */
-    int getStartTime();
+    unsigned int getStartTime() const;
     
     /**
      * Gets an end frame of the current interval
      * @return end time
      */
-    int getEndTime();
-    
+    unsigned int getEndTime() const;
+
     /**
-     * Gets real start and end time of the current interval
-     * @param t1 start time
-     * @param t2 end time
-     * @return  sucess
+     * Gets real start time of the current interval
+     * @return start time
      */
-    bool getRealStartEndTime(time_t *t1, time_t *t2);
-    
+    std::chrono::system_clock::time_point getRealStartTime();
+
+    /**
+     * Gets real end time of the current interval
+     * @return end time
+     */
+    std::chrono::system_clock::time_point getRealEndTime();
+
     /**
      * @brief Gets event length in seconds
      * @return seconds
      */
-    double getLengthSeconds();
+    double getLengthSeconds() const;
 
     /**
-     * Sets interval's start/end time
+     * Sets interval's end time
      * @param t1 start time
+     */
+    bool updateStartTime(unsigned int t1);
+
+    /**
+     * Sets interval's end time
      * @param t2 end time
      */
-    bool updateStartEndTime(const int t1, const int t2 = -1);
+    bool updateEndTime(unsigned int t2);
 
     /**
      * Sets filter for intervals by ID before calling next()
@@ -127,49 +137,59 @@ public:
      * @return success
      */
     bool filterById(const int id);
+
     /**
      * Sets filter for intervals by sequence before calling next()
      * @param seqname   sequence name
      * @return success
      */
     bool filterBySequence(const std::string& seqname);
+
     /**
      * Sets filter for intervals by sequences before calling next()
      * @param seqnames   sequences names
      * @return success
      */
-    bool filterBySequences(const std::list<std::string>& seqnames);
+    bool filterBySequences(const std::vector<std::string>& seqnames);
+
     /**
      * Sets filter for intervals by task before calling next()
      * @param taskname task name
      * @return success
      */
     bool filterByTask(const std::string& taskname);
+
     /**
      * Sets filter for intervals by duration(real seconds) before calling next()
      * @param t_low min duration in real seconds
      * @param t_high max duration in real seconds
      * @return success
      */
-    bool filterByDuration(const float t_low, const float t_high);
+    bool filterByDuration(const std::chrono::microseconds & dur_low,
+                          const std::chrono::microseconds & dur_high);
+
     /**
      * Sets filter for intervals by overlapping time range before calling next()
      * @param t_low overlapping interval lower bound (UNIX time)
      * @param t_high overlapping interval higher bound (UNIX time)
      * @return success
      */
-    bool filterByTimeRange(const time_t t_low, const time_t t_high);
+    bool filterByTimeRange(const std::chrono::system_clock::time_point & t_low,
+                           const std::chrono::system_clock::time_point & t_high);
+
     /**
      * Sets filter for intervals by overlapping event region before calling next()
      * @param region overlapping region
      * @return success
      */
-    bool filterByRegion(const IntervalEvent::box& region);
+    bool filterByRegion(const Box & region);
     
 protected:
-    bool preUpdate();
+    virtual bool preUpdate() override;
 
 private:
+    std::shared_ptr<Video> _pparent_vid;
+
     Interval() = delete;
     Interval(const Interval&) = delete;
     Interval& operator=(const Interval&) = delete;
@@ -223,15 +243,6 @@ public:
      * @return string value with the location of the data
      */
     std::string getDataLocation();
-    
-//    /**
-//     * Simply adds an image (interval) to the sequence table (no checking)
-//     * @param sequence   interval name
-//     * @param t          time (start time is the same as the end time)
-//     * @param location   location of the image
-//     * @return success
-//     */
-//    bool add(const std::string& sequence, const int t, const std::string& location);
 
     /**
      * Loads an image from a file (given by imgLocation of %VTApi)

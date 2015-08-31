@@ -2,8 +2,6 @@
 
 #include <vtapi/common/exception.h>
 #include <vtapi/data/process.h>
-#include <vtapi/data/task.h>
-#include <vtapi/data/sequence.h>
 
 namespace vtapi {
 
@@ -12,12 +10,12 @@ class IModuleInterface
 {
 public:
     // module control codes
-    typedef enum
+    enum ControlCode
     {
         ControlSuspend,     // suspend processing
         ControlResume,      // resume suspended processing
         ControlStop         // stop all processing and return
-    } ControlCode;
+    };
 
     /**
      * @brief virtual destructor
@@ -74,7 +72,6 @@ public:
      * @throws vtapi::RuntimeModuleException processing error
      */
     virtual void process(Process & process) = 0;
-
 
     /**
      * @brief Module control implementation (suspending, resuming, stopping)

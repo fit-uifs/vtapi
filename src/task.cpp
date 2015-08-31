@@ -15,6 +15,7 @@
 #include <vtapi/common/exception.h>
 #include <vtapi/common/defs.h>
 #include <vtapi/queries/insert.h>
+#include <vtapi/queries/delete.h>
 #include <vtapi/queries/predefined.h>
 #include <vtapi/data/task.h>
 
@@ -32,55 +33,55 @@ Task::Task(const Task &copy)
 Task::Task(const Commons& commons, const string& name)
     : KeyValues(commons, def_tab_tasks)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
     
     if (!name.empty())
-        context().task = name;
+        _context.task = name;
     
     // normally SELECT selects all columns implicitly
     // but we can't handle regclass => specify explicitly
-    select().from(def_tab_tasks, def_col_task_name);
-    select().from(def_tab_tasks, def_col_task_mtname);
-    select().from(def_tab_tasks, def_col_task_params);
-    select().from(def_tab_tasks, def_col_task_outputs + "::text");
-    select().from(def_tab_tasks, def_col_task_created);
+    _select.from(def_tab_tasks, def_col_task_name);
+    _select.from(def_tab_tasks, def_col_task_mtname);
+    _select.from(def_tab_tasks, def_col_task_params);
+    _select.from(def_tab_tasks, def_col_task_outputs + "::text");
+    _select.from(def_tab_tasks, def_col_task_created);
 
-    select().setOrderBy(def_col_task_name);
+    _select.setOrderBy(def_col_task_name);
     
-    if (!context().task.empty()) {
-        select().whereString(def_col_task_name, context().task);
+    if (!_context.task.empty()) {
+        _select.querybuilder().whereString(def_col_task_name, _context.task);
     }
     else {
-        if (!context().method.empty())
-            select().whereString(def_col_task_mtname, context().method);
+        if (!_context.method.empty())
+            _select.querybuilder().whereString(def_col_task_mtname, _context.method);
     }
 }
 
-Task::Task(const Commons& commons, const list<string>& names)
+Task::Task(const Commons& commons, const vector<string>& names)
     : KeyValues(commons, def_tab_tasks)
 {
-    if (context().dataset.empty())
+    if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
     
     // normally SELECT selects all columns implicitly
     // but we can't handle regclass => specify explicitly
-    select().from(def_tab_tasks, def_col_task_name);
-    select().from(def_tab_tasks, def_col_task_mtname);
-    select().from(def_tab_tasks, def_col_task_params);
-    select().from(def_tab_tasks, def_col_task_outputs + "::text");
-    select().from(def_tab_tasks, def_col_task_created);
+    _select.from(def_tab_tasks, def_col_task_name);
+    _select.from(def_tab_tasks, def_col_task_mtname);
+    _select.from(def_tab_tasks, def_col_task_params);
+    _select.from(def_tab_tasks, def_col_task_outputs + "::text");
+    _select.from(def_tab_tasks, def_col_task_created);
 
-    select().setOrderBy(def_col_task_name);
-    select().whereStringInList(def_col_task_name, names);
+    _select.setOrderBy(def_col_task_name);
+    _select.querybuilder().whereStringVector(def_col_task_name, names);
     
-    context().method.clear();
+    _context.method.clear();
 }
 
 bool Task::next()
 {
     if (KeyValues::next()) {
-        context().task = this->getName();
+        _context.task = this->getName();
         return true;
     }
     else {
@@ -88,7 +89,7 @@ bool Task::next()
     }
 }
 
-Dataset *Task::getParentDataset()
+Dataset *Task::getParentDataset() const
 {
     Dataset *d = new Dataset(*this);
     if (d->next()) {
@@ -100,15 +101,15 @@ Dataset *Task::getParentDataset()
     }
 }
 
-string Task::getParentMethodName()
+string Task::getParentMethodName() const
 {
-    if (!context().method.empty())
-        return context().method;
+    if (!_context.method.empty())
+        return _context.method;
     else
         return this->getString(def_col_task_mtname);
 }
 
-Method *Task::getParentMethod()
+Method *Task::getParentMethod() const
 {
     string mtname = this->getParentMethodName();
 
@@ -127,12 +128,12 @@ Method *Task::getParentMethod()
     }
 }
 
-Task *Task::loadPrerequisiteTasks()
+Task *Task::loadPrerequisiteTasks() const
 {
     KeyValues kv(*this, def_tab_tasks_prereq);
-    kv.select().whereString(def_col_tprq_taskname, context().task);
+    kv._select.querybuilder().whereString(def_col_tprq_taskname, _context.task);
 
-    list<string> tasknames;
+    vector<string> tasknames;
     while(kv.next()) {
         tasknames.push_back(kv.getString(def_col_tprq_taskprereq));
     }
@@ -140,42 +141,47 @@ Task *Task::loadPrerequisiteTasks()
     return new Task(*this, tasknames);
 }
 
-string Task::getOutputDataTable()
+string Task::getOutputDataTable() const
 {
     return this->getString(def_col_task_outputs);
 }
 
-TaskProgress *Task::loadTaskProgress()
+TaskProgress *Task::loadTaskProgress() const
 {
-    return new TaskProgress(*this, context().task);
+    return new TaskProgress(*this, _context.task);
 }
 
-TaskProgress *Task::loadTaskProgress(const list<string>& seqnames)
+TaskProgress *Task::loadTaskProgress(const vector<string>& seqnames) const
 {
-    return new TaskProgress(*this, context().task, seqnames);
+    return new TaskProgress(*this, _context.task, seqnames);
 }
 
-Interval *Task::loadOutputData()
+Interval *Task::loadOutputData() const
 {
     return new Interval(*this, this->getOutputDataTable());
 }
 
-Process* Task::loadProcesses(int id)
+Process* Task::loadProcesses(int id) const
 {
     return (new Process(*this, id));
 }
 
-string Task::getName()
+string Task::getName() const
 {
     return this->getString(def_col_task_name);
 }
 
-TaskParams *Task::getParams()
+TaskParams Task::getParams() const
 {
-    return new TaskParams(this->getString(def_col_task_params));
+    return TaskParams(this->getString(def_col_task_params));
 }
 
-Process* Task::createProcess(const list<string>& seqnames)
+chrono::system_clock::time_point Task::getCreatedTime() const
+{
+    return this->getTimestamp(def_col_task_created);
+}
+
+Process* Task::createProcess(const vector<string>& seqnames) const
 {
     Process *p = NULL;
     int prsid = 0;
@@ -185,7 +191,7 @@ Process* Task::createProcess(const list<string>& seqnames)
 
     {
         Insert insert(*this, def_tab_processes);
-        retval &= insert.keyString(def_col_prs_taskname, context().task);
+        retval &= insert.querybuilder().keyString(def_col_prs_taskname, _context.task);
 
         if (retval && (retval = insert.execute())) {
             QueryLastInsertedId q(*this);
@@ -193,8 +199,8 @@ Process* Task::createProcess(const list<string>& seqnames)
                 prsid = q.getLastId();
                 for (auto & item : seqnames) {
                     Insert insert2(*this, def_tab_processes_seq);
-                    retval &= insert2.keyInt(def_col_prss_prsid, prsid);
-                    retval &= insert2.keyString(def_col_prss_seqname, item);
+                    retval &= insert2.querybuilder().keyInt(def_col_prss_prsid, prsid);
+                    retval &= insert2.querybuilder().keyString(def_col_prss_seqname, item);
                     if (retval && (retval = insert2.execute())) {
                     }
                     else {
@@ -218,9 +224,30 @@ Process* Task::createProcess(const list<string>& seqnames)
     return p;
 }
 
-IntervalOutput *Task::createIntervalOutput(const string &seqname)
+IntervalOutput *Task::createIntervalOutput(const string &seqname) const
 {
     return new IntervalOutput(*this, seqname, this->getOutputDataTable());
+}
+
+bool Task::deleteOutputData(const string &seqname) const
+{
+    bool ret = true;
+    Delete d(*this, this->getOutputDataTable());
+    ret &= d.querybuilder().whereString(def_col_int_taskname, this->getName());
+    if (!seqname.empty())
+        ret &= d.querybuilder().whereString(def_col_int_seqname, seqname);
+
+    return ret && d.execute();
+}
+
+bool Task::deleteOutputData(const vector<string> &seqnames) const
+{
+    bool ret = true;
+    Delete d(*this, this->getOutputDataTable());
+    ret &= d.querybuilder().whereString(def_col_int_taskname, this->getName());
+    ret &= d.querybuilder().whereStringVector(def_col_int_seqname, seqnames);
+
+    return ret && d.execute();
 }
 
 string Task::constructName(const string &mtname, const TaskParams &params)
@@ -236,7 +263,7 @@ string Task::constructName(const string &mtname, const TaskParams &params)
 
 bool Task::preUpdate()
 {
-    return update().whereString(def_col_task_name, context().task);
+    return update().querybuilder().whereString(def_col_task_name, _context.task);
 }
 
 }

@@ -19,7 +19,7 @@ int main(int argc, char *argv[])
         if (ds->next()) {
             shared_ptr<Task> task(ds->loadTasks());
             if (task->next()) {
-                list<string> seqnames = { "video1", "video2" };
+                vector<string> seqnames = { "video1", "video2" };
                 shared_ptr<Process> prs (task->createProcess(seqnames));
                 if (prs) {
                     prs->launchInstance();
@@ -568,7 +568,7 @@ int main(int argc, char *argv[])
 //            Method* me = new Method(*(m_vtapi->commons), method);
             
 //            me->next();
-//            me->printMethodKeys();
+//            me->printTaskKeyDefinitions();
 //            delete me;
 //            break;
 //        }
@@ -882,7 +882,7 @@ int main(int argc, char *argv[])
 //                }
 
 //                // get video length in frames
-//                size_t len = vid->getLength();
+//                unsigned int len = vid->getLength();
 //                if (!len) {
 //                    printError(string("failed to get video length: ").append(sequence).c_str());
 //                    bRet = false;
