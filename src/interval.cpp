@@ -25,6 +25,10 @@ namespace vtapi {
 
 //================================= INTERVAL ===================================
 
+Interval::Interval(const Interval &copy)
+    : Interval(dynamic_cast<const Commons&>(copy), _context.selection)
+{}
+
 Interval::Interval(const Commons& commons, const string& selection)
     : KeyValues(commons, selection)
 {
@@ -133,7 +137,7 @@ unsigned int Interval::getEndTime() const
     return this->getInt(def_col_int_t2);
 }
 
-chrono::system_clock::time_point Interval::getRealStartTime()
+chrono::system_clock::time_point Interval::calculateRealStartTime()
 {
     if (!_pparent_vid) {
         _pparent_vid = std::make_shared<Video>(*this, this->getParentSequenceName());
@@ -153,7 +157,7 @@ chrono::system_clock::time_point Interval::getRealStartTime()
     }
 }
 
-chrono::system_clock::time_point Interval::getRealEndTime()
+chrono::system_clock::time_point Interval::calculateRealEndTime()
 {
     if (!_pparent_vid) {
         _pparent_vid = std::make_shared<Video>(*this, this->getParentSequenceName());
@@ -257,21 +261,21 @@ bool Image::next()
 
 string Image::getDataLocation()
 {
-    if (_context.datasetLocation.empty()) {
+    if (_context.dataset_location.empty()) {
         Dataset *d = getParentDataset();
-        _context.datasetLocation = d->getLocation();
+        _context.dataset_location = d->getLocation();
         delete d;
     }
 
-    if (_context.sequenceLocation.empty()) {
+    if (_context.sequence_location.empty()) {
         Sequence *s = getParentSequence();
-        _context.sequenceLocation = s->getLocation();
+        _context.sequence_location = s->getLocation();
         delete s;
     }
 
     return config().datasets_dir + Poco::Path::separator() +
-            _context.datasetLocation + Poco::Path::separator() +
-            _context.sequenceLocation  + Poco::Path::separator() +
+            _context.dataset_location + Poco::Path::separator() +
+            _context.sequence_location  + Poco::Path::separator() +
             this->getString(def_col_int_imglocation);
 }
 

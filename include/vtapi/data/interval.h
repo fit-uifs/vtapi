@@ -42,6 +42,11 @@ class Interval : public KeyValues
 {
 public:
     /**
+     * @brief Copy constructor
+     */
+    Interval(const Interval &copy);
+
+    /**
      * Constructor for intervals
      * @param commons     shared Commons object
      * @param selection   specific name of a selection table
@@ -105,13 +110,13 @@ public:
      * Gets real start time of the current interval
      * @return start time
      */
-    std::chrono::system_clock::time_point getRealStartTime();
+    std::chrono::system_clock::time_point calculateRealStartTime();
 
     /**
      * Gets real end time of the current interval
      * @return end time
      */
-    std::chrono::system_clock::time_point getRealEndTime();
+    std::chrono::system_clock::time_point calculateRealEndTime();
 
     /**
      * @brief Gets event length in seconds
@@ -191,7 +196,6 @@ private:
     std::shared_ptr<Video> _pparent_vid;
 
     Interval() = delete;
-    Interval(const Interval&) = delete;
     Interval& operator=(const Interval&) = delete;
 };
 

@@ -184,7 +184,7 @@ public:
      * @brief Return param data for iterating and querying
      * @return parameter map
      */
-    const ParamsMap & data()
+    const ParamsMap & data() const
     { return _data; }
 
 

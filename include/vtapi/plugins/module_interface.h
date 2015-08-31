@@ -34,7 +34,7 @@ public:
      * @brief Module uninitialization
      * Called ALWAYS on plugin uninitialization
      */
-    virtual void uninitialize() = 0;
+    virtual void uninitialize() noexcept = 0;
 
     /**
      * @brief Main processing function

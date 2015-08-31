@@ -53,7 +53,7 @@ bool Dataset::next()
 {
     if (KeyValues::next()) {
         _context.dataset = this->getName();
-        _context.datasetLocation = this->getLocation();
+        _context.dataset_location = this->getLocation();
         return true;
     }
     else {
@@ -131,7 +131,7 @@ Video* Dataset::createVideo(const string& name,
     do {
         string fullpath =
                 config().datasets_dir + Poco::Path::separator() +
-                _context.datasetLocation + Poco::Path::separator() +
+                _context.dataset_location + Poco::Path::separator() +
                 location;
 
         if (!Poco::Path(fullpath).isFile()) {
@@ -184,7 +184,7 @@ ImageFolder* Dataset::createImageFolder(const string& name,
     ImageFolder *im = NULL;
     
     do {
-        string fullpath = config().datasets_dir + _context.datasetLocation + location;
+        string fullpath = config().datasets_dir + _context.dataset_location + location;
 
         if (!Poco::File(Poco::Path(fullpath)).isDirectory()) {
             VTLOG_WARNING("Cannot open folder: " + fullpath);

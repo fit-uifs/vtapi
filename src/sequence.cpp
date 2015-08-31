@@ -32,7 +32,7 @@ Sequence::Sequence(const Sequence &copy)
 Sequence::Sequence(const Commons& commons, const string& name)
     : KeyValues(commons, def_tab_sequences)
 {
-    if (_context.dataset.empty() || _context.datasetLocation.empty())
+    if (_context.dataset.empty() || _context.dataset_location.empty())
         throw BadConfigurationException("dataset not specified");
     
     if (!name.empty())
@@ -47,7 +47,7 @@ Sequence::Sequence(const Commons& commons, const string& name)
 Sequence::Sequence(const Commons& commons, const vector<string>& names)
     : KeyValues(commons, def_tab_sequences)
 {
-    if (_context.dataset.empty() || _context.datasetLocation.empty())
+    if (_context.dataset.empty() || _context.dataset_location.empty())
         throw BadConfigurationException("dataset not specified");
 
     _select.setOrderBy(def_col_seq_name);
@@ -61,7 +61,7 @@ bool Sequence::next()
 {
     if (KeyValues::next()) {
         _context.sequence = this->getName();
-        _context.sequenceLocation = this->getLocation();
+        _context.sequence_location = this->getLocation();
         return true;
     }
     else {
@@ -108,9 +108,12 @@ string Sequence::getComment() const
 
 string Sequence::getDataLocation() const
 {
+    if (_context.sequence_location.empty())
+        throw RuntimeException("sequence not ready, call next()?");
+
     return config().datasets_dir + Poco::Path::separator() +
-            _context.datasetLocation + Poco::Path::separator() +
-            _context.sequenceLocation;
+            _context.dataset_location + Poco::Path::separator() +
+            _context.sequence_location;
 }
 
 chrono::system_clock::time_point Sequence::getCreatedTime() const
@@ -171,44 +174,18 @@ Video::Video(const Commons& commons, const vector<string>& names)
     _select.querybuilder().whereSeqtype(def_col_seq_type, def_val_video);
 }
 
-Video::~Video()
-{
-    closeVideo();
-}
-
 bool Video::next()
 {
-    closeVideo();
-    
     return Sequence::next();
 }
 
-bool Video::openVideo()
+cv::VideoCapture Video::openVideo() const
 {
-    closeVideo();
-    _capture = cv::VideoCapture(this->getDataLocation());
-    return _capture.isOpened();
-}
+    cv::VideoCapture cap(this->getDataLocation());
+    if (!cap.isOpened())
+        throw RuntimeException("Failed to open video: " + this->getDataLocation());
 
-void Video::closeVideo()
-{
-    if (_capture.isOpened()) _capture.release();
-}
-
-cv::VideoCapture& Video::getCapture()
-{
-    return _capture;
-}
-
-cv::Mat Video::getNextFrame()
-{
-    cv::Mat frame;
-
-    if (_capture.isOpened() || this->openVideo()) {
-        _capture >> frame;
-    }
-    
-    return frame;
+    return cap;
 }
 
 double Video::getFPS() const

@@ -12,7 +12,7 @@ public:
 
     void initialize() override;
 
-    void uninitialize() override;
+    void uninitialize() noexcept override;
 
     void process(Process & process) override;
 

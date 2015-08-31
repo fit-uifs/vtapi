@@ -24,7 +24,7 @@ void Demo2Module::initialize()
     VTLOG_DEBUG("demo2: initializing");
 }
 
-void Demo2Module::uninitialize()
+void Demo2Module::uninitialize() noexcept
 {
     VTLOG_DEBUG("demo2 : uninitializing");
 }

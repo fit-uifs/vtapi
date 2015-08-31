@@ -230,38 +230,16 @@ public:
     Video(const Commons& commons, const std::vector<std::string>& names);
 
     /**
-     * Destructor
-     */
-    ~Video();
-
-    /**
      * Moves to a next video, releases capture and sets sequence name and location varibles
      * @return success
      */
     bool next() override;
     
     /**
-     * Opens a video capture (not necessary to call directly)
-     * @return success
-     */
-    bool openVideo();
-    
-    /**
-     * Closes a video capture (not necessary to call directly)
-     */
-    void closeVideo();
-
-    /**
      * Gets OpenCV capture object of opened video
      * @return reference to capture object
      */
-    cv::VideoCapture& getCapture();
-    
-    /**
-     * Gets next frame from current capture
-     * @return frame of the video
-     */
-    cv::Mat getNextFrame();
+    cv::VideoCapture openVideo() const;
     
     /**
      * Gets video FPS rate
@@ -288,8 +266,6 @@ public:
     bool updateRealStartTime(const std::chrono::system_clock::time_point &starttime);
 
 private:
-    cv::VideoCapture _capture;   /**< Video file capture */
-
     Video() = delete;
     Video& operator=(const Video&) = delete;
 };

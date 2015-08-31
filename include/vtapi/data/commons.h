@@ -80,8 +80,8 @@ protected:
     class Context
     {
     public:
-        std::string     datasetLocation;    /**< Current dataset location */
-        std::string     sequenceLocation;   /**< Current sequence location */
+        std::string     dataset_location;   /**< Current dataset location */
+        std::string     sequence_location;  /**< Current sequence location */
         std::string     dataset;            /**< Current dataset name */
         std::string     sequence;           /**< Current sequence name */
         std::string     selection;          /**< Current selection name */

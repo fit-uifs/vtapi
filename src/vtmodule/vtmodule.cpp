@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
                 module->process(*prs);
                 module->uninitialize();
             }
-            catch (RuntimeModuleException &e)
+            catch (Exception &e)
             {
                 module->uninitialize();
                 throw;
