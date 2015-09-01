@@ -14,7 +14,6 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DVTAPI_DEBUG")
 
 # POCO libraries
 find_library(PocoFoundation_LIBRARY PocoFoundation /usr/local/lib)
-find_library(PocoNet_LIBRARY PocoNet /usr/local/lib)
 find_library(PocoUtil_LIBRARY PocoUtil /usr/local/lib)
 find_library(PocoXML_LIBRARY PocoXML /usr/local/lib)
 
