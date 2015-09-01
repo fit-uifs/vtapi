@@ -56,6 +56,14 @@ public:
     virtual ~DatabaseConnectionException() noexcept {}
 };
 
+class InterProcessException : public Exception
+{
+public:
+    InterProcessException(const std::string &error)
+        : Exception("InterProcessException", error) {}
+    virtual ~InterProcessException() noexcept {}
+};
+
 class BackendException : public Exception
 {
 public:
@@ -88,6 +96,14 @@ public:
     RuntimeModuleException(const std::string &error)
         : Exception("RuntimeModuleException", error) {}
     virtual ~RuntimeModuleException() noexcept {}
+};
+
+class UserAbortModuleException : public RuntimeModuleException
+{
+public:
+    UserAbortModuleException()
+        : RuntimeModuleException("aborted by user") {}
+    virtual ~UserAbortModuleException() noexcept {}
 };
 
 }

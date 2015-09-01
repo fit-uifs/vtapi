@@ -35,7 +35,6 @@ public:
     {
         STATUS_CREATED,     /**< process has been newly registered but not yet started */
         STATUS_RUNNING,     /**< process is currently working */
-        STATUS_SUSPENDED,   /**< process is currently in paused state */
         STATUS_FINISHED,    /**< process has finished succesfully */
         STATUS_ERROR        /**< process has finished with an error */
     };

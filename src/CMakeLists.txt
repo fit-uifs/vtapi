@@ -16,7 +16,6 @@ set_target_properties(vtapi PROPERTIES
 
 target_link_libraries(vtapi
     ${PocoFoundation_LIBRARY}
-    ${PocoNet_LIBRARY}
     ${PocoUtil_LIBRARY}
     ${OpenCV_LIBRARIES}
 )

@@ -61,6 +61,7 @@ public:
     Task(const Commons& commons, const std::vector<std::string>& names);
 
     using KeyValues::count;
+    using KeyValues::updateExecute;
 
     /**
      * @brief Iterates to next task

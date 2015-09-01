@@ -15,7 +15,6 @@ static const struct
 status_map[] = {
     { ProcessState::STATUS_CREATED,     "created" },
     { ProcessState::STATUS_RUNNING,     "running" },
-    { ProcessState::STATUS_SUSPENDED,   "suspended" },
     { ProcessState::STATUS_FINISHED,    "finished" },
     { ProcessState::STATUS_ERROR,       "error" }
 };

@@ -12,26 +12,22 @@
 
 #pragma once
 
+#include <Poco/Process.h>
+#include <csignal>
 #include <string>
 #include <atomic>
 #include <thread>
-#include <mutex>
-#include <condition_variable>
-#include <Poco/Process.h>
-#include <vtapi/data/process.h>
 
 namespace vtapi {
-
-class Process;
 
 
 class InterProcessBase
 {
 protected:
-    Process *_pprocess;
+    const std::string _ipc_base_name;
 
-    InterProcessBase(const Process & process);
-    ~InterProcessBase();
+    explicit InterProcessBase(const std::string & ipc_base_name)
+        : _ipc_base_name(ipc_base_name) {}
 
 private:
     InterProcessBase() = delete;
@@ -41,37 +37,27 @@ private:
 class InterProcessServer : public InterProcessBase
 {
 public:
-    enum Command
+    class IModuleControlInterface
     {
-        CommandSuspend,
-        CommandResume,
-        CommandStop
+    public:
+        virtual void stop() noexcept = 0;
     };
 
-    typedef void (*fnCommandCallback)(Command command);
 
-    explicit InterProcessServer(const Process & process, fnCommandCallback callback);
+    explicit InterProcessServer(const std::string & ipc_base_name,
+                                IModuleControlInterface & control);
     ~InterProcessServer();
 
-    bool installSignalHandlers();
-    void uninstallSignalHandlers();
-
-    int startListening();
-    void stopListening();
-
 private:
-    static fnCommandCallback _callback;
+    std::atomic_bool _stop_loop;
+    static std::atomic_bool _signal_flag;
     static std::atomic_bool _signals_installed;
     static void sighandler(int sig);
 
-    std::thread _server_thread;
-    std::mutex _server_ready_mtx;
-    std::condition_variable _server_ready_cv;
-    std::atomic_bool _stop_server;
-    int _server_port;
+    IModuleControlInterface & _control;
+    std::thread _stop_check_thread;
 
-    static void serverProc(InterProcessServer *context);
-    void serverLoop();
+    void stopCheckLoop();
 
     InterProcessServer() = delete;
 };
@@ -81,19 +67,19 @@ private:
 class InterProcessClient : public InterProcessBase
 {
 public:
-    InterProcessClient(const Process & process, Poco::ProcessHandle hproc);
-    explicit InterProcessClient(const Process & process);
-    ~InterProcessClient();
+    InterProcessClient(const std::string & ipc_base_name,
+                       int pid,
+                       Poco::ProcessHandle hproc);
+    explicit InterProcessClient(const std::string & ipc_base_name, int pid);
 
     bool isRunning();
-    bool suspend();
-    bool resume();
-    bool stop();
-    bool kill();
-    bool wait();
+    void stop();
+    void kill();
+    void wait();
 
 private:
-    Poco::ProcessHandle *_phproc;
+    int _pid;
+    std::shared_ptr<Poco::ProcessHandle> _phproc;
 
     InterProcessClient() = delete;
 };

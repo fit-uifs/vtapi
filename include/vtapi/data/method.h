@@ -59,6 +59,7 @@ public:
     Method(const Commons& commons, const std::vector<std::string>& names);
     
     using KeyValues::count;
+    using KeyValues::updateExecute;
 
     /**
      * Moves to a next method and set a method name and its methodkeys variables

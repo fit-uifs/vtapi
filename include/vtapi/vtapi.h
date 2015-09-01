@@ -36,6 +36,12 @@ class VTApi
 public:
 
     /**
+     * Copy constructor
+     * @param orig copy
+     */
+    VTApi(const VTApi &orig);
+
+    /**
      * Constructor from program arguments
      * @param argc   argument count (as in usual program)
      * @param argv   argument vector (as in usual program)
@@ -47,12 +53,6 @@ public:
      * @param config_file   location of configuration file
      */
     explicit VTApi(const std::string& config_file);
-
-    /**
-     * Copy constructor
-     * @param orig
-     */
-    VTApi(const VTApi& orig);
 
     /**
      * Creates new dataset + appropriate DB objects and returns its object for iteration

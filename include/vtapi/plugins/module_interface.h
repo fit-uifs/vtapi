@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vtapi/common/exception.h>
-#include <vtapi/data/process.h>
+#include <vtapi/vtapi.h>
 
 namespace vtapi {
 
@@ -9,14 +9,6 @@ namespace vtapi {
 class IModuleInterface
 {
 public:
-    // module control codes
-    enum ControlCode
-    {
-        ControlSuspend,     // suspend processing
-        ControlResume,      // resume suspended processing
-        ControlStop         // stop all processing and return
-    };
-
     /**
      * @brief virtual destructor
      */
@@ -26,9 +18,10 @@ public:
      * @brief Module initialization
      * Called ALWAYS on plugin initialization
      * Throw vtapi::RuntimeModuleException on failure
+     * @param vtapi main vtapi object to access VTApi for initialization purposes
      * @throws vtapi::RuntimeModuleException initialization error
      */
-    virtual void initialize() = 0;
+    virtual void initialize(VTApi & vtapi) = 0;
 
     /**
      * @brief Module uninitialization
@@ -38,47 +31,24 @@ public:
 
     /**
      * @brief Main processing function
-     * Called when initialization ended without error
+     * Called after initialization ended without error
      * Throw vtapi::RuntimeModuleException on failure
-     *
-     * Typical processing:
-     * 1. get task associated with process:
-     *      task = process.getParentTask();
-     * 2. load prerequisite tasks for our task:
-     *      task_prereq = task.loadPrerequisiteTasks();
-     *      task_prereq->next();
-     * 3. get task parameters:
-     *      params = task->getParams();
-     * 4. get assigned videos:
-     *      videos = process.loadAssignedVideos();
-     * 5. iterate over videos:
-     *      while(videos->next()) { ... }
-     * 6. check if video has been processed by prerequisite tasks:
-     *      task_prereq->isSequenceFinished(videos->getName());
-     * 7. save outputs for each video:
-     *      output = task.createIntervalOutput(video.getName());
-     *      while (continue_processing) {
-     *          // do some processing here
-     *          // now save video interval
-     *          interval = output->newInterval(...);
-     *          interval->setXXX(...);
-     *          interval->setYYY(...);
-     *          ...
-     *      }
-     *      output->commit();
-     * 8. update process status regularly:
-     *      process.updateStateXXX(...);
+     * Throw vtapi::ModuleUserAbortException on user abort
+     * Proper processing may get a bit complicated, check demo modules
+     * for example
      * @param process process object representing processing to be done
      * @throws vtapi::RuntimeModuleException processing error
+     * @throws vtapi::ModuleUserAbortException processing error
      */
     virtual void process(Process & process) = 0;
 
     /**
-     * @brief Module control implementation (suspending, resuming, stopping)
-     * Called during process() function from different thread (!)
-     * @param code control code
+     * @brief Call to this function should cause currently active processing
+     * to throw a vtapi::ModuleUserAbortException
+     * It is called during process() function from a different thread (!)
+     * It should return ASAP and not wait for processing end
      */
-    virtual void control(ControlCode code) = 0;
+    virtual void stop() noexcept = 0;
 };
 
 

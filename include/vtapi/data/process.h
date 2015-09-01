@@ -73,6 +73,7 @@ public:
     Process(const Commons& commons, const std::vector<int>& ids);
     
     using KeyValues::count;
+    using KeyValues::updateExecute;
 
     /**
      * Individual next() for processes, updates process and selection
@@ -88,10 +89,10 @@ public:
     /**
      * @brief Initializes current process as this process's instance
      * Call this before first next()
-     * @param callback callback on received command
+     * @param control control interface for invoking commands to processing
      * @return object for registering interprocess communication with clients, NULL on error
      */
-    InterProcessServer * initializeInstance(InterProcessServer::fnCommandCallback callback);
+    InterProcessServer * initializeInstance(InterProcessServer::IModuleControlInterface & control);
 
     /**
      * @brief Launches this process' instance and connects to it
@@ -206,39 +207,11 @@ public:
     //////////////////////////////////////////////////
 
     /**
-     * Sets custom process state
+     * Sets process state
      * @param state process state
-     * @param execute calls updateExecute() right away
      * @return success
      */
-    bool updateState(const ProcessState& state, bool execute);
-
-    /**
-     * Sets process status as RUNNING
-     * @param progress percentage progress [0-100]
-     * @param currentItem currently processed item
-     * @return success
-     */
-    bool updateStateRunning(double progress, const std::string& currentItem);
-
-    /**
-     * Sets process status as SUSPENDED (paused)
-     * @return success
-     */
-    bool updateStateSuspended();
-
-    /**
-     * Sets process status as FINISHED (without error)
-     * @return success
-     */
-    bool updateStateFinished();
-
-    /**
-     * Sets process status as ERROR and sets last error message
-     * @param errorMsg error message
-     * @return success
-     */
-    bool updateStateError(const std::string& lastError);
+    bool updateState(const ProcessState& state);
 
     /**
      * @brief Sets instance's PID
@@ -262,6 +235,12 @@ public:
      * Filters iteration via next() by task
      */
     void filterByTask(const std::string& taskname);
+
+    /**
+     * @brief Constructs unique process ID
+     * @return unique ID
+     */
+    std::string constructUniqueName() const;
 
 protected:
     bool preUpdate() override;

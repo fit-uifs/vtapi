@@ -76,14 +76,14 @@ bool Process::next()
     return ret;
 }
 
-InterProcessServer * Process::initializeInstance(InterProcessServer::fnCommandCallback callback)
+InterProcessServer * Process::initializeInstance(InterProcessServer::IModuleControlInterface & control)
 {
     // delete temporary config file created for process
     string tmpdir = Poco::Path::temp();
     if (config().configfile.find(tmpdir) == 0)
         Poco::File(config().configfile).remove();
 
-    return new InterProcessServer(*this, callback);
+    return new InterProcessServer(constructUniqueName(), control);
 }
 
 InterProcessClient * Process::launchInstance()
@@ -110,13 +110,12 @@ InterProcessClient * Process::launchInstance()
         Poco::ProcessHandle hproc = Poco::Process::launch("vtmodule", args);
         VTLOG_DEBUG("Launched PID " + toString<Poco::ProcessHandle::PID>(hproc.id()));
 
-        return new InterProcessClient(*this, hproc);
+        return new InterProcessClient(constructUniqueName(), this->getInstancePID(), hproc);
     }
     catch(exception& e) {
         VTLOG_ERROR("Failed to launch process : " +
                     toString<int>(_context.process) + ";" + e.what());
         Poco::File(config_path).remove();
-        updateStateError(e.what());
     }
 
     return NULL;
@@ -125,12 +124,12 @@ InterProcessClient * Process::launchInstance()
 
 InterProcessClient *Process::connectToInstance()  const
 {
-    return new InterProcessClient(*this);
+    return new InterProcessClient(constructUniqueName(), this->getInstancePID());
 }
 
 bool Process::isInstanceRunning() const
 {
-    return InterProcessClient(*this).isRunning();
+    return InterProcessClient(constructUniqueName(), this->getInstancePID()).isRunning();
 }
 
 Dataset *Process::getParentDataset() const
@@ -281,54 +280,31 @@ bool Process::preUpdate()
     return update().querybuilder().whereInt(def_col_prs_prsid, _context.process);
 }
 
-bool Process::updateState(const ProcessState& state, bool execute)
+bool Process::updateState(const ProcessState& state)
 {
-    bool retval = true;
+    bool ret = true;
     
-    retval &= updateProcessStatus(def_col_prs_pstate_status, state.status);
+    ret &= updateProcessStatus(def_col_prs_pstate_status, state.status);
     
     switch (state.status)
     {
+    case ProcessState::STATUS_CREATED:
+        ret &= updateFloat8(def_col_prs_pstate_progress, 0.0);
+        ret &= updateString(def_col_prs_pstate_curritem, string());
+        ret &= updateString(def_col_prs_pstate_errmsg, string());
+        break;
     case ProcessState::STATUS_RUNNING:
-        retval &= updateFloat(def_col_prs_pstate_progress, state.progress);
-        retval &= updateString(def_col_prs_pstate_curritem, state.current_item);
+        ret &= updateFloat8(def_col_prs_pstate_progress, state.progress);
+        ret &= updateString(def_col_prs_pstate_curritem, state.current_item);
         break;
     case ProcessState::STATUS_FINISHED:
         break;
     case ProcessState::STATUS_ERROR:
-        retval &= updateString(def_col_prs_pstate_errmsg, state.last_error);
-        break;
-    case ProcessState::STATUS_SUSPENDED:
-        break;
-    default:
-        retval = false;
+        ret &= updateString(def_col_prs_pstate_errmsg, state.last_error);
         break;
     }
 
-    if (retval && execute)
-        retval = updateExecute();
-
-    return retval;
-}
-
-bool Process::updateStateRunning(double progress, const string& currentItem)
-{
-    return updateState(ProcessState(ProcessState::STATUS_RUNNING, progress, currentItem), true);
-}
-
-bool Process::updateStateSuspended()
-{
-    return updateState(ProcessState(ProcessState::STATUS_SUSPENDED, 0, string()), true);
-}
-
-bool Process::updateStateFinished()
-{
-    return updateState(ProcessState(ProcessState::STATUS_FINISHED, 0, string()), true);
-}
-
-bool Process::updateStateError(const string& lastError)
-{
-    return updateState(ProcessState(ProcessState::STATUS_ERROR, 0, lastError), true);
+    return ret;
 }
 
 bool Process::updateInstancePID(int pid)
@@ -348,6 +324,11 @@ bool Process::updateInstanceName(const string &name)
 void Process::filterByTask(const string &taskname)
 {
     _select.querybuilder().whereString(def_col_prs_taskname, taskname);
+}
+
+string Process::constructUniqueName() const
+{
+    return _context.dataset + '_' + toString(this->getId());
 }
 
 

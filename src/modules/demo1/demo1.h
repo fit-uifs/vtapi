@@ -10,13 +10,10 @@ public:
     Demo1Module();
     ~Demo1Module();
 
-    void initialize() override;
-
+    void initialize(VTApi & vtapi) override;
     void uninitialize() noexcept override;
-
     void process(Process & process) override;
-
-    void control(ControlCode code) override;
+    void stop() noexcept override;
 
 private:
     volatile bool _stop;

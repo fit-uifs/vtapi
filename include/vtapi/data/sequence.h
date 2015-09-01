@@ -68,6 +68,7 @@ public:
     virtual ~Sequence();
     
     using KeyValues::count;
+    using KeyValues::updateExecute;
 
     /**
      * Moves to a next sequence and sets sequence name and location varibles

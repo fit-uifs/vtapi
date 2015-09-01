@@ -551,8 +551,8 @@ ProcessState PGResultSet::getProcessState(int col) const
         if (psres) {
             // get event members
             PGvarchar ps_status = NULL, ps_curritem = NULL, ps_lasterror = NULL;
-            PGfloat4 ps_progress = 0;
-            if (! PQgetf(psres, 0, "%public.pstatus %float4 %varchar %varchar",
+            PGfloat8 ps_progress = 0;
+            if (! PQgetf(psres, 0, "%public.pstatus %float8 %varchar %varchar",
                          0, &ps_status, 1, &ps_progress,
                          2, &ps_curritem, 3, &ps_lasterror))
                 throw RuntimeException("Failed to get value: unexpected value in pstate header");

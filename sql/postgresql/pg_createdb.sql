@@ -120,7 +120,6 @@ CREATE TYPE methodparamtype AS (
 CREATE TYPE pstatus AS ENUM (
     'created',  -- process has been newly registered but not yet started
     'running',  -- process is currently working
-    'suspended',-- process is currently in paused state
     'finished', -- process has finished succesfully
     'error'     -- process has finished with an error
 );
@@ -145,7 +144,7 @@ CREATE TYPE vtevent AS (
 -- process state type
 CREATE TYPE pstate AS (
     status public.pstatus,  -- process status
-    progress real,          -- process progress (0-100)
+    progress double precision, -- process progress (0-100)
     current_item varchar,   -- currently processed item
     last_error varchar      -- error message
 );

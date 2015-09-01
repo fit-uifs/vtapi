@@ -114,7 +114,7 @@ VTApi::VTApi(const string& config_file)
 }
 
 VTApi::VTApi(const VTApi& orig)
-    : _pcommons(shared_ptr<Commons>(new Commons(*orig._pcommons, true)))
+    : _pcommons(make_shared<Commons>(*orig._pcommons, true))
 {
 }
 

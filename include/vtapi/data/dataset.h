@@ -43,7 +43,6 @@ class Process;
 class Dataset : protected KeyValues
 {
 public:
-
     /**
      * @brief Copy constructor
      * @param copy original object
@@ -67,6 +66,7 @@ public:
     Dataset(const Commons& commons, const std::vector<std::string>& names);
 
     using KeyValues::count;
+    using KeyValues::updateExecute;
 
     /**
      * Moves to a next dataset and sets dataset name and location varibles

@@ -20,7 +20,7 @@ Demo1Module::~Demo1Module()
 
 }
 
-void Demo1Module::initialize()
+void Demo1Module::initialize(VTApi & vtapi)
 {
     VTLOG_DEBUG("demo1: initializing");
 }
@@ -33,6 +33,8 @@ void Demo1Module::uninitialize() noexcept
 void Demo1Module::process(Process & process)
 {
     VTLOG_DEBUG("demo1 : process=" + vtapi::toString<int>(process.getId()));
+
+    //TODO: demo module is very basic
 
     {
         shared_ptr<Task> task (process.getParentTask());
@@ -52,17 +54,9 @@ void Demo1Module::process(Process & process)
     VTLOG_DEBUG("demo1 : processing stopped");
 }
 
-void Demo1Module::control(ControlCode code)
+void Demo1Module::stop() noexcept
 {
-    switch (code)
-    {
-    case ControlSuspend:
-    case ControlResume:
-        break;
-    case ControlStop:
-        _stop = true;
-        break;
-    }
+    _stop = true;
 }
 
 

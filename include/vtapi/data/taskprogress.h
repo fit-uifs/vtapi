@@ -59,6 +59,7 @@ public:
     ~TaskProgress();
 
     using KeyValues::count;
+    using KeyValues::updateExecute;
 
     /**
      * @brief Step to progress information for next sequence

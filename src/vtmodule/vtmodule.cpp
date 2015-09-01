@@ -1,23 +1,26 @@
+#include "vtmodule.h"
 #include <memory>
 #include <Poco/Exception.h>
 #include <Poco/ClassLoader.h>
 #include <Poco/Process.h>
 #include <vtapi/common/exception.h>
 #include <vtapi/common/logger.h>
-#include <vtapi/plugins/module_interface.h>
 #include <vtapi/vtapi.h>
 
-using namespace vtapi;
+
 using namespace std;
 
 
-void commandCallback(InterProcessServer::Command command)
+int main(int argc, char *argv[])
 {
-
+    return vtapi::VTModule().main(argc, argv);
 }
 
 
-int main(int argc, char *argv[])
+namespace vtapi {
+
+
+int VTModule::main(int argc, char *argv[])
 {
     int ret = 0;
 
@@ -28,13 +31,12 @@ int main(int argc, char *argv[])
         VTLOG_DEBUG("vtmodule : starting...");
 
         shared_ptr<Process> prs(vtapi.getRunnableProcess());
-        if (prs) {
-            shared_ptr<InterProcessServer> srv(prs->initializeInstance(commandCallback));
 
+        if (prs) {
             // get library path
             shared_ptr<Method> met(prs->getParentMethod());
             string libpath = met->getPluginPath();
-            VTLOG_DEBUG("vtmodule : loading module from " + libpath);
+            VTLOG_DEBUG("vtmodule : loading module from: " + libpath);
 
             Poco::ClassLoader<IModuleInterface> loader;
             shared_ptr<IModuleInterface> module;
@@ -61,19 +63,27 @@ int main(int argc, char *argv[])
                 throw ModuleException(libpath, e.message());
             }
 
-            VTLOG_DEBUG("vtmodule : running module " + plugin_name);
+            VTLOG_DEBUG("vtmodule : running module: " + plugin_name);
 
-            // run processing
-            try
             {
-                module->initialize();
-                module->process(*prs);
-                module->uninitialize();
-            }
-            catch (Exception &e)
-            {
-                module->uninitialize();
-                throw;
+                // helper object for passing control signals to module
+                ModuleControl control(*module);
+
+                // server will listen for commands
+                shared_ptr<InterProcessServer> srv(prs->initializeInstance(control));
+
+                // run processing
+                try
+                {
+                    module->initialize(vtapi);
+                    module->process(*prs);
+                    module->uninitialize();
+                }
+                catch (Exception &e)
+                {
+                    module->uninitialize();
+                    throw;
+                }
             }
         }
         else {
@@ -89,4 +99,7 @@ int main(int argc, char *argv[])
     VTLOG_DEBUG("vtmodule : stopped");
 
     return ret;
+}
+
+
 }
