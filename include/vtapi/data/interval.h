@@ -249,13 +249,12 @@ public:
     std::string getDataLocation();
 
     /**
-     * Loads an image from a file (given by imgLocation of %VTApi)
+     * Loads image data
      * @return image file data
      */
-    cv::Mat& getImageData();
+    cv::Mat getImageData();
 
 private:
-    cv::Mat _image;   /**< Image file data */
 
     Image() = delete;
     Image(const Image&) = delete;

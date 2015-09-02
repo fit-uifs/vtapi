@@ -254,8 +254,6 @@ Image::Image(const Commons& commons,
 
 bool Image::next()
 {
-    if (_image.data) _image.release();
-    
     return Interval::next();
 }
 
@@ -284,12 +282,13 @@ int Image::getTime()
     return this->getStartTime();
 }
 
-cv::Mat& Image::getImageData()
+cv::Mat Image::getImageData()
 {
-    if (_image.data) _image.release();
+    cv::Mat image = cv::imread(this->getDataLocation().c_str(), CV_LOAD_IMAGE_COLOR);
+    if (!image.data)
+        throw RuntimeException("Failed to open image: " + this->getDataLocation());
 
-    _image = cv::imread(this->getDataLocation().c_str(), CV_LOAD_IMAGE_COLOR);
-    return _image;
+    return image;
 }
 
 
