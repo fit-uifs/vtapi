@@ -1,12 +1,14 @@
 
 # !! this throws error !! all dirs are entered manually below
-#find_package(PostgreSQL)
+project(vtapi.postgresql)
 
-
+file(GLOB ${PROJECT_NAME}.Headers *.h)
 file(GLOB ${PROJECT_NAME}.Sources *.cpp)
 
 add_library(vtapi_postgresql SHARED
-    ${${PROJECT_NAME}.Sources})
+    ${${PROJECT_NAME}.Headers}
+    ${${PROJECT_NAME}.Sources}
+)
 
 set_target_properties(vtapi_postgresql PROPERTIES
     VERSION ${VTAPI_VERSION}
@@ -14,14 +16,12 @@ set_target_properties(vtapi_postgresql PROPERTIES
 )
 
 target_link_libraries(vtapi_postgresql
-    #${PostgreSQL_LIBRARIES}
     pq
     pqtypes
 )
 
 target_include_directories(vtapi_postgresql PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
-    #${PostgreSQL_INCLUDE_DIRS}
     /usr/include/postgresql
 )
 

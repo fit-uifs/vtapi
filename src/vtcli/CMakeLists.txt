@@ -1,5 +1,8 @@
+project(vtapi.vtcli)
 
-add_executable(vtcli vtcli.cpp)
+add_executable(vtcli
+    vtcli.cpp
+)
 
 target_link_libraries(vtcli
     vtapi

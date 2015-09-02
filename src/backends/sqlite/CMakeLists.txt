@@ -1,8 +1,12 @@
+project(vtapi.sqlite)
 
+file(GLOB ${PROJECT_NAME}.Headers *.h)
 file(GLOB ${PROJECT_NAME}.Sources *.cpp)
 
 add_library(vtapi_sqlite SHARED
-    ${${PROJECT_NAME}.Sources})
+    ${${PROJECT_NAME}.Headers}
+    ${${PROJECT_NAME}.Sources}
+)
 
 set_target_properties(vtapi_sqlite PROPERTIES
     VERSION ${VTAPI_VERSION}
