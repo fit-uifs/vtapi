@@ -254,7 +254,7 @@ IntervalEvent PGResultSet::getIntervalEvent(int col) const
 
 ProcessState PGResultSet::getProcessState(int col) const
 {
-    return GetterSingle<PGresult*,ProcessState>::get(static_cast<const PGresult *>(_res), _pos, col, "%public.vtevent");
+    return GetterSingle<PGresult*,ProcessState>::get(static_cast<const PGresult *>(_res), _pos, col, "%public.pstate");
 }
 
 vector<char> PGResultSet::getBlob(int col) const
