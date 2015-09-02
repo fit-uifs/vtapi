@@ -173,7 +173,7 @@ public:
      * @param col column index
      * @return CvMat structure
      */
-    cv::Mat *getCvMat(int col) const override;
+    cv::Mat getCvMat(int col) const override;
 
     /**
      * Get 2D point specified by the column index

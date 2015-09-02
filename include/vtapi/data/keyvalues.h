@@ -317,7 +317,7 @@ public:
      * @param key   column key
      * @return CvMat structure
      */
-    inline cv::Mat *getCvMat(const std::string& key) const
+    inline cv::Mat getCvMat(const std::string& key) const
     { return _select._presultset->getCvMat(key); }
 
     /**
@@ -325,7 +325,7 @@ public:
      * @param col   index of the column
      * @return CvMat structure
      */
-    inline cv::Mat *getCvMat(int col) const
+    inline cv::Mat getCvMat(int col) const
     { return _select._presultset->getCvMat(col); }
 
     /**

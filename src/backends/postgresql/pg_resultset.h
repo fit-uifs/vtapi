@@ -1,7 +1,5 @@
 #pragma once
 
-#include <libpq-fe.h>
-#include <libpqtypes.h>
 #include <vtapi/plugins/backend_resultset.h>
 
 namespace vtapi {
@@ -176,7 +174,7 @@ public:
      * @param col column index
      * @return CvMat structure
      */
-    cv::Mat *getCvMat(int col) const override;
+    cv::Mat getCvMat(int col) const override;
 
     /**
      * Get 2D point specified by the column index
@@ -228,11 +226,17 @@ public:
 private:
     short getKeyTypeLength(int col, short def) const;
 
-    template<typename TDB, typename TOUT>
-    TOUT getSingleValue(int col, const char *def) const;
+    template <typename T>
+    T getIntegerSingle(int col) const;
 
-    template<typename TDB, typename TOUT>
-    std::vector<TOUT> getVector(int col, const char *def) const;
+    template <typename T>
+    std::vector<T> getIntegerVector(int col) const;
+
+    template <typename T>
+    T getFloatSingle(int col) const;
+
+    template <typename T>
+    std::vector<T> getFloatVector(int col) const;
 };
 
 }

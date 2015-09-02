@@ -183,7 +183,7 @@ public:
      * @param col column index
      * @return CvMat structure
      */
-    virtual cv::Mat *getCvMat(int col) const = 0;
+    virtual cv::Mat getCvMat(int col) const = 0;
 
     /**
      * Get 2D point specified by the column index
@@ -374,7 +374,7 @@ public:
      * @param key column key
      * @return CvMat structure
      */
-    inline cv::Mat *getCvMat(const std::string &key) const
+    inline cv::Mat getCvMat(const std::string &key) const
     { return this->getCvMat(this->getKeyIndex(key)); }
 
     /**

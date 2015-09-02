@@ -161,10 +161,10 @@ chrono::system_clock::time_point SLResultSet::getTimestamp(int col) const
     return chrono::system_clock::time_point();
 }
 
-cv::Mat *SLResultSet::getCvMat(int col) const
+cv::Mat SLResultSet::getCvMat(int col) const
 {
     throw RuntimeException("unimplemented");
-    return NULL;
+    return cv::Mat();
 }
 
 Point SLResultSet::getPoint(int col) const
