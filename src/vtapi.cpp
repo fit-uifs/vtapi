@@ -67,12 +67,13 @@ VTApi::VTApi(int argc, char** argv)
     // load all command line options into configuration
     Poco::Util::OptionProcessor opt_proc(options);
     string opt_name, opt_arg;
+    string warning;
     for (int i = 1; i < argc; i++) {
         bool ok = opt_proc.process(argv[i], opt_name, opt_arg);
         if (ok)
             cmd_config->setString(opt_name, opt_arg);
         else
-            throw BadConfigurationException("invalid option: " + string(argv[i]));
+            warning = "Unknown option: " + string(argv[i]);
     }
 
     // check config file (given by argument or default one)
@@ -92,10 +93,12 @@ VTApi::VTApi(int argc, char** argv)
     }
     catch (Poco::Exception & e)
     {
-        throw BadConfigurationException("failed to load config file: " + e.message());
+        throw BadConfigurationException("Failed to load config file: " + e.message());
     }
 
     _pcommons = make_shared<Commons>(*config.get());
+
+    if (!warning.empty()) VTLOG_WARNING(warning);
 }
 
 VTApi::VTApi(const string& config_file)
