@@ -1,8 +1,8 @@
 
+#include <csignal>
 #include <vtapi/common/interproc.h>
 #include <vtapi/common/global.h>
 #include <vtapi/common/exception.h>
-#include <csignal>
 
 #define DEF_STOP_CHECK_INTERVAL_MS      250
 #define DEF_CONNECT_ATTEMPTS    10
@@ -43,8 +43,6 @@ InterProcessServer::InterProcessServer(const string & ipc_base_name,
     _signals_installed = true;
 
     _stop_check_thread = std::thread(&InterProcessServer::stopCheckLoop, this);
-
-
 }
 
 InterProcessServer::~InterProcessServer()
@@ -62,7 +60,16 @@ InterProcessServer::~InterProcessServer()
 void InterProcessServer::stopCheckLoop()
 {
     while(!_stop_loop) {
-        if (_signal_flag) _control.stop();
+        bool stop = false;
+        if (_mtx.tryLock()) {
+            _mtx.unlock();
+            if (_signal_flag)
+                stop = true;
+        }
+        else {
+            stop = true;
+        }
+        if (stop) _control.stop();
         this_thread::sleep_for(chrono::milliseconds(DEF_STOP_CHECK_INTERVAL_MS));
     }
 }
@@ -93,8 +100,10 @@ bool InterProcessClient::isRunning()
 
 void InterProcessClient::stop()
 {
-    // TODO: via mutex
-
+    if (_mtx.tryLock()) {
+        this_thread::sleep_for(chrono::milliseconds(DEF_STOP_CHECK_INTERVAL_MS*2));
+        _mtx.unlock();
+    }
 }
 
 void InterProcessClient::kill()

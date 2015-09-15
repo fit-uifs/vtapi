@@ -13,6 +13,7 @@
 #pragma once
 
 #include <Poco/Process.h>
+#include <Poco/NamedMutex.h>
 #include <csignal>
 #include <string>
 #include <atomic>
@@ -25,9 +26,10 @@ class InterProcessBase
 {
 protected:
     const std::string _ipc_base_name;
+    Poco::NamedMutex _mtx;
 
     explicit InterProcessBase(const std::string & ipc_base_name)
-        : _ipc_base_name(ipc_base_name) {}
+        : _ipc_base_name(ipc_base_name), _mtx(ipc_base_name + "_mtx") {}
 
 private:
     InterProcessBase() = delete;
