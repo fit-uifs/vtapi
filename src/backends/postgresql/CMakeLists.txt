@@ -2,6 +2,40 @@
 # !! this throws error !! all dirs are entered manually below
 project(vtapi.postgresql)
 
+
+if(NOT PG_CONFIG_PATH)
+  set(PG_CONFIG_PATH pg_config)
+endif()
+
+if(LIBPQTYPES_PATH)
+  set(LIBPQTYPES_INCLUDE_PATH ${LIBPQTYPES_PATH}/include)
+  set(LIBPQTYPES_LIBRARY_PATH ${LIBPQTYPES_PATH}/lib)
+endif()
+
+execute_process(COMMAND ${PG_CONFIG_PATH} RESULT_VARIABLE PG_CONFIG_ERR OUTPUT_QUIET ERROR_QUIET)
+
+if(PG_CONFIG_ERR)
+  message(FATAL_ERROR "Executable \"pg_config\" could not be found at location \"${PG_CONFIG_PATH}\". Please, use -DPG_CONFIG_PATH=<path> variable.")
+endif()
+
+execute_process(COMMAND ${PG_CONFIG_PATH} --version
+  OUTPUT_VARIABLE POSTGRES_VERSION # TODO: minimal version check
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(COMMAND ${PG_CONFIG_PATH} --pkgincludedir
+  OUTPUT_VARIABLE POSTGRES_INCLUDE_PATH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+execute_process(COMMAND ${PG_CONFIG_PATH} --pkglibdir
+  OUTPUT_VARIABLE POSTGRES_LIBRARY_PATH
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+find_library(POSTGRES_LIBS pq ${POSTGRES_LIBRARY_PATH})
+find_library(PQTYPES_LIBS pqtypes ${LIBPQTYPES_LIBRARY_PATH} ${POSTGRES_LIBRARY_PATH})
+
 file(GLOB ${PROJECT_NAME}.Headers *.h)
 file(GLOB ${PROJECT_NAME}.Sources *.cpp)
 
@@ -13,16 +47,20 @@ add_library(vtapi_postgresql SHARED
 set_target_properties(vtapi_postgresql PROPERTIES
     VERSION ${VTAPI_VERSION}
     SOVERSION ${VTAPI_SOVERSION}
+    INSTALL_RPATH_USE_LINK_PATH TRUE
+    BUILD_WITH_INSTALL_RPATH TRUE
 )
+#    INSTALL_RPATH "${LIBPQTYPES_LIBRARY_PATH};${POSTGRES_LIBRARY_PATH}"
 
 target_link_libraries(vtapi_postgresql
-    pq
-    pqtypes
+    ${POSTGRES_LIBS}
+    ${PQTYPES_LIBS}
 )
 
 target_include_directories(vtapi_postgresql PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
-    /usr/include/postgresql
+    ${LIBPQTYPES_INCLUDE_PATH}
+    ${POSTGRES_INCLUDE_PATH}
 )
 
 install(TARGETS vtapi_postgresql
