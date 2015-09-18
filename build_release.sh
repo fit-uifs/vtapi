@@ -22,7 +22,7 @@
 
 mkdir -p build/release
 cd build/release
-cmake ../.. -Wno-dev
+cmake ../.. -Wno-dev 
 if test $? = 0
 then
   make
