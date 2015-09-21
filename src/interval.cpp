@@ -241,6 +241,22 @@ bool Interval::filterByRegion(const Box& region)
     return _select.querybuilder().whereRegion("event,region", region, "&&");
 }
 
+bool Interval::filterByEventClassID(int class_id)
+{
+    return _select.querybuilder().whereInt("event,class_id", class_id);
+}
+
+bool Interval::filterByEventGroupID(int group_id)
+{
+    return _select.querybuilder().whereInt("event,group_id", group_id);
+}
+
+bool Interval::filterByEventIsRoot(bool is_root)
+{
+    return _select.querybuilder().whereBool("event,is_root", is_root);
+}
+
+
 //=================================== IMAGE ====================================
 
 Image::Image(const Commons& commons,

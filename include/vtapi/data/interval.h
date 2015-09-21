@@ -188,6 +188,10 @@ public:
      * @return success
      */
     bool filterByRegion(const Box & region);
+
+    bool filterByEventClassID(int class_id);
+    bool filterByEventGroupID(int group_id);
+    bool filterByEventIsRoot(bool is_root);
     
 protected:
     virtual bool preUpdate() override;
