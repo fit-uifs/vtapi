@@ -42,6 +42,7 @@ InterProcessServer::InterProcessServer(const string & ipc_base_name,
     std::signal(SIGTERM, InterProcessServer::sighandler);
     _signals_installed = true;
 
+    _stop_loop = false;
     _stop_check_thread = std::thread(&InterProcessServer::stopCheckLoop, this);
 }
 
@@ -63,11 +64,14 @@ void InterProcessServer::stopCheckLoop()
         bool stop = false;
         if (_mtx.tryLock()) {
             _mtx.unlock();
-            if (_signal_flag)
+            if (_signal_flag) {
                 stop = true;
+                VTLOG_DEBUG("interproc : server stopped by signal: " + _ipc_base_name);
+            }
         }
         else {
             stop = true;
+            VTLOG_DEBUG("interproc : server stopped by mutex: " + _ipc_base_name);
         }
         if (stop) _control.stop();
         this_thread::sleep_for(chrono::milliseconds(DEF_STOP_CHECK_INTERVAL_MS));
@@ -101,6 +105,7 @@ bool InterProcessClient::isRunning()
 void InterProcessClient::stop()
 {
     if (_mtx.tryLock()) {
+        VTLOG_DEBUG("interproc : attempting to stop by mutex: " + _ipc_base_name);
         this_thread::sleep_for(chrono::milliseconds(DEF_STOP_CHECK_INTERVAL_MS*2));
         _mtx.unlock();
     }
