@@ -31,7 +31,26 @@ CREATE SCHEMA IF NOT EXISTS public;
 -- DROP all VTApi objects
 -------------------------------------
 
--- TODO: what if this function doesn't exist yet?
+CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
+  RETURNS BOOLEAN AS
+  $VT_dataset_drop_all$
+  DECLARE
+    _dsname   public.datasets.dsname%TYPE;
+  BEGIN
+    FOR _dsname IN SELECT dsname FROM public.datasets LOOP
+      EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(_dsname) || ' CASCADE;';
+    END LOOP;
+    
+    TRUNCATE TABLE public.datasets;
+    
+    RETURN TRUE;
+    
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during the removal of all datasets. (Details: ERROR %: %)', SQLSTATE, SQLERRM;
+  END;
+  $VT_dataset_drop_all$
+  LANGUAGE plpgsql STRICT;
+
 SELECT VT_dataset_drop_all();
 
 
@@ -49,22 +68,30 @@ DROP TYPE IF EXISTS public.pstatus CASCADE;
 DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
 DROP TYPE IF EXISTS public.pstate CASCADE;
+DROP TYPE IF EXISTS public.vtevent_filter CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_dataset_create(VARCHAR, VARCHAR, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_truncate(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 
--- TODO: it still crashes here
---DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR, BOOLEAN) CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_task_create(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_task_delete(VARCHAR, BOOLEAN, VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_task_output_idxquery(VARCHAR, NAME, REGTYPE, INT, VARCHAR) CASCADE;
+DROP FUNCTION IF EXISTS public.VT_task_out_filter_event(ANYELEMENT, public.vtevent_filter, VARCHAR, VARCHAR, VARCHAR) CASCADE;
 
 
 DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, DOUBLE PRECISION) CASCADE;
+DROP FUNCTION IF EXISTS public.trg_interval_provide_seclength_realtime() CASCADE;
+
+
+-------------------------------------
+-- DROP ALL OBSOLETE VTAPI OBJECTS
+-------------------------------------
+
 DROP FUNCTION IF EXISTS public.trg_interval_provide_realtime() CASCADE;
 
 
@@ -147,6 +174,16 @@ CREATE TYPE pstate AS (
     progress double precision, -- process progress (0-100)
     current_item varchar,   -- currently processed item
     last_error varchar      -- error message
+);
+
+CREATE TYPE vtevent_filter AS (
+    duration_min   DOUBLE PRECISION,
+    duration_max   DOUBLE PRECISION,
+    realtime_min   TIMESTAMP WITHOUT TIME ZONE,
+    realtime_max   TIMESTAMP WITHOUT TIME ZONE,
+    daytime_min    TIME WITHOUT TIME ZONE,
+    daytime_max    TIME WITHOUT TIME ZONE,
+    region         BOX
 );
 
 
@@ -365,28 +402,6 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
       RAISE EXCEPTION 'Some problem occured during the removal of the dataset "%". (Details: ERROR %: %)', _dsname, SQLSTATE, SQLERRM;
   END;
   $VT_dataset_drop$
-  LANGUAGE plpgsql STRICT;
-
-
-
-CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
-  RETURNS BOOLEAN AS
-  $VT_dataset_drop_all$
-  DECLARE
-    _dsname   public.datasets.dsname%TYPE;
-  BEGIN
-    FOR _dsname IN SELECT dsname FROM public.datasets LOOP
-      EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(_dsname) || ' CASCADE;';
-    END LOOP;
-    
-    TRUNCATE TABLE public.datasets;
-    
-    RETURN TRUE;
-    
-    EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during the removal of all datasets. (Details: ERROR %: %)', SQLSTATE, SQLERRM;
-  END;
-  $VT_dataset_drop_all$
   LANGUAGE plpgsql STRICT;
 
 
@@ -734,6 +749,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     _controlcount   INT;
     _i              INT;
     _usert          BOOLEAN;
+    _usertarg       VARCHAR   DEFAULT 'FALSE';
     _keyio          VARCHAR;
     _namespaceoid   OID;
     _idxnames       VARCHAR[];
@@ -862,13 +878,14 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
 
       IF _usert = TRUE THEN
         _stmt := _stmt || 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
-        
-        _stmt := _stmt || 'CREATE TRIGGER ' || quote_ident(_reqoutname || '_provide_realtime') || '
-                             BEFORE INSERT OR UPDATE
-                             ON ' || __outname || '
-                             FOR EACH ROW
-                             EXECUTE PROCEDURE public.trg_interval_provide_realtime();';
+        _usertarg := 'TRUE';
       END IF;
+
+      _stmt := _stmt || 'CREATE TRIGGER ' || quote_ident(_reqoutname || '_provide_seclength_realtime') || '
+                         BEFORE INSERT OR UPDATE
+                         ON ' || __outname || '
+                         FOR EACH ROW
+                         EXECUTE PROCEDURE public.trg_interval_provide_seclength_realtime(' || _usert || ');';
 
 
     -- task' output table maybe exists - it is needed to check the presence of columns required by method
@@ -1084,6 +1101,127 @@ CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NA
 
 
 -------------------------------------
+-- Filters
+-------------------------------------
+-- WARNING: function returning SETOF RESULTSET -> call it as a standard DB table
+--   * i.e.: SELECT * FROM public.VT_task_out_filter_event(NULL::demo2_out, '(0,5,,2015-04-01 04:06:00,,,"(0,0),(0.1,0.8)")', 'task_demo2_1');
+-- Function behavior:
+--   * first argument is tabletype (passed like NULL::<table name>
+--   * available filters:
+--       * duration filter: 1st and 2nd value as min and max
+--       * realtime filter: 3rd and 4th value as min and max
+--       * daytime filter:  5th and 6th value as min and max
+--       * spatial filter:  7th value as interested box
+--   * filters may be combined
+--   * returns setof records of matching rows
+CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter public.vtevent_filter, _taskname VARCHAR, _seqname VARCHAR DEFAULT NULL, _eventcolname VARCHAR DEFAULT NULL)
+  RETURNS SETOF ANYELEMENT AS
+  $VT_task_out_filter_event$
+  DECLARE
+    _cond_seqname    VARCHAR   DEFAULT '';
+    _cond_duration   VARCHAR   DEFAULT '';
+    _cond_realtime   VARCHAR   DEFAULT '';
+    _cond_daytime    VARCHAR   DEFAULT '';
+    _query           VARCHAR;
+    _gids            INT[];
+    
+    __taskout   REGCLASS;
+  BEGIN
+    __taskout := pg_typeof(_tbltype);
+    
+    IF _eventcolname IS NULL
+    THEN
+       _eventcolname := 'event';
+    END IF;
+    
+    IF _seqname IS NOT NULL
+    THEN
+      _cond_seqname := ' AND seqname = ' || quote_literal(_seqname) || ' ';
+    END IF;
+
+    IF (_filter).duration_max IS NULL OR (_filter).duration_max < 0
+    THEN
+      IF (_filter).duration_min > 0
+      THEN
+        _cond_duration := ' sec_length >= ' || (_filter).duration_min;
+      END IF;
+    ELSE
+      IF (_filter).duration_min IS NULL OR (_filter).duration_min = (_filter).duration_max
+      THEN
+        _cond_duration := ' sec_length = ' || (_filter).duration_max;
+      ELSIF (_filter).duration_min < (_filter).duration_max
+      THEN
+        _cond_duration := ' sec_length BETWEEN ' || (_filter).duration_min || ' AND ' || (_filter).duration_max;
+      ELSE
+        RAISE EXCEPTION 'Minimal duration (%) can not be greater than maximal duration (%). ', (_filter).duration_min, (_filter).duration_max;
+      END IF;
+    END IF;
+    IF _cond_duration <> ''
+    THEN
+      _cond_duration := ' AND ' || _cond_duration || ' ';
+    END IF;
+    
+    
+    IF (_filter).realtime_min IS NOT NULL OR (_filter).realtime_max IS NOT NULL
+    THEN
+      _cond_realtime := ' AND public.tsrange(' || __taskout ||'.rt_start, ' || __taskout || '.sec_length) && tsrange(' || quote_nullable((_filter).realtime_min) || '::timestamp, ' || quote_nullable((_filter).realtime_max) || '::timestamp) ';
+    END IF;
+    
+    IF (_filter).daytime_min IS NOT NULL OR (_filter).daytime_max IS NOT NULL
+    THEN
+      RAISE WARNING 'Day time condition is not implemented yet';
+    END IF;
+    
+    IF _cond_duration <> '' OR _cond_realtime <> '' OR _cond_daytime <> ''
+    THEN
+      _query := ' SELECT (' || quote_ident(_eventcolname) || ').group_id AS gids
+                  FROM ' || __taskout ||
+                ' WHERE taskname = ' || quote_literal(_taskname) ||
+                    _cond_seqname ||
+                '   AND (' || quote_ident(_eventcolname) || ').is_root = FALSE ' ||
+                    _cond_duration ||
+                    _cond_realtime ||
+                    _cond_daytime;
+    END IF;
+
+    IF (_filter).region IS NOT NULL
+    THEN
+      IF _query IS NOT NULL
+      THEN
+        _query := _query || ' EXCEPT ';
+      END IF;
+
+      _query :=   _query ||
+                ' SELECT (' || quote_ident(_eventcolname) || ').group_id AS gids
+                  FROM ' || __taskout ||
+                ' WHERE taskname = ' || quote_literal(_taskname) ||
+                    _cond_seqname ||
+                '   AND (' || quote_ident(_eventcolname) || ').region && ' || quote_literal((_filter).region);
+    END IF;
+    
+    IF _query IS NULL
+    THEN
+      RAISE EXCEPTION 'No event filter was given.';
+    END IF;
+    
+    _query := 'SELECT array_agg(gids) FROM (' || _query || ') AS x;';
+    
+    EXECUTE _query INTO _gids;
+    
+    IF _gids IS NOT NULL
+    THEN
+      RETURN QUERY EXECUTE 'SELECT * FROM ' || __taskout || ' WHERE taskname = ' || quote_literal(_taskname) || _cond_seqname || ' AND (' || quote_ident(_eventcolname) || ').group_id IN (' || array_to_string(_gids, ',') || ');';
+    ELSE
+      RETURN QUERY EXECUTE 'SELECT * FROM ' || __taskout || ' WHERE 0 = 1;';
+    END IF;
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during filtering by event filters (%) of the task "%". (Details: ERROR %: %)', _filter, _taskname, SQLSTATE, SQLERRM;  
+  END;
+  $VT_task_out_filter_event$
+  LANGUAGE plpgsql CALLED ON NULL INPUT;
+
+
+-------------------------------------
 -- Functions to work with real time
 -------------------------------------
 CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length DOUBLE PRECISION)
@@ -1097,16 +1235,25 @@ CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_
   LANGUAGE SQL;
 
 
-CREATE OR REPLACE FUNCTION trg_interval_provide_realtime ()
+CREATE OR REPLACE FUNCTION trg_interval_provide_seclength_realtime ()
   RETURNS TRIGGER AS
-  $trg_interval_provide_realtime$
+  $trg_interval_provide_seclength_realtime$
     DECLARE
-      _fps double precision := NULL;
-      _speed double precision := NULL;
-      _rt_start timestamp without time zone := NULL;
-      _tabname name := NULL;
+      _usert      BOOLEAN            DEFAULT NULL;
+      _rtchange   BOOLEAN            DEFAULT NULL;
+      _fps        DOUBLE PRECISION   DEFAULT NULL;
+      _speed      DOUBLE PRECISION   DEFAULT NULL;
+      _rt_start   TIMESTAMP WITHOUT TIME ZONE   DEFAULT NULL;
+      _tabname    NAME   DEFAULT NULL;
     BEGIN
-      IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2 OR OLD.rt_start <> NEW.rt_start OR OLD.sec_length <> NEW.sec_length)) THEN  
+      _usert := TG_NARGS > 0 AND TG_ARGV[0]::BOOLEAN = TRUE;
+      IF _usert AND TG_OP = 'UPDATE'
+      THEN
+        _rtchange := OLD.rt_start <> NEW.rt_start;
+      END IF;
+      
+      IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2 OR OLD.sec_length <> NEW.sec_length OR _rtchange))
+      THEN
         _tabname := quote_ident(TG_TABLE_SCHEMA) || '.sequences';
         EXECUTE 'SELECT vid_fps, vid_speed, vid_time
                    FROM '
@@ -1121,9 +1268,12 @@ CREATE OR REPLACE FUNCTION trg_interval_provide_realtime ()
         END IF;
 
         NEW.sec_length := (NEW.t2 - NEW.t1 + 1) / _fps;
-        NEW.rt_start := _rt_start + (NEW.t1 / _fps) * '1 second'::interval;
+        IF _usert
+        THEN
+          NEW.rt_start := _rt_start + (NEW.t1 / _fps) * '1 second'::interval;
+        END IF;
       END IF;
       RETURN NEW;
     END;
-  $trg_interval_provide_realtime$
-  LANGUAGE PLPGSQL;
+  $trg_interval_provide_seclength_realtime$
+  LANGUAGE PLPGSQL CALLED ON NULL INPUT;

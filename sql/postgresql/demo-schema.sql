@@ -72,8 +72,8 @@ INSERT INTO sequences (seqname, seqlocation, seqtyp, seqlength, vid_fps, vid_spe
 INSERT INTO processes (taskname, state) VALUES
     ('task_demo1_1', '(finished,100,,)'),
     ('task_demo1_1', '(finished,100,,)'),
-    ('task_demo1_2', '(suspended,0,"video1",)'),
-    ('task_demo1_3', '(suspended,0,"video1",)'),
+    ('task_demo1_2', '(running,0,"video1",)'), -- suspended does not exist anymore
+    ('task_demo1_3', '(running,0,"video1",)'), -- suspended does not exist anymore
     ('task_demo2_1', '(error,33,"video2","cannot process video")'),
     ('task_demo2_2', '(created,0,,)'),
     ('task_demo2_3', '(created,0,,)');
