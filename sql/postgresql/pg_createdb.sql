@@ -85,6 +85,7 @@ DROP FUNCTION IF EXISTS public.VT_task_out_filter_event(ANYELEMENT, public.vteve
 
 
 DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, DOUBLE PRECISION) CASCADE;
+DROP FUNCTION IF EXISTS public.daytimenumrange(TIMESTAMP WITHOUT TIME ZONE, DOUBLE PRECISION) CASCADE;
 DROP FUNCTION IF EXISTS public.trg_interval_provide_seclength_realtime() CASCADE;
 
 
@@ -878,6 +879,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
 
       IF _usert = TRUE THEN
         _stmt := _stmt || 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
+        _stmt := _stmt || 'CREATE INDEX ' || quote_ident(_reqoutname || '_daytime_idx') || ' ON ' || __outname || ' USING GIST ( public.daytimenumrange(rt_start, sec_length) );';
         _usertarg := 'TRUE';
       END IF;
 
@@ -993,8 +995,8 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     
     RETURN TRUE;
 
-    EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during the addition of the task "%" in dataset "%". (Details: ERROR %: %)', _taskname, _dsname, SQLSTATE, SQLERRM;
+--    EXCEPTION WHEN OTHERS THEN
+--      RAISE EXCEPTION 'Some problem occured during the addition of the task "%" in dataset "%". (Details: ERROR %: %)', _taskname, _dsname, SQLSTATE, SQLERRM;
   END;
   $VT_task_create$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
@@ -1164,12 +1166,12 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
     
     IF (_filter).realtime_min IS NOT NULL OR (_filter).realtime_max IS NOT NULL
     THEN
-      _cond_realtime := ' AND public.tsrange(' || __taskout ||'.rt_start, ' || __taskout || '.sec_length) && tsrange(' || quote_nullable((_filter).realtime_min) || '::timestamp, ' || quote_nullable((_filter).realtime_max) || '::timestamp) ';
+      _cond_realtime := ' AND public.tsrange(' || __taskout || '.rt_start, ' || __taskout || '.sec_length) && tsrange(' || quote_nullable((_filter).realtime_min) || '::timestamp, ' || quote_nullable((_filter).realtime_max) || '::timestamp) ';
     END IF;
     
     IF (_filter).daytime_min IS NOT NULL OR (_filter).daytime_max IS NOT NULL
     THEN
-      RAISE WARNING 'Day time condition is not implemented yet';
+      _cond_daytime := ' AND public.daytimenumrange(' || __taskout || '.rt_start, ' || __taskout || '.sec_length) && public.daytimenumrange(' || quote_nullable((_filter).daytime_min) || '::time, ' || quote_nullable((_filter).daytime_max) || '::time) ';
     END IF;
     
     IF _cond_duration <> '' OR _cond_realtime <> '' OR _cond_daytime <> ''
@@ -1199,6 +1201,8 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
                 '   AND (' || quote_ident(_eventcolname) || ').region && ' || quote_literal((_filter).region);
     END IF;
     
+    RAISE WARNING '%', _query;
+    
     IF _query IS NULL
     THEN
       RAISE EXCEPTION 'No event filter was given.';
@@ -1214,8 +1218,9 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
     ELSE
       RETURN QUERY EXECUTE 'SELECT * FROM ' || __taskout || ' WHERE 0 = 1;';
     END IF;
-    EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during filtering by event filters (%) of the task "%". (Details: ERROR %: %)', _filter, _taskname, SQLSTATE, SQLERRM;  
+    
+--    EXCEPTION WHEN OTHERS THEN
+--      RAISE EXCEPTION 'Some problem occured during filtering by event filters (%) of the task "%". (Details: ERROR %: %)', _filter, _taskname, SQLSTATE, SQLERRM;  
   END;
   $VT_task_out_filter_event$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
@@ -1225,13 +1230,35 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
 -- Functions to work with real time
 -------------------------------------
 CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length DOUBLE PRECISION)
-  RETURNS TSRANGE AS
+  RETURNS TSRANGE 
+  IMMUTABLE AS
   $tsrange$
     SELECT CASE _rt_start
       WHEN NULL THEN NULL
       ELSE tsrange(_rt_start, _rt_start + _sec_length * '1 second'::interval, '[]')
     END;
   $tsrange$
+  LANGUAGE SQL;
+  
+
+CREATE OR REPLACE FUNCTION daytimenumrange(_rt_start TIME WITHOUT TIME ZONE, _rt_end TIME WITHOUT TIME ZONE)
+  RETURNS NUMRANGE
+  IMMUTABLE AS
+  $daytimenumrange$
+    SELECT numrange((SELECT EXTRACT ('EPOCH' FROM _rt_start))::NUMERIC, (SELECT EXTRACT ('EPOCH' FROM _rt_end))::NUMERIC, '[]');
+  $daytimenumrange$
+  LANGUAGE SQL;
+
+
+CREATE OR REPLACE FUNCTION daytimenumrange(_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length DOUBLE PRECISION)
+  RETURNS NUMRANGE
+  IMMUTABLE AS
+  $daytimenumrange$
+    SELECT CASE _rt_start
+      WHEN NULL THEN NULL
+      ELSE numrange((SELECT EXTRACT ('EPOCH' FROM _rt_start::TIME))::NUMERIC, (SELECT EXTRACT('EPOCH' FROM _rt_start::TIME + _sec_length * '1 second'::interval))::NUMERIC, '[]')
+    END;
+  $daytimenumrange$
   LANGUAGE SQL;
 
 
@@ -1276,4 +1303,4 @@ CREATE OR REPLACE FUNCTION trg_interval_provide_seclength_realtime ()
       RETURN NEW;
     END;
   $trg_interval_provide_seclength_realtime$
-  LANGUAGE PLPGSQL CALLED ON NULL INPUT;
+  LANGUAGE PLPGSQL;
