@@ -1124,7 +1124,7 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
     _cond_duration   VARCHAR   DEFAULT '';
     _cond_realtime   VARCHAR   DEFAULT '';
     _cond_daytime    VARCHAR   DEFAULT '';
-    _query           VARCHAR;
+    _query           VARCHAR   DEFAULT '';
     _gids            INT[];
     
     __taskout   REGCLASS;
@@ -1188,9 +1188,9 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
 
     IF (_filter).region IS NOT NULL
     THEN
-      IF _query IS NOT NULL
+      IF _query <> ''
       THEN
-        _query := _query || ' EXCEPT ';
+        _query := _query || ' INTERSECT ';
       END IF;
 
       _query :=   _query ||
@@ -1201,9 +1201,8 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
                 '   AND (' || quote_ident(_eventcolname) || ').region && ' || quote_literal((_filter).region);
     END IF;
     
-    RAISE WARNING '%', _query;
     
-    IF _query IS NULL
+    IF _query = ''
     THEN
       RAISE EXCEPTION 'No event filter was given.';
     END IF;
@@ -1219,8 +1218,8 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
       RETURN QUERY EXECUTE 'SELECT * FROM ' || __taskout || ' WHERE 0 = 1;';
     END IF;
     
---    EXCEPTION WHEN OTHERS THEN
---      RAISE EXCEPTION 'Some problem occured during filtering by event filters (%) of the task "%". (Details: ERROR %: %)', _filter, _taskname, SQLSTATE, SQLERRM;  
+    EXCEPTION WHEN OTHERS THEN
+      RAISE EXCEPTION 'Some problem occured during filtering by event filters (%) of the task "%". (Details: ERROR %: %)', _filter, _taskname, SQLSTATE, SQLERRM;  
   END;
   $VT_task_out_filter_event$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
