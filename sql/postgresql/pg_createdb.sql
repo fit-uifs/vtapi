@@ -35,7 +35,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
   RETURNS BOOLEAN AS
   $VT_dataset_drop_all$
   DECLARE
-    _dsname   public.datasets.dsname%TYPE;
+    _dsname   VARCHAR;
   BEGIN
     FOR _dsname IN SELECT dsname FROM public.datasets LOOP
       EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(_dsname) || ' CASCADE;';
