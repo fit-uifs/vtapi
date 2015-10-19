@@ -103,5 +103,5 @@ INSERT INTO demo1_out (taskname, seqname, t1, t2, features_array, features_mat) 
 
 -- insert results for demo2 processes (only for first task and first video)
 INSERT INTO demo2_out (taskname, seqname, t1, t2, event) VALUES
-    ('task_demo2_1', 'video1', 1, 15, '(1,55,0,"((0.2,0.5),(0.11,0.13))",0.23,)'),
-    ('task_demo2_1', 'video1', 16, 79, '(2,17,0,"((0,0.7),(1,1))",0.11,)');
+    ('task_demo2_1', 'video1', 1, 15, '(1,55,1,"((0.2,0.5),(0.11,0.13))",0.23,)'),
+    ('task_demo2_1', 'video1', 16, 79, '(2,17,1,"((0,0.7),(1,1))",0.11,)');

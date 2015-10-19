@@ -760,6 +760,16 @@ bool PGQueryBuilder::whereInouttype(const string& key, const string& value, cons
     return checkInouttype(value) && whereSingleValue(key, value.c_str(), "%public.inouttype", oper, from);
 }
 
+bool PGQueryBuilder::whereEvent(const string &key, const string &taskname, const vector<string> &seqnames, const EventFilter &filter, const string& from)
+{
+//id = ANY (public.VT_filtered_events('demo.demo2_out', 'event', 'task_demo2_1', 'video1', '(,,,,,,"(0,0),(0,0)")'))
+    string val = "ANY (" + def_fnc_event_filter + "(" +
+            escapeLiteral(constructTable(from)) + "," + escapeLiteral(key) + "," +
+            escapeLiteral(taskname) + "," + escapeLiteralArray(seqnames) + "," +
+            "\'" + toString<EventFilter>(filter) + "\'))";
+    return whereExpression("(" + key + ").group_id", val, "=");
+}
+
 
 template<typename T>
 unsigned int PGQueryBuilder::addToParam(const char* type, const T& value)
@@ -911,6 +921,21 @@ string PGQueryBuilder::escapeLiteral(const string& literal) const
     string ret = escaped;
     PQfreemem(escaped);
     return ret;
+}
+
+string PGQueryBuilder::escapeLiteralArray(const vector<string> &literals) const
+{
+    std::string str;
+    str += '{';
+    for (size_t i = 0; i < literals.size(); i++) {
+        if (i > 0) str += ',';
+        str += escapeLiteral(literals[i]);
+    }
+    str += '}';
+
+    std::replace(str.begin(), str.end(), '\'', '\"');
+
+    return "\'" + str + "\'";
 }
 
 string PGQueryBuilder::constructWhereClause() const

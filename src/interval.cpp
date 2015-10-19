@@ -216,44 +216,10 @@ bool Interval::filterByTask(const string& taskname)
     return _select.querybuilder().whereString(def_col_int_taskname, taskname);
 }
 
-bool Interval::filterByDuration(const chrono::microseconds & dur_low,
-                                const chrono::microseconds & dur_high)
+bool Interval::filterByEvent(const string& eventkey, const string& taskname,
+                             const vector<string>& seqnames, const EventFilter & filter)
 {
-    double d_low = static_cast<double>(dur_low.count()) / (1000 * 1000);
-    double d_high = static_cast<double>(dur_high.count()) / (1000 * 1000);
-
-    return
-        _select.querybuilder().whereFloat8(def_col_int_seclength, d_low, ">=") &&
-        _select.querybuilder().whereFloat8(def_col_int_seclength, d_high, "<=");
-}
-
-bool Interval::filterByTimeRange(const chrono::system_clock::time_point & t_low,
-                                 const chrono::system_clock::time_point & t_high)
-{
-    return _select.querybuilder().whereTimeRange(def_col_int_rtstart,
-                                                 def_col_int_seclength,
-                                                 t_low,
-                                                 t_high);
-}
-
-bool Interval::filterByRegion(const Box& region)
-{
-    return _select.querybuilder().whereRegion("event,region", region, "&&");
-}
-
-bool Interval::filterByEventClassID(int class_id)
-{
-    return _select.querybuilder().whereInt("event,class_id", class_id);
-}
-
-bool Interval::filterByEventGroupID(int group_id)
-{
-    return _select.querybuilder().whereInt("event,group_id", group_id);
-}
-
-bool Interval::filterByEventIsRoot(bool is_root)
-{
-    return _select.querybuilder().whereBool("event,is_root", is_root);
+    return _select.querybuilder().whereEvent(eventkey, taskname, seqnames, filter);
 }
 
 

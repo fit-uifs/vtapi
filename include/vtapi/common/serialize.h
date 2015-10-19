@@ -14,6 +14,7 @@
 
 #include "../data/intervalevent.h"
 #include "../data/processstate.h"
+#include "../data/eventfilter.h"
 #include <chrono>
 #include <string>
 #include <sstream>
@@ -136,6 +137,23 @@ inline std::string toString <std::chrono::system_clock::time_point>(const std::c
 }
 
 template <>
+inline std::string toString <std::chrono::microseconds>(const std::chrono::microseconds& value)
+{
+    std::chrono::hours hours = std::chrono::duration_cast<std::chrono::hours>(value);
+    std::chrono::minutes mins = std::chrono::duration_cast<std::chrono::minutes>(value) % 60;
+    std::chrono::seconds secs = std::chrono::duration_cast<std::chrono::seconds>(value) % 60;
+
+    std::ostringstream oss;
+    oss << std::setfill('0') <<
+           std::setw(2) << hours.count() << ':' <<
+           std::setw(2) << mins.count() << ':' <<
+           std::setw(2) << secs.count() << '.' <<
+           value.count() % 1000;
+
+    return oss.str();
+}
+
+template <>
 inline std::string toString <IntervalEvent::Point>(const IntervalEvent::Point& value)
 {
     std::ostringstream ostr;
@@ -177,6 +195,46 @@ inline std::string toString <ProcessState>(const ProcessState& value)
             value.progress << ',' <<
             value.current_item << ',' <<
             value.last_error << ')';
+
+    return ostr.str();
+}
+
+template <>
+inline std::string toString <EventFilter>(const EventFilter& value)
+{
+    //(0,5,,2015-04-01 04:06:00,,,"(0,0),(0.1,0.8)")
+    std::ostringstream ostr;
+    ostr << '(';
+
+    if (value.hasDurationFilter()) {
+        EventFilter::Duration filter = value.getDurationFilter();
+        ostr << static_cast<double>(filter._low.count()) / 1000000.0 << ',' <<
+                static_cast<double>(filter._high.count()) / 1000000.0 << ',';
+    }
+    else {
+        ostr << ",,";
+    }
+    if (value.hasTimeRangeFilter()) {
+        EventFilter::TimeRange filter = value.getTimeRangeFilter();
+        ostr << toString(filter._low) << ',' <<
+                toString(filter._high) << ',';
+    }
+    else {
+        ostr << ",,";
+    }
+    if (value.hasDayTimeRangeFilter()) {
+        EventFilter::DayTimeRange filter = value.getDayTimeRangeFilter();
+        ostr << toString(filter._low) << ',' <<
+                toString(filter._high) << ',';
+    }
+    else {
+        ostr << ",,";
+    }
+    if (value.hasRegionFilter()) {
+        ostr << "\"" << toString(value.getRegionFilter()) << "\"";
+    }
+
+    ostr << ')';
 
     return ostr.str();
 }

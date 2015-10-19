@@ -750,6 +750,19 @@ public:
                         const std::string& oper,
                         const std::string &from) override;
 
+     /**
+      * WHERE statement part for event filter
+      * @param key event key by which to filter
+      * @param taskname events' task name
+      * @param seqnames events only for certain
+      * @param filter event filter definition
+      * @return success
+      */
+     bool whereEvent(const std::string& key,
+                     const std::string& taskname,
+                     const std::vector<std::string>& seqnames,
+                     const EventFilter & filter,
+                     const std::string& from) override;
 
     // ////////////////////////////////////////////////////////////////////////
     // OWN IMPLEMENTATION
@@ -812,6 +825,7 @@ private:
     std::string constructAlias(const std::string& column) const;
     std::string escapeIdent(const std::string& ident) const;
     std::string escapeLiteral(const std::string& literal) const;
+    std::string escapeLiteralArray(const std::vector<std::string>& idents) const;
 
     std::string constructWhereClause() const;
 

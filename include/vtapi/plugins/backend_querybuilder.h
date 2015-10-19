@@ -4,6 +4,7 @@
 #include "../data/intervalevent.h"
 #include "../data/taskkeys.h"
 #include "../data/taskparams.h"
+#include "../data/eventfilter.h"
 #include "backend_connection.h"
 #include <string>
 #include <vector>
@@ -761,6 +762,20 @@ public:
                                  const std::string& oper = std::string("="),
                                  const std::string &from = std::string()) = 0;
 
+    /**
+     * WHERE statement part for event filter
+     * @param eventkey event key by which to filter
+     * @param taskname events' task name
+     * @param seqnames events only for certain
+     * @param filter event filter definition
+     * @param from table where the key is situated
+     * @return success
+     */
+    virtual bool whereEvent(const std::string& eventkey,
+                            const std::string& taskname,
+                            const std::vector<std::string>& seqnames,
+                            const EventFilter & filter,
+                            const std::string& from = std::string()) = 0;
 
     // ////////////////////////////////////////////////////////////////////////
     // IMPLEMENTED METHODS

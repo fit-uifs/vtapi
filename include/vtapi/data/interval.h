@@ -16,6 +16,7 @@
 #include "dataset.h"
 #include "sequence.h"
 #include "task.h"
+#include "eventfilter.h"
 #include "intervalevent.h"
 
 namespace vtapi {
@@ -165,34 +166,16 @@ public:
     bool filterByTask(const std::string& taskname);
 
     /**
-     * Sets filter for intervals by duration(real seconds) before calling next()
-     * @param t_low min duration in real seconds
-     * @param t_high max duration in real seconds
+     * @brief Sets filter for intervals by examining its event value
+     * @param eventkey column for event
+     * @param taskname events' task
+     * @param seqnames filter events for these sequences
+     * @param filter filter definition
      * @return success
      */
-    bool filterByDuration(const std::chrono::microseconds & dur_low,
-                          const std::chrono::microseconds & dur_high);
+    bool filterByEvent(const std::string& eventkey, const std::string& taskname,
+                       const std::vector<std::string>& seqnames, const EventFilter & filter);
 
-    /**
-     * Sets filter for intervals by overlapping time range before calling next()
-     * @param t_low overlapping interval lower bound (UNIX time)
-     * @param t_high overlapping interval higher bound (UNIX time)
-     * @return success
-     */
-    bool filterByTimeRange(const std::chrono::system_clock::time_point & t_low,
-                           const std::chrono::system_clock::time_point & t_high);
-
-    /**
-     * Sets filter for intervals by overlapping event region before calling next()
-     * @param region overlapping region
-     * @return success
-     */
-    bool filterByRegion(const Box & region);
-
-    bool filterByEventClassID(int class_id);
-    bool filterByEventGroupID(int group_id);
-    bool filterByEventIsRoot(bool is_root);
-    
 protected:
     virtual bool preUpdate() override;
 

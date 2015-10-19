@@ -15,6 +15,7 @@ const std::string def_fnc_nt_create = "public.VT_method_add";
 const std::string def_fnc_mt_delete = "public.VT_method_delete";
 const std::string def_fnc_task_create = "public.VT_task_create";
 const std::string def_fnc_task_delete = "public.VT_task_delete";
+const std::string def_fnc_event_filter = "public.VT_filtered_events";
 
 const std::string def_tab_datasets = "public.datasets";
 const std::string def_tab_methods = "public.methods";

@@ -28,6 +28,7 @@ extern const std::string def_fnc_nt_create;
 extern const std::string def_fnc_mt_delete;
 extern const std::string def_fnc_task_create;
 extern const std::string def_fnc_task_delete;
+extern const std::string def_fnc_event_filter;
 
 extern const std::string def_tab_datasets;
 extern const std::string def_tab_methods;

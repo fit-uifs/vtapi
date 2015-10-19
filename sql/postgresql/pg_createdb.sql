@@ -35,7 +35,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
   RETURNS BOOLEAN AS
   $VT_dataset_drop_all$
   DECLARE
-    _dsname   public.datasets.dsname%TYPE;
+    _dsname   VARCHAR;
   BEGIN
     FOR _dsname IN SELECT dsname FROM public.datasets LOOP
       EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(_dsname) || ' CASCADE;';
@@ -51,7 +51,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
   $VT_dataset_drop_all$
   LANGUAGE plpgsql STRICT;
 
-SELECT VT_dataset_drop_all();
+--SELECT VT_dataset_drop_all();
 
 
 DROP TABLE IF EXISTS public.methods_params CASCADE;
@@ -75,13 +75,13 @@ DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_truncate(VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_support_create(VARCHAR) CASCADE;
 
-DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
+--DROP FUNCTION IF EXISTS public.VT_method_add(VARCHAR, methodkeytype[], methodparamtype[], BOOLEAN, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_method_delete(VARCHAR, BOOLEAN) CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_task_create(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_task_delete(VARCHAR, BOOLEAN, VARCHAR) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_task_output_idxquery(VARCHAR, NAME, REGTYPE, INT, VARCHAR) CASCADE;
-DROP FUNCTION IF EXISTS public.VT_task_out_filter_event(ANYELEMENT, public.vtevent_filter, VARCHAR, VARCHAR, VARCHAR) CASCADE;
+--DROP FUNCTION IF EXISTS public.VT_filtered_events(VARCHAR, VARCHAR, VARCHAR, VARCHAR, public.vtevent_filter)
 
 
 DROP FUNCTION IF EXISTS public.tsrange(TIMESTAMP WITHOUT TIME ZONE, DOUBLE PRECISION) CASCADE;
@@ -1105,9 +1105,9 @@ CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NA
 -------------------------------------
 -- Filters
 -------------------------------------
--- WARNING: function returning SETOF RESULTSET -> call it as a standard DB table
---   * i.e.: SELECT * FROM public.VT_task_out_filter_event(NULL::demo2_out, '(0,5,,2015-04-01 04:06:00,,,"(0,0),(0.1,0.8)")', 'task_demo2_1');
+--   * i.e.: SELECT * FROM demo2_out WHERE id IN public.VT_filtered_events('demo.demo2_out', 'event', 'task_demo2_1', '["video1"]', '(0,5,,2015-04-01 04:06:00,,,"(0,0),(0.1,0.8)")');
 -- Function behavior:
+--   * returns set of IDs of filtered events
 --   * first argument is tabletype (passed like NULL::<table name>
 --   * available filters:
 --       * duration filter: 1st and 2nd value as min and max
@@ -1116,29 +1116,41 @@ CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NA
 --       * spatial filter:  7th value as interested box
 --   * filters may be combined
 --   * returns setof records of matching rows
-CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter public.vtevent_filter, _taskname VARCHAR, _seqname VARCHAR DEFAULT NULL, _eventcolname VARCHAR DEFAULT NULL)
-  RETURNS SETOF ANYELEMENT AS
-  $VT_task_out_filter_event$
+CREATE OR REPLACE FUNCTION VT_filtered_events(_table VARCHAR, _column VARCHAR, _taskname VARCHAR, _seqnames VARCHAR[], _filter public.vtevent_filter)
+  RETURNS INT[] AS
+  $VT_filtered_events$
   DECLARE
-    _cond_seqname    VARCHAR   DEFAULT '';
+    _cond            VARCHAR   DEFAULT '';
+    _seqlist         VARCHAR   DEFAULT '';
     _cond_duration   VARCHAR   DEFAULT '';
     _cond_realtime   VARCHAR   DEFAULT '';
     _cond_daytime    VARCHAR   DEFAULT '';
     _query           VARCHAR   DEFAULT '';
     _gids            INT[];
-    
-    __taskout   REGCLASS;
+
   BEGIN
-    __taskout := pg_typeof(_tbltype);
     
-    IF _eventcolname IS NULL
+    IF _column IS NULL
     THEN
-       _eventcolname := 'event';
+       _column := 'event';
     END IF;
     
-    IF _seqname IS NOT NULL
+    IF _taskname IS NULL
     THEN
-      _cond_seqname := ' AND seqname = ' || quote_literal(_seqname) || ' ';
+      RAISE EXCEPTION 'Task name canot be null.';
+    END IF;
+
+    _cond := 'taskname = ' || quote_literal(_taskname);
+
+    IF array_length(_seqnames, 1) > 0 THEN
+      FOR _i IN 1 .. array_upper(_seqnames, 1) LOOP
+        IF _i > 1 THEN
+          _seqlist := _seqlist || ',';
+        END IF;
+        _seqlist := _seqlist || quote_literal(_seqnames[_i]);
+      END LOOP;
+
+      _cond := _cond || ' AND seqname IN (' || _seqlist || ')';
     END IF;
 
     IF (_filter).duration_max IS NULL OR (_filter).duration_max < 0
@@ -1166,21 +1178,20 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
     
     IF (_filter).realtime_min IS NOT NULL OR (_filter).realtime_max IS NOT NULL
     THEN
-      _cond_realtime := ' AND public.tsrange(' || __taskout || '.rt_start, ' || __taskout || '.sec_length) && tsrange(' || quote_nullable((_filter).realtime_min) || '::timestamp, ' || quote_nullable((_filter).realtime_max) || '::timestamp) ';
+      _cond_realtime := ' AND public.tsrange(' || _table || '.rt_start, ' || _table || '.sec_length) && tsrange(' || quote_nullable((_filter).realtime_min) || '::timestamp, ' || quote_nullable((_filter).realtime_max) || '::timestamp) ';
     END IF;
     
     IF (_filter).daytime_min IS NOT NULL OR (_filter).daytime_max IS NOT NULL
     THEN
-      _cond_daytime := ' AND public.daytimenumrange(' || __taskout || '.rt_start, ' || __taskout || '.sec_length) && public.daytimenumrange(' || quote_nullable((_filter).daytime_min) || '::time, ' || quote_nullable((_filter).daytime_max) || '::time) ';
+      _cond_daytime := ' AND public.daytimenumrange(' || _table || '.rt_start, ' || _table || '.sec_length) && public.daytimenumrange(' || quote_nullable((_filter).daytime_min) || '::time, ' || quote_nullable((_filter).daytime_max) || '::time) ';
     END IF;
     
     IF _cond_duration <> '' OR _cond_realtime <> '' OR _cond_daytime <> ''
     THEN
-      _query := ' SELECT (' || quote_ident(_eventcolname) || ').group_id AS gids
-                  FROM ' || __taskout ||
-                ' WHERE taskname = ' || quote_literal(_taskname) ||
-                    _cond_seqname ||
-                '   AND (' || quote_ident(_eventcolname) || ').is_root = FALSE ' ||
+      _query := ' SELECT DISTINCT (' || quote_ident(_column) || ').group_id AS gids
+                  FROM ' || _table ||
+                ' WHERE ' || _cond ||
+                '   AND (' || quote_ident(_column) || ').is_root = TRUE ' ||
                     _cond_duration ||
                     _cond_realtime ||
                     _cond_daytime;
@@ -1194,13 +1205,11 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
       END IF;
 
       _query :=   _query ||
-                ' SELECT (' || quote_ident(_eventcolname) || ').group_id AS gids
-                  FROM ' || __taskout ||
-                ' WHERE taskname = ' || quote_literal(_taskname) ||
-                    _cond_seqname ||
-                '   AND (' || quote_ident(_eventcolname) || ').region && ' || quote_literal((_filter).region);
+                ' SELECT DISTINCT (' || quote_ident(_column) || ').group_id AS gids
+                  FROM ' || _table ||
+                ' WHERE ' || _cond ||
+                '   AND (' || quote_ident(_column) || ').region && ' || quote_literal((_filter).region);
     END IF;
-    
     
     IF _query = ''
     THEN
@@ -1210,18 +1219,20 @@ CREATE OR REPLACE FUNCTION VT_task_out_filter_event(_tbltype ANYELEMENT, _filter
     _query := 'SELECT array_agg(gids) FROM (' || _query || ') AS x;';
     
     EXECUTE _query INTO _gids;
+
+    RETURN _gids;
     
-    IF _gids IS NOT NULL
-    THEN
-      RETURN QUERY EXECUTE 'SELECT * FROM ' || __taskout || ' WHERE taskname = ' || quote_literal(_taskname) || _cond_seqname || ' AND (' || quote_ident(_eventcolname) || ').group_id IN (' || array_to_string(_gids, ',') || ');';
-    ELSE
-      RETURN QUERY EXECUTE 'SELECT * FROM ' || __taskout || ' WHERE 0 = 1;';
-    END IF;
+    -- IF _gids IS NOT NULL
+    -- THEN
+    --   RETURN QUERY EXECUTE 'SELECT * FROM ' || _table || ' WHERE taskname = ' || quote_literal(_taskname) || _cond_seqname || ' AND (' || quote_ident(_column) || ').group_id IN (' || array_to_string(_gids, ',') || ');';
+    -- ELSE
+    --   RETURN QUERY EXECUTE 'SELECT * FROM ' || _table || ' WHERE 0 = 1;';
+    -- END IF;
     
     EXCEPTION WHEN OTHERS THEN
       RAISE EXCEPTION 'Some problem occured during filtering by event filters (%) of the task "%". (Details: ERROR %: %)', _filter, _taskname, SQLSTATE, SQLERRM;  
   END;
-  $VT_task_out_filter_event$
+  $VT_filtered_events$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
 
 

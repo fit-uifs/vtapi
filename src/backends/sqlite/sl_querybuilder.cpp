@@ -403,6 +403,12 @@ bool SLQueryBuilder::whereInouttype(const string &key, const string &value, cons
     return false;
 }
 
+bool SLQueryBuilder::whereEvent(const string &key, const string &taskname, const vector<string> &seqnames, const EventFilter &filter, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
 
 
 string SLQueryBuilder::escapeColumn(const string& key, const string& table)
