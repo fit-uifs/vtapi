@@ -14,7 +14,7 @@ using namespace std;
 namespace vtapi {
 
 
-std::atomic_bool InterProcessServer::_signal_flag(false);
+Poco::Event InterProcessServer::_stop_event_local(false);
 std::atomic_bool InterProcessServer::_signals_installed(false);
 
 void InterProcessServer::sighandler(int sig)
@@ -23,7 +23,7 @@ void InterProcessServer::sighandler(int sig)
     {
     case SIGINT:
     case SIGTERM:
-        _signal_flag = true;
+        _stop_event_local.set();
         break;
     default:
         break;
@@ -42,8 +42,9 @@ InterProcessServer::InterProcessServer(const string & ipc_base_name,
     std::signal(SIGTERM, InterProcessServer::sighandler);
     _signals_installed = true;
 
-    _stop_loop = false;
+    _stopped_by_user = false;
     _stop_check_thread = std::thread(&InterProcessServer::stopCheckLoop, this);
+    _stop_wait_thread = std::thread(&InterProcessServer::stopWaitProc, this);
 }
 
 InterProcessServer::~InterProcessServer()
@@ -54,27 +55,31 @@ InterProcessServer::~InterProcessServer()
         _signals_installed = false;
     }
 
-    _stop_loop = true;
+    _stop_event_local.set();
     _stop_check_thread.join();
+    _stop_event_global.set();
+    _stop_wait_thread.join();
 }
 
 void InterProcessServer::stopCheckLoop()
 {
-    while(!_stop_loop) {
-        bool stop = false;
-        if (_mtx.tryLock()) {
-            _mtx.unlock();
-            if (_signal_flag) {
-                stop = true;
-                VTLOG_DEBUG("interproc : server stopped by signal: " + _ipc_base_name);
+    for(;;) {
+        if (_stop_event_local.tryWait(DEF_STOP_CHECK_INTERVAL_MS)) {
+            if (_stopped_by_user) {
+                VTLOG_DEBUG("interproc : server stopped: " + _ipc_base_name);
+                _control.stop();
             }
+            break;
         }
-        else {
-            stop = true;
-            VTLOG_DEBUG("interproc : server stopped by mutex: " + _ipc_base_name);
-        }
-        if (stop) _control.stop();
-        this_thread::sleep_for(chrono::milliseconds(DEF_STOP_CHECK_INTERVAL_MS));
+    }
+}
+
+void InterProcessServer::stopWaitProc()
+{
+    _stop_event_global.wait();
+    if (!_stop_event_local.tryWait(0)) {
+        _stopped_by_user = true;
+        _stop_event_local.set();
     }
 }
 
@@ -104,29 +109,34 @@ bool InterProcessClient::isRunning()
 
 void InterProcessClient::stop()
 {
-    if (_mtx.tryLock()) {
-        VTLOG_DEBUG("interproc : attempting to stop by mutex: " + _ipc_base_name);
-        this_thread::sleep_for(chrono::milliseconds(DEF_STOP_CHECK_INTERVAL_MS*2));
-        _mtx.unlock();
-    }
+    VTLOG_DEBUG("interproc : attempting to stop by event: " + _ipc_base_name);
+    _stop_event_global.set();
 }
 
 void InterProcessClient::kill()
 {
-    if (_phproc)
+    if (_phproc) {
+        VTLOG_DEBUG("interproc : killing by handle: " + _ipc_base_name);
         Poco::Process::kill(*_phproc);
-    else if (_pid > 0)
+    }
+    else if (_pid > 0) {
+        VTLOG_DEBUG("interproc : killing by PID: " + _ipc_base_name);
         Poco::Process::kill(_pid);
-    else
+    }
+    else {
         throw InterProcessException("Failed to kill(): invalid client instance");
+    }
 }
 
 void InterProcessClient::wait()
 {
-    if (_phproc)
+    if (_phproc) {
+        VTLOG_DEBUG("interproc : waiting for finish: " + _ipc_base_name);
         Poco::Process::wait(*_phproc);
-    else
+    }
+    else {
         throw InterProcessException("Failed to wait(): must be child process");
+    }
 }
 
 

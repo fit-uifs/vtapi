@@ -13,7 +13,8 @@
 #pragma once
 
 #include <Poco/Process.h>
-#include <Poco/NamedMutex.h>
+#include <Poco/NamedEvent.h>
+#include <Poco/Event.h>
 #include <csignal>
 #include <string>
 #include <atomic>
@@ -26,10 +27,10 @@ class InterProcessBase
 {
 protected:
     const std::string _ipc_base_name;
-    Poco::NamedMutex _mtx;
+    Poco::NamedEvent _stop_event_global;
 
     explicit InterProcessBase(const std::string & ipc_base_name)
-        : _ipc_base_name(ipc_base_name), _mtx(ipc_base_name + "_mtx") {}
+        : _ipc_base_name(ipc_base_name), _stop_event_global(ipc_base_name + "_evt") {}
 
 private:
     InterProcessBase() = delete;
@@ -51,15 +52,17 @@ public:
     ~InterProcessServer();
 
 private:
-    std::atomic_bool _stop_loop;
-    static std::atomic_bool _signal_flag;
+    static Poco::Event _stop_event_local;
     static std::atomic_bool _signals_installed;
     static void sighandler(int sig);
 
     IModuleControlInterface & _control;
     std::thread _stop_check_thread;
+    std::thread _stop_wait_thread;
+    std::atomic_bool _stopped_by_user;
 
     void stopCheckLoop();
+    void stopWaitProc();
 
     InterProcessServer() = delete;
 };
