@@ -3,6 +3,7 @@
 #include <vtapi/common/interproc.h>
 #include <vtapi/common/global.h>
 #include <vtapi/common/exception.h>
+#include <vtapi/common/compat.h>
 
 #define DEF_STOP_CHECK_INTERVAL_MS      250
 #define DEF_CONNECT_ATTEMPTS    10
@@ -100,9 +101,7 @@ InterProcessClient::InterProcessClient(const string & ipc_base_name, int pid)
 bool InterProcessClient::isRunning()
 {
     if (_phproc)
-        return Poco::Process::isRunning(*_phproc);
-    else if (_pid > 0)
-        return Poco::Process::isRunning(_pid);
+        return compat::isChildProcessRunning(*_phproc);
     else
         throw InterProcessException("Invalid client instance");
 }
@@ -117,11 +116,19 @@ void InterProcessClient::kill()
 {
     if (_phproc) {
         VTLOG_DEBUG("interproc : killing by handle: " + _ipc_base_name);
-        Poco::Process::kill(*_phproc);
+        try
+        {
+            Poco::Process::kill(*_phproc);
+        }
+        catch (Poco::Exception) {}
     }
     else if (_pid > 0) {
         VTLOG_DEBUG("interproc : killing by PID: " + _ipc_base_name);
-        Poco::Process::kill(_pid);
+        try
+        {
+            Poco::Process::kill(_pid);
+        }
+        catch (Poco::Exception) {}
     }
     else {
         throw InterProcessException("Failed to kill(): invalid client instance");
@@ -132,7 +139,11 @@ void InterProcessClient::wait()
 {
     if (_phproc) {
         VTLOG_DEBUG("interproc : waiting for finish: " + _ipc_base_name);
-        Poco::Process::wait(*_phproc);
+        try
+        {
+            Poco::Process::wait(*_phproc);
+        }
+        catch (Poco::Exception) {}
     }
     else {
         throw InterProcessException("Failed to wait(): must be child process");

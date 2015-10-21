@@ -1,11 +1,12 @@
 #include "vtmodule.h"
+#include <vtapi/common/exception.h>
+#include <vtapi/common/logger.h>
+#include <vtapi/vtapi.h>
 #include <memory>
 #include <Poco/Exception.h>
 #include <Poco/ClassLoader.h>
 #include <Poco/Process.h>
-#include <vtapi/common/exception.h>
-#include <vtapi/common/logger.h>
-#include <vtapi/vtapi.h>
+
 
 
 using namespace std;
