@@ -60,6 +60,10 @@ VTApi::VTApi(int argc, char** argv)
     config->add(cmd_config.get(), -100);
     config->add(file_config.get(), 100);
 
+    // get application name
+    if (argv && argv[0])
+        cmd_config->setString("app.name", Poco::Path(argv[0]).getBaseName());
+
     // define command line options
     Poco::Util::OptionSet options;
     DEFINE_OPTIONS(options, *cmd_config.get());
@@ -70,10 +74,15 @@ VTApi::VTApi(int argc, char** argv)
     string warning;
     for (int i = 1; i < argc; i++) {
         bool ok = opt_proc.process(argv[i], opt_name, opt_arg);
-        if (ok)
+        if (ok) {
             cmd_config->setString(opt_name, opt_arg);
-        else
-            warning = "Unknown option: " + string(argv[i]);
+        }
+        else {
+            if (warning.empty())
+                warning = "Unknown option: " + string(argv[i]);
+            else
+                warning += "," + string(argv[i]);
+        }
     }
 
     // check config file (given by argument or default one)

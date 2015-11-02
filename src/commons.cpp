@@ -27,8 +27,13 @@ Commons::Commons(const Poco::Util::AbstractConfiguration &config)
     // load config
     loadConfig(config);
 
+    // get app name
+    string appname;
+    if (config.hasProperty("app.name"))
+        appname = config.getString("app.name");
+
     // initialize global logger
-    Logger::instance().config(_pconfig->logfile,
+    Logger::instance().config(appname, _pconfig->logfile,
                               _pconfig->log_errors, _pconfig->log_warnings,
                               _pconfig->log_messages, _pconfig->log_queries);
 

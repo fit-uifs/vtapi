@@ -35,7 +35,8 @@ Logger::Logger()
 {}
 
 
-void Logger::config(const string& logfile, bool errors, bool warnings, bool messages, bool queries)
+void Logger::config(const string& appname, const string& logfile,
+                    bool errors, bool warnings, bool messages, bool queries)
 {
     if (_log.is_open())
         _log.close();
@@ -48,7 +49,11 @@ void Logger::config(const string& logfile, bool errors, bool warnings, bool mess
         if (!_log.is_open())
             throw BadConfigurationException("cannot create log file: " + logpath.toString());
 
-        message("------------------------------------------------------");
+        output(_log, "------------------------------------------------------");
+        if (!appname.empty())
+            output(_log, "-- log session: " + appname);
+        else
+            output(_log, "-- log session: vtapi");
     }
     
     _log_errors = errors;
@@ -91,7 +96,6 @@ void Logger::message(const string& line, const string& where)
 {
     if (_log_messages) {
         string message(timestamp());
-        message += " INFO: ";
         message += line;
         if (!where.empty()) {
             message += " @ ";
@@ -111,7 +115,7 @@ void Logger::query(const string& line)
 
 string Logger::timestamp() const
 {
-    return toString(chrono::system_clock::now());
+    return toString(chrono::system_clock::now()) + "> ";
 }
 
 void Logger::output(std::ostream & stream, const std::string& line)

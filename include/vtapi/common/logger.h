@@ -56,6 +56,7 @@ public:
 
     /**
      * Configures logger instance
+     * @param appname application name
      * @param logfile set file as log output
      * @param errors log errors
      * @param warnings log warnings
@@ -63,7 +64,8 @@ public:
      * @param queries log queries
      * @return succesful config
      */
-    void config(const std::string& logfile, bool errors, bool warnings, bool messages, bool queries);
+    void config(const std::string& appname, const std::string& logfile,
+                bool errors, bool warnings, bool messages, bool queries);
     
     /**
      * Logs error message
