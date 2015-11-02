@@ -29,7 +29,7 @@ int VTModule::main(int argc, char *argv[])
     {
         VTApi vtapi(argc, argv);
 
-        VTLOG_DEBUG("vtmodule : starting...");
+        VTLOG_MESSAGE("vtmodule : starting...");
 
         shared_ptr<Process> prs(vtapi.getRunnableProcess());
 
@@ -37,7 +37,7 @@ int VTModule::main(int argc, char *argv[])
             // get library path
             shared_ptr<Method> met(prs->getParentMethod());
             string libpath = met->getPluginPath();
-            VTLOG_DEBUG("vtmodule : loading module from: " + libpath);
+            VTLOG_MESSAGE("vtmodule : loading module from: " + libpath);
 
             Poco::ClassLoader<IModuleInterface> loader;
             shared_ptr<IModuleInterface> module;
@@ -64,7 +64,7 @@ int VTModule::main(int argc, char *argv[])
                 throw ModuleException(libpath, e.message());
             }
 
-            VTLOG_DEBUG("vtmodule : running module: " + plugin_name);
+            VTLOG_MESSAGE("vtmodule : running module: " + plugin_name);
 
             {
                 // helper object for passing control signals to module
@@ -97,7 +97,7 @@ int VTModule::main(int argc, char *argv[])
         ret = 1;
     }
 
-    VTLOG_DEBUG("vtmodule : stopped");
+    VTLOG_MESSAGE("vtmodule : stopped");
 
     return ret;
 }

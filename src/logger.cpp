@@ -31,11 +31,11 @@ Logger& Logger::instance()
 }
 
 Logger::Logger()
-    : _log_errors(false), _log_warnings(false), _log_debug(false)
+    : _log_errors(false), _log_warnings(false), _log_messages(false), _log_queries(false)
 {}
 
 
-void Logger::config(const string& logfile, bool errors, bool warnings, bool debug)
+void Logger::config(const string& logfile, bool errors, bool warnings, bool messages, bool queries)
 {
     if (_log.is_open())
         _log.close();
@@ -53,12 +53,8 @@ void Logger::config(const string& logfile, bool errors, bool warnings, bool debu
     
     _log_errors = errors;
     _log_warnings = warnings;
-    _log_debug = debug;
-}
-
-void Logger::message(const string& line)
-{
-    output(cout, line);
+    _log_messages = messages;
+    _log_queries = queries;
 }
 
 void Logger::error(const string& line, const string& where)
@@ -91,11 +87,11 @@ void Logger::warning(const string& line, const string& where)
     }
 }
 
-void Logger::debug(const string& line, const string& where)
+void Logger::message(const string& line, const string& where)
 {
-    if (_log_debug) {
+    if (_log_messages) {
         string message(timestamp());
-        message += " DEBUG: ";
+        message += " INFO: ";
         message += line;
         if (!where.empty()) {
             message += " @ ";
@@ -103,6 +99,13 @@ void Logger::debug(const string& line, const string& where)
         }
 
         output(cout, message);
+    }
+}
+
+void Logger::query(const string& line)
+{
+    if (_log_queries) {
+        output(cout, line);
     }
 }
 

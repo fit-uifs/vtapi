@@ -17,7 +17,7 @@ bool PGConnection::connect()
     bool retval = true;
 
     do {
-        VTLOG_DEBUG("Connecting to DB... " + _connection_info);
+        VTLOG_MESSAGE("Connecting to database : " + _connection_info);
         
         _conn = PQconnectdb(_connection_info.c_str());
         if (!(retval = isConnected())) {
@@ -25,7 +25,7 @@ bool PGConnection::connect()
             if (errmsgc)
                 VTLOG_ERROR(errmsgc);
             else
-                VTLOG_ERROR("Failed to connect to database (" + _connection_info + ")");
+                VTLOG_ERROR("Failed to connect to database: " + _connection_info);
             break;
         }
 
@@ -49,7 +49,7 @@ bool PGConnection::connect()
 void PGConnection::disconnect ()
 {
     if (isConnected()) {
-        VTLOG_DEBUG("Disconnecting DB...");
+        VTLOG_MESSAGE("Disconnecting DB : " + _connection_info);
 
         PQclearTypes(PGCONN);
         PQfinish(PGCONN);
@@ -67,7 +67,7 @@ bool PGConnection::execute(const string& query, void *param)
     PGresult    *pgres  = NULL;
     bool        retval  = true;
 
-    VTLOG_DEBUG(query);
+    VTLOG_QUERY(query);
 
     _error_message.clear();
 
@@ -85,7 +85,7 @@ bool PGConnection::execute(const string& query, void *param)
         int result = PQresultStatus(pgres);
         if (result == PGRES_NONFATAL_ERROR) {
             _error_message = PQerrorMessage(PGCONN);
-            VTLOG_DEBUG(_error_message);
+            VTLOG_MESSAGE(_error_message);
         }
         else if (result != PGRES_TUPLES_OK && result != PGRES_COMMAND_OK) {
             _error_message = PQerrorMessage(PGCONN);
@@ -103,7 +103,7 @@ int PGConnection::fetch(const string& query, void *param, ResultSet &resultSet)
     int retval  = -1;
     PGresult *pgres  = NULL;
 
-    VTLOG_DEBUG(query);
+    VTLOG_QUERY(query);
 
     _error_message.clear();
 
@@ -142,7 +142,7 @@ bool PGConnection::loadDBTypes()
     PGresult *pgres = NULL;
 
     do {
-        VTLOG_DEBUG("Loading DB types...");
+        VTLOG_MESSAGE("Loading database types");
 
         // register types for use by libpqtypes
 

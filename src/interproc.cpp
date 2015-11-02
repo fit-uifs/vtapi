@@ -67,7 +67,7 @@ void InterProcessServer::stopCheckLoop()
     for(;;) {
         if (_stop_event_local.tryWait(DEF_STOP_CHECK_INTERVAL_MS)) {
             if (_stopped_by_user) {
-                VTLOG_DEBUG("interproc : server stopped: " + _ipc_base_name);
+                VTLOG_MESSAGE("interproc : server stopped: " + _ipc_base_name);
                 _control.stop();
             }
             break;
@@ -108,14 +108,14 @@ bool InterProcessClient::isRunning()
 
 void InterProcessClient::stop()
 {
-    VTLOG_DEBUG("interproc : attempting to stop by event: " + _ipc_base_name);
+    VTLOG_MESSAGE("interproc : attempting to stop by event: " + _ipc_base_name);
     _stop_event_global.set();
 }
 
 void InterProcessClient::kill()
 {
     if (_phproc) {
-        VTLOG_DEBUG("interproc : killing by handle: " + _ipc_base_name);
+        VTLOG_MESSAGE("interproc : killing by handle: " + _ipc_base_name);
         try
         {
             Poco::Process::kill(*_phproc);
@@ -123,7 +123,7 @@ void InterProcessClient::kill()
         catch (Poco::Exception) {}
     }
     else if (_pid > 0) {
-        VTLOG_DEBUG("interproc : killing by PID: " + _ipc_base_name);
+        VTLOG_MESSAGE("interproc : killing by PID: " + _ipc_base_name);
         try
         {
             Poco::Process::kill(_pid);
@@ -138,7 +138,7 @@ void InterProcessClient::kill()
 void InterProcessClient::wait()
 {
     if (_phproc) {
-        VTLOG_DEBUG("interproc : waiting for finish: " + _ipc_base_name);
+        VTLOG_MESSAGE("interproc : waiting for finish: " + _ipc_base_name);
         try
         {
             Poco::Process::wait(*_phproc);

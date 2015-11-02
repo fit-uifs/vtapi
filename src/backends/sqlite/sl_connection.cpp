@@ -21,7 +21,7 @@ bool SLConnection::connect ()
     fixSlashes(_connection_info);
     string dbname = _connection_info + "/" + SL_DB_PREFIX + SL_DB_PUBLIC + SL_DB_SUFFIX;
 
-    VTLOG_DEBUG("Connecting to DB... " + dbname);
+    VTLOG_MESSAGE("Opening database file : " + dbname);
 
     sqlite3_open_v2(dbname.c_str(), (sqlite3**)&_conn, SQLITE_OPEN_READWRITE, NULL);
     if (!(retval = isConnected())) {
@@ -35,8 +35,7 @@ bool SLConnection::connect ()
 void SLConnection::disconnect ()
 {
     if (SLCONN) {
-        VTLOG_DEBUG("Disconnecting DB...");
-
+        VTLOG_MESSAGE("Closing database");
         sqlite3_close(SLCONN);
     }
 }
@@ -46,7 +45,7 @@ bool SLConnection::isConnected () const
     if (SLCONN) {
         int cur, high;
         int ret = sqlite3_db_status(SLCONN, SQLITE_DBSTATUS_SCHEMA_USED,
-                                        &cur, &high, false);
+                                    &cur, &high, false);
         return ret == SQLITE_OK;
     }
     else {
@@ -60,7 +59,7 @@ bool SLConnection::execute(const string& query, void *param)
     char        *errmsg     = NULL;
     bool        retval      = true;
 
-    VTLOG_DEBUG(query);
+    VTLOG_QUERY(query);
 
     _error_message.clear();
 
@@ -94,7 +93,7 @@ int SLConnection::fetch(const string& query, void *param, ResultSet &resultSet)
     int         retval      = -1;
     int         retquery    = SQLITE_ERROR;
 
-    VTLOG_DEBUG(query);
+    VTLOG_QUERY(query);
 
     _error_message.clear();
 
@@ -156,6 +155,8 @@ bool SLConnection::fixSlashes(string& path) const
 bool SLConnection::attachDatabase(string& dbfile)
 {
     if (sqlite3_db_filename(SLCONN, dbfile.c_str()) == NULL) {
+        VTLOG_MESSAGE("Attaching database file: " + dbfile);
+
         string path = _connection_info + "/" + SL_DB_PREFIX + dbfile + SL_DB_SUFFIX;
         string query = "ATTACH DATABASE \'" + path + "\' AS \'" + dbfile + "\';";
         return sqlite3_exec(SLCONN, query.c_str(), NULL, NULL, NULL) == SQLITE_OK;

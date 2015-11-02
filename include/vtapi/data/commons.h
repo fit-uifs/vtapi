@@ -68,10 +68,11 @@ protected:
         std::string     connection;         /**< Connection string (URI://[string]) */
         bool            log_errors;         /**< Enables logging error messages */
         bool            log_warnings;       /**< Enables logging warning messages */
-        bool            log_debug;          /**< Enables logging debug messages */
+        bool            log_messages;       /**< Enables logging info messages */
+        bool            log_queries;        /**< Enables logging SQL queries */
         std::string     logfile;            /**< Path to log file (empty => stdout/stderr) */
 
-        Config() : log_errors(false), log_warnings(false), log_debug(false) {}
+        Config() : log_errors(false), log_warnings(false), log_messages(false), log_queries(false) {}
     };
 
     /**

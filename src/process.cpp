@@ -104,11 +104,11 @@ InterProcessClient * Process::launchInstance()
 
     // try launching vtmodule
     try {
-        VTLOG_DEBUG("Launching process... " +
+        VTLOG_MESSAGE("Launching process : " +
                     toString<int>(_context.process) + ";" + config_path);
 
         Poco::ProcessHandle hproc = Poco::Process::launch("vtmodule", args);
-        VTLOG_DEBUG("Launched PID " + toString<Poco::ProcessHandle::PID>(hproc.id()));
+        VTLOG_MESSAGE("Launched process : PID " + toString<Poco::ProcessHandle::PID>(hproc.id()));
 
         return new InterProcessClient(constructUniqueName(), this->getInstancePID(), hproc);
     }

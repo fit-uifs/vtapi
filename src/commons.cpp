@@ -28,8 +28,9 @@ Commons::Commons(const Poco::Util::AbstractConfiguration &config)
     loadConfig(config);
 
     // initialize global logger
-    Logger::instance().config(_pconfig->logfile, _pconfig->log_errors,
-                              _pconfig->log_warnings, _pconfig->log_debug);
+    Logger::instance().config(_pconfig->logfile,
+                              _pconfig->log_errors, _pconfig->log_warnings,
+                              _pconfig->log_messages, _pconfig->log_queries);
 
     // load backend interface + connection
     loadBackend();
@@ -155,7 +156,8 @@ void Commons::loadConfig(const Poco::Util::AbstractConfiguration &config)
             _pconfig->logfile = Poco::Path(config.getString("logfile")).makeAbsolute().toString();
         _pconfig->log_errors = config.hasProperty("log_errors");
         _pconfig->log_warnings = config.hasProperty("log_warnings");
-        _pconfig->log_debug = config.hasProperty("log_debug");
+        _pconfig->log_messages = config.hasProperty("log_messages");
+        _pconfig->log_queries = config.hasProperty("log_queries");
 
         // context properties
 
@@ -188,8 +190,10 @@ void Commons::saveConfig(Poco::Util::AbstractConfiguration &config) const
         config.setBool("log_errors", true);
     if (_pconfig->log_warnings)
         config.setBool("log_warnings", true);
-    if (_pconfig->log_debug)
-        config.setBool("log_debug", true);
+    if (_pconfig->log_messages)
+        config.setBool("log_messages", true);
+    if (_pconfig->log_queries)
+        config.setBool("log_queries", true);
 
     // context properties
 
