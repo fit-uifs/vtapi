@@ -45,6 +45,8 @@ public:
             : x(0), y(0) {}
         Point(double x, double y)
             : x(x), y(y) {}
+        static Point invalid()
+        { return Point(-1.0,-1.0); }
     };
     
     /**
@@ -61,6 +63,8 @@ public:
             : high(high), low(low) {}
         Box(double x_high, double y_high, double x_low, double y_low)
             : high(x_high, y_high), low (x_low, y_low) {}
+        static Box invalid()
+        { return Box(Point::invalid(), Point::invalid()); }
     };
 
 
@@ -72,7 +76,9 @@ public:
     std::vector<char> user_data;    /**< additional custom user-defined data */
 
 
-    IntervalEvent() : group_id(-1), class_id(-1), is_root(false), score(-1.0) {}
+    IntervalEvent()
+        : group_id(-1), class_id(-1), is_root(false),
+          score(-1.0), region(Box::invalid()) {}
 };
 
 typedef IntervalEvent::Point Point;
