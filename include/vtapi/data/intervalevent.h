@@ -46,7 +46,7 @@ public:
         Point(double x, double y)
             : x(x), y(y) {}
         static Point invalid()
-        { return Point(-1.0,-1.0); }
+        { return Point(2.0,2.0); }
     };
     
     /**
