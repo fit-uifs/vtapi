@@ -586,6 +586,12 @@ public:
     inline bool updateBlob(const std::string &key, const std::vector<char> &value)
     { return update()._pquerybuilder->keyBlob(key, value); }
 
+    // =============== WHERE clause (Select) ===============
+    // these must be called before first next()
+
+    inline bool filterByInt(const std::string &key, int value, const std::string &oper = "=")
+    { return _select.querybuilder().whereInt(key, value, oper); }
+
 protected:
     Select _select; /**< Select object for select queries (usually pre-filled by the constructor) */
 
