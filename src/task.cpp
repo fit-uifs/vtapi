@@ -250,6 +250,24 @@ bool Task::deleteOutputData(const vector<string> &seqnames) const
     return ret && d.execute();
 }
 
+bool Task::deleteOutputData(int intervalID) const
+{
+    bool ret = true;
+    Delete d(*this, this->getOutputDataTable());
+    ret &= d.querybuilder().whereInt(def_col_int_id, intervalID);
+
+    return ret && d.execute();
+}
+
+bool Task::deleteOutputData(const std::vector<int> & intervalIDs) const
+{
+    bool ret = true;
+    Delete d(*this, this->getOutputDataTable());
+    ret &= d.querybuilder().whereIntVector(def_col_int_id, intervalIDs);
+
+    return ret && d.execute();
+}
+
 string Task::constructName(const string &mtname, const TaskParams &params)
 {
     string input = mtname + params.serialize();

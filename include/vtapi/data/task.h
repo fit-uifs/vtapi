@@ -187,6 +187,20 @@ public:
      */
     bool deleteOutputData(const std::vector<std::string> &seqnames) const;
 
+    /**
+     * @brief Deletes one event from output data
+     * @param intervalID ID of event to delete
+     * @return success
+     */
+    bool deleteOutputData(int intervalID) const;
+
+    /**
+     * @brief Deletes multiple events from output data
+     * @param intervalIDs IDs of events to delete
+     * @return success
+     */
+    bool deleteOutputData(const std::vector<int> & intervalIDs) const;
+
     //////////////////////////////////////////////////
     // misc
     //////////////////////////////////////////////////
