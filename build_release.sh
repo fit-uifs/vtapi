@@ -19,7 +19,8 @@
 #
 #   * SQLITE3_PC_PATH: path to sqlite3.pc file for pkg-config (including file name)
 
-
+BASEPATH="$( cd "$( dirname "${0}" )" && pwd )"
+cd ${BASEPATH}
 mkdir -p build/release
 cd build/release
 cmake ../.. -Wno-dev 

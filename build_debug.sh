@@ -7,7 +7,8 @@ INSTALL_PREFIX="../../install"
 # (relative path to INSTALL_PREFIX or absolute)
 MODULES_DIR="lib/modules"
 
-
+BASEPATH="$( cd "$( dirname "${0}" )" && pwd )"
+cd ${BASEPATH}
 mkdir -p build/debug
 mkdir -p $INSTALL_PREFIX
 cd build/debug
