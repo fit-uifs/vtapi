@@ -28,7 +28,7 @@ execute_process(COMMAND ${PG_CONFIG_PATH} --pkgincludedir
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-execute_process(COMMAND ${PG_CONFIG_PATH} --pkglibdir
+execute_process(COMMAND ${PG_CONFIG_PATH} --pkglibdir --libdir
   OUTPUT_VARIABLE POSTGRES_LIBRARY_PATH
   OUTPUT_STRIP_TRAILING_WHITESPACE
 )

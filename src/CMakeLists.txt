@@ -32,7 +32,7 @@ target_include_directories(vtapi PUBLIC
   ${OPENCV_INCLUDE_PATH}
   ${POCOFOUNDATION_INCLUDE_PATH}
   ${POCOUTIL_INCLUDE_PATH}
-  /usr/local/include
+  ${DEFAULT_INCLUDE_PATH}
 )
 
 install(TARGETS vtapi
