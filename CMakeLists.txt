@@ -21,8 +21,8 @@ endif()
 if (NOT VTAPI_MODULES_DIR)
   set(VTAPI_MODULES_DIR lib CACHE FILEPATH "Default module libraries path is \"${CMAKE_INSTALL_PREFIX}/lib\"")
 endif ()
-set(DEFAULT_INCLUDE_PATH "/usr/include /usr/local/include")
-set(DEFAULT_LIBRARY_PATH "/usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu")
+set(DEFAULT_INCLUDE_PATH /usr/include /usr/local/include /include)
+set(DEFAULT_LIBRARY_PATH /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu /lib64 /lib)
 
 # global g++ flags
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DBOOST_DATE_TIME_NO_LIB")
