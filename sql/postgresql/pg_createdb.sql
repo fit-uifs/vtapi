@@ -242,6 +242,45 @@ CREATE TABLE methods_params (
 );
 
 
+-------------------------------------
+-- VTApi CORE functions to identify schema version in existing database
+-------------------------------------
+CREATE OR REPLACE FUNCTION VT_version_major ()
+  RETURNS INT AS
+  $VT_version_major$
+  BEGIN
+    RETURN 3;
+  END;
+  $VT_version_major$
+  LANGUAGE plpgsql STRICT;
+
+CREATE OR REPLACE FUNCTION VT_version_minor ()
+  RETURNS INT AS
+  $VT_version_minor$
+  BEGIN
+    RETURN 0;
+  END;
+  $VT_version_minor$
+  LANGUAGE plpgsql STRICT;
+
+CREATE OR REPLACE FUNCTION VT_version_revision ()
+  RETURNS INT AS
+  $VT_version_revision$
+  BEGIN
+    RETURN 0;
+  END;
+  $VT_version_revision$
+  LANGUAGE plpgsql STRICT;
+
+CREATE OR REPLACE FUNCTION VT_version ()
+  RETURNS VARCHAR AS
+  $VT_version$
+  BEGIN
+    RETURN CONCAT(VT_version_major() || '.' || VT_version_minor() || '.' || VT_version_revision());
+  END;
+  $VT_version$
+  LANGUAGE plpgsql STRICT;
+
 
 -------------------------------------
 -- VTApi CORE UNDERLYING functions for DATASETS
