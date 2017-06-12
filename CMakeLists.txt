@@ -117,6 +117,11 @@ if (OPENCV_PC_PATH)
       OUTPUT_VARIABLE OPENCV_LIBS
       OUTPUT_STRIP_TRAILING_WHITESPACE
     )
+
+    execute_process(COMMAND ${PKG_CONFIG} ${OPENCV_PC_PATH} --variable=libdir
+      OUTPUT_VARIABLE OPENCV_LIBDIR
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
     string(REPLACE " " ";" OPENCV_LIBS ${OPENCV_LIBS})
   else ()
     message(SEND_ERROR "OpenCV file for pkg-config could not be found at location \"${OPENCV_PC_PATH}\". Please, check the path and try it again.")
@@ -134,25 +139,6 @@ else ()
 endif()
 
 
-                 
-# VTApi library
+# all sources
 add_subdirectory(src)
-
-# PostgreSQL backend plugin
-add_subdirectory(src/backends/postgresql)
-
-# SQLite backend plugin
-add_subdirectory(src/backends/sqlite)
-
-# VTCLi command line tool
-add_subdirectory(src/vtcli)
-
-# VTModule module loader
-add_subdirectory(src/vtmodule)
-
-# demo1 module
-add_subdirectory(src/modules/demo1)
-
-# demo2 module
-add_subdirectory(src/modules/demo2)
 

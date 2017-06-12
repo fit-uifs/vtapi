@@ -13,7 +13,6 @@ set_target_properties(vtcli PROPERTIES
 target_link_libraries(vtcli
     vtapi
     ${POCOXML_LIBS}
-    ${OPENCV_LIBS}
 )
 
 target_include_directories(vtcli PRIVATE
