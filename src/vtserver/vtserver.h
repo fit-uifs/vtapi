@@ -35,9 +35,7 @@ namespace vtserver {
     void getVideoInfo(const vtserver_interface::getVideoInfoRequest &request, ::rpcz::reply<vtserver_interface::getVideoInfoResponse> response);
     void setVideoInfo(const vtserver_interface::setVideoInfoRequest &request, ::rpcz::reply<vtserver_interface::setVideoInfoResponse> response);
     void deleteVideo(const vtserver_interface::deleteVideoRequest &request, ::rpcz::reply<vtserver_interface::deleteVideoResponse> response);
-    void addTaskVideoProcessing(const vtserver_interface::addTaskVideoProcessingRequest &request, ::rpcz::reply<vtserver_interface::addTaskVideoProcessingResponse> response);
-    void addTaskEventDetection(const vtserver_interface::addTaskEventDetectionRequest &request, ::rpcz::reply<vtserver_interface::addTaskEventDetectionResponse> response);
-    void addTaskProcessingMetadata(const vtserver_interface::addTaskProcessingMetadataRequest &request, ::rpcz::reply<vtserver_interface::addTaskProcessingMetadataResponse> response);
+    void addTask(const vtserver_interface::addTaskRequest &request, ::rpcz::reply<vtserver_interface::addTaskResponse> response);
     void getTaskIDList(const vtserver_interface::getTaskIDListRequest &request, ::rpcz::reply<vtserver_interface::getTaskIDListResponse> response);
     void getTaskInfo(const vtserver_interface::getTaskInfoRequest &request, ::rpcz::reply<vtserver_interface::getTaskInfoResponse> response);
     void getTaskProgress(const vtserver_interface::getTaskProgressRequest &request, ::rpcz::reply<vtserver_interface::getTaskProgressResponse> response);
@@ -57,7 +55,7 @@ private:
     Interproc _interproc;
 
     template<class REQUEST_T, class RESPONSE_T>
-    bool processRequest(REQUEST_T & request, RESPONSE_T & reply);
+    bool processRequest(REQUEST_T & request, RESPONSE_T & reply);    
  };
 
 

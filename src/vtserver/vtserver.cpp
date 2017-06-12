@@ -131,17 +131,7 @@ void VTServer::deleteVideo(const vti::deleteVideoRequest &request, ::rpcz::reply
     processRequest(request, response);
 }
 
-void VTServer::addTaskVideoProcessing(const vti::addTaskVideoProcessingRequest &request, ::rpcz::reply<vti::addTaskVideoProcessingResponse> response)
-{
-    processRequest(request, response);
-}
-
-void VTServer::addTaskEventDetection(const vti::addTaskEventDetectionRequest &request, ::rpcz::reply<vti::addTaskEventDetectionResponse> response)
-{
-    processRequest(request, response);
-}
-
-void VTServer::addTaskProcessingMetadata(const vti::addTaskProcessingMetadataRequest &request, ::rpcz::reply<vti::addTaskProcessingMetadataResponse> response)
+void VTServer::addTask(const vtserver_interface::addTaskRequest &request, ::rpcz::reply<vtserver_interface::addTaskResponse> response)
 {
     processRequest(request, response);
 }

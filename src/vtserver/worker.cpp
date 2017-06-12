@@ -14,11 +14,6 @@ namespace vti = vtserver_interface;
 namespace vtserver {
 
 
-static const std::string suffix_vidproc("_vp");
-static const std::string suffix_evdet("_ed");
-static const std::string suffix_procmet("_pm");
-
-
 vti::Timestamp *WorkerJobBase::createTimestamp(const chrono::system_clock::time_point & value)
 {
     chrono::seconds secs = chrono::duration_cast<chrono::seconds>(value.time_since_epoch());
@@ -34,29 +29,6 @@ vti::Timestamp *WorkerJobBase::createTimestamp(const chrono::system_clock::time_
 chrono::system_clock::time_point WorkerJobBase::fromTimestamp(const vtserver_interface::Timestamp &value)
 {
     return chrono::system_clock::from_time_t(value.seconds()) + chrono::nanoseconds(value.nanos());
-}
-
-bool WorkerJobBase::parseMethodName(const string &mtname, string &module, vti::taskInfo::taskType &type)
-{
-    size_t pos;
-    if ((pos = mtname.find(suffix_vidproc) != string::npos)) {
-        module = mtname.substr(0, pos);
-        type = vti::taskInfo::TASK_TYPE_VIDEO_PROCESSING;
-        return true;
-    }
-    else if ((pos = mtname.find(suffix_evdet) != string::npos)) {
-        module = mtname.substr(0, pos);
-        type = vti::taskInfo::TASK_TYPE_EVENT_DETECTION;
-        return true;
-    }
-    else if ((pos = mtname.find(suffix_procmet) != string::npos)) {
-        module = mtname.substr(0, pos);
-        type = vti::taskInfo::TASK_TYPE_PROCESSING_METADATA;
-        return true;
-    }
-    else {
-        return false;
-    }
 }
 
 void WorkerJobBase::addTaskParamVT(const vti::taskParam &param,
@@ -645,12 +617,12 @@ void WorkerJob<const vti::deleteVideoRequest, ::rpcz::reply<vti::deleteVideoResp
 }
 
 template<>
-void WorkerJob<const vti::addTaskVideoProcessingRequest, ::rpcz::reply<vti::addTaskVideoProcessingResponse> >
+void WorkerJob<const vti::addTaskRequest, ::rpcz::reply<vti::addTaskResponse> >
 ::process(Args & args)
 {
     VTSERVER_DEBUG_REQUEST;
 
-    vti::addTaskVideoProcessingResponse reply;
+    vti::addTaskResponse reply;
     vti::requestResult *res = new vti::requestResult();
 
     Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
@@ -659,114 +631,14 @@ void WorkerJob<const vti::addTaskVideoProcessingRequest, ::rpcz::reply<vti::addT
         for (int i = 0; i < _request.params_size(); i++)
             addTaskParamVT(_request.params(i), params);
 
-        string mtname = _request.module() + suffix_vidproc;
-
         // check if task already exists, if not create it
-        string taskname = Task::constructName(mtname, params);
+        string taskname = Task::constructName(_request.module(), params);
         Task *ts = ds->loadTasks(taskname);
         if (!ts->next()) {
             delete ts;
-            ts = ds->createTask(mtname,
+            ts = ds->createTask(_request.module(),
                                 params,
-                                string(),
-                                string());
-        }
-        if (ts) {
-            res->set_success(true);
-            reply.set_task_id(ts->getName());
-            delete ts;
-        }
-        else {
-            res->set_success(false);
-            res->set_msg("Failed to create task");
-        }
-    }
-    else {
-        res->set_success(false);
-        res->set_msg("Cannot find dataset");
-    }
-    delete ds;
-
-    reply.set_allocated_res(res);
-    _response.send(reply);
-
-    VTSERVER_DEBUG_REPLY;
-}
-
-template<>
-void WorkerJob<const vti::addTaskEventDetectionRequest, ::rpcz::reply<vti::addTaskEventDetectionResponse> >
-::process(Args & args)
-{
-    VTSERVER_DEBUG_REQUEST;
-
-    vti::addTaskEventDetectionResponse reply;
-    vti::requestResult *res = new vti::requestResult();
-
-    Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
-    if (!_request.dataset_id().empty() && ds->next()) {
-        TaskParams params;
-        for (int i = 0; i < _request.params_size(); i++)
-            addTaskParamVT(_request.params(i), params);
-
-        string mtname = _request.module() + suffix_evdet;
-
-        // check if task already exists, if not create it
-        string taskname = Task::constructName(mtname, params);
-        Task *ts = ds->loadTasks(taskname);
-        if (!ts->next()) {
-            delete ts;
-            ts = ds->createTask(mtname,
-                                params,
-                                _request.prereq_task_id(),
-                                string());
-        }
-        if (ts) {
-            res->set_success(true);
-            reply.set_task_id(ts->getName());
-            delete ts;
-        }
-        else {
-            res->set_success(false);
-            res->set_msg("Failed to create task");
-        }
-    }
-    else {
-        res->set_success(false);
-        res->set_msg("Cannot find dataset");
-    }
-    delete ds;
-
-    reply.set_allocated_res(res);
-    _response.send(reply);
-
-    VTSERVER_DEBUG_REPLY;
-}
-
-template<>
-void WorkerJob<const vti::addTaskProcessingMetadataRequest, ::rpcz::reply<vti::addTaskProcessingMetadataResponse> >
-::process(Args & args)
-{
-    VTSERVER_DEBUG_REQUEST;
-
-    vti::addTaskProcessingMetadataResponse reply;
-    vti::requestResult *res = new vti::requestResult();
-
-    Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
-    if (!_request.dataset_id().empty() && ds->next()) {
-        TaskParams params;
-        for (int i = 0; i < _request.params_size(); i++)
-            addTaskParamVT(_request.params(i), params);
-
-        string mtname = _request.module() + suffix_procmet;
-
-        // check if task already exists, if not create it
-        string taskname = Task::constructName(mtname, params);
-        Task *ts = ds->loadTasks(taskname);
-        if (!ts->next()) {
-            delete ts;
-            ts = ds->createTask(mtname,
-                                params,
-                                _request.prereq_task_id(),
+                                _request.has_prereq_task_id() ? _request.prereq_task_id() : string(),
                                 string());
         }
         if (ts) {
@@ -855,18 +727,7 @@ void WorkerJob<const vti::getTaskInfoRequest, ::rpcz::reply<vti::getTaskInfoResp
             vti::taskInfo *info = reply.add_tasks();
             info->set_task_id(ts->getName());
 
-            // infer module + type from method name
-            string mtname = ts->getParentMethodName();
-            string module;
-            vti::taskInfo::taskType type;
-            if (parseMethodName(mtname, module, type)) {
-                info->set_module(module);
-                info->set_task_type(type);
-            }
-            else {
-                info->set_module(mtname);
-                info->set_task_type(vti::taskInfo::TASK_TYPE_UNKNOWN);
-            }
+            info->set_module(ts->getParentMethodName());
 
             // construct params
             TaskParams params = ts->getParams();

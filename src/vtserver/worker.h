@@ -36,10 +36,6 @@ protected:
     std::chrono::system_clock::time_point fromTimestamp(
             const ::vtserver_interface::Timestamp &value);
 
-    bool parseMethodName(const std::string& mtname,
-                         std::string &module,
-                         vtserver_interface::taskInfo::taskType &type);
-
     void addTaskParamVT(const vtserver_interface::taskParam &param,
                         vtapi::TaskParams &params);
 
