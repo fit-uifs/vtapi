@@ -1,0 +1,440 @@
+syntax = "proto2";
+
+package vtserver_interface;
+
+// common structure for all response messages
+message requestResult {
+  optional bool success = 1;
+  optional string msg = 2; // error or info message
+}
+
+message Timestamp {
+  // https://github.com/google/protobuf/blob/master/src/google/protobuf/timestamp.proto
+  required int64 seconds = 1;
+  required int32 nanos = 2;
+}
+
+// ---------------------------------
+// ---------- Dataset API ----------
+// ---------------------------------
+
+message datasetInfo {
+  required string dataset_id = 1;
+  required string name = 2;
+  optional string friendly_name = 3;
+  optional string description = 4;
+}
+
+message datasetMetrics {
+  required string dataset_id = 1;
+  optional int64 video_count = 2;
+  optional int64 process_count = 3;
+  optional int64 task_count = 4;
+}
+
+// addDataset
+message addDatasetRequest {
+  required string name = 1;
+  optional string friendly_name = 2;
+  optional string description = 3;
+}
+
+message addDatasetResponse {
+  optional requestResult res = 1;
+  optional string dataset_id = 2;
+}
+
+// getDatasetList
+message getDatasetListRequest {
+}
+
+message getDatasetListResponse {
+  optional requestResult res = 1;
+  repeated datasetInfo datasets = 2;
+}
+
+// getDatasetMetrics(string #datasetID) → dataset_metrics metrics
+message getDatasetMetricsRequest {
+  required string dataset_id = 1;
+}
+
+message getDatasetMetricsResponse {
+  optional requestResult res = 1;
+  optional datasetMetrics metrics = 2;
+}
+
+// deleteDataset (string #datasetID) → bool success
+message deleteDatasetRequest {
+  required string dataset_id = 1;
+}
+
+message deleteDatasetResponse {
+  optional requestResult res = 1;
+}
+
+// ---------------------------------
+// ---------- Videos API -----------
+// ---------------------------------
+
+message videoInfo {
+  required string video_id = 1;
+  required string filepath = 2; // complete path to the file
+  required string location = 3; // physical location
+  optional Timestamp start_time = 4; // real-world video start time
+  optional string comment = 5;
+  optional int64 length_frames = 6; // # of frames in video
+  optional double length_ms = 7; // video length in ms
+  optional double fps = 8; // frames per second
+  optional double speed = 9; // 1.0 = normal video speed
+  optional Timestamp added_time = 10; // time the video was added to dataset
+}
+
+// addVideo(string  #datasetID, string filepath, float speed, timestamp start_time, string comment, string location) → string #videoID
+message addVideoRequest {
+  required string dataset_id = 1;
+  required string filepath = 2; 
+  optional string name = 3;
+  optional string location = 4;
+  optional Timestamp start_time = 5;
+  optional double speed = 6;
+  optional string comment = 7;
+}
+
+message addVideoResponse {
+  optional requestResult res = 1;
+  optional string video_id = 2;
+}
+
+// postVideo (string #datasetID,blob video, float speed, timestamp start_time, string comment) → string #videoID
+// TBD
+
+// getVideoIDList (string #datasetID) → string #videoIDs[]
+message getVideoIDListRequest {
+  required string dataset_id = 1;
+}
+
+message getVideoIDListResponse {
+  optional requestResult res = 1;
+  repeated string video_ids = 2;
+}
+
+// getVideoInfo (string #datasetID, string #videoIDs[]) → video_info videos[]
+message getVideoInfoRequest {
+  required string dataset_id = 1;
+  repeated string video_ids = 2;
+}
+
+message getVideoInfoResponse {
+  optional requestResult res = 1;
+  repeated videoInfo videos = 2;
+}
+
+//setVideoInfo (string #datasetID, string #videoID, timestamp start_time) → bool success
+message setVideoInfoRequest {
+  required string dataset_id = 1;
+  required string video_id = 2;
+  optional Timestamp start_time = 3;
+}
+
+message setVideoInfoResponse {
+  optional requestResult res = 1;
+}
+
+// deleteVieo (string #datasetID, string #videoID)
+message deleteVideoRequest {
+  required string dataset_id = 1;
+  required string video_id = 2;
+}
+
+message deleteVideoResponse {
+  optional requestResult res = 1;
+}
+
+// ---------------------------------
+// ----- Processing tasks API ------
+// ---------------------------------
+
+message taskParam {
+  enum taskParamType {
+  TP_STRING = 1;
+  TP_INT = 2;
+  TP_INTARRAY = 3;
+  TP_FLOAT = 4;
+  TP_FLOATARRAY = 5;
+  }
+  required taskParamType type = 1;
+  required string name = 2;
+  optional string value_string = 3;
+  optional int64 value_int = 4;
+  repeated int64 value_int_array = 5;
+  optional double value_float = 6;
+  repeated double value_float_array = 7;
+}
+
+message taskInfo {
+  required string task_id = 1;
+  optional string module = 2;
+  repeated taskParam params = 3;
+  optional string prereq_task_id = 4;
+  repeated string process_ids = 5;
+  optional Timestamp added_time = 6;
+}
+
+message taskProgress {
+  required double progress = 1; // 0-1
+  optional Timestamp time_to_finish = 2;
+  repeated string inprogress_video_ids = 3;
+  repeated string done_video_ids = 4;
+}
+
+// addTask (string #datasetID, string module, string prereq_task_id, task_param params[]) → string #taskID
+message addTaskRequest {
+  required string dataset_id = 1;
+  required string module = 2;
+  optional string prereq_task_id = 3;
+  repeated taskParam params = 4;
+}
+
+message addTaskResponse {
+  optional requestResult res = 1;
+  optional string task_id = 2;
+}
+
+// getTaskIDList (string #dataset) → string #taskIDs[]
+message getTaskIDListRequest {
+  required string dataset_id = 1;
+}
+
+message getTaskIDListResponse {
+  optional requestResult res = 1;
+  repeated string task_ids = 2;
+}
+
+// getTaskInfo (string #datasetID, string #taskID[]) → task_info tasks[]
+message getTaskInfoRequest {
+  required string dataset_id = 1;
+  repeated string task_ids = 2;
+}
+
+message getTaskInfoResponse {
+  optional requestResult res = 1;
+  repeated taskInfo tasks = 2;
+}
+
+// getTaskProgress(string #datasetID, string #taskID, string #videoID[]) → task_progress
+message getTaskProgressRequest {
+  required string dataset_id = 1;
+  required string task_id = 2;
+  repeated string video_ids = 3;
+}
+
+message getTaskProgressResponse {
+  optional requestResult res = 1;
+  optional taskProgress task_progress = 2;
+}
+
+// deleteTask (string #datasetID, string #taskID, bool force_data, bool force_dependencies) → bool success
+message deleteTaskRequest {
+  required string dataset_id = 1;
+  required string task_id = 2;
+  optional bool force_data = 3; // removes all computed data associated with the task
+  optional bool force_dependencies = 4; // also removes all tasks dependent on this one
+}
+
+message deleteTaskResponse {
+  optional requestResult res = 1;
+}
+
+// ---------------------------------
+// -------- Processes API ----------
+// ---------------------------------
+
+message processInfo {
+  required string process_id = 1;
+  optional string assigned_task_id = 2; // which task is being computed
+  repeated string assigned_video_ids = 3; // which videos are being processed
+  enum processState {
+  STATE_CREATED = 1;
+  STATE_RUNNING = 2;
+  STATE_FINISHED = 3;
+  STATE_ERROR = 4;
+  }
+  optional processState state = 4; // current state
+  optional double progress = 5; // 0-100
+  optional string current_item = 6; // currently processed video
+  optional string error_message = 7; // error message on STATE_ERROR state
+  optional Timestamp added_time = 8; // time the process was added to dataset
+}
+
+// getProcessIDList(string #datasetID, string #module) → string #processIDs[]
+message getProcessIDListRequest {
+  required string dataset_id = 1;
+  optional string module = 2;
+}
+
+message getProcessIDListResponse {
+  optional requestResult res = 1;
+  repeated string process_ids = 2;
+}
+
+// getProcessInfo (string #datasetID, string #processID[]) → process_info processes[]
+message getProcessInfoRequest {
+  required string dataset_id = 1;
+  repeated string process_ids = 2;
+}
+
+message getProcessInfoResponse {
+  optional requestResult res = 1;
+  repeated processInfo processes = 2;
+}
+
+// runProcess (string #datasetID, string #videoIDs[], string #taskID) → string #processID
+message runProcessRequest {
+  required string dataset_id = 1;
+  repeated string video_ids = 2;
+  required string task_id = 3;
+}
+
+message runProcessResponse {
+  optional requestResult res = 1;
+  optional string process_id = 2;
+}
+
+// stopProcess (string #datasetID, string #processID) → bool success
+message stopProcessRequest {
+  required string dataset_id = 1;
+  required string process_id = 2;
+}
+
+message stopProcessResponse {
+  optional requestResult res = 1;
+}
+
+// ---------------------------------
+// -------- Events API -------------
+// ---------------------------------
+
+message Region {
+  optional int64 t = 1;
+  optional double t_sec = 2;
+  optional double x1 = 3;
+  optional double x2 = 4;
+  optional double y1 = 5;
+  optional double y2 = 6;
+}
+
+message eventInfo {
+  optional int64 t1 = 1; // (frames)
+  optional int64 t2 = 2; // (frames)
+  optional double t1_sec = 3; // (seconds)
+  optional double t2_sec = 4; // (seconds)
+  optional double length = 5; // (seconds)
+  optional int64 group_id = 6; 
+  optional int64 class_id = 7;
+  optional double score = 8;
+  repeated Region regions = 9; // list of bounding boxes - trajectory
+}
+
+message eventInfoList {
+  required string video_id = 1;
+  repeated eventInfo events = 2;
+}
+
+message eventStats {
+  required string video_id = 1;
+  optional int64 count = 2;
+  optional double coverage = 3;
+  optional bytes coverage_bitmap = 4;
+}
+
+message eventFilter {
+  optional double min_duration = 1;
+  optional double max_duration = 2;
+  optional Timestamp begin_timewindow = 3;
+  optional Timestamp end_timewindow = 4;
+  optional Timestamp begin_daywindow = 5;
+  optional Timestamp end_daywindow = 6;
+  optional Region region = 7;
+}
+
+// getEventList (string #datasetID, string #videoIDs[], string #taskID, event_filter filter) → event_info_list events_list[]
+message getEventListRequest {
+  required string dataset_id = 1;
+  repeated string video_ids = 2;
+  required string task_id = 3;
+  optional eventFilter filter = 4;
+}
+
+message getEventListResponse {
+  optional requestResult res = 1;
+  repeated eventInfoList events_list = 2;
+}
+
+// getEventsStats string #datasetID, string #videoIDs[], string #taskID, event_filter filter, bool get_bitmap) → event_stats stats[]
+message getEventsStatsRequest {
+  required string dataset_id = 1;
+  repeated string video_ids = 2;
+  required string task_id = 3;
+  optional eventFilter filter = 4;
+  optional bool get_bitmap = 5;
+}
+
+message getEventsStatsResponse {
+  optional requestResult res = 1;
+  repeated eventStats stats = 2;
+}
+
+
+// ---------------------------------
+// -- VideoProcessing metadata API -
+// ---------------------------------
+
+message classIdOccurence {
+  required int64 class_id = 1;
+  required double occurrence = 2;
+}
+
+message processingMetadataVideoType {
+  repeated classIdOccurence class_id_occurence= 1;
+}
+
+message getProcessingMetadataRequest {
+  required string dataset_id = 1;
+  repeated string video_ids = 2;
+  required string task_id = 3;
+}
+
+message getProcessingMetadataResponse {
+  optional requestResult res = 1;
+  optional processingMetadataVideoType metadata_videotype = 2;
+}
+
+
+// ---------------------------------
+// ----- RPC service definition ----
+// ---------------------------------
+
+service VTServerInterface {
+  rpc addDataset(addDatasetRequest) returns(addDatasetResponse);
+  rpc getDatasetList(getDatasetListRequest) returns(getDatasetListResponse);
+  rpc getDatasetMetrics(getDatasetMetricsRequest) returns(getDatasetMetricsResponse);
+  rpc deleteDataset(deleteDatasetRequest) returns(deleteDatasetResponse);
+  rpc addVideo(addVideoRequest) returns(addVideoResponse);
+  rpc getVideoIDList(getVideoIDListRequest) returns(getVideoIDListResponse);
+  rpc getVideoInfo(getVideoInfoRequest) returns(getVideoInfoResponse);
+  rpc setVideoInfo(setVideoInfoRequest) returns(setVideoInfoResponse);
+  rpc deleteVideo(deleteVideoRequest) returns(deleteVideoResponse);
+  rpc addTask(addTaskRequest) returns(addTaskResponse);
+  rpc getTaskIDList(getTaskIDListRequest) returns(getTaskIDListResponse);
+  rpc getTaskInfo(getTaskInfoRequest) returns(getTaskInfoResponse);
+  rpc getTaskProgress(getTaskProgressRequest) returns(getTaskProgressResponse);
+  rpc deleteTask(deleteTaskRequest) returns(deleteTaskResponse);
+  rpc getProcessIDList(getProcessIDListRequest) returns(getProcessIDListResponse);
+  rpc getProcessInfo(getProcessInfoRequest) returns(getProcessInfoResponse);
+  rpc runProcess(runProcessRequest) returns(runProcessResponse);
+  rpc stopProcess(stopProcessRequest) returns(stopProcessResponse);
+  rpc getEventList(getEventListRequest) returns(getEventListResponse);
+  rpc getEventsStats(getEventsStatsRequest) returns(getEventsStatsResponse);
+  rpc getProcessingMetadata(getProcessingMetadataRequest) returns(getProcessingMetadataResponse);
+}
+
