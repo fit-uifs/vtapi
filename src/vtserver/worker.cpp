@@ -1010,7 +1010,7 @@ void WorkerJob<const vti::getProcessInfoRequest, ::rpcz::reply<vti::getProcessIn
                 info->set_state(vti::processInfo_processState_STATE_FINISHED);
                 break;
             case ProcessState::STATUS_ERROR:
-                info->set_state(vti::processInfo_processState_STATE_RUNNING);
+                info->set_state(vti::processInfo_processState_STATE_ERROR);
                 info->set_error_message(state.last_error);
                 info->set_progress(state.progress);
                 break;
