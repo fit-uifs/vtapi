@@ -134,14 +134,15 @@ Video* Dataset::createVideo(const string& name,
                 _context.dataset_location + Poco::Path::separator() +
                 location;
 
-        if (!Poco::Path(fullpath).isFile()) {
-            VTLOG_WARNING( "File doesn't exist: " + fullpath);
+        string videopath = Poco::Path::expand(fullpath);
+        if (!Poco::Path(videopath).isFile()) {
+            VTLOG_WARNING( "File doesn't exist: " + videopath);
             break;
         }
 
-        cv::VideoCapture capture(fullpath);
+        cv::VideoCapture capture(videopath);
         if (!capture.isOpened()) {
-            VTLOG_WARNING( "Cannot open video: " + fullpath);
+            VTLOG_WARNING( "Cannot open video: " + videopath);
             break;
         }
 
