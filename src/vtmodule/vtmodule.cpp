@@ -61,6 +61,11 @@ int VTModule::main(int argc, char *argv[])
             }
             catch (Poco::Exception &e)
             {
+                vtapi::ProcessState state;
+                state.status = vtapi::ProcessState::STATUS_ERROR;
+                state.last_error = e.message();
+                prs->updateState(state);
+
                 throw ModuleException(libpath, e.message());
             }
 
