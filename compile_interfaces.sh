@@ -1,5 +1,7 @@
 #!/bin/bash
 
-protoc --proto_path=src/vtserver --cpp_out=src/vtserver --cpp_rpcz_out=src/vtserver src/vtserver/vtserver_interface.proto
-protoc --proto_path=src/vtserver --python_out=src/vtserver/python --python_rpcz_out=src/vtserver/python src/vtserver/vtserver_interface.proto
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+protoc --proto_path=$DIR/src/vtserver --cpp_out=$DIR/src/vtserver --cpp_rpcz_out=$DIR/src/vtserver $DIR/src/vtserver/vtserver_interface.proto
+protoc --proto_path=$DIR/src/vtserver --python_out=$DIR/pyclient/vtclient --python_rpcz_out=$DIR/pyclient/vtclient $DIR/src/vtserver/vtserver_interface.proto
 
