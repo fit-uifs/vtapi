@@ -1,11 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 project(vtapi)
 
+# global C++11 flag
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+
 # VTApi version
 set(VTAPI_VERSION 3.0)
 set(VTAPI_SOVERSION 3)
-# user-supplied modules dir
-set(VTAPI_MODULES_DIR "modules" CACHE STRING "where to install VTApi modules")
 
 # DEFAULT SETTINGS
 # default build type is "Release"
@@ -23,11 +24,6 @@ if (NOT VTAPI_MODULES_DIR)
 endif ()
 set(DEFAULT_INCLUDE_PATH /usr/include /usr/local/include /include)
 set(DEFAULT_LIBRARY_PATH /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu /lib64 /lib)
-
-# global g++ flags
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -DBOOST_DATE_TIME_NO_LIB")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DVTAPI_DEBUG")
-
 
 
 #pkg-config

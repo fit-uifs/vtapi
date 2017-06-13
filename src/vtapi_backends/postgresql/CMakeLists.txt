@@ -69,6 +69,5 @@ target_include_directories(vtapi_postgresql PRIVATE
 )
 
 install(TARGETS vtapi_postgresql
-    RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
 )
