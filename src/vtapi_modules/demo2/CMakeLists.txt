@@ -1,26 +1,31 @@
 project(vtapi.demo2)
 
-add_library(vtmodule_demo2 SHARED
-    demo2.cpp
-)
+file(GLOB ${PROJECT_NAME}.Sources *.cpp *.h)
 
-set_target_properties(vtmodule_demo2 PROPERTIES
+add_library(${PROJECT_NAME} SHARED ${${PROJECT_NAME}.Sources})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION ${VTAPI_VERSION}
     SOVERSION ${VTAPI_SOVERSION}
-    INSTALL_RPATH "${VTAPI_LIBRARY_PATH};${VTAPI_CURRENT_PATH};/usr/lib;/usr/local/lib"
-    INSTALL_RPATH_USE_LINK_PATH TRUE
-    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH ${VTAPI_LIBRARY_PATH}
 )
+if (OPENCV_LIBDIR)
+  set_target_properties(vtapi PROPERTIES
+    INSTALL_RPATH ${OPENCV_LIBDIR}
+)
+endif()
 
-target_link_libraries(vtmodule_demo2
+find_library(vtapi ${VTAPI_CURRENT_PATH})
+target_link_libraries(${PROJECT_NAME}
     vtapi
     ${OPENCV_LIBS}
 )
 
-target_include_directories(vtmodule_demo2 PRIVATE
+target_include_directories(${PROJECT_NAME} BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
+    ${OPENCV_INCLUDE_PATH}
 )
 
-install(TARGETS vtmodule_demo2
+install(TARGETS ${PROJECT_NAME}
     DESTINATION ${VTAPI_MODULES_DIR}
 )

@@ -30,11 +30,11 @@ target_link_libraries(vtapi
   ${OPENCV_LIBS}
 )
 
-target_include_directories(vtapi PUBLIC
+target_include_directories(vtapi BEFORE PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../include>
-)
-target_include_directories(vtapi PRIVATE
   ${OPENCV_INCLUDE_PATH}
+)
+target_include_directories(vtapi BEFORE PRIVATE
   ${POCOFOUNDATION_INCLUDE_PATH}
   ${POCOUTIL_INCLUDE_PATH}
 )

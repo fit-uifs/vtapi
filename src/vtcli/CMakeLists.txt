@@ -1,25 +1,23 @@
 project(vtapi.vtcli)
 
-add_executable(vtcli
-    vtcli.cpp
+file(GLOB ${PROJECT_NAME}.Sources *.cpp *.h)
+
+add_executable(${PROJECT_NAME} ${${PROJECT_NAME}.Sources})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
+    INSTALL_RPATH ${VTAPI_LIBRARY_PATH}
 )
 
-set_target_properties(vtcli PROPERTIES
-  INSTALL_RPATH "${VTAPI_LIBRARY_PATH};${VTAPI_CURRENT_PATH};/usr/lib;/usr/local/lib"
-    INSTALL_RPATH_USE_LINK_PATH TRUE
-    BUILD_WITH_INSTALL_RPATH TRUE
-)
-
-target_link_libraries(vtcli
+find_library(vtapi ${VTAPI_CURRENT_PATH})
+target_link_libraries(${PROJECT_NAME}
     vtapi
-    ${POCOXML_LIBS}
 )
 
-target_include_directories(vtcli PRIVATE
+target_include_directories(${PROJECT_NAME} BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-install(TARGETS vtcli
+install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
     LIBRARY DESTINATION lib
 )

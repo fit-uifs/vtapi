@@ -54,7 +54,7 @@ target_link_libraries(vtapi_sqlite
     sqlite3
 )
 
-target_include_directories(vtapi_sqlite PRIVATE
+target_include_directories(vtapi_sqlite BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 

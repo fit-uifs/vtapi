@@ -3,22 +3,24 @@ project(vtapi.vtmodule)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DVTMODULE_DEBUG")
 
-add_executable(vtmodule vtmodule.cpp)
+file(GLOB ${PROJECT_NAME}.Sources *.cpp *.h)
 
-set_target_properties(vtmodule PROPERTIES
+add_executable(${PROJECT_NAME} ${${PROJECT_NAME}.Sources})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES
   INSTALL_RPATH ${VTAPI_LIBRARY_PATH}
 )
 
-target_link_libraries(vtmodule
+find_library(vtapi ${VTAPI_CURRENT_PATH})
+target_link_libraries(${PROJECT_NAME}
     vtapi
-    ${POCOJSON_LIBS}
-    ${POCOXML_LIBS}
 )
 
-target_include_directories(vtmodule PRIVATE
+target_include_directories(${PROJECT_NAME} BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
 )
 
-install(TARGETS vtmodule
+install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
 )

@@ -1,5 +1,3 @@
-
-# !! this throws error !! all dirs are entered manually below
 project(vtapi.postgresql)
 
 
@@ -62,7 +60,7 @@ target_link_libraries(vtapi_postgresql
     ${PQTYPES_LIBS}
 )
 
-target_include_directories(vtapi_postgresql PRIVATE
+target_include_directories(vtapi_postgresql BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
     ${LIBPQTYPES_INCLUDE_PATH}
     ${POSTGRES_INCLUDE_PATH}

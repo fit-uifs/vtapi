@@ -4,25 +4,22 @@ project (vtapi.vtserver)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -DBOOST_DATE_TIME_NO_LIB")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DVTSERVER_DEBUG")
 
-set(DEFAULT_LIBRARY_PATH /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu /lib64 /lib)
-find_library(rpcz_LIBRARY rpcz ${DEFAULT_LIBRARY_PATH})
-find_library(zmq3_LIBRARY zmq zmq3 ${DEFAULT_LIBRARY_PATH})
-find_library(protobuf_LIBRARY protobuf ${DEFAULT_LIBRARY_PATH})
-find_library(boost_system_LIBRARY boost_system ${DEFAULT_LIBRARY_PATH})
-find_library(boost_thread_LIBRARY boost_thread ${DEFAULT_LIBRARY_PATH})
-find_library(boost_program_options_LIBRARY boost_program_options ${DEFAULT_LIBRARY_PATH})
-find_library(vtapi ${VTAPI_LIBRARY_PATH})
-
 file(GLOB ${PROJECT_NAME}.Sources *.cpp *.cc *.h)
 
-add_executable(vtserver
-    ${${PROJECT_NAME}.Sources})
+add_executable(${PROJECT_NAME} ${${PROJECT_NAME}.Sources})
 
-set_target_properties(vtserver PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
   INSTALL_RPATH ${VTAPI_LIBRARY_PATH}
 )
 
-target_link_libraries(vtserver
+find_library(rpcz_LIBRARY rpcz)
+find_library(zmq3_LIBRARY zmq zmq3)
+find_library(protobuf_LIBRARY protobuf)
+find_library(boost_system_LIBRARY boost_system)
+find_library(boost_thread_LIBRARY boost_thread)
+find_library(boost_program_options_LIBRARY boost_program_options)
+find_library(vtapi ${VTAPI_CURRENT_PATH})
+target_link_libraries(${PROJECT_NAME}
     vtapi
     ${rpcz_LIBRARY}
     ${zmq3_LIBRARY}
@@ -34,12 +31,12 @@ target_link_libraries(vtserver
     -pthread
 )
 
-target_include_directories(vtserver PRIVATE
+target_include_directories(${PROJECT_NAME} BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
     ${POCOFOUNDATION_INCLUDE_PATH}
 )
 
-install(TARGETS vtserver
+install(TARGETS ${PROJECT_NAME}
     RUNTIME DESTINATION bin
+    LIBRARY DESTINATION lib
 )
-
