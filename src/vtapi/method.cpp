@@ -71,12 +71,10 @@ string Method::getDescription() const
 
 string Method::getPluginPath() const
 {
-    string path =
-            config().modules_dir +
+    return config().modules_dir +
             Poco::Path::separator() +
             "libvtmodule_" + this->getName() +
             Poco::SharedLibrary::suffix();
-    return Poco::Path::expand(path);
 }
 
 bool Method::updateDescription(const string& description)

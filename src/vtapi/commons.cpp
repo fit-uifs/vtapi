@@ -134,6 +134,11 @@ string Commons::getBackendLibName() const
     }
 }
 
+std::string Commons::getFullPath(const std::string & path)
+{
+    return Poco::Path(Poco::Path::expand(path)).makeAbsolute().toString();
+}
+
 void Commons::loadConfig(const Poco::Util::AbstractConfiguration &config)
 {
     try
@@ -141,24 +146,24 @@ void Commons::loadConfig(const Poco::Util::AbstractConfiguration &config)
         // required properties
 
         if (config.hasProperty("datasets_dir"))
-            _pconfig->datasets_dir = config.getString("datasets_dir");
+            _pconfig->datasets_dir = getFullPath(config.getString("datasets_dir"));
         else
-            throw BadConfigurationException("datasets_dir option missing");
+            throw BadConfigurationException("datasets_dir option missing, use --datasets_dir=<path> or config file");
         if (config.hasProperty("modules_dir"))
-            _pconfig->modules_dir = config.getString("modules_dir");
+            _pconfig->modules_dir = getFullPath(config.getString("modules_dir"));
         else
-            throw BadConfigurationException("modules_dir option missing");
+            throw BadConfigurationException("modules_dir option missing, use --modules_dir=<path> or config file");
         if (config.hasProperty("connection"))
             _pconfig->connection = config.getString("connection");
         else
-            throw BadConfigurationException("connection option missing");
+            throw BadConfigurationException("connection option missing, use --connection=<string> or config file");
 
         // optional properties
 
         if (config.hasProperty("config"))
-            _pconfig->configfile = Poco::Path(config.getString("config")).makeAbsolute().toString();
+            _pconfig->configfile = getFullPath(config.getString("config"));
         if (config.hasProperty("logfile"))
-            _pconfig->logfile = Poco::Path(config.getString("logfile")).makeAbsolute().toString();
+            _pconfig->logfile = getFullPath(config.getString("logfile"));
         _pconfig->log_errors = config.hasProperty("log_errors");
         _pconfig->log_warnings = config.hasProperty("log_warnings");
         _pconfig->log_messages = config.hasProperty("log_messages");

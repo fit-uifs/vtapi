@@ -139,6 +139,7 @@ private:
     void loadBackend();
     void unloadBackend();
     std::string getBackendLibName() const;
+    static std::string getFullPath(const std::string & path);
 
     Commons() = delete;
     Commons(const Commons&) = delete;
