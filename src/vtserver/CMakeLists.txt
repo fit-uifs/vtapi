@@ -1,5 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
-project (vtapi.vtserver)
+project (vtserver)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -DBOOST_DATE_TIME_NO_LIB")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DVTSERVER_DEBUG")

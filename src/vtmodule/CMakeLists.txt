@@ -1,5 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
-project(vtapi.vtmodule)
+project(vtmodule)
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DVTMODULE_DEBUG")
 

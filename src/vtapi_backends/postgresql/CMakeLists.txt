@@ -1,4 +1,4 @@
-project(vtapi.postgresql)
+project(vtapi_postgresql)
 
 
 if(NOT PG_CONFIG_PATH)
@@ -42,12 +42,12 @@ find_library(PQTYPES_LIBS pqtypes ${LIBPQTYPES_LIBRARY_PATH} ${POSTGRES_LIBRARY_
 file(GLOB ${PROJECT_NAME}.Headers *.h)
 file(GLOB ${PROJECT_NAME}.Sources *.cpp)
 
-add_library(vtapi_postgresql SHARED
+add_library(${PROJECT_NAME} SHARED
     ${${PROJECT_NAME}.Headers}
     ${${PROJECT_NAME}.Sources}
 )
 
-set_target_properties(vtapi_postgresql PROPERTIES
+set_target_properties(${PROJECT_NAME} PROPERTIES
     VERSION ${VTAPI_VERSION}
     SOVERSION ${VTAPI_SOVERSION}
     INSTALL_RPATH_USE_LINK_PATH TRUE
@@ -55,17 +55,17 @@ set_target_properties(vtapi_postgresql PROPERTIES
 )
 #    INSTALL_RPATH "${LIBPQTYPES_LIBRARY_PATH};${POSTGRES_LIBRARY_PATH}"
 
-target_link_libraries(vtapi_postgresql
+target_link_libraries(${PROJECT_NAME}
     ${POSTGRES_LIBS}
     ${PQTYPES_LIBS}
 )
 
-target_include_directories(vtapi_postgresql BEFORE PRIVATE
+target_include_directories(${PROJECT_NAME} BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
     ${LIBPQTYPES_INCLUDE_PATH}
     ${POSTGRES_INCLUDE_PATH}
 )
 
-install(TARGETS vtapi_postgresql
+install(TARGETS ${PROJECT_NAME}
     LIBRARY DESTINATION lib
 )

@@ -1,4 +1,4 @@
-project(vtapi.sqlite)
+project(vtapi_sqlite)
 
 if (SQLITE3_PC_PATH)
   if (NOT (EXISTS ${SQLITE3_PC_PATH}))

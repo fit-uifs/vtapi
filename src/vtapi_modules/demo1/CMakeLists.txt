@@ -1,4 +1,4 @@
-project(vtapi.demo1)
+project(vtmodule_demo1)
 
 file(GLOB ${PROJECT_NAME}.Sources *.cpp *.h)
 

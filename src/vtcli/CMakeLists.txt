@@ -1,4 +1,4 @@
-project(vtapi.vtcli)
+project(vtcli)
 
 file(GLOB ${PROJECT_NAME}.Sources *.cpp *.h)
 
