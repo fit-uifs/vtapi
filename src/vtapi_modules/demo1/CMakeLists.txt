@@ -24,6 +24,7 @@ target_link_libraries(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME} BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
     ${OPENCV_INCLUDE_PATH}
+    ${DEFAULT_INCLUDE_PATH}
 )
 
 install(TARGETS ${PROJECT_NAME}

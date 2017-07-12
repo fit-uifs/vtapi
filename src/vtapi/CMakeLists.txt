@@ -36,6 +36,7 @@ target_include_directories(${PROJECT_NAME} BEFORE PUBLIC
 target_include_directories(${PROJECT_NAME} BEFORE PRIVATE
   ${POCOFOUNDATION_INCLUDE_PATH}
   ${POCOUTIL_INCLUDE_PATH}
+  ${DEFAULT_INCLUDE_PATH}
 )
 
 

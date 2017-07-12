@@ -19,6 +19,7 @@ target_link_libraries(vtmodule_demo
 
 target_include_directories(vtmodule_demo PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
+    ${DEFAULT_INCLUDE_PATH}
 )
 
 install(TARGETS vtmodule_demo
