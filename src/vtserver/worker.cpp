@@ -121,12 +121,12 @@ void WorkerJobBase::addTaskParamGPB(const string& name,
 void WorkerJobBase::parseFilter(const vtserver_interface::eventFilter &filter, vtapi::EventFilter & outfilter)
 {
     // filter by duration
-    if (filter.has_min_duration() || filter.has_max_duration()) {
+    if (filter.max_duration()) {
         chrono::microseconds min_duration(chrono::microseconds::zero());
         chrono::microseconds max_duration(chrono::microseconds::max());
-        if (filter.has_min_duration())
-            min_duration = chrono::microseconds(static_cast<chrono::microseconds::rep>(filter.min_duration() * 1000 * 1000));
-        if (filter.has_max_duration())
+
+        min_duration = chrono::microseconds(static_cast<chrono::microseconds::rep>(filter.min_duration() * 1000 * 1000));
+        if (filter.max_duration())
             max_duration = chrono::microseconds(static_cast<chrono::microseconds::rep>(filter.max_duration() * 1000 * 1000));
         outfilter.setDurationFilter(EventFilter::Duration(min_duration, max_duration));
     }
@@ -198,7 +198,7 @@ void WorkerJob<const vti::addDatasetRequest, ::rpcz::reply<vti::addDatasetRespon
         shared_ptr<Dataset> ds(
             args._vtapi.createDataset(_request.name(), _request.name(),
                                       _request.friendly_name(),
-                                      _request.has_description() ? _request.description() : string()));
+                                      _request.description().length() ? _request.description() : string()));
         if (ds) {
             res->set_success(true);
             reply.set_dataset_id(ds->getName());
@@ -340,7 +340,7 @@ void WorkerJob<const vti::addVideoRequest, ::rpcz::reply<vti::addVideoResponse> 
             string name, location, destpath;
 
             // get/construct location in dataset
-            if (_request.has_location()) {
+            if (_request.location().length()) {
                 location = _request.location();
             }
             else {
@@ -365,7 +365,7 @@ void WorkerJob<const vti::addVideoRequest, ::rpcz::reply<vti::addVideoResponse> 
             } while (Poco::File(destpath).exists());
 
             // get/construct video name
-            if (_request.has_name()) {
+            if (_request.name().length()) {
                 name = _request.name();
             }
             else {
@@ -392,8 +392,8 @@ void WorkerJob<const vti::addVideoRequest, ::rpcz::reply<vti::addVideoResponse> 
                 start_time = chrono::system_clock::from_time_t(_request.start_time().seconds()) +
                         chrono::nanoseconds(_request.start_time().nanos());
             }
-            double speed = _request.has_speed() ? _request.speed() : 0.0;
-            string comment = _request.has_comment() ? _request.comment() : string();
+            double speed = _request.speed() ? _request.speed() : 0.0;
+            string comment = _request.comment().length() ? _request.comment() : string();
 
             Video *vid = ds->createVideo(name,
                                          location,
@@ -638,7 +638,7 @@ void WorkerJob<const vti::addTaskRequest, ::rpcz::reply<vti::addTaskResponse> >
             delete ts;
             ts = ds->createTask(_request.module(),
                                 params,
-                                _request.has_prereq_task_id() ? _request.prereq_task_id() : string(),
+                                _request.prereq_task_id().length() ? _request.prereq_task_id() : string(),
                                 string());
         }
         if (ts) {
