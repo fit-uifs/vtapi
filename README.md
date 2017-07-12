@@ -67,7 +67,7 @@ Testing the server:
 ```python
 import vtclient.client as vtclient
 cl = vtclient.VTServerClient("tcp://127.0.0.1:8719")
-addDataset = cl.call('addDataset', {'name': test_dataset})
+addDataset = cl.call('addDataset', {'name': 'test_dataset'})
 print cl.call('getDatasetList', {})
 cl.call('deleteDataset', {'dataset_id': addDataset['dataset_id']})
 ```
