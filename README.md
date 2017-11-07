@@ -7,7 +7,7 @@
 * SQLite 3.8
 * POCO 1.61 (http://pocoproject.org)
 * Boost 1.54
-* Protocol Buffers 2.5
+* Protocol Buffers 3.1
 * ZeroMQ 4.0.4 (http://zeromq.org)
 * Python 2.x
 
@@ -20,11 +20,10 @@
 cd 3rdparty/rpcz
 mkdir build
 cd build
-cmake ..
+cmake -Drpcz_install_python_support ..
+
 make
 sudo make install
-cd ../python
-python setup.py install
 ```
 
 2. compile interfaces
