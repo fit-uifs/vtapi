@@ -20,7 +20,7 @@
 cd 3rdparty/rpcz
 mkdir build
 cd build
-cmake -Drpcz_install_python_support ..
+cmake -Drpcz_install_python_support=1 ..
 
 make
 sudo make install
