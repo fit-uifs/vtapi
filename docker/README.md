@@ -30,7 +30,7 @@ docker ps                # list of containers
 # Some notes for Windows
 ## Using VirtualBox? Don't have Windows X Professional Edition?
 If you don't have Professional Edition (with Hyper-V support), you need to use "Docker Toolbox"
-([https://www.docker.com/products/docker-toolbox]) .
+( https://www.docker.com/products/docker-toolbox ).
 If you use VirtualBox (it can't be combined with Hyper-V), I recommend to use "Docker Toolbox" also.
 
 ## Docker Toolbox
