@@ -25,7 +25,11 @@ docker ps                # list of containers
 
 &nbsp;
 
+&nbsp;
+
 ---
+
+&nbsp;
 
 # Some notes for Windows
 ## Using VirtualBox? Don't have Windows X Professional Edition?
