@@ -23,7 +23,10 @@ docker attach vtapidev   # attaches running container
 docker ps                # list of containers
 ```
 
+
+
 ---
+
 # Some notes for Windows
 ## Using VirtualBox? Don't have Windows X Professional Edition?
 If you don't have Professional Edition (with Hyper-V support), you need to use "Docker Toolbox"
