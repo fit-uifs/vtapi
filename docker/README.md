@@ -23,7 +23,7 @@ docker attach vtapidev   # attaches running container
 docker ps                # list of containers
 ```
 
-
+&nbsp;
 
 ---
 
@@ -31,11 +31,13 @@ docker ps                # list of containers
 ## Using VirtualBox? Don't have Windows X Professional Edition?
 If you don't have Professional Edition of Windows with Hyper-V support, you need to use "Docker Toolbox"
 (https://www.docker.com/products/docker-toolbox).
+
 If you use VirtualBox (it can't be combined with Hyper-V), I recommend to use "Docker Toolbox" also.
 
 ## Docker Toolbox
 If you use Docker Toolbox, there will be created VirtualBox machine, in which Docker is processed.
-Be carefull of shared folders, because there is supported only C:\Users directory, which is shared
+
+**Be carefull of shared folders**, because there is supported only C:\Users directory, which is shared
 to this VirtualBox machine and which you can mount to docker container. If you would like to share
 another location, there is small workaround:
 ```shell
