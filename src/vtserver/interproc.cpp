@@ -1,3 +1,8 @@
+// VTServer application - interprocess communication
+// by ifroml[at]fit.vutbr.cz
+//
+// Separate thread to periodically check active processing.
+
 #include "interproc.h"
 #include <chrono>
 

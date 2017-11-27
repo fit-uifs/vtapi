@@ -1,3 +1,8 @@
+// VTServer application - video statistics
+// by ifroml[at]fit.vutbr.cz
+//
+// Calculate how much video is covered by evenets (trajectories etc.)
+
 #include "videostats.h"
 #include <cstring>
 
