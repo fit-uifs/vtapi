@@ -1,3 +1,3 @@
 [submodule "3rdparty/rpcz"]
 	path = 3rdparty/rpcz
-	url = git@github.com:thesamet/rpcz.git
+	url = https://github.com/thesamet/rpcz.git

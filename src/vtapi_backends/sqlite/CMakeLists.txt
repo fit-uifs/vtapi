@@ -56,6 +56,7 @@ target_link_libraries(vtapi_sqlite
 
 target_include_directories(vtapi_sqlite BEFORE PRIVATE
     $<TARGET_PROPERTY:vtapi,INTERFACE_INCLUDE_DIRECTORIES>
+    ${DEFAULT_INCLUDE_PATH}
 )
 
 install(TARGETS vtapi_sqlite
