@@ -1,14 +1,38 @@
-/*
- * VideoTerror server
- * by: Vojtech Froml (ifroml[at]fit.vutbr.cz)
- */
+// VTServer application - main entry
+// by ifroml[at]fit.vutbr.cz
+//
+// Service acts as main interface for computer vision applications based on VTApi,
+// listening on port 8719.
+// Interface is defined in vtserver_interface.proto (Protocol Buffers format).
+//
+// worker.cpp       main interface implementation
+// interproc.cpp    interprocess communication to manage active processing tasks
+// videostats.cpp   calculation of statistics for video from processing results
+// vtserver_interface*  generated interface files
+//
+// Dataset interface
+// - manage datasets (collection of videos, tasks and processing results)
+// - methods: add, delete, get info
+//
+// Video interface
+// - manipulate videos in a dataset
+// - methods: add, delete, get/set info
+//
+// Task interface
+// - first define, then run processing tasks and later query results (Events interface)
+// - methods: add, delete, get info, get progress, run process, stop process
+//
+// Events interface
+// - query results of finished tasks
+// - methods: get list, get stats
+
 
 #include "vtserver.h"
 #include <iostream>
 #include <rpcz/rpcz.hpp>
 
-#define WORKER_THREAD_COUNT     10
-#define ZEROMQ_IO_THREAD_COUNT  1
+#define WORKER_THREAD_COUNT     10      // concurrent worker threads
+#define ZEROMQ_IO_THREAD_COUNT  1       // IO threads
 
 
 namespace vti = vtserver_interface;
@@ -17,7 +41,9 @@ namespace vti = vtserver_interface;
 int main(int argc, char *argv[])
 {
     try {
+        // main vtapi object with connection
         vtapi::VTApi vtapi(argc, argv);
+        // initialize interface, copy vtapi object to all worker threads
         vtserver::VTServer vtserver(vtapi);
 
         rpcz::application::options opts;
