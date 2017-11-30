@@ -1,3 +1,14 @@
+// VTServer application - worker thread
+// by ifroml[at]fit.vutbr.cz
+//
+// This code runs concurrently in several worker threads (default: 10).
+//
+// All RPC implementation methods map requests to VTApi calls.
+// Methods check for objects existence (datasets/videos/tasks/...) usually
+// using: 1. loadXYZ() method to initialize ; 2. next() to execute DB query.
+// Any special processing above simple mapping is described in code.
+
+
 #include "worker.h"
 #include "videostats.h"
 #include <list>
@@ -14,6 +25,7 @@ namespace vti = vtserver_interface;
 namespace vtserver {
 
 
+// convert time to timestamp
 vti::Timestamp *WorkerJobBase::createTimestamp(const chrono::system_clock::time_point & value)
 {
     chrono::seconds secs = chrono::duration_cast<chrono::seconds>(value.time_since_epoch());
@@ -26,11 +38,13 @@ vti::Timestamp *WorkerJobBase::createTimestamp(const chrono::system_clock::time_
     return ts;
 }
 
+// convert timestamp to time
 chrono::system_clock::time_point WorkerJobBase::fromTimestamp(const vtserver_interface::Timestamp &value)
 {
     return chrono::system_clock::from_time_t(value.seconds()) + chrono::nanoseconds(value.nanos());
 }
 
+// convert parameter from Protocol Buffers format to VTApi task param
 void WorkerJobBase::addTaskParamVT(const vti::taskParam &param,
                                    TaskParams &params)
 {
@@ -70,6 +84,7 @@ void WorkerJobBase::addTaskParamVT(const vti::taskParam &param,
     }
 }
 
+// convert parameter from VTApi task param to Protocol Buffers format
 void WorkerJobBase::addTaskParamGPB(const string& name,
                                     const TaskParamValueBase &param,
                                     vti::taskInfo &info)
@@ -118,6 +133,7 @@ void WorkerJobBase::addTaskParamGPB(const string& name,
     }
 }
 
+// convert event filter (for search in events) to VTApi format
 void WorkerJobBase::parseFilter(const vtserver_interface::eventFilter &filter, vtapi::EventFilter & outfilter)
 {
     // filter by duration
