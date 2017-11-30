@@ -97,16 +97,16 @@
 
 /**
  * @page example_configfile Default (example) configuration file of VTApi
- * @include "../default.conf"
+ * @include "@CMAKE_CURRENT_SOURCE_DIR@/vtapi_example.conf"
  */
 
 /**
- * @page example_advanced_modules_launcher ADVANCED example of VTApi usage: two demo modules and their launcher
- * @note All this examples and other support files for this example (as Makefiles, SQL scripts and so on) can be found in "example" subdirectory of VTApi.
- * @section example_moddemo1 DEMO MODULE 1 (mod_demo1.cpp)
- * @include "../example/mod_demo1/mod_demo1.cpp"
- * @section example_moddemo2 DEMO MODULE 2 (mod_demo2.cpp)
- * @include "../example/mod_demo2/mod_demo2.cpp"
- * @section example_moddemo1 DEMO LAUNCHER (launcher.cpp)
- * @include "../example/launcher.cpp"
+ * @page example_advanced_modules ADVANCED example of VTApi usage: three demo modules
+ * @note All this examples and other support files for this example (as CMake files, SQL scripts and so on) can be found in "./src/vtapi_modules" or "./sql" subdirectories of VTApi root directory.
+ * @section example_demo DEMO MODULE (demo.cpp)
+ * @include "@CMAKE_CURRENT_SOURCE_DIR@/src/vtapi_modules/demo/demo.cpp"
+ * @section example_demo1 DEMO MODULE 1 (demo1.cpp)
+ * @include "@CMAKE_CURRENT_SOURCE_DIR@/src/vtapi_modules/demo1/demo1.cpp"
+ * @section example_demo2 DEMO MODULE 2 (demo2.cpp)
+ * @include "@CMAKE_CURRENT_SOURCE_DIR@/src/vtapi_modules/demo2/demo2.cpp"
  */

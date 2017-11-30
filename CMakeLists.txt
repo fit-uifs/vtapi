@@ -153,10 +153,13 @@ if (DOXYGEN)
   set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/Doxyfile)
   set(VTAPI_DOC_MAIN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/MAINPAGE.txt.in)
   set(VTAPI_DOC_MAIN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/MAINPAGE.txt)
+  set(VTAPI_DOC_SAMPLES_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/SAMPLES.txt.in)
+  set(VTAPI_DOC_SAMPLES_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/SAMPLES.txt)
 
   # requests to configure the files
   configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
   configure_file(${VTAPI_DOC_MAIN_IN} ${VTAPI_DOC_MAIN_OUT} @ONLY)
+  configure_file(${VTAPI_DOC_SAMPLES_IN} ${VTAPI_DOC_SAMPLES_OUT} @ONLY)
 
   set(VTAPI_DOC_OUTDIR ${CMAKE_CURRENT_BINARY_DIR}/doc)
   add_custom_target(vtapi_doc ALL

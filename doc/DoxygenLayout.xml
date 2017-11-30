@@ -24,8 +24,8 @@
 <!--    <tab type="user" url="@ref examples" visible="yes" title="Examples" intro="" /> -->
     <tab type="usergroup" visible="yes" title="Examples">
       <tab type="user" url="@ref example_basic" visible="yes" title="Basic examples" intro="" />
-      <tab type="user" url="@ref example_configfile" visible="yes" title="default.conf" intro="" />
-      <tab type="user" url="@ref example_advanced_modules_launcher" visible="yes" title="Advanced examples: modules &amp; launcher" intro="" />
+      <tab type="user" url="@ref example_configfile" visible="yes" title="vtapi_example.conf" intro="" />
+      <tab type="user" url="@ref example_advanced_modules" visible="yes" title="Advanced examples: modules" intro="" />
     </tab>
     <tab type="user" url="@ref licence" visible="yes" title="Licence" intro=""/>
     <tab type="usergroup" visible="yes" title="For developers" intro="">

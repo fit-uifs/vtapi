@@ -773,7 +773,7 @@ WARN_LOGFILE           =
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include \
                          @CMAKE_CURRENT_SOURCE_DIR@/src \
                          @CMAKE_CURRENT_BINARY_DIR@/doc-config/MAINPAGE.txt \
-                         @CMAKE_CURRENT_SOURCE_DIR@/doc/SAMPLES.txt \
+                         @CMAKE_CURRENT_BINARY_DIR@/doc-config/SAMPLES.txt \
                          @CMAKE_CURRENT_SOURCE_DIR@/doc/LICENCE.txt
 
 # This tag can be used to specify the character encoding of the source files
