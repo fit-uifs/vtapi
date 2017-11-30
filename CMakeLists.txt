@@ -146,6 +146,8 @@ find_program(DOXYGEN doxygen
   HINTS ${DOXYGEN_BIN}
 )
 if (DOXYGEN)
+  set(PROJECT_NAME_DOC "VTApi")
+  
   # set input and output files
   set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
   set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/Doxyfile)

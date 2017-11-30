@@ -7,7 +7,7 @@
  * which was created to unify and accelerate the intelligent vision
  * applications development.
  *
- * @bold{%VTApi @VTAPI_API_VERSION@} is based on PostgreSQL database, PostGIS and OpenCV created within
+ * @bold{%VTApi @VTAPI_VERSION@} is based on PostgreSQL database, PostGIS and OpenCV created within
  * the Ministry of interior VideoTerror (VT) research project. The main objective
  * of the VT project is to define, explore and create a prototype of a system
  * warehousing image and video accomplished with computer
