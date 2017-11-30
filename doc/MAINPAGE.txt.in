@@ -1,0 +1,138 @@
+/**
+ * @mainpage
+ *
+ * @b %VTApi (%Video Terror Application programming interface and methodology),
+ * is a data(base) interface used for processing and efficient management, indexing,
+ * retrieval and analysis of image and video data and related metadata,
+ * which was created to unify and accelerate the intelligent vision
+ * applications development.
+ *
+ * @bold{%VTApi @VTAPI_API_VERSION@} is based on PostgreSQL database, PostGIS and OpenCV created within
+ * the Ministry of interior VideoTerror (VT) research project. The main objective
+ * of the VT project is to define, explore and create a prototype of a system
+ * warehousing image and video accomplished with computer
+ * vision and analytics based on a computer cluster. The basic requirements
+ * include image and video feature extraction, storage and indexing to enable
+ * (content-based) retrieval, summarization and characterization together with
+ * video analytics in the meaning of object detection and recognition
+ * in an interactive and iterative process.
+ *
+ *
+ * @section QUICKSTART Getting started
+ *
+ * @subsection BASICDEFS Fundamental concepts
+ * @image html minimal_logical_data_model_small.png "Simplified class diagram of VTApi"
+ * @image latex minimal_logical_data_model_small.png "Simplified class diagram of VTApi" width=\textwidth
+ * @image rtf minimal_logical_data_model_small.png "Simplified class diagram of VTApi" width=\textwidth
+ *
+ * - @b Dataset is a named set of (multimedia) data along with metadata
+ *         (descriptive data). Datasets can be organized hierarchically, i.e., one
+ *         may be based on several others. Each dataset contains sequences.
+ * - @b Sequence is a named ordered set of frames referred to as @b Video
+ *         or a named ordered set of images referred to as @b Images.
+ *         The ordering of frames in video is time-based.
+ *         There may be their intervals defined for a sequence.
+ * - @b Method defines the custom algorithm and the structure of metadata consumed
+ *         and produced by its processes.
+ * - @b Process (task or operation) is a named running instance of Method.
+ *        Process defines (inserts and modifies) data according to its inputs
+ *        (created by other processes, media data) and it represents all activities
+ *        of the proposed framework. 
+ *        @note Implementation of a specific method is generally
+ *        not included in the API, it is created by developers using the API.
+ * - @b Interval is any subsequence of @b Video or @b Images
+ *         whose elements share the same metadata. For example, it can be a video
+ *         shot or any sequence of frames containing the monitored object in
+ *         the video or scene. Metadata of an interval are created by a process.
+ * - @b Selection is a subset of logically related metadata,
+ *         appropriately chosen, so that operations (processes) are effective and
+ *         allow the natural chaining of processes (input, output of a process or media data).
+ *         Common examples of selections are @b Interval and @b Tag. This concept is
+ *         related to the effective implementation and access to the metadata in the database.
+ * - @b Tag is an indexing term representing an ontology class (in hierarchy).
+ *         Tags are assigned to the multimedia data as description or annotation of a scene,
+ *         object or action.
+ *
+ * The entry point to the application is the <b>VTApi class</b> based on the config
+ * file and command-line arguments. This class is used to implement the additional command line
+ * interface (VTCli), which can give you an insight into the managed data and metadata.
+ *
+ * @subsection KEYVALUES KeyValues concept (mechanism)
+ * The KeyValue is a basic mechanism of organization metadata in %VTApi. It is
+ * data structure, which allows you to store metadata into <b>pair \<key, value\></b> .
+ *
+ * Most classes inherit from KeyValues object that provides the basic
+ * operations needed to manage key-value pairs (associative array), on which
+ * the %VTApi model is based. KeyValues class is the crucial to ensure
+ * the functionality and generality of the API by the main method <tt><b>next()</b></tt>, 
+ * which includes not only navigation over data structures, but also executes database queries,
+ * commits changes made by setter methods and commits new data added by adder methods.
+ * Moreover, it uses the lazy approach, hiding the functionality necessary, doing
+ * it efficiently when needed by using caches and batches if possible.
+ *
+ * The %VTApi is strongly typed, the following description uses notation of X
+ * referring to any data type implemented (integers, floating points, strings,
+ * 4D geometry points, lines and polygons and their structures, vectors, arrays
+ * and (OpenCV) matrices).
+ * For instance, <tt><b>getX(k)</b></tt> or <tt><b>setX(k,v)</b></tt> operates key @c k and its value @c v of type @c X .
+ *
+
+ *
+ * There are several other important classes. Some of them are nested in the class KeyValues
+ * (as its attrubutes as is shown in above figure):
+ * - @b Commons class provides a very basic methods such as loading
+ *         configuration file and command line parameters (using GNU Gengetopt).
+ *         It provides a connection to the database (PostgreSQL), a data storage
+ *         (remote file system) also and it uniformly manages error reports and other statements (log).
+ *         Commons is a shared object, usually created by the VTApi class.
+ * - @b Select class is used to construct queries that after the first
+ *         call of the method next() retrieves the required data from the database.
+ *         There are special methods to simplify the construction of queries. Other
+ *         methods simplify the work with selections, keys and their values to filter queries,
+ *         use functions and indexes.
+ * - @b Insert class provides insertion of defined data by the method <tt><b>addX(k,v)</b></tt>.
+ *         There are 2 possible ways of inserting -- immediate by calling method
+ *         <tt><b>addExecute()</b></tt> or batch (implicitly) by calling method
+ *         <tt><b>next()</b></tt>.
+ * - @b Update class similarly allows the modification of the current element using
+ *         the typed family of methods <tt><b>setX(k,v)</b></tt>. There are also 
+ *         2 possible ways of updating -- immediate by calling method
+ *         <tt><b>setExecute()</b></tt> or batch (implicitly) by calling method
+ *         <tt><b>next()</b></tt>.
+ *
+ * @todo Is really implemented batch insert/update? Vlczech doesn't think so..
+ *
+ * Classes derived from KeyValues contain only functionality related to the consistency of data
+ * and to make some operations easier for VTApi users and factory methods.
+ * For instance, getName() returns string identifier of data, getLocation() returns
+ * the physical data location (e.g., a dataset or a directory with pictures).
+ * The method newSequence() of the Dataset class object is an example of a factory method.
+ * It creates a new object of the class Sequence, with all necessary parameters.
+ * So, then it is possible to access all the current dataset’s sequences identified
+ * by getName() by calling the next() method.
+ *
+ * @see <a href="./usergroup0.html">Examples</a> for more details on configuration and code samples.
+ *
+ *
+ * @subsection DOWNLOAD VTApi download and install, manual, ...
+ *
+ *  - Basic prerequisities, compilation and installation manual are at: https://github.com/fit-uifs/vtapi/wiki/Install
+ *
+ *  - Download the actual version at https://github.com/fit-uifs/vtapi .
+ *
+ *  - Source codes in various versions can be found at: https://github.com/fit-uifs/vtapi/branches .
+ *
+ *  - Oficial website of VT project and VTApi, technical documentation (written in Czech language)
+ *    recommended for beginners can be found at: http://vidte.fit.vutbr.cz/vtapi.html
+ *
+ * @subsection LEGALINFO VTApi authors and licence
+ *
+ * @author   Vladimir Bartik, bartik (at) fit.vutbr.cz
+ * @author   Vojtech Froml, ifroml (at) fit.vutbr.cz
+ * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
+ * 
+ * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
+ * 
+ * @copyright   &copy; 2011 &ndash; 2017, Brno University of Technology
+ */
+ 

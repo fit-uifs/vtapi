@@ -8,6 +8,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(VTAPI_VERSION 3.0)
 set(VTAPI_SOVERSION 3)
 
+# Additional cmake parameters
+
 # DEFAULT SETTINGS
 # default build type is "Release"
 if (NOT CMAKE_BUILD_TYPE)
@@ -22,6 +24,9 @@ endif()
 if (NOT VTAPI_MODULES_DIR)
   set(VTAPI_MODULES_DIR lib CACHE FILEPATH "Default module libraries path is \"${CMAKE_INSTALL_PREFIX}/lib\"")
 endif ()
+
+option(BUILD_DOC "Generate doxygen documentation (Doxygen is required)" OFF)
+
 set(DEFAULT_INCLUDE_PATH /usr/include /usr/local/include /include)
 set(DEFAULT_LIBRARY_PATH /usr/lib /usr/local/lib /usr/lib/x86_64-linux-gnu /usr/local/lib/x86_64-linux-gnu /lib64 /lib)
 
@@ -133,6 +138,35 @@ else ()
     set(OPENCV_LIBS ${OpenCV_LIBS})
   endif ()
 endif()
+
+
+# Doxygen support
+message("-- Documentation configuration")
+find_program(DOXYGEN doxygen
+  HINTS ${DOXYGEN_BIN}
+)
+if (DOXYGEN)
+  # set input and output files
+  set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
+  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/Doxyfile)
+  set(VTAPI_DOC_MAIN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/MAINPAGE.txt.in)
+  set(VTAPI_DOC_MAIN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/MAINPAGE.txt)
+
+  # requests to configure the files
+  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+  configure_file(${VTAPI_DOC_MAIN_IN} ${VTAPI_DOC_MAIN_OUT} @ONLY)
+
+  set(VTAPI_DOC_OUTDIR ${CMAKE_CURRENT_BINARY_DIR}/doc)
+  add_custom_target(vtapi_doc ALL
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${VTAPI_DOC_OUTDIR}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${VTAPI_DOC_OUTDIR} ${DOXYGEN} ${DOXYGEN_OUT}
+    COMMENT "Generating VTApi + VTServer documentation with Doxygen"
+    VERBATIM
+  )
+else (DOXYGEN)
+  message(SEND_ERROR "Doxygen executable could not be found. Please do one of following steps, instal doxygen package, specify path by -DDOXYGEN_BIN=<executable doxygen> or run cmake without -DBUILD_DOC parameter.")
+endif()
+message("-- Documentation configuration - done")
 
 
 # all sources
