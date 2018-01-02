@@ -31,12 +31,24 @@ docker ps                # list of containers
 
 &nbsp;
 
+# Alternatives
+## Vagrant with docker
+Vagrant creates automatically new VirtualBox machine. This machine contains docker for VTApi. [Vagrant with Docker](../vagrant%2Bdocker).
+
+&nbsp;
+
+&nbsp;
+
+---
+
+&nbsp;
+
 # Some notes for Windows
 ## Using VirtualBox? Don't have Windows X Professional Edition?
-If you don't have Professional Edition of Windows with Hyper-V support, you need to use "Docker Toolbox"
+If you don't have Professional Edition of Windows with Hyper-V support, you need to use [Vagrant with Docker](../vagrant%2Bdocker) or "Docker Toolbox"
 (https://www.docker.com/products/docker-toolbox).
 
-If you use VirtualBox (it can't be combined with Hyper-V), I recommend to use "Docker Toolbox" also.
+If you use VirtualBox (it can't be combined with Hyper-V), I highly recommend to use [Vagrant with Docker](../vagrant%2Bdocker) or at worst "Docker Toolbox" also.
 
 ## Docker Toolbox
 If you use Docker Toolbox, there will be created VirtualBox machine, in which Docker is processed.
