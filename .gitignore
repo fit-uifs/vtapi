@@ -1,6 +1,5 @@
 /backup
 /build
-/doc
 /install
 
 CMakeLists.txt.user
