@@ -23,16 +23,15 @@ docker attach vtapidev   # attaches running container
 docker ps                # list of containers
 ```
 
+&nbsp;
+
 # Alternatives
 ## Vagrant with docker
 Vagrant creates automatically new VirtualBox machine. This machine contains docker for VTApi. Move to [Vagrant with Docker](../vagrant%2Bdocker).
 
-&nbsp; \
 &nbsp;
 
 ---
-
-&nbsp;
 
 # Some notes for Windows
 ## Using VirtualBox? Don't have Windows X Professional Edition?
