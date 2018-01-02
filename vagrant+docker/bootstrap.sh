@@ -17,3 +17,17 @@ sudo docker run -it -h vtapidev -p 5432:5432 --restart=always --name vtapidev vt
 
 # Other configuration
 sudo loadkeys cz
+
+# Create custom user if it is required
+if test $login != ""
+then
+  sudo useradd --create-home -G adm,sudo,audio,video,plugdev,netdev,cdrom,floppy $login
+  echo "${login}:${password}" | sudo chpasswd > /dev/null
+fi
+
+# Install X11 if it is required
+if test $GUI -eq 1
+then
+  sudo apt-get install -yq ubuntu-desktop
+  sudo reboot
+fi
