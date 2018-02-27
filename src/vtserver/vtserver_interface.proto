@@ -333,6 +333,9 @@ message eventInfo {
   optional int64 class_id = 7;
   optional double score = 8;
   repeated Region regions = 9; // list of bounding boxes - trajectory
+  
+  optional bytes user_data = 10;
+  required int64 id = 11;
 }
 
 message eventInfoList {
