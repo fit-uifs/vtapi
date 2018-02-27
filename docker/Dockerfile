@@ -5,7 +5,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 # Force upgrade dependencies
 RUN apt-get -yq update \
-    && apt-get install -y --no-install-recommends apt-utils \
+    && apt-get -yqq install --no-install-recommends apt-utils \
     && apt-get dist-upgrade -y \
     && apt-get -yq update
 

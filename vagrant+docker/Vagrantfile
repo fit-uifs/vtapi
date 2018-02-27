@@ -1,0 +1,57 @@
+Vagrant.configure(2) do |config|
+  config.vm.box = "ubuntu/xenial64"
+
+  config.vm.define "VTApiDev+docker"
+  config.vm.hostname = "vtapidev"
+  config.vm.provider "virtualbox" do |v|
+    v.name = "VTApiDev + Docker"
+  end
+  
+  if ARGV[0] == 'up' || ARGV[0] == 'provision'
+    username = 
+    password = 
+    print "==========   SYSTEM CONFIGURATION   ==========\n"
+    print "Would you like to install GUI (it will take some time and lot of megabytes of internet connection)? (Y/n) : "
+    gui = STDIN.gets.chomp
+    print " \n"
+  
+    if gui == 'Y' || gui == 'y'
+      gui = 1
+      print "Please enter username if you would like to create custom user for GUI (in other case leave it blank): "
+      while true
+        username = STDIN.gets.chomp
+        if username.match('/^$/') || username.match(/^[A-z][A-z0-9\-_]*$/)
+          break
+        else
+          print "Username is not valid - please enter user name which begins with A-z and follows with alphanumeric, dash or underscore (or leave it blank if you do not need custom user): "
+        end
+      end
+    
+      if username != ''
+        system 'stty -echo'
+        while true
+          print "Password: "
+          passwd = URI.escape(STDIN.gets.chomp)
+          puts " \n"
+          print "Repeat password: "
+          passwd2 = URI.escape(STDIN.gets.chomp)
+          puts " \n"
+          
+          if passwd == passwd2
+            break
+          end
+          
+          print " \n"
+          print "Password does not match, please try again..\n"
+        end
+
+        system 'stty echo'
+      end
+    else
+      gui = 0
+    end
+  end
+
+  config.vm.provision :file, source: "../docker/Dockerfile", destination: "/tmp/vtapi-docker/Dockerfile"
+  config.vm.provision :shell, path: "bootstrap.sh", env: {"GUI" => gui, "login" => username, "password" => passwd}
+end
