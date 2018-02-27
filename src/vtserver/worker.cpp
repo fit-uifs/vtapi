@@ -1213,6 +1213,11 @@ void WorkerJob<const vti::getEventListRequest, ::rpcz::reply<vti::getEventListRe
                         traj->set_t2(t2);
                         traj->set_t1_sec(t1*to_sec);
                         traj->set_t2_sec((t2+1)*to_sec);
+
+                        // todo: zde pridat ID + copy memory
+                        // traj->set_id(...);
+                        // traj->set_user_data(...)
+
                     }
                 }
                 // add event to existing trajectory
