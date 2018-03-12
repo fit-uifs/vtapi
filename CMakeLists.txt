@@ -139,39 +139,40 @@ else ()
   endif ()
 endif()
 
-
-# Doxygen support
-message("-- Documentation configuration")
-find_program(DOXYGEN doxygen
-  HINTS ${DOXYGEN_BIN}
-)
-if (DOXYGEN)
-  set(PROJECT_NAME_DOC "VTApi")
-  
-  # set input and output files
-  set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
-  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/Doxyfile)
-  set(VTAPI_DOC_MAIN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/MAINPAGE.txt.in)
-  set(VTAPI_DOC_MAIN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/MAINPAGE.txt)
-  set(VTAPI_DOC_SAMPLES_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/SAMPLES.txt.in)
-  set(VTAPI_DOC_SAMPLES_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/SAMPLES.txt)
-
-  # requests to configure the files
-  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-  configure_file(${VTAPI_DOC_MAIN_IN} ${VTAPI_DOC_MAIN_OUT} @ONLY)
-  configure_file(${VTAPI_DOC_SAMPLES_IN} ${VTAPI_DOC_SAMPLES_OUT} @ONLY)
-
-  set(VTAPI_DOC_OUTDIR ${CMAKE_CURRENT_BINARY_DIR}/doc)
-  add_custom_target(vtapi_doc ALL
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${VTAPI_DOC_OUTDIR}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${VTAPI_DOC_OUTDIR} ${DOXYGEN} ${DOXYGEN_OUT}
-    COMMENT "Generating VTApi + VTServer documentation with Doxygen"
-    VERBATIM
+if (BUILD_DOC)
+  # Doxygen support
+  message("-- Documentation configuration")
+  find_program(DOXYGEN doxygen
+    HINTS ${DOXYGEN_BIN}
   )
-else (DOXYGEN)
-  message(SEND_ERROR "Doxygen executable could not be found. Please do one of following steps, instal doxygen package, specify path by -DDOXYGEN_BIN=<executable doxygen> or run cmake without -DBUILD_DOC parameter.")
+  if (DOXYGEN)
+    set(PROJECT_NAME_DOC "VTApi")
+
+    # set input and output files
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/Doxyfile)
+    set(VTAPI_DOC_MAIN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/MAINPAGE.txt.in)
+    set(VTAPI_DOC_MAIN_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/MAINPAGE.txt)
+    set(VTAPI_DOC_SAMPLES_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/SAMPLES.txt.in)
+    set(VTAPI_DOC_SAMPLES_OUT ${CMAKE_CURRENT_BINARY_DIR}/doc-config/SAMPLES.txt)
+
+    # requests to configure the files
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+    configure_file(${VTAPI_DOC_MAIN_IN} ${VTAPI_DOC_MAIN_OUT} @ONLY)
+    configure_file(${VTAPI_DOC_SAMPLES_IN} ${VTAPI_DOC_SAMPLES_OUT} @ONLY)
+
+    set(VTAPI_DOC_OUTDIR ${CMAKE_CURRENT_BINARY_DIR}/doc)
+    add_custom_target(vtapi_doc ALL
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${VTAPI_DOC_OUTDIR}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${VTAPI_DOC_OUTDIR} ${DOXYGEN} ${DOXYGEN_OUT}
+      COMMENT "Generating VTApi + VTServer documentation with Doxygen"
+      VERBATIM
+    )
+  else (DOXYGEN)
+    message(SEND_ERROR "Doxygen executable could not be found. Please do one of following steps, instal doxygen package, specify path by -DDOXYGEN_BIN=<executable doxygen> or run cmake without -DBUILD_DOC parameter.")
+  endif()
+  message("-- Documentation configuration - done")
 endif()
-message("-- Documentation configuration - done")
 
 
 # all sources
