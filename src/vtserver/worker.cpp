@@ -8,7 +8,6 @@
 // using: 1. loadXYZ() method to initialize ; 2. next() to execute DB query.
 // Any special processing above simple mapping is described in code.
 
-
 #include "worker.h"
 #include "videostats.h"
 #include <list>
@@ -1213,11 +1212,8 @@ void WorkerJob<const vti::getEventListRequest, ::rpcz::reply<vti::getEventListRe
                         traj->set_t2(t2);
                         traj->set_t1_sec(t1*to_sec);
                         traj->set_t2_sec((t2+1)*to_sec);
-
-                        // todo: zde pridat ID + copy memory
-                        // traj->set_id(...);
-                        // traj->set_user_data(...)
-
+                        std::string user_data(ev.user_data.data(), ev.user_data.size());
+                        traj->set_user_data(user_data);
                     }
                 }
                 // add event to existing trajectory
