@@ -645,7 +645,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
     _stmt := 'INSERT INTO public.methods (mtname' || _inscols || ') VALUES (' || quote_literal(_mtname) || _insvals || ');';
     EXECUTE _stmt;
 
-    IF _mkeys IS NOT NULL THEN
+    IF _mkeys IS NOT NULL AND _mkeys != '{}' THEN
       _insvals := '';
       FOR _i IN 1 .. array_upper(_mkeys, 1) LOOP
         IF _mkeys[_i].keyname IS NULL THEN
@@ -676,7 +676,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
     END IF;
 
     
-    IF _mparams IS NOT NULL THEN
+    IF _mparams IS NOT NULL AND _mparams != '{}' THEN
       _insvals := '';
       FOR _i IN 1 .. array_upper(_mparams, 1) LOOP
         IF _mparams[_i].paramname IS NULL THEN
