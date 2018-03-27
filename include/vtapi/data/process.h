@@ -145,6 +145,18 @@ public:
      * @return method object (initialized)
      */
     Method *getParentMethod() const;
+    
+    /**
+     * @brief Loads sequences names which should be processed
+     * @return sequences names vector
+     */
+    std::vector<std::string> loadAssignedSequencesNames() const;
+    
+    /**
+     * @brief Loads sequences which should be processed
+     * @return sequences object for iteration
+     */
+    Sequence *loadAssignedSequences() const;
 
     /**
      * @brief Loads image folders which should be processed

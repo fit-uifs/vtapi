@@ -200,28 +200,30 @@ Method *Process::getParentMethod() const
     }
 }
 
-Video *Process::loadAssignedVideos() const
-{
+vector<string> Process::loadAssignedSequencesNames() const {
     vector<string> seqnames;
     KeyValues kv(*this, def_tab_processes_seq);
     kv._select.querybuilder().whereInt(def_col_prss_prsid, _context.process);
     while(kv.next()) {
         seqnames.push_back(kv.getString(def_col_prss_seqname));
     }
+    
+    return seqnames;
+}
 
-    return new Video(*this, seqnames);
+Sequence *Process::loadAssignedSequences() const
+{
+    return new Sequence(*this, this->loadAssignedSequencesNames());
+}
+
+Video *Process::loadAssignedVideos() const
+{
+    return new Video(*this, this->loadAssignedSequencesNames());
 }
 
 ImageFolder *Process::loadAssignedImageFolders() const
 {
-    vector<string> seqnames;
-    KeyValues kv(*this, def_tab_processes_seq);
-    kv._select.querybuilder().whereInt(def_col_prss_prsid, _context.process);
-    while(kv.next()) {
-        seqnames.push_back(kv.getString(def_col_prss_seqname));
-    }
-
-    return new ImageFolder(*this, seqnames);
+    return new ImageFolder(*this, this->loadAssignedSequencesNames());
 }
 
 TaskProgress *Process::acquireSequenceLock(const string &seqname) const
