@@ -151,11 +151,13 @@ public:
      * Creates new image folder in dataset and returns its object for iteration
      * @param name image folder name (unique)
      * @param location location in dataset
+     * @param realtime UNIX timestamp of start of the image folder
      * @param comment optional comment
      * @return image folder object, NULL on error
      */
     ImageFolder *createImageFolder(const std::string& name,
                                    const std::string& location,
+                                   const std::chrono::system_clock::time_point& realtime,
                                    const std::string& comment = std::string()) const;
     
     /**

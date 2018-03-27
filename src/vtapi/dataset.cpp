@@ -10,6 +10,7 @@
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
+#include <Poco/DirectoryIterator.h>
 #include <Poco/Path.h>
 #include <Poco/File.h>
 #include <vtapi/common/global.h>
@@ -179,15 +180,45 @@ Video* Dataset::createVideo(const string& name,
 
 ImageFolder* Dataset::createImageFolder(const string& name,
                                         const string& location,
+                                        const chrono::system_clock::time_point& realtime,
                                         const string& comment) const
 {
     ImageFolder *im = NULL;
     
     do {
-        string fullpath = config().datasets_dir + _context.dataset_location + location;
+        string fullpath = config().datasets_dir + Poco::Path::separator() + _context.dataset_location + Poco::Path::separator() + location;
 
         if (!Poco::File(Poco::Path(fullpath)).isDirectory()) {
             VTLOG_WARNING("Cannot open folder: " + fullpath);
+            break;
+        }
+        
+        int cnt_images = 0;
+        Poco::DirectoryIterator end;
+        for (Poco::DirectoryIterator it(fullpath); it != end; ++it) {
+            cv::Mat image;
+            
+            if (! it->isFile()) {
+                VTLOG_WARNING("Unexpected filesystem structure (maybe nested directory?): " + it->path());
+                cnt_images = -1;
+                break;
+            }
+            
+            image = cv::imread(it->path());
+            if (! image.data) {
+                VTLOG_WARNING("Invalid image file: " + it->path());
+                cnt_images = -1;
+                break;
+            }
+            
+            cnt_images++;
+        }
+        
+        if (cnt_images == -1) {
+            break;
+        }
+        else if (cnt_images == 0) {
+            VTLOG_WARNING("Image path does not contain any image: " + fullpath);
             break;
         }
 
@@ -196,14 +227,15 @@ ImageFolder* Dataset::createImageFolder(const string& name,
         retval &= insert.querybuilder().keyString(def_col_seq_name, name);
         retval &= insert.querybuilder().keyString(def_col_seq_location, location);
         retval &= insert.querybuilder().keySeqtype(def_col_seq_type, def_val_images);
+        retval &= insert.querybuilder().keyInt(def_col_seq_length, cnt_images);
+        if (realtime.time_since_epoch() > chrono::seconds(0))
+            retval &= insert.querybuilder().keyTimestamp(def_col_seq_vidtime, realtime);
         if (!comment.empty()) retval &= insert.querybuilder().keyString(def_col_seq_comment, comment);
 
         if (retval && insert.execute()) {
             im = loadImageFolders(name);
             if (!im->next()) vt_destruct(im);
         }
-
-        //TODO: insert images from folder
 
     } while (0);
     
