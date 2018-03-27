@@ -1,15 +1,16 @@
 // VTServer application - worker thread
-// by ifroml[at]fit.vutbr.cz
+// by ifroml[at]fit.vutbr.cz, ivolf[at]fit.vutbr.cz
 //
 // This code runs concurrently in several worker threads (default: 10).
 //
 // All RPC implementation methods map requests to VTApi calls.
-// Methods check for objects existence (datasets/videos/tasks/...) usually
+// Methods check for objects existence (datasets/sequences/tasks/...) usually
 // using: 1. loadXYZ() method to initialize ; 2. next() to execute DB query.
 // Any special processing above simple mapping is described in code.
 
+//#include "vtapi/common/logger.h"
 #include "worker.h"
-#include "videostats.h"
+#include "sequencestats.h"
 #include <list>
 #include <map>
 #include <Poco/Path.h>
@@ -246,7 +247,7 @@ void WorkerJob<const vti::getDatasetListRequest, ::rpcz::reply<vti::getDatasetLi
         res->set_success(true);
 
         while (ds->next()) {
-            ::vti::datasetInfo* info = reply.add_datasets();
+            vti::datasetInfo* info = reply.add_datasets();
             info->set_dataset_id(ds->getName());
             info->set_name(ds->getName());
             info->set_friendly_name(ds->getFriendlyName());
@@ -279,13 +280,13 @@ void WorkerJob<const vti::getDatasetMetricsRequest, ::rpcz::reply<vti::getDatase
     if (!_request.dataset_id().empty() && ds->next()) {
         res->set_success(true);
 
-        ::vti::datasetMetrics *metrics = new ::vti::datasetMetrics();
+        vti::datasetMetrics *metrics = new vti::datasetMetrics();
         metrics->set_dataset_id(ds->getName());
         reply.set_allocated_metrics(metrics);
 
-        Video *vid = ds->loadVideos();
-        metrics->set_video_count(vid->count());
-        delete vid;
+        Sequence *seq = ds->loadSequences();
+        metrics->set_sequence_count(seq->count());
+        delete seq;
 
         Task *ts = ds->loadTasks();
         metrics->set_task_count(ts->count());
@@ -341,12 +342,12 @@ void WorkerJob<const vti::deleteDatasetRequest, ::rpcz::reply<vti::deleteDataset
 }
 
 template<>
-void WorkerJob<const vti::addVideoRequest, ::rpcz::reply<vti::addVideoResponse> >
+void WorkerJob<const vti::addSequenceRequest, ::rpcz::reply<vti::addSequenceResponse> >
 ::process(Args & args)
 {
     VTSERVER_DEBUG_REQUEST;
 
-    vti::addVideoResponse reply;
+    vti::addSequenceResponse reply;
     vti::requestResult *res = new vti::requestResult();
 
     Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
@@ -360,12 +361,17 @@ void WorkerJob<const vti::addVideoRequest, ::rpcz::reply<vti::addVideoResponse> 
             }
             else {
                 Poco::Path path(_request.filepath());
-                location = path.getFileName();
+                if (_request.seqtyp() == vti::SEQTYPE_IMAGE) {
+                    location = path.directory(path.depth() - 1);
+                }
+                else {
+                    location = path.getFileName();
+                }
+
                 if (location.empty()) {
                     res->set_msg("Failed to create location from: " + _request.filepath());
                     throw exception();
                 }
-
             }
 
             // construct full destination path
@@ -379,7 +385,7 @@ void WorkerJob<const vti::addVideoRequest, ::rpcz::reply<vti::addVideoResponse> 
                 destindex++;
             } while (Poco::File(destpath).exists());
 
-            // get/construct video name
+            // get/construct sequence name
             if (_request.has_name()) {
                 name = _request.name();
             }
@@ -410,18 +416,25 @@ void WorkerJob<const vti::addVideoRequest, ::rpcz::reply<vti::addVideoResponse> 
             double speed = _request.has_speed() ? _request.speed() : 0.0;
             string comment = _request.has_comment() ? _request.comment() : string();
 
-            Video *vid = ds->createVideo(name,
+            Sequence *seq;
+            if (_request.seqtyp() == vti::SEQTYPE_IMAGE) {
+                seq = ds->createImageFolder(name, location, start_time, comment);
+            }
+            else {
+                seq = ds->createVideo(name,
                                          location,
                                          start_time,
                                          speed,
                                          comment);
-            if (vid) {
+            }
+
+            if (seq) {
                 res->set_success(true);
-                reply.set_video_id(vid->getName());
-                delete vid;
+                reply.set_sequence_id(seq->getName());
+                delete seq;
             }
             else {
-                res->set_msg("Failed to create video: " + name);
+                res->set_msg("Failed to create sequence: " + name);
                 throw exception();
             }
         }
@@ -449,24 +462,24 @@ void WorkerJob<const vti::addVideoRequest, ::rpcz::reply<vti::addVideoResponse> 
 }
 
 template<>
-void WorkerJob<const vti::getVideoIDListRequest, ::rpcz::reply<vti::getVideoIDListResponse> >
+void WorkerJob<const vti::getSequenceIDListRequest, ::rpcz::reply<vti::getSequenceIDListResponse> >
 ::process(Args & args)
 {
     VTSERVER_DEBUG_REQUEST;
 
-    vti::getVideoIDListResponse reply;
+    vti::getSequenceIDListResponse reply;
     vti::requestResult *res = new vti::requestResult();
 
     Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
     if (!_request.dataset_id().empty() && ds->next()) {
         res->set_success(true);
 
-        Video *vid = ds->loadVideos();
-        while (vid->next()) {
-            string* info = reply.add_video_ids();
-            *info = vid->getName();
+        Sequence *seq = ds->loadSequences();
+        while (seq->next()) {
+            string* info = reply.add_sequence_ids();
+            *info = seq->getName();
         }
-        delete vid;
+        delete seq;
     }
     else {
         res->set_success(false);
@@ -481,51 +494,62 @@ void WorkerJob<const vti::getVideoIDListRequest, ::rpcz::reply<vti::getVideoIDLi
 }
 
 template<>
-void WorkerJob<const vti::getVideoInfoRequest, ::rpcz::reply<vti::getVideoInfoResponse> >
+void WorkerJob<const vti::getSequenceInfoRequest, ::rpcz::reply<vti::getSequenceInfoResponse> >
 ::process(Args & args)
 {
     VTSERVER_DEBUG_REQUEST;
 
-    vti::getVideoInfoResponse reply;
+    vti::getSequenceInfoResponse reply;
     vti::requestResult *res = new vti::requestResult();
 
     Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
     if (!_request.dataset_id().empty() && ds->next()) {
         res->set_success(true);
 
-        // load videos, possibly filter by names
-        Video *vid = NULL;
-        if (_request.video_ids_size() > 0) {
-            vector<string> vidnames(_request.video_ids_size());
-            for (int i = 0; i < _request.video_ids_size(); i++)
-                vidnames[i] = _request.video_ids(i);
-            vid = ds->loadVideos(vidnames);
+        // load sequences, possibly filter by names
+        Sequence *seq = NULL;
+        if (_request.sequence_ids_size() > 0) {
+            vector<string> seqnames(_request.sequence_ids_size());
+            for (int i = 0; i < _request.sequence_ids_size(); i++)
+                seqnames[i] = _request.sequence_ids(i);
+            seq = ds->loadSequences(seqnames);
         }
         else {
-            vid = ds->loadVideos();
+            seq = ds->loadSequences();
         }
 
-        // iterate over videos
-        while (vid->next()) {
-            vti::videoInfo *info = reply.add_videos();
-            info->set_video_id(vid->getName());
-            info->set_filepath(vid->getDataLocation());
-            info->set_location(vid->getLocation());
-            info->set_allocated_start_time(createTimestamp(vid->getRealStartTime()));
-            info->set_comment(vid->getComment());
-            unsigned int length = vid->getLength();
-            double fps = vid->getFPS();
-            double speed = vid->getSpeed();
-            info->set_length_frames(length);
-            info->set_fps(fps);
-            info->set_speed(speed);
-            if (fps > 0)
-                info->set_length_ms((length / fps) * 1000 * speed);
-            else
-                info->set_length_ms(0);
-            info->set_allocated_added_time(createTimestamp(vid->getCreatedTime()));
+        // iterate over sequences
+        while (seq->next()) {
+            vti::sequenceInfo *info = reply.add_sequences();
+            info->set_sequence_id(seq->getName());
+            info->set_filepath(seq->getDataLocation());
+            info->set_location(seq->getLocation());
+            info->set_allocated_start_time(createTimestamp(seq->getRealStartTime()));
+            info->set_comment(seq->getComment());
+            info->set_allocated_added_time(createTimestamp(seq->getCreatedTime()));
+
+            if (seq->getType() == "video") {
+                info->set_seqtyp(vti::SEQTYPE_VIDEO);
+                Video *vid = ds->loadVideos(seq->getName());
+                if (vid->next()) {
+                    unsigned int length = vid->getLength();
+                    double fps = vid->getFPS();
+                    double speed = vid->getSpeed();
+                    info->set_length_frames(length);
+                    info->set_fps(fps);
+                    info->set_speed(speed);
+                    if (fps > 0)
+                        info->set_length_ms((length / fps) * 1000 * speed);
+                    else
+                        info->set_length_ms(0);
+                }
+                delete vid;
+            }
+            else {
+                info->set_seqtyp(vti::SEQTYPE_IMAGE);
+            }
         }
-        delete vid;
+        delete seq;
     }
     else {
         res->set_success(false);
@@ -540,18 +564,18 @@ void WorkerJob<const vti::getVideoInfoRequest, ::rpcz::reply<vti::getVideoInfoRe
 }
 
 template<>
-void WorkerJob<const vti::setVideoInfoRequest, ::rpcz::reply<vti::setVideoInfoResponse> >
+void WorkerJob<const vti::setSequenceInfoRequest, ::rpcz::reply<vti::setSequenceInfoResponse> >
 ::process(Args & args)
 {
     VTSERVER_DEBUG_REQUEST;
 
-    vti::setVideoInfoResponse reply;
+    vti::setSequenceInfoResponse reply;
     vti::requestResult *res = new vti::requestResult();
 
     Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
     if (!_request.dataset_id().empty() && ds->next()) {
-        Video *vid = ds->loadVideos(_request.video_id());
-        if (!_request.video_id().empty() && vid->next()) {
+        Video *vid = ds->loadVideos(_request.sequence_id());
+        if (!_request.sequence_id().empty() && vid->next()) {
             if (_request.has_start_time()) {
                 if (vid->updateRealStartTime(fromTimestamp(_request.start_time())) &&
                     vid->updateExecute())
@@ -563,14 +587,14 @@ void WorkerJob<const vti::setVideoInfoRequest, ::rpcz::reply<vti::setVideoInfoRe
                     res->set_msg("Failed to update start_time");
                 }
             }
-            else {
+            else if (vid->getType() == "video") {
                 res->set_success(false);
                 res->set_msg("Video info must have start_time");
             }
         }
         else {
             res->set_success(false);
-            res->set_msg("Cannot find video");
+            res->set_msg("Cannot find sequence");
         }
         delete vid;
     }
@@ -587,37 +611,37 @@ void WorkerJob<const vti::setVideoInfoRequest, ::rpcz::reply<vti::setVideoInfoRe
 }
 
 template<>
-void WorkerJob<const vti::deleteVideoRequest, ::rpcz::reply<vti::deleteVideoResponse> >
+void WorkerJob<const vti::deleteSequenceRequest, ::rpcz::reply<vti::deleteSequenceResponse> >
 ::process(Args & args)
 {
     VTSERVER_DEBUG_REQUEST;
 
-    vti::deleteVideoResponse reply;
+    vti::deleteSequenceResponse reply;
     vti::requestResult *res = new vti::requestResult();
 
     Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
     if (!_request.dataset_id().empty() && ds->next()) {
-        Video *vid = ds->loadVideos(_request.video_id());
-        if (!_request.video_id().empty() && vid->next()) {
-            if (ds->deleteSequence(vid->getName())) {
+        Sequence *seq = ds->loadSequences(_request.sequence_id());
+        if (!_request.sequence_id().empty() && seq->next()) {
+            if (ds->deleteSequence(seq->getName())) {
                 res->set_success(true);
                 try
                 {
-                    Poco::File(vid->getDataLocation()).remove(true);
+                    Poco::File(seq->getDataLocation()).remove(true);
                 }
                 catch (Poco::Exception &e) {}
             }
             else {
-                res->set_msg("Failed to delete video " + vid->getName());
+                res->set_msg("Failed to delete sequence " + seq->getName());
                 res->set_success(false);
             }
 
         }
         else {
             res->set_success(false);
-            res->set_msg("Cannot find video");
+            res->set_msg("Cannot find sequence");
         }
-        delete vid;
+        delete seq;
     }
     else {
         res->set_success(false);
@@ -794,29 +818,29 @@ void WorkerJob<const vti::getTaskProgressRequest, ::rpcz::reply<vti::getTaskProg
 
     Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
     if (!_request.dataset_id().empty() && ds->next()) {
-        // video names list
-        vector<string> vidnames(_request.video_ids_size());
-        for (int i = 0; i < _request.video_ids_size(); i++)
-            vidnames[i] = _request.video_ids(i);
+        // sequence names list
+        vector<string> seqnames(_request.sequence_ids_size());
+        for (int i = 0; i < _request.sequence_ids_size(); i++)
+            seqnames[i] = _request.sequence_ids(i);
 
-        unsigned int vids_count = 0;
-        unsigned long long vids_total_length = 0;
+        unsigned int seqs_count = 0;
+        unsigned long long seqs_total_length = 0;
         unsigned long long vids_partial_length = 0;
-        unsigned long long vids_done_length = 0;
-        map<string,unsigned int> vids_lengths_map;
+        unsigned long long seqs_done_length = 0;
+        map<string,unsigned int> seqs_lengths_map;
         map<int,string> processes_vids_map;
 
-        // get requested videos and their lengths
-        Video *vids;
-        if (vidnames.size() > 0)
-            vids = ds->loadVideos(vidnames);
+        // get requested sequences and their lengths
+        Sequence *seqs;
+        if (seqnames.size() > 0)
+            seqs = ds->loadSequences(seqnames);
         else
-            vids = ds->loadVideos();
-        while (vids->next()) {
-            unsigned int length = vids->getLength();
-            vids_count++;
-            vids_total_length += length;
-            vids_lengths_map[vids->getName()] = length;
+            seqs = ds->loadSequences();
+        while (seqs->next()) {
+            unsigned int length = seqs->getLength();
+            seqs_count++;
+            seqs_total_length += length;
+            seqs_lengths_map[seqs->getName()] = length;
         }
 
         // find requested task
@@ -827,30 +851,30 @@ void WorkerJob<const vti::getTaskProgressRequest, ::rpcz::reply<vti::getTaskProg
             vti::taskProgress *tp = new vti::taskProgress();
             reply.set_allocated_task_progress(tp);
 
-            // load progress info for all or specified videos
+            // load progress info for all or specified sequences
             TaskProgress *tprog;
-            if (vidnames.size() > 0)
-                tprog = ts->loadTaskProgress(vidnames);
+            if (seqnames.size() > 0)
+                tprog = ts->loadTaskProgress(seqnames);
             else
                 tprog = ts->loadTaskProgress();
 
             // iterate over progress info
             while (tprog->next()) {
-                string vidname = tprog->getSequenceName();
+                string seqname = tprog->getSequenceName();
                 if (tprog->getIsDone()) {
-                    const auto it = vids_lengths_map.find(vidname);
-                    if (it != vids_lengths_map.end())
-                        vids_done_length += it->second;
+                    const auto it = seqs_lengths_map.find(seqname);
+                    if (it != seqs_lengths_map.end())
+                        seqs_done_length += it->second;
 
-                    tp->add_done_video_ids(vidname);
+                    tp->add_done_sequence_ids(seqname);
                 }
                 else {
-                    tp->add_inprogress_video_ids(vidname);
-                    processes_vids_map[tprog->getProcessId()] = vidname;
+                    tp->add_inprogress_sequence_ids(seqname);
+                    processes_vids_map[tprog->getProcessId()] = seqname;
                 }
             }
 
-            // calculate partial progress for videos in progress
+            // calculate partial progress for sequences in progress
             if (!processes_vids_map.empty() > 0) {
                 vector<int> prsids(processes_vids_map.size());
                 int idx = 0;
@@ -859,29 +883,29 @@ void WorkerJob<const vti::getTaskProgressRequest, ::rpcz::reply<vti::getTaskProg
 
                 Process *prs = ds->loadProcesses(prsids);
                 while (prs->next()) {
-                    // get length of processed video
-                    unsigned long long vid_length = 0;
+                    // get length of processed sequence
+                    unsigned long long seq_length = 0;
                     auto prsvid = processes_vids_map.find(prs->getId());
                     if (prsvid != processes_vids_map.end()) {
-                        auto vidlen = vids_lengths_map.find(prsvid->second);
-                        if (vidlen != vids_lengths_map.end())
-                            vid_length = vidlen->second;
+                        auto seqlen = seqs_lengths_map.find(prsvid->second);
+                        if (seqlen != seqs_lengths_map.end())
+                            seq_length = seqlen->second;
                     }
 
                     // get process state and partial progress
-                    if (vid_length > 0) {
+                    if (seq_length > 0) {
                         ProcessState state = prs->getState();
                         if (state.status == ProcessState::STATUS_RUNNING)
-                            vids_partial_length += static_cast<unsigned long long>(state.progress * vid_length);
+                            vids_partial_length += static_cast<unsigned long long>(state.progress * seq_length);
                         else if (state.status == ProcessState::STATUS_FINISHED)
-                            vids_partial_length += vid_length;
+                            vids_partial_length += seq_length;
                     }
                 }
                 delete prs;
             }
 
-            if (vids_total_length > 0)
-                tp->set_progress(static_cast<double>(vids_done_length + vids_partial_length) / vids_total_length);
+            if (seqs_total_length > 0)
+                tp->set_progress(static_cast<double>(seqs_done_length + vids_partial_length) / seqs_total_length);
             else
                 tp->set_progress(0);
 
@@ -894,7 +918,7 @@ void WorkerJob<const vti::getTaskProgressRequest, ::rpcz::reply<vti::getTaskProg
             res->set_msg("Cannot find task");
         }
         delete ts;
-        delete vids;
+        delete seqs;
     }
     else {
         res->set_success(false);
@@ -1003,12 +1027,12 @@ void WorkerJob<const vti::getProcessInfoRequest, ::rpcz::reply<vti::getProcessIn
             info->set_process_id(toString<int>(prs->getId()));
             info->set_assigned_task_id(prs->getParentTaskName());
 
-            Video *vids = prs->loadAssignedVideos();
-            while(vids->next()) {
-                string *vidname = info->add_assigned_video_ids();
-                *vidname = vids->getName();
+            Sequence *seqs = prs->loadAssignedSequences();
+            while(seqs->next()) {
+                string *seqname = info->add_assigned_sequence_ids();
+                *seqname = seqs->getName();
             }
-            delete vids;
+            delete seqs;
 
             ProcessState state = prs->getState();
             switch (state.status)
@@ -1059,9 +1083,9 @@ void WorkerJob<const vti::runProcessRequest, ::rpcz::reply<vti::runProcessRespon
     if (!_request.dataset_id().empty() && ds->next()) {
         Task *ts = ds->loadTasks(_request.task_id());
         if (!_request.task_id().empty() && ts->next()) {
-            vector<string> seqnames(_request.video_ids_size());
-            for (int i = 0; i < _request.video_ids_size(); i++)
-                seqnames[i] = _request.video_ids(i);
+            vector<string> seqnames(_request.sequence_ids_size());
+            for (int i = 0; i < _request.sequence_ids_size(); i++)
+                seqnames[i] = _request.sequence_ids(i);
 
             Process *prs = ts->createProcess(seqnames);
             if (prs) {
@@ -1157,18 +1181,18 @@ void WorkerJob<const vti::getEventListRequest, ::rpcz::reply<vti::getEventListRe
         if (ts->next()) {
             res->set_success(true);
 
-            // map added videos to their infos
-            map<string,vti::eventInfoList*> vid_infos;
+            // map added sequences to their infos
+            map<string,vti::eventInfoList*> seq_infos;
             // map trajectories to their events
             map<int,vti::eventInfo*> trajectories;
 
             // load intervals, possibly filter by sequences
             Interval *outdata = ts->loadOutputData();
             vector<string> seqnames;
-            if (_request.video_ids_size() > 0) {
-                seqnames.resize(_request.video_ids_size());
-                for (int i = 0; i < _request.video_ids_size(); i++)
-                    seqnames[i] = _request.video_ids(i);
+            if (_request.sequence_ids_size() > 0) {
+                seqnames.resize(_request.sequence_ids_size());
+                for (int i = 0; i < _request.sequence_ids_size(); i++)
+                    seqnames[i] = _request.sequence_ids(i);
                 outdata->filterBySequences(seqnames);
             }
 
@@ -1181,14 +1205,14 @@ void WorkerJob<const vti::getEventListRequest, ::rpcz::reply<vti::getEventListRe
 
             // iterate over events
             while (outdata->next()) {
-                // get video info
+                // get sequence info
                 vti::eventInfoList *info;
-                string vidname = outdata->getParentSequenceName();
-                auto it = vid_infos.find(vidname);
-                if (it == vid_infos.end()) {
+                string seqname = outdata->getParentSequenceName();
+                auto it = seq_infos.find(seqname);
+                if (it == seq_infos.end()) {
                     info = reply.add_events_list();
-                    info->set_video_id(vidname);
-                    vid_infos.insert(std::make_pair(vidname,info));
+                    info->set_sequence_id(seqname);
+                    seq_infos.insert(std::make_pair(seqname,info));
                 }
                 else {
                     info = (*it).second;
@@ -1267,33 +1291,33 @@ void WorkerJob<const vti::getEventsStatsRequest, ::rpcz::reply<vti::getEventsSta
 
             // load intervals, possibly filter by sequences
             Interval *outdata = ts->loadOutputData();
-            Video *vids = NULL;
+            Sequence *seqs = NULL;
             vector<string> seqnames;
-            if (_request.video_ids_size() > 0) {
-                seqnames.resize(_request.video_ids_size());
-                for (int i = 0; i < _request.video_ids_size(); i++)
-                    seqnames[i] = _request.video_ids(i);
+            if (_request.sequence_ids_size() > 0) {
+                seqnames.resize(_request.sequence_ids_size());
+                for (int i = 0; i < _request.sequence_ids_size(); i++)
+                    seqnames[i] = _request.sequence_ids(i);
                 outdata->filterBySequences(seqnames);
-                vids = ds->loadVideos(seqnames);
+                seqs = ds->loadSequences(seqnames);
             }
             else {
-                vids = ds->loadVideos();
+                seqs = ds->loadSequences();
             }
 
-            // map added videos to their stats
-            struct vid_item
+            // map added sequences to their stats
+            struct seq_item
             {
                 vti::eventStats* stats_out;
-                VideoStats stats_int;
+                SequenceStats stats_int;
             };
-            map<string,vid_item> vids_map;
+            map<string,seq_item> seqs_map;
 
-            // initialize stats structures for all videos
-            while (vids->next()) {
-                vid_item item = { reply.add_stats(), VideoStats(vids->getLength()) };
-                vids_map.insert(make_pair(vids->getName(), std::move(item)));
+            // initialize stats structures for all sequences
+            while (seqs->next()) {
+                seq_item item = { reply.add_stats(), SequenceStats(seqs->getLength()) };
+                seqs_map.insert(make_pair(seqs->getName(), std::move(item)));
             }
-            delete vids;
+            delete seqs;
 
             // apply filters
             if (_request.has_filter()) {
@@ -1304,9 +1328,9 @@ void WorkerJob<const vti::getEventsStatsRequest, ::rpcz::reply<vti::getEventsSta
 
             // iterate over events
             while (outdata->next()) {
-                auto item = vids_map.find(outdata->getParentSequenceName());
-                // all videos should have stats prepared
-                if (item != vids_map.end()) {
+                auto item = seqs_map.find(outdata->getParentSequenceName());
+                // all sequences should have stats prepared
+                if (item != seqs_map.end()) {
                     item->second.stats_int.processEvent(outdata->getStartTime(),
                                                         outdata->getEndTime(),
                                                         outdata->getIntervalEvent("event"));
@@ -1316,8 +1340,8 @@ void WorkerJob<const vti::getEventsStatsRequest, ::rpcz::reply<vti::getEventsSta
             delete outdata;
 
             // fill stats
-            for (auto item : vids_map) {
-                item.second.stats_out->set_video_id(item.first);
+            for (auto item : seqs_map) {
+                item.second.stats_out->set_sequence_id(item.first);
                 item.second.stats_out->set_count(item.second.stats_int.count_root());
                 item.second.stats_out->set_coverage(item.second.stats_int.calculateCoverage());
             }
@@ -1360,13 +1384,13 @@ void WorkerJob<const vti::getProcessingMetadataRequest, ::rpcz::reply<vti::getPr
             // class ID occurrences sums
             map<int,double> sum_occurences;
 
-            // load class ID occurrences for all videos
+            // load class ID occurrences for all sequences
             Interval *outdata = ts->loadOutputData();
             vector<string> seqnames;
-            if (_request.video_ids_size() > 0) {
-                seqnames.resize(_request.video_ids_size());
-                for (int i = 0; i < _request.video_ids_size(); i++)
-                    seqnames[i] = _request.video_ids(i);
+            if (_request.sequence_ids_size() > 0) {
+                seqnames.resize(_request.sequence_ids_size());
+                for (int i = 0; i < _request.sequence_ids_size(); i++)
+                    seqnames[i] = _request.sequence_ids(i);
                 outdata->filterBySequences(seqnames);
             }
 
@@ -1414,8 +1438,8 @@ void WorkerJob<const vti::getProcessingMetadataRequest, ::rpcz::reply<vti::getPr
             std::sort(rate_occurrences.begin(), rate_occurrences.end());
 
             // construct reply
-            vti::processingMetadataVideoType *md = new vti::processingMetadataVideoType();
-            reply.set_allocated_metadata_videotype(md);
+            vti::processingMetadataSequenceType *md = new vti::processingMetadataSequenceType();
+            reply.set_allocated_metadata_seqtype(md);
             for (auto & item : rate_occurrences) {
                 vti::classIdOccurence *occ = md->add_class_id_occurence();
                 occ->set_class_id(item._id);
