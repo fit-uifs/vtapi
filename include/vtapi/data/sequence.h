@@ -120,6 +120,18 @@ public:
     std::string getDataLocation() const;
     
     /**
+     * Gets sequence real-world start time
+     * @return start time
+     */
+    std::chrono::system_clock::time_point getRealStartTime() const;
+    
+    /**
+     * Sets sequence real-world start time
+     * @return success
+     */
+    bool updateRealStartTime(const std::chrono::system_clock::time_point &starttime);
+    
+    /**
      * @brief Gets time when sequence was added to dataset
      * @return timestamp
      */
@@ -253,18 +265,6 @@ public:
      * @return  speed
      */
     double getSpeed() const;
-    
-    /**
-     * Gets video real-world start time
-     * @return start time
-     */
-    std::chrono::system_clock::time_point getRealStartTime() const;
-    
-    /**
-     * Sets video real-world start time
-     * @return success
-     */
-    bool updateRealStartTime(const std::chrono::system_clock::time_point &starttime);
 
 private:
     Video() = delete;

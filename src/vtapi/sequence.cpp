@@ -116,6 +116,16 @@ string Sequence::getDataLocation() const
             _context.sequence_location;
 }
 
+chrono::system_clock::time_point Sequence::getRealStartTime() const
+{
+    return getTimestamp(def_col_seq_vidtime);
+}
+
+bool Sequence::updateRealStartTime(const chrono::system_clock::time_point& starttime)
+{
+    return (updateTimestamp(def_col_seq_vidtime, starttime));
+}
+
 chrono::system_clock::time_point Sequence::getCreatedTime() const
 {
     return this->getTimestamp(def_col_seq_created);
@@ -196,16 +206,6 @@ double Video::getFPS() const
 double vtapi::Video::getSpeed() const
 {
     return getFloat8(def_col_seq_vidspeed);
-}
-
-chrono::system_clock::time_point Video::getRealStartTime() const
-{
-    return getTimestamp(def_col_seq_vidtime);
-}
-
-bool Video::updateRealStartTime(const chrono::system_clock::time_point& starttime)
-{
-    return (updateTimestamp(def_col_seq_vidtime, starttime));
 }
 
 }
