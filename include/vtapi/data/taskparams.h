@@ -192,6 +192,7 @@ public:
 
     bool getString(const std::string& key, std::string& value) const;
     bool getInt(const std::string& key, int& value) const;
+    bool getFloat(const std::string& key, float& value) const;
     bool getDouble(const std::string& key, double& value) const;
     bool getIntVector(const std::string& key, std::vector<int>& value) const;
     bool getDoubleVector(const std::string& key, std::vector<double>& value) const;
@@ -214,13 +215,13 @@ private:
 
     template <class T>
     bool get(const std::string& key, T& value) const;
-    
+
     template <class T>
     void add(const std::string& key, const T & value);
-    
+
     template <class T>
     void add(const std::string& key, T && value);
-    
+
     // internal stuff
 
     void deserializeParam(const std::string& key,

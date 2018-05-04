@@ -49,6 +49,16 @@ bool TaskParams::getString(const string& key, string& value) const
 bool TaskParams::getInt(const string& key, int& value) const
 { return get<int>(key, value); }
 
+bool TaskParams::getFloat(const string& key, float& value) const {
+    double doubleValue;
+    bool returnValue;
+
+    returnValue = get<double>(key, doubleValue);
+    value = (float) doubleValue;
+
+    return returnValue;
+}
+
 bool TaskParams::getDouble(const string& key, double& value) const
 { return get<double>(key, value); }
 
