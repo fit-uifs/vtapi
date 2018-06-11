@@ -222,7 +222,7 @@ CREATE TABLE methods_keys (
     indexedkey     BOOLEAN   DEFAULT FALSE,
     indexedparts   INT[]     DEFAULT NULL,
     description    VARCHAR   DEFAULT NULL,
-    CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname),
+    CONSTRAINT methods_keys_pk PRIMARY KEY (mtname, keyname, inout),
     CONSTRAINT mtname_fk FOREIGN KEY (mtname)
       REFERENCES methods(mtname) ON UPDATE CASCADE ON DELETE CASCADE
 );

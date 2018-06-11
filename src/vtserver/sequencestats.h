@@ -6,10 +6,10 @@
 namespace vtserver {
 
 
-class VideoStats
+class SequenceStats
 {
 public:
-    VideoStats(unsigned int video_length);
+    SequenceStats(unsigned int video_length);
 
     void processEvent(unsigned int t1_frame, unsigned int t2_frame, const vtapi::IntervalEvent &event);
     
@@ -23,13 +23,13 @@ public:
     { return _count_all; }
 
 private:
-    unsigned int _video_length;
+    unsigned int _sequence_length;
     std::vector<char> _bitmap;
     unsigned int _count_root;
     unsigned int _count_all;
 
 private:
-    VideoStats() = delete;
+    SequenceStats() = delete;
 };
 
 }

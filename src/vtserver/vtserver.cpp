@@ -1,5 +1,5 @@
 // VTServer application - main entry
-// by ifroml[at]fit.vutbr.cz
+// by ifroml[at]fit.vutbr.cz, ivolf[at]fit.vutbr.cz
 //
 // Service acts as main interface for computer vision applications based on VTApi,
 // listening on port 8719.
@@ -7,7 +7,7 @@
 //
 // worker.cpp       main interface implementation
 // interproc.cpp    interprocess communication to manage active processing tasks
-// videostats.cpp   calculation of statistics for video from processing results
+// sequencestats.cpp   calculation of statistics for sequence from processing results
 // vtserver_interface*  generated interface files
 //
 // Dataset interface
@@ -132,27 +132,27 @@ void VTServer::deleteDataset(const vti::deleteDatasetRequest &request, ::rpcz::r
     processRequest(request, response);
 }
 
-void VTServer::addVideo(const vti::addVideoRequest &request, ::rpcz::reply<vti::addVideoResponse> response)
+void VTServer::addSequence(const vti::addSequenceRequest &request, ::rpcz::reply<vti::addSequenceResponse> response)
 {
     processRequest(request, response);
 }
 
-void VTServer::getVideoIDList(const vti::getVideoIDListRequest &request, ::rpcz::reply<vti::getVideoIDListResponse> response)
+void VTServer::getSequenceIDList(const vti::getSequenceIDListRequest &request, ::rpcz::reply<vti::getSequenceIDListResponse> response)
 {
     processRequest(request, response);
 }
 
-void VTServer::getVideoInfo(const vti::getVideoInfoRequest &request, ::rpcz::reply<vti::getVideoInfoResponse> response)
+void VTServer::getSequenceInfo(const vti::getSequenceInfoRequest &request, ::rpcz::reply<vti::getSequenceInfoResponse> response)
 {
     processRequest(request, response);
 }
 
-void VTServer::setVideoInfo(const vti::setVideoInfoRequest &request, ::rpcz::reply<vti::setVideoInfoResponse> response)
+void VTServer::setSequenceInfo(const vti::setSequenceInfoRequest &request, ::rpcz::reply<vti::setSequenceInfoResponse> response)
 {
     processRequest(request, response);
 }
 
-void VTServer::deleteVideo(const vti::deleteVideoRequest &request, ::rpcz::reply<vti::deleteVideoResponse> response)
+void VTServer::deleteSequence(const vti::deleteSequenceRequest &request, ::rpcz::reply<vti::deleteSequenceResponse> response)
 {
     processRequest(request, response);
 }

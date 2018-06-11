@@ -27,7 +27,7 @@ message datasetInfo {
 
 message datasetMetrics {
   required string dataset_id = 1;
-  optional int64 video_count = 2;
+  optional int64 sequence_count = 2;
   optional int64 process_count = 3;
   optional int64 task_count = 4;
 }
@@ -72,81 +72,88 @@ message deleteDatasetResponse {
   optional requestResult res = 1;
 }
 
-// ---------------------------------
-// ---------- Videos API -----------
-// ---------------------------------
+// ------------------------------------
+// ---------- Sequences API -----------
+// ------------------------------------
 
-message videoInfo {
-  required string video_id = 1;
-  required string filepath = 2; // complete path to the file
-  required string location = 3; // physical location
-  optional Timestamp start_time = 4; // real-world video start time
-  optional string comment = 5;
-  optional int64 length_frames = 6; // # of frames in video
-  optional double length_ms = 7; // video length in ms
-  optional double fps = 8; // frames per second
-  optional double speed = 9; // 1.0 = normal video speed
-  optional Timestamp added_time = 10; // time the video was added to dataset
+enum SeqType {
+  SEQTYPE_VIDEO = 1;
+  SEQTYPE_IMAGE = 2;
 }
 
-// addVideo(string  #datasetID, string filepath, float speed, timestamp start_time, string comment, string location) → string #videoID
-message addVideoRequest {
+message sequenceInfo {
+  required string sequence_id = 1;
+  required SeqType seqtyp = 2; // type of sequence
+  required string filepath = 3; // complete path to the file
+  required string location = 4; // physical location
+  optional Timestamp start_time = 5; // real-world sequence start time
+  optional string comment = 6;
+  optional int64 length_frames = 7; // # of frames in sequence
+  optional double length_ms = 8; // sequence length in ms
+  optional double fps = 9; // frames per second
+  optional double speed = 10; // 1.0 = normal sequence speed
+  optional Timestamp added_time = 11; // time the sequence was added to dataset
+}
+
+// addSequence(string  #datasetID, SeqType seqtyp, string filepath, float speed, timestamp start_time, string comment, string location) → string #sequenceID
+message addSequenceRequest {
   required string dataset_id = 1;
-  required string filepath = 2; 
-  optional string name = 3;
-  optional string location = 4;
-  optional Timestamp start_time = 5;
-  optional double speed = 6;
-  optional string comment = 7;
+  required SeqType seqtyp = 2;
+  required string filepath = 3; 
+  optional string name = 4;
+  optional string location = 5;
+  optional Timestamp start_time = 6;
+  optional double speed = 7;
+  optional string comment = 8;
 }
 
-message addVideoResponse {
+message addSequenceResponse {
   optional requestResult res = 1;
-  optional string video_id = 2;
+  optional string sequence_id = 2;
 }
 
-// postVideo (string #datasetID,blob video, float speed, timestamp start_time, string comment) → string #videoID
+// postSequence (string #datasetID,blob sequence, float speed, timestamp start_time, string comment) → string #sequenceID
 // TBD
 
-// getVideoIDList (string #datasetID) → string #videoIDs[]
-message getVideoIDListRequest {
+// getSequenceIDList (string #datasetID) → string #sequenceIDs[]
+message getSequenceIDListRequest {
   required string dataset_id = 1;
 }
 
-message getVideoIDListResponse {
+message getSequenceIDListResponse {
   optional requestResult res = 1;
-  repeated string video_ids = 2;
+  repeated string sequence_ids = 2;
 }
 
-// getVideoInfo (string #datasetID, string #videoIDs[]) → video_info videos[]
-message getVideoInfoRequest {
+// getSequenceInfo (string #datasetID, string #sequenceIDs[]) → sequence_info sequences[]
+message getSequenceInfoRequest {
   required string dataset_id = 1;
-  repeated string video_ids = 2;
+  repeated string sequence_ids = 2;
 }
 
-message getVideoInfoResponse {
+message getSequenceInfoResponse {
   optional requestResult res = 1;
-  repeated videoInfo videos = 2;
+  repeated sequenceInfo sequences = 2;
 }
 
-//setVideoInfo (string #datasetID, string #videoID, timestamp start_time) → bool success
-message setVideoInfoRequest {
+//setSequenceInfo (string #datasetID, string #sequenceID, timestamp start_time) → bool success
+message setSequenceInfoRequest {
   required string dataset_id = 1;
-  required string video_id = 2;
+  required string sequence_id = 2;
   optional Timestamp start_time = 3;
 }
 
-message setVideoInfoResponse {
+message setSequenceInfoResponse {
   optional requestResult res = 1;
 }
 
-// deleteVieo (string #datasetID, string #videoID)
-message deleteVideoRequest {
+// deleteSequence (string #datasetID, string #sequenceID)
+message deleteSequenceRequest {
   required string dataset_id = 1;
-  required string video_id = 2;
+  required string sequence_id = 2;
 }
 
-message deleteVideoResponse {
+message deleteSequenceResponse {
   optional requestResult res = 1;
 }
 
@@ -183,8 +190,8 @@ message taskInfo {
 message taskProgress {
   required double progress = 1; // 0-1
   optional Timestamp time_to_finish = 2;
-  repeated string inprogress_video_ids = 3;
-  repeated string done_video_ids = 4;
+  repeated string inprogress_sequence_ids = 3;
+  repeated string done_sequence_ids = 4;
 }
 
 // addTask (string #datasetID, string module, string prereq_task_id, task_param params[]) → string #taskID
@@ -221,11 +228,11 @@ message getTaskInfoResponse {
   repeated taskInfo tasks = 2;
 }
 
-// getTaskProgress(string #datasetID, string #taskID, string #videoID[]) → task_progress
+// getTaskProgress(string #datasetID, string #taskID, string #sequenceID[]) → task_progress
 message getTaskProgressRequest {
   required string dataset_id = 1;
   required string task_id = 2;
-  repeated string video_ids = 3;
+  repeated string sequence_ids = 3;
 }
 
 message getTaskProgressResponse {
@@ -252,7 +259,7 @@ message deleteTaskResponse {
 message processInfo {
   required string process_id = 1;
   optional string assigned_task_id = 2; // which task is being computed
-  repeated string assigned_video_ids = 3; // which videos are being processed
+  repeated string assigned_sequence_ids = 3; // which sequences are being processed
   enum processState {
   STATE_CREATED = 1;
   STATE_RUNNING = 2;
@@ -261,7 +268,7 @@ message processInfo {
   }
   optional processState state = 4; // current state
   optional double progress = 5; // 0-100
-  optional string current_item = 6; // currently processed video
+  optional string current_item = 6; // currently processed sequence
   optional string error_message = 7; // error message on STATE_ERROR state
   optional Timestamp added_time = 8; // time the process was added to dataset
 }
@@ -288,10 +295,10 @@ message getProcessInfoResponse {
   repeated processInfo processes = 2;
 }
 
-// runProcess (string #datasetID, string #videoIDs[], string #taskID) → string #processID
+// runProcess (string #datasetID, string #sequenceIDs[], string #taskID) → string #processID
 message runProcessRequest {
   required string dataset_id = 1;
-  repeated string video_ids = 2;
+  repeated string sequence_ids = 2;
   required string task_id = 3;
 }
 
@@ -337,12 +344,12 @@ message eventInfo {
 }
 
 message eventInfoList {
-  required string video_id = 1;
+  required string sequence_id = 1;
   repeated eventInfo events = 2;
 }
 
 message eventStats {
-  required string video_id = 1;
+  required string sequence_id = 1;
   optional int64 count = 2;
   optional double coverage = 3;
   optional bytes coverage_bitmap = 4;
@@ -358,10 +365,10 @@ message eventFilter {
   optional Region region = 7;
 }
 
-// getEventList (string #datasetID, string #videoIDs[], string #taskID, event_filter filter) → event_info_list events_list[]
+// getEventList (string #datasetID, string #sequenceIDs[], string #taskID, event_filter filter) → event_info_list events_list[]
 message getEventListRequest {
   required string dataset_id = 1;
-  repeated string video_ids = 2;
+  repeated string sequence_ids = 2;
   required string task_id = 3;
   optional eventFilter filter = 4;
 }
@@ -371,10 +378,10 @@ message getEventListResponse {
   repeated eventInfoList events_list = 2;
 }
 
-// getEventsStats string #datasetID, string #videoIDs[], string #taskID, event_filter filter, bool get_bitmap) → event_stats stats[]
+// getEventsStats string #datasetID, string #sequenceIDs[], string #taskID, event_filter filter, bool get_bitmap) → event_stats stats[]
 message getEventsStatsRequest {
   required string dataset_id = 1;
-  repeated string video_ids = 2;
+  repeated string sequence_ids = 2;
   required string task_id = 3;
   optional eventFilter filter = 4;
   optional bool get_bitmap = 5;
@@ -387,7 +394,7 @@ message getEventsStatsResponse {
 
 
 // ---------------------------------
-// -- VideoProcessing metadata API -
+// -- SequenceProcessing metadata API -
 // ---------------------------------
 
 message classIdOccurence {
@@ -395,19 +402,19 @@ message classIdOccurence {
   required double occurrence = 2;
 }
 
-message processingMetadataVideoType {
+message processingMetadataSequenceType {
   repeated classIdOccurence class_id_occurence= 1;
 }
 
 message getProcessingMetadataRequest {
   required string dataset_id = 1;
-  repeated string video_ids = 2;
+  repeated string sequence_ids = 2;
   required string task_id = 3;
 }
 
 message getProcessingMetadataResponse {
   optional requestResult res = 1;
-  optional processingMetadataVideoType metadata_videotype = 2;
+  optional processingMetadataSequenceType metadata_seqtype = 2;
 }
 
 
@@ -420,11 +427,11 @@ service VTServerInterface {
   rpc getDatasetList(getDatasetListRequest) returns(getDatasetListResponse);
   rpc getDatasetMetrics(getDatasetMetricsRequest) returns(getDatasetMetricsResponse);
   rpc deleteDataset(deleteDatasetRequest) returns(deleteDatasetResponse);
-  rpc addVideo(addVideoRequest) returns(addVideoResponse);
-  rpc getVideoIDList(getVideoIDListRequest) returns(getVideoIDListResponse);
-  rpc getVideoInfo(getVideoInfoRequest) returns(getVideoInfoResponse);
-  rpc setVideoInfo(setVideoInfoRequest) returns(setVideoInfoResponse);
-  rpc deleteVideo(deleteVideoRequest) returns(deleteVideoResponse);
+  rpc addSequence(addSequenceRequest) returns(addSequenceResponse);
+  rpc getSequenceIDList(getSequenceIDListRequest) returns(getSequenceIDListResponse);
+  rpc getSequenceInfo(getSequenceInfoRequest) returns(getSequenceInfoResponse);
+  rpc setSequenceInfo(setSequenceInfoRequest) returns(setSequenceInfoResponse);
+  rpc deleteSequence(deleteSequenceRequest) returns(deleteSequenceResponse);
   rpc addTask(addTaskRequest) returns(addTaskResponse);
   rpc getTaskIDList(getTaskIDListRequest) returns(getTaskIDListResponse);
   rpc getTaskInfo(getTaskInfoRequest) returns(getTaskInfoResponse);

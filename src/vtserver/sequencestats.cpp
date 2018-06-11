@@ -3,20 +3,20 @@
 //
 // Calculate how much video is covered by evenets (trajectories etc.)
 
-#include "videostats.h"
+#include "sequencestats.h"
 #include <cstring>
 
 namespace vtserver {
 
 
-VideoStats::VideoStats(unsigned int video_length)
-    : _video_length(video_length), _count_root(0), _count_all(0)
+SequenceStats::SequenceStats(unsigned int video_length)
+    : _sequence_length(video_length), _count_root(0), _count_all(0)
 {
     size_t bitmap_size = (video_length + 7) >> 3;
     _bitmap.resize(bitmap_size, '\0');
 }
 
-void VideoStats::processEvent(unsigned int t1_frame, unsigned int t2_frame, const vtapi::IntervalEvent &event)
+void SequenceStats::processEvent(unsigned int t1_frame, unsigned int t2_frame, const vtapi::IntervalEvent &event)
 {
     // add to counts
     _count_all++;
@@ -26,7 +26,7 @@ void VideoStats::processEvent(unsigned int t1_frame, unsigned int t2_frame, cons
     int t1 = t1_frame - 1;  // start time
     int t2 = t2_frame - 1;    // end time
     if (t1 < 0) t1 = 0;
-    if (t2 > _video_length - 1) t2 = _video_length - 1;
+    if (t2 > _sequence_length - 1) t2 = _sequence_length - 1;
     if (t2 < t1) t2 = t1;
 
     // helpful index values to bitmap
@@ -54,13 +54,13 @@ void VideoStats::processEvent(unsigned int t1_frame, unsigned int t2_frame, cons
     if (bits > 0) memset(&_bitmap[x1], 0xFF, x2-x1+1);
 }
 
-double VideoStats::calculateCoverage()
+double SequenceStats::calculateCoverage()
 {
-    if (_video_length == 0) return 0.0;
+    if (_sequence_length == 0) return 0.0;
 
     // analyze bitmap for coverage
     int x = 0, y = 7, total = 0;;
-    for (int i = 0; i < _video_length; i++) {
+    for (int i = 0; i < _sequence_length; i++) {
         if ((_bitmap[x]) & (1 << y)) total++;
         if (--y < 0) {
             x++;
@@ -68,7 +68,7 @@ double VideoStats::calculateCoverage()
         }
     }
 
-    return static_cast<double>(total)/_video_length;
+    return static_cast<double>(total)/_sequence_length;
 }
 
 

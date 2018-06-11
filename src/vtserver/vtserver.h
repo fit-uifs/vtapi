@@ -1,6 +1,6 @@
 /*
  * VideoTerror server
- * by: Vojtech Froml (ifroml[at]fit.vutbr.cz)
+ * by: Vojtech Froml (ifroml[at]fit.vutbr.cz), Tomas Volf (ivolf[at]fit.vutbr.cz)
  */
 
 
@@ -30,11 +30,11 @@ namespace vtserver {
     void getDatasetList(const vtserver_interface::getDatasetListRequest &request, ::rpcz::reply<vtserver_interface::getDatasetListResponse> response);
     void getDatasetMetrics(const vtserver_interface::getDatasetMetricsRequest &request, ::rpcz::reply<vtserver_interface::getDatasetMetricsResponse> response);
     void deleteDataset(const vtserver_interface::deleteDatasetRequest &request, ::rpcz::reply<vtserver_interface::deleteDatasetResponse> response);
-    void addVideo(const vtserver_interface::addVideoRequest &request, ::rpcz::reply<vtserver_interface::addVideoResponse> response);
-    void getVideoIDList(const vtserver_interface::getVideoIDListRequest &request, ::rpcz::reply<vtserver_interface::getVideoIDListResponse> response);
-    void getVideoInfo(const vtserver_interface::getVideoInfoRequest &request, ::rpcz::reply<vtserver_interface::getVideoInfoResponse> response);
-    void setVideoInfo(const vtserver_interface::setVideoInfoRequest &request, ::rpcz::reply<vtserver_interface::setVideoInfoResponse> response);
-    void deleteVideo(const vtserver_interface::deleteVideoRequest &request, ::rpcz::reply<vtserver_interface::deleteVideoResponse> response);
+    void addSequence(const vtserver_interface::addSequenceRequest &request, ::rpcz::reply<vtserver_interface::addSequenceResponse> response);
+    void getSequenceIDList(const vtserver_interface::getSequenceIDListRequest &request, ::rpcz::reply<vtserver_interface::getSequenceIDListResponse> response);
+    void getSequenceInfo(const vtserver_interface::getSequenceInfoRequest &request, ::rpcz::reply<vtserver_interface::getSequenceInfoResponse> response);
+    void setSequenceInfo(const vtserver_interface::setSequenceInfoRequest &request, ::rpcz::reply<vtserver_interface::setSequenceInfoResponse> response);
+    void deleteSequence(const vtserver_interface::deleteSequenceRequest &request, ::rpcz::reply<vtserver_interface::deleteSequenceResponse> response);
     void addTask(const vtserver_interface::addTaskRequest &request, ::rpcz::reply<vtserver_interface::addTaskResponse> response);
     void getTaskIDList(const vtserver_interface::getTaskIDListRequest &request, ::rpcz::reply<vtserver_interface::getTaskIDListResponse> response);
     void getTaskInfo(const vtserver_interface::getTaskInfoRequest &request, ::rpcz::reply<vtserver_interface::getTaskInfoResponse> response);
@@ -55,7 +55,7 @@ private:
     Interproc _interproc;
 
     template<class REQUEST_T, class RESPONSE_T>
-    bool processRequest(REQUEST_T & request, RESPONSE_T & reply);    
+    bool processRequest(REQUEST_T & request, RESPONSE_T & reply);
  };
 
 
