@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -34,12 +34,12 @@ Sequence::Sequence(const Commons& commons, const string& name)
 {
     if (_context.dataset.empty() || _context.dataset_location.empty())
         throw BadConfigurationException("dataset not specified");
-    
+
     if (!name.empty())
         _context.sequence = name;
 
     _select.setOrderBy(def_col_seq_name);
-    
+
     if (!_context.sequence.empty())
         _select.querybuilder().whereString(def_col_seq_name, _context.sequence);
 }
@@ -162,7 +162,12 @@ ImageFolder::ImageFolder(const Commons& commons, const vector<string>& names)
 
 bool ImageFolder::next()
 {
-    return Sequence::next();
+    bool result;
+    result = Sequence::next();
+
+    this->nextImage = Poco::DirectoryIterator(this->getDataLocation());
+
+    return result;
 }
 
 //================================= VIDEO ======================================
@@ -208,4 +213,24 @@ double vtapi::Video::getSpeed() const
     return getFloat8(def_col_seq_vidspeed);
 }
 
+}
+
+
+bool operator >> (const vtapi::ImageFolder *imageFolder, cv::Mat &image) {
+    Poco::DirectoryIterator end;
+
+    if (imageFolder->nextImage != end) {
+        image = cv::imread(imageFolder->nextImage->path(), CV_LOAD_IMAGE_COLOR);
+
+        if (! image.data) {
+            throw vtapi::RuntimeException("Failed to open image \"" + imageFolder->nextImage->path() + "\" from imageFolder: " + imageFolder->getDataLocation());
+        }
+
+        ++(imageFolder->nextImage);
+    }
+    else {
+        image.release();
+    }
+
+    return ! image.empty();
 }

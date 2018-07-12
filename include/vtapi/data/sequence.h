@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -16,6 +16,7 @@
 #include "keyvalues.h"
 #include "dataset.h"
 #include "interval.h"
+#include "Poco/DirectoryIterator.h"
 
 namespace vtapi {
 
@@ -29,12 +30,12 @@ class Interval;
  * @see Basic definition on page @ref BASICDEFS
  *
  * @note Error codes 32*
- * 
+ *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Sequence : protected KeyValues
@@ -61,12 +62,12 @@ public:
      * @param names vector of sequences names
      */
     Sequence(const Commons& commons, const std::vector<std::string>& names);
-    
+
     /**
      * Destructor
      */
     virtual ~Sequence();
-    
+
     using KeyValues::count;
     using KeyValues::updateExecute;
 
@@ -88,13 +89,13 @@ public:
      * @return string value with the name of the sequence
      */
     std::string getName() const;
-    
+
     /**
      * Gets a sequence type
      * @return string value [video|images|data]
      */
     std::string getType() const;
-    
+
     /**
      * Gets sequence location relative to dataset location
      * @return location of the current sequence
@@ -118,19 +119,19 @@ public:
      * @return full path
      */
     std::string getDataLocation() const;
-    
+
     /**
      * Gets sequence real-world start time
      * @return start time
      */
     std::chrono::system_clock::time_point getRealStartTime() const;
-    
+
     /**
      * Sets sequence real-world start time
      * @return success
      */
     bool updateRealStartTime(const std::chrono::system_clock::time_point &starttime);
-    
+
     /**
      * @brief Gets time when sequence was added to dataset
      * @return timestamp
@@ -159,17 +160,19 @@ private:
  * @see Basic definition on page @ref BASICDEFS
  *
  * @note Error codes 321*
- * 
+ *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class ImageFolder : public Sequence
 {
 public:
+    mutable Poco::DirectoryIterator nextImage;
+
     /**
      * @brief Copy constructor
      * @param copy original object
@@ -209,12 +212,12 @@ private:
  * @see Basic definition on page @ref BASICDEFS
  *
  * @note Error codes 321*
- * 
+ *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Video : public Sequence
@@ -247,13 +250,13 @@ public:
      * @return success
      */
     bool next() override;
-    
+
     /**
      * Gets OpenCV capture object of opened video
      * @return reference to capture object
      */
     cv::VideoCapture openVideo() const;
-    
+
     /**
      * Gets video FPS rate
      * @return FPS
@@ -273,3 +276,6 @@ private:
 
 
 } // namespace vtapi
+
+
+bool operator >> (const vtapi::ImageFolder *, cv::Mat &);
