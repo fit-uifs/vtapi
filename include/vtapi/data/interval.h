@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -34,9 +34,9 @@ class Task;
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Interval : public KeyValues
@@ -94,13 +94,13 @@ public:
      * @return interval ID
      */
     int getId() const;
-    
+
     /**
      * Gets a start frame of the current interval
      * @return start time
      */
     unsigned int getStartTime() const;
-    
+
     /**
      * Gets an end frame of the current interval
      * @return end time
@@ -196,12 +196,12 @@ private:
  * @see Basic definition on page @ref BASICDEFS
  *
  * @note Error codes 339*
- * 
+ *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class Image : public Interval
