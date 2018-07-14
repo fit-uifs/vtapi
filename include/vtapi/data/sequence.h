@@ -171,7 +171,8 @@ private:
 class ImageFolder : public Sequence
 {
 public:
-    mutable Poco::DirectoryIterator nextImage;
+    std::vector<std::string> imagesInPath;
+    mutable int iNextImage;
 
     /**
      * @brief Copy constructor

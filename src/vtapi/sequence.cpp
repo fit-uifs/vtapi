@@ -164,8 +164,17 @@ bool ImageFolder::next()
 {
     bool result;
     result = Sequence::next();
+    this->imagesInPath.clear();
 
-    this->nextImage = Poco::DirectoryIterator(this->getDataLocation());
+    Poco::DirectoryIterator it(this->getDataLocation());
+    Poco::DirectoryIterator end;
+
+    while (it != end) {
+        this->imagesInPath.push_back(it->path());
+        ++it;
+    }
+
+    std::sort(this->imagesInPath.begin(), this->imagesInPath.end());
 
     return result;
 }
@@ -217,18 +226,16 @@ double vtapi::Video::getSpeed() const
 
 
 bool operator >> (const vtapi::ImageFolder *imageFolder, cv::Mat &image) {
-    Poco::DirectoryIterator end;
-
-    if (imageFolder->nextImage != end) {
-        image = cv::imread(imageFolder->nextImage->path(), CV_LOAD_IMAGE_COLOR);
+    try {
+        image = cv::imread(imageFolder->imagesInPath.at(imageFolder->iNextImage), CV_LOAD_IMAGE_COLOR);
 
         if (! image.data) {
-            throw vtapi::RuntimeException("Failed to open image \"" + imageFolder->nextImage->path() + "\" from imageFolder: " + imageFolder->getDataLocation());
+            throw vtapi::RuntimeException("Failed to open image \"" + imageFolder->imagesInPath.at(imageFolder->iNextImage) + "\" from imageFolder: " + imageFolder->getDataLocation());
         }
 
-        ++(imageFolder->nextImage);
+        imageFolder->iNextImage++;
     }
-    else {
+    catch (std::out_of_range e) {
         image.release();
     }
 
