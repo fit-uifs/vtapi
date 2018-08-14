@@ -2,6 +2,7 @@
 
 #include <vtapi/common/exception.h>
 #include <vtapi/data/intervalevent.h>
+#include <vtapi/data/eyedea_edfdescriptor.h>
 #include <vtapi/data/processstate.h>
 #include <libpq-fe.h>
 #include <libpqtypes.h>
@@ -166,6 +167,43 @@ public:
         return event;
     }
 };
+
+
+template <>
+class TypeConverterDatabase<PGresult *, EyedeaEdfDescriptor>
+{
+public:
+    static EyedeaEdfDescriptor convert(PGresult * &val)
+    {
+        EyedeaEdfDescriptor edfdesc;
+
+        try
+        {
+            // get event members
+            PGint4 version = 0;
+            PGbytea data = { 0 };
+            if (!PQgetf(val, 0, "%int4 %bytea",
+                        0, &version, 1, edfdesc.data))
+                throw RuntimeException("Failed to get value: unexpected value in edfdescriptor header");
+
+            edfdesc.version = static_cast<int>(version);
+
+            if (data.len > 0) {
+                edfdesc.data = std::vector<unsigned char>(data.data, data.data + data.len);
+            }
+
+            PQclear(val);
+        }
+        catch(RuntimeException &)
+        {
+            PQclear(val);
+            throw;
+        }
+
+        return edfdesc;
+    }
+};
+
 
 template <>
 class TypeConverterDatabase<PGresult*,ProcessState>

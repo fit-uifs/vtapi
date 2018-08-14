@@ -561,6 +561,37 @@ bool PGQueryBuilder::keyIntervalEvent(const string& key, const IntervalEvent& va
     return ret;
 }
 
+
+bool PGQueryBuilder::keyEdfDescriptor(const string &key, const EyedeaEdfDescriptor &value, const string &from)
+{
+    bool ret = true;
+    PGparam *edfdesc = NULL;
+
+    do {
+        // user data
+        PGbytea data = { (int) value.data.size(), (char*) value.data.data() };
+
+        // create interval event composite
+        edfdesc = PQparamCreate((PGconn *) _connection.getConnectionObject());
+        if (! edfdesc) {
+            ret = false;
+            break;
+        }
+
+        ret = (0 != PQputf(edfdesc, "%int4 %bytea*",
+                                (PGint4) value.version, &data));
+
+        if (! ret) break;
+
+        ret = keySingleValue(key, edfdesc, "%public.eyedea_edfdescriptor", from);
+    } while (0);
+
+    if (edfdesc) PQparamClear(edfdesc);
+
+    return ret;
+}
+
+
 bool PGQueryBuilder::keyProcessStatus(const string& key, ProcessState::Status value, const string& from)
 {
     return keySingleValue(key, ProcessState::toStatusString(value).c_str(), "%public.pstatus", from);

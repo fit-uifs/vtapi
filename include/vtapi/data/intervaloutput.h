@@ -101,6 +101,9 @@ public:
     inline bool setIntervalEvent(const std::string &key, const IntervalEvent &value)
     { last_insert().querybuilder().keyIntervalEvent(key,value); }
 
+    inline bool setEdfDescriptor(const std::string &key, const EyedeaEdfDescriptor &value)
+    { last_insert().querybuilder().keyEdfDescriptor(key, value); }
+
     inline bool setBlob(const std::string &key, const std::vector<char> &data)
     { last_insert().querybuilder().keyBlob(key,data); }
 

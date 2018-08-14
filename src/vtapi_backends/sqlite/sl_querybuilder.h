@@ -410,6 +410,19 @@ public:
                           const IntervalEvent& value,
                           const std::string &from) override;
 
+
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+     bool keyEdfDescriptor(const std::string &key,
+                          const EyedeaEdfDescriptor &value,
+                          const std::string &from) override;
+
     /**
      * This is a persistent function to add keys (columns) and values
      * It may be called several times.

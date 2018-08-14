@@ -2,6 +2,7 @@
 
 #include "../data/processstate.h"
 #include "../data/intervalevent.h"
+#include "../data/eyedea_edfdescriptor.h"
 #include "../data/taskkeys.h"
 #include "../data/taskparams.h"
 #include "../data/eventfilter.h"
@@ -422,6 +423,18 @@ public:
      */
     virtual bool keyIntervalEvent(const std::string& key,
                                   const IntervalEvent& value,
+                                  const std::string& = std::string()) = 0;
+
+    /**
+     * This is a persistent function to add keys (columns) and values
+     * It may be called several times.
+     * @param key key
+     * @param value value
+     * @param from selection (table; this is optional)
+     * @return success
+     */
+    virtual bool keyEdfDescriptor(const std::string &key,
+                                  const EyedeaEdfDescriptor &value,
                                   const std::string& = std::string()) = 0;
 
     /**

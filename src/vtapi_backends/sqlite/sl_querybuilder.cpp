@@ -247,6 +247,12 @@ bool SLQueryBuilder::keyIntervalEvent(const string &key, const IntervalEvent &va
     return false;
 }
 
+bool SLQueryBuilder::keyEdfDescriptor(const string &key, const EyedeaEdfDescriptor &value, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
 bool SLQueryBuilder::keyProcessStatus(const string &key, ProcessState::Status value, const string &from)
 {
     throw RuntimeException("unimplemented");

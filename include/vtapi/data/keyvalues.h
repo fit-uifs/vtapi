@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -14,6 +14,7 @@
 
 #include "commons.h"
 #include "intervalevent.h"
+#include "eyedea_edfdescriptor.h"
 #include "processstate.h"
 #include "../common/tkey.h"
 #include "../queries/select.h"
@@ -32,9 +33,9 @@ namespace vtapi {
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 class KeyValues : public Commons
@@ -183,7 +184,7 @@ public:
      */
     inline int getInt(int col) const
     { return _select._presultset->getInt(col); }
-    
+
     /**
      * Gets a vector of integer values specified by a column key
      * @param key   column key
@@ -247,7 +248,7 @@ public:
      */
     inline float getFloat(int col) const
     { return _select._presultset->getFloat(col); }
-    
+
     /**
      * Gets a vector of float values specified by an index of a column
      * @param key   column key
@@ -567,6 +568,17 @@ public:
      */
     inline bool updateIntervalEvent(const std::string& key, const IntervalEvent &value)
     { return update()._pquerybuilder->keyIntervalEvent(key, value); }
+
+
+    /**
+     * Sets a new EdfDescriptor of a specified key
+     * @param key column key to update
+     * @param EdfDescriptor value
+     * @return success
+     */
+    inline bool updateEdfDescriptor(const std::string& key, const EyedeaEdfDescriptor &value)
+    { return update()._pquerybuilder->keyEdfDescriptor(key, value); }
+
 
     /**
      * Sets a new process status of a specified key
