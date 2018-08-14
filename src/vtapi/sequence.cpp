@@ -162,19 +162,20 @@ ImageFolder::ImageFolder(const Commons& commons, const vector<string>& names)
 
 bool ImageFolder::next()
 {
-    bool result;
-    result = Sequence::next();
-    this->imagesInPath.clear();
+    bool result = Sequence::next();
+    if (result) {
+        this->imagesInPath.clear();
 
-    Poco::DirectoryIterator it(this->getDataLocation());
-    Poco::DirectoryIterator end;
+        Poco::DirectoryIterator it(this->getDataLocation());
+        Poco::DirectoryIterator end;
 
-    while (it != end) {
-        this->imagesInPath.push_back(it->path());
-        ++it;
+        while (it != end) {
+            this->imagesInPath.push_back(it->path());
+            ++it;
+        }
+
+        std::sort(this->imagesInPath.begin(), this->imagesInPath.end());
     }
-
-    std::sort(this->imagesInPath.begin(), this->imagesInPath.end());
 
     return result;
 }

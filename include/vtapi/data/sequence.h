@@ -172,7 +172,7 @@ class ImageFolder : public Sequence
 {
 public:
     std::vector<std::string> imagesInPath;
-    mutable int iNextImage;
+    mutable int iNextImage = 0;
 
     /**
      * @brief Copy constructor
