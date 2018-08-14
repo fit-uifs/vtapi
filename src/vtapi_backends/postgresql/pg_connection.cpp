@@ -18,7 +18,7 @@ bool PGConnection::connect()
 
     do {
         VTLOG_MESSAGE("Connecting to database : " + _connection_info);
-        
+
         _conn = PQconnectdb(_connection_info.c_str());
         if (!(retval = isConnected())) {
             const char *errmsgc = PQerrorMessage(PGCONN);
@@ -167,7 +167,8 @@ bool PGConnection::loadDBTypes()
         PGregisterType types_comp[] = {
             {"public.cvmat", NULL, NULL },
             {"public.vtevent", NULL, NULL },
-            {"public.pstate", NULL, NULL }
+            {"public.pstate", NULL, NULL },
+            {"public.eyedea_edfdescriptor", NULL, NULL}
         };
         retval = PQregisterTypes(PGCONN,
                                  PQT_COMPOSITE,
@@ -260,6 +261,10 @@ void PGConnection::getTypeCategoryFlags(char c, const std::string &name,
         }
         else if (name == "pstate") {
             category = DatabaseTypes::CATEGORY_UD_PSTATE;
+            flags |= DatabaseTypes::FLAG_USERDEFINED;
+        }
+        else if (name == "eyedea_edfdescriptor") {
+            category = DatabaseTypes::CATEGORY_UD_EVENT;
             flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
         break;
