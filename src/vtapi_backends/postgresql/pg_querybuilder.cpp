@@ -780,7 +780,7 @@ unsigned int PGQueryBuilder::addToParam(const char* type, const T& value)
         if (!_pquery_param && !(_pquery_param = createQueryParam())) break;
 
         if (PQputf((PGparam *)_pquery_param, type, value) == 0) {
-            VTLOG_WARNING("Failed to add value to query: " + toString<T>(value));
+            VTLOG_WARNING("Failed to add value to query: " + toString<T>(value) + " (" + PQgeterror() + ")");
             break;
         }
 
