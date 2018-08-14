@@ -40,11 +40,11 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop_all ()
     FOR _dsname IN SELECT dsname FROM public.datasets LOOP
       EXECUTE 'DROP SCHEMA IF EXISTS ' || quote_ident(_dsname) || ' CASCADE;';
     END LOOP;
-    
+
     TRUNCATE TABLE public.datasets;
-    
+
     RETURN TRUE;
-    
+
     EXCEPTION WHEN OTHERS THEN
       RAISE EXCEPTION 'Some problem occured during the removal of all datasets. (Details: ERROR %: %)', SQLSTATE, SQLERRM;
   END;
@@ -69,6 +69,7 @@ DROP TYPE IF EXISTS public.cvmat CASCADE;
 DROP TYPE IF EXISTS public.vtevent CASCADE;
 DROP TYPE IF EXISTS public.pstate CASCADE;
 DROP TYPE IF EXISTS public.vtevent_filter CASCADE;
+DROP TYPE IF EXISTS public.eyedea_edfdescriptor CASCADE;
 
 DROP FUNCTION IF EXISTS public.VT_dataset_create(VARCHAR, VARCHAR, VARCHAR, TEXT) CASCADE;
 DROP FUNCTION IF EXISTS public.VT_dataset_drop(VARCHAR) CASCADE;
@@ -105,7 +106,7 @@ CREATE TYPE seqtype AS ENUM (
     'video',    -- sequence is video
     'images',   -- sequence is image folder
     'data'      -- unspecified
-);    
+);
 
 -- method key type - does column contain input or output data?
 CREATE TYPE inouttype AS ENUM (
@@ -185,6 +186,11 @@ CREATE TYPE vtevent_filter AS (
     daytime_min    TIME WITHOUT TIME ZONE,
     daytime_max    TIME WITHOUT TIME ZONE,
     region         BOX
+);
+
+CREATE TYPE eyedea_edfdescriptor AS (
+    version        INT,
+    data           BYTEA
 );
 
 
@@ -293,20 +299,20 @@ CREATE OR REPLACE FUNCTION VT_version ()
 --   * Dataset is already registered, but _dslocation, _friendly_name or _description is different than in DB => returns -1
 --   * There already exist some parts of dataset and some parts not exist => INTERRUPTED with INCONSISTENCY EXCEPTION
 --   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCHAR, _friendly_name VARCHAR, _description TEXT) 
-  RETURNS INT AS 
+CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCHAR, _friendly_name VARCHAR, _description TEXT)
+  RETURNS INT AS
   $VT_dataset_create$
   DECLARE
     _dsnamecount    INT;
     _dsidentical    INT;
     _schemacount    INT;
     _classescount   INT;
-    
+
     __tmp1 VARCHAR;
     __tmp2 VARCHAR;
   BEGIN
     IF _dsname IN ('public', 'pg_catalog') THEN
-      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
+      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname;
     END IF;
 
     EXECUTE 'SELECT COUNT(*)
@@ -321,12 +327,12 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
 
     IF _friendly_name IS NULL THEN
       __tmp1 := 'IS NULL';
-    ELSE 
+    ELSE
       __tmp1 := '= ' || quote_literal(_friendly_name);
     END IF;
     IF _description IS NULL THEN
       __tmp2 := 'IS NULL';
-    ELSE 
+    ELSE
       __tmp2 := '= ' || quote_literal(_description);
     END IF;
 
@@ -337,7 +343,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
              || ' AND friendly_name ' || __tmp1
              || ' AND description ' || __tmp2
       INTO _dsidentical;
-    
+
     IF _dsnamecount <> _dsidentical THEN
       RAISE WARNING 'Dataset "%" already exists, but has different value in "dslocation" or/and in "friendly_name", "description" property.', _dsname;
       RETURN -1;
@@ -348,7 +354,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
       EXECUTE 'SELECT COUNT(*)
                FROM pg_catalog.pg_class
                WHERE relname IN (
-                   ''sequences'', ''tasks'', ''processes'', 
+                   ''sequences'', ''tasks'', ''processes'',
                    ''rel_processes_sequences_assigned'', ''rel_tasks_tasks_prerequisities'', ''rel_tasks_sequences_done''
                  )
                  AND relnamespace = (
@@ -367,7 +373,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
         RAISE NOTICE 'Dataset "%" can not be created due to it already exists.', _dsname;
         RETURN 0;
       END IF;
-      
+
     END IF;
 
     -- create schema (dataset)
@@ -383,9 +389,9 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
     ELSE
       RAISE NOTICE 'Dataset inconsistency was repaired by creating dataset "%".', _dsname;
     END IF;
-    
+
     RETURN 1;
-    
+
     EXCEPTION WHEN OTHERS THEN
       RAISE EXCEPTION 'Some problem occured during the creation of the dataset "%". (Details: ERROR %: %)', _dsname, SQLSTATE, SQLERRM;
   END;
@@ -400,15 +406,15 @@ CREATE OR REPLACE FUNCTION VT_dataset_create (_dsname VARCHAR, _dslocation VARCH
 --   * Whole dataset structure is no longer available => returns FALSE
 --   * Dataset is not registered, but schema exists => INTERRUPTED with INCONSISTENCY EXCEPTION
 --   * Some error in statement (ie. CREATE, DROP, INSERT, ..) => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR) 
-  RETURNS BOOLEAN AS 
+CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
+  RETURNS BOOLEAN AS
   $VT_dataset_drop$
   DECLARE
     _dsnamecount   INT;
     _schemacount   INT;
   BEGIN
     IF _dsname IN ('public', 'pg_catalog') THEN
-      RAISE EXCEPTION 'Can not drop dataset "%" due to it is not valid VTApi dataset (reserved name whose use for dataset name is not allowed!).', _dsname; 
+      RAISE EXCEPTION 'Can not drop dataset "%" due to it is not valid VTApi dataset (reserved name whose use for dataset name is not allowed!).', _dsname;
     END IF;
 
     EXECUTE 'SELECT COUNT(*)
@@ -435,9 +441,9 @@ CREATE OR REPLACE FUNCTION VT_dataset_drop (_dsname VARCHAR)
     ELSE
       RAISE NOTICE 'Dataset inconsistency was repaired by dropping dataset "%".', _dsname;
     END IF;
-    
+
     RETURN TRUE;
-    
+
     EXCEPTION WHEN OTHERS THEN
       RAISE EXCEPTION 'Some problem occured during the removal of the dataset "%". (Details: ERROR %: %)', _dsname, SQLSTATE, SQLERRM;
   END;
@@ -467,7 +473,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_truncate (_dsname VARCHAR)
              FROM pg_catalog.pg_namespace
              WHERE nspname = ' || quote_literal(_dsname)
       INTO _schemacount;
-    
+
     IF _dsnamecount = 0 THEN
       IF _schemacount = 0 THEN
         RAISE WARNING 'Dataset "%" can not be truncated due to it is no longer available. You need to call VT_dataset_create() function instead.', _dsname;
@@ -476,15 +482,15 @@ CREATE OR REPLACE FUNCTION VT_dataset_truncate (_dsname VARCHAR)
         RAISE EXCEPTION 'Inconsistency was detected in dataset "%".', _dsname;
       END IF;
     END IF;
-    
+
     IF _schemacount = 1 THEN
       EXECUTE 'DROP SCHEMA ' || quote_ident(_dsname) || ' CASCADE';
     ELSE
       RAISE NOTICE 'Dataset inconsistency was repaired by truncating dataset "%".', _dsname;
     END IF;
-    
+
     PERFORM public.VT_dataset_support_create(_dsname);
-    
+
     RETURN TRUE;
 
     EXCEPTION WHEN OTHERS THEN
@@ -512,7 +518,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       EXECUTE 'CREATE SCHEMA ' || quote_ident(_dsname);
     END IF;
     EXECUTE 'SET search_path=' || quote_ident(_dsname);
-    
+
     -- create sequences in schema (dataset)
     CREATE TABLE sequences (
       seqname name NOT NULL,
@@ -617,7 +623,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
   $VT_method_add$
   DECLARE
     _mtcount   INT;
-    
+
     _stmt      VARCHAR;
     _inscols   VARCHAR   DEFAULT '';
     _insvals   VARCHAR   DEFAULT '';
@@ -631,7 +637,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
       _inscols := ', usert';
       _insvals := ', TRUE';
     END IF;
-    
+
     IF _description IS NOT NULL THEN
       _inscols := _inscols || ', description';
       _insvals := _insvals || ', ' || quote_literal(_description);
@@ -641,7 +647,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
       _inscols := _inscols || ', friendly_name';
       _insvals := _insvals || ', ' || quote_literal(_mfriendly_name);
     END IF;
-    
+
     _stmt := 'INSERT INTO public.methods (mtname' || _inscols || ') VALUES (' || quote_literal(_mtname) || _insvals || ');';
     EXECUTE _stmt;
 
@@ -658,7 +664,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
 
         IF _mkeys[_i].inout IS NULL THEN
           RAISE EXCEPTION 'Method scope ("inout" property) can not be NULL!';
-        END IF;      
+        END IF;
 
         _insvals := _insvals || '(' || quote_literal(_mtname) || ', ' || quote_literal(_mkeys[_i].keyname) || ', ' || quote_literal(_mkeys[_i].typname) || ', ' || quote_literal(_mkeys[_i].inout) || ', ';
 
@@ -675,7 +681,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
       EXECUTE _stmt;
     END IF;
 
-    
+
     IF _mparams IS NOT NULL THEN
       _insvals := '';
       FOR _i IN 1 .. array_upper(_mparams, 1) LOOP
@@ -688,8 +694,8 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
         END IF;
 
 
-        _insvals := _insvals || '(' || quote_literal(_mtname)                   || ', ' 
-                                    || quote_literal(_mparams[_i].paramname)    || ', ' 
+        _insvals := _insvals || '(' || quote_literal(_mtname)                   || ', '
+                                    || quote_literal(_mparams[_i].paramname)    || ', '
                                     || quote_literal(_mparams[_i].type)         || ', '
                                     -- this values can be NULL
                                     || quote_nullable(_mparams[_i].required)    || ', '
@@ -702,7 +708,7 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
       _stmt := 'INSERT INTO public.methods_params(mtname, paramname, type, required, default_val, valid_range, description) VALUES ' || rtrim(_insvals, ', ');
       EXECUTE _stmt;
     END IF;
-    
+
     RETURN TRUE;
 
     EXCEPTION WHEN OTHERS THEN
@@ -730,8 +736,8 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN)
     IF _controlcount <> 1 THEN
       RETURN FALSE;
     END IF;
-    
-    -- pokud je _force false, SELECT procesů kde je method name - IF TRUE - exception 
+
+    -- pokud je _force false, SELECT procesů kde je method name - IF TRUE - exception
     IF _force = FALSE THEN
       FOR _tblname IN SELECT tgconstrrelid::regclass::varchar FROM pg_catalog.pg_trigger WHERE tgrelid = 'public.methods'::regclass AND tgconstrrelid::regclass::varchar LIKE '%.tasks' AND tgfoid::regproc::varchar = '"RI_FKey_cascade_del"' LOOP
         EXECUTE 'SELECT COUNT(*) FROM ' || _tblname || ' WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
@@ -740,10 +746,10 @@ CREATE OR REPLACE FUNCTION VT_method_delete (_mtname VARCHAR, _force BOOLEAN)
         END IF;
       END LOOP;
     END IF;
-    
+
     EXECUTE 'DELETE FROM public.methods WHERE mtname = ' || quote_literal(_mtname);
     RETURN TRUE;
-    
+
     EXCEPTION WHEN OTHERS THEN
       RAISE EXCEPTION 'Some problem occured during the deletion of the method "%". (Details: ERROR %: %)', _mtname, SQLSTATE, SQLERRM;
   END;
@@ -781,11 +787,11 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     _indexedparts   public.methods_keys.indexedparts%TYPE;
     _typname2       pg_catalog.pg_attribute.atttypid%TYPE;
     _required2      pg_catalog.pg_attribute.attnotnull%TYPE;
-  
+
     _stmt           VARCHAR   DEFAULT '';
     _tmpstmt        VARCHAR   DEFAULT '';
     _idxstmt        VARCHAR   DEFAULT '';
-    
+
     _controlcount   INT;
     _i              INT;
     _usert          BOOLEAN;
@@ -798,7 +804,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     __outname       VARCHAR   DEFAULT '';
   BEGIN
     IF _dsname IN ('public', 'pg_catalog') THEN
-      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
+      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname;
     END IF;
 
     IF _reqoutname IS NULL THEN
@@ -815,25 +821,25 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
     ELSE
       _idxprefix := _dsname || '.';
     END IF;
-    
+
     -- check if dataset (schema) exists
     EXECUTE 'SELECT oid
              FROM pg_catalog.pg_namespace
              WHERE nspname = ' || quote_literal(_dsname)
         INTO _namespaceoid;
-    
+
     IF _namespaceoid IS NULL THEN
       RAISE EXCEPTION 'Dataset "%" does not exist.', _dsname;
     END IF;
 
     EXECUTE 'SET search_path=' || quote_ident(_dsname);
-    
+
     -- check if method exists
     EXECUTE 'SELECT COUNT(*) FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _controlcount;
     IF _controlcount <> 1 THEN
       RAISE EXCEPTION 'Method "%" does not exist.', _mtname;
     END IF;
-    
+
     -- check if inkeys of task' method are already defined as outkeys of preprequisity task' method
     IF _taskprereq IS NOT NULL THEN
       EXECUTE 'SELECT mtname FROM tasks WHERE taskname = ' || quote_literal(_taskprereq) INTO _prereqmtname;
@@ -852,7 +858,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
         IF _controlcount <> 0 THEN
           RAISE EXCEPTION 'Methods inconsistency: Not all inkeys of method "%" are outkeys of method "%".', _mtname, _prereqmtname;
         END IF;
-    END IF; 
+    END IF;
 
 
     __outname := quote_ident(_dsname) || '.' || quote_ident(_reqoutname);
@@ -864,7 +870,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
                AND relnamespace = ' || _namespaceoid || '
                AND relkind = ''r'';'
         INTO _controlcount;
-        
+
     EXECUTE 'SELECT usert FROM public.methods WHERE mtname = ' || quote_literal(_mtname) INTO _usert;
 
 
@@ -931,7 +937,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
 
     -- task' output table maybe exists - it is needed to check the presence of columns required by method
     ELSE
-    
+
       -- check if sequence (for SERIALed "id" column) exists
       EXECUTE 'SELECT COUNT(*)
                FROM pg_catalog.pg_class
@@ -942,7 +948,7 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
       IF _controlcount = 0 THEN
         RAISE EXCEPTION 'Column named "id" also defined as a sequence is missing.';
       END IF;
-    
+
       EXECUTE 'SELECT ''taskname'' AS attname, ''NAME''::regtype AS attypid
                UNION SELECT ''seqname'', ''NAME''::regtype
                UNION SELECT ''imglocation'', ''VARCHAR''::regtype
@@ -956,20 +962,20 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
                WHERE attrelid = ' || quote_literal(_dsname || '.' || _reqoutname) || '::regclass::oid
                  AND attstattarget = -1'
           INTO _keyname, _typname;
-      
+
       IF _keyname IS NOT NULL THEN
         RAISE EXCEPTION 'It seems, that "%" is not a task'' output table (column named "%" of "%" data type is missing).', _dsname || '.' || _reqoutname, _keyname, _typname;
       END IF;
-      
+
       EXECUTE 'SELECT array_agg(indexrelid::regclass::varchar)
                FROM pg_catalog.pg_index
                WHERE indrelid = ' || quote_literal(__outname) || '::regclass;'
           INTO _idxnames;
-      
+
       IF _usert = TRUE THEN
         _tmpstmt := 'SELECT ''rt_start'', ''TIMESTAMP WITHOUT TIME ZONE'', FALSE, FALSE, NULL  -- trigger supplied
                      UNION ';
-        
+
         EXECUTE 'SELECT 1 WHERE ' || quote_literal(_idxprefix || _reqoutname || '_tsrange_idx') || ' = ANY(' || quote_literal(_idxnames) || ');' INTO _controlcount;
         IF _controlcount <> 1 THEN
           _idxstmt := 'CREATE INDEX ' || quote_ident(_reqoutname || '_tsrange_idx') || ' ON ' || __outname || ' USING GIST ( public.tsrange(rt_start, sec_length) );';
@@ -1024,14 +1030,14 @@ CREATE OR REPLACE FUNCTION public.VT_task_create (_taskname VARCHAR, _mtname VAR
       EXECUTE _stmt;
       EXECUTE _idxstmt;
     END IF;
-    
+
     EXECUTE 'INSERT INTO tasks(taskname, mtname, params, outputs)
                VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_mtname) || ', ' || quote_nullable(_params) || ', ''' || __outname || '''::regclass);';
-               
+
     IF _taskprereq IS NOT NULL THEN
       EXECUTE 'INSERT INTO rel_tasks_tasks_prerequisities VALUES (' || quote_literal(_taskname) || ', ' || quote_literal(_taskprereq) || ');';
     END IF;
-    
+
     RETURN TRUE;
 
 --    EXCEPTION WHEN OTHERS THEN
@@ -1067,7 +1073,7 @@ CREATE OR REPLACE FUNCTION VT_task_delete (_taskname VARCHAR, _force BOOLEAN, _d
     EXECUTE 'SET search_path=' || quote_ident(_dsname);
 
     IF _dsname IN ('public', 'pg_catalog') THEN
-      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname; 
+      RAISE EXCEPTION 'Usage of the name "%" for dataset name is not allowed!', _dsname;
     END IF;
 
 
@@ -1082,12 +1088,12 @@ CREATE OR REPLACE FUNCTION VT_task_delete (_taskname VARCHAR, _force BOOLEAN, _d
         RAISE EXCEPTION 'Can not delete task "%" due to dependent tasks in dataset "%".', _taskname, _dsname;
       END IF;
     END IF;
-    
+
     EXECUTE 'DELETE FROM tasks WHERE taskname = ' || quote_literal(_taskname);
     RETURN TRUE;
 
     EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during the deletion of the task "%" in dataset "%". (Details: ERROR %: %)', _taskname, _dsname, SQLSTATE, SQLERRM;    
+      RAISE EXCEPTION 'Some problem occured during the deletion of the task "%" in dataset "%". (Details: ERROR %: %)', _taskname, _dsname, SQLSTATE, SQLERRM;
   END;
   $VT_task_delete$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
@@ -1113,7 +1119,7 @@ CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NA
     EXECUTE 'SET search_path=' || quote_ident(_dsname);
 
     __idxcol := quote_ident(_keyname);
-    
+
     IF _keypart IS NOT NULL THEN
       EXECUTE 'SELECT attname, atttypid::regtype FROM pg_catalog.pg_attribute WHERE attrelid = (SELECT oid FROM pg_catalog.pg_class WHERE reltype = ' || quote_literal(_typname) || '::regtype AND relkind = ''c'') AND attnum = ' || _keypart INTO __idxcol, _typname;
       _idxname := '_' || __idxcol;
@@ -1121,17 +1127,17 @@ CREATE OR REPLACE FUNCTION VT_task_output_idxquery(_tblname VARCHAR, _keyname NA
     END IF;
 
     _idxname := _tblname || '_' || _keyname || _idxname || '_idx';
-    
+
     -- TODO complex index
     _goid := oid FROM pg_catalog.pg_type WHERE typname = 'geometry';
     IF _typname = 'box'::regtype OR (_goid IS NOT NULL AND _typname = _goid) THEN
       _stmt := 'USING GIST';
     END IF;
-    
+
     -- TODO GIST index 4 3D geometry?
     -- TODO _idxtype & _idxops - is it needed & useful?
     RETURN 'CREATE INDEX ' || quote_ident(_idxname) || ' ON ' || quote_ident(_tblname) || ' ' || _stmt || ' (' || __idxcol || ');';
-    
+
     EXCEPTION WHEN OTHERS THEN
       RAISE WARNING 'It seems, that indexing of "%" type (above key "%") is not supported by VTApi at this moment. If you would like to index this key, try to contact VTApi team. (Details: ERROR %: %)', _typname, _keyname, SQLSTATE, SQLERRM;
       RETURN '';
@@ -1168,12 +1174,12 @@ CREATE OR REPLACE FUNCTION VT_filtered_events(_table VARCHAR, _column VARCHAR, _
     _gids            INT[];
 
   BEGIN
-    
+
     IF _column IS NULL
     THEN
        _column := 'event';
     END IF;
-    
+
     IF _taskname IS NULL
     THEN
       RAISE EXCEPTION 'Task name canot be null.';
@@ -1213,18 +1219,18 @@ CREATE OR REPLACE FUNCTION VT_filtered_events(_table VARCHAR, _column VARCHAR, _
     THEN
       _cond_duration := ' AND ' || _cond_duration || ' ';
     END IF;
-    
-    
+
+
     IF (_filter).realtime_min IS NOT NULL OR (_filter).realtime_max IS NOT NULL
     THEN
       _cond_realtime := ' AND public.tsrange(' || _table || '.rt_start, ' || _table || '.sec_length) && tsrange(' || quote_nullable((_filter).realtime_min) || '::timestamp, ' || quote_nullable((_filter).realtime_max) || '::timestamp) ';
     END IF;
-    
+
     IF (_filter).daytime_min IS NOT NULL OR (_filter).daytime_max IS NOT NULL
     THEN
       _cond_daytime := ' AND public.daytimenumrange(' || _table || '.rt_start, ' || _table || '.sec_length) && public.daytimenumrange(' || quote_nullable((_filter).daytime_min) || '::time, ' || quote_nullable((_filter).daytime_max) || '::time) ';
     END IF;
-    
+
     IF _cond_duration <> '' OR _cond_realtime <> '' OR _cond_daytime <> ''
     THEN
       _query := ' SELECT DISTINCT (' || quote_ident(_column) || ').group_id AS gids
@@ -1249,27 +1255,27 @@ CREATE OR REPLACE FUNCTION VT_filtered_events(_table VARCHAR, _column VARCHAR, _
                 ' WHERE ' || _cond ||
                 '   AND (' || quote_ident(_column) || ').region && ' || quote_literal((_filter).region);
     END IF;
-    
+
     IF _query = ''
     THEN
       RAISE EXCEPTION 'No event filter was given.';
     END IF;
-    
+
     _query := 'SELECT array_agg(gids) FROM (' || _query || ') AS x;';
-    
+
     EXECUTE _query INTO _gids;
 
     RETURN _gids;
-    
+
     -- IF _gids IS NOT NULL
     -- THEN
     --   RETURN QUERY EXECUTE 'SELECT * FROM ' || _table || ' WHERE taskname = ' || quote_literal(_taskname) || _cond_seqname || ' AND (' || quote_ident(_column) || ').group_id IN (' || array_to_string(_gids, ',') || ');';
     -- ELSE
     --   RETURN QUERY EXECUTE 'SELECT * FROM ' || _table || ' WHERE 0 = 1;';
     -- END IF;
-    
+
     EXCEPTION WHEN OTHERS THEN
-      RAISE EXCEPTION 'Some problem occured during filtering by event filters (%) of the task "%". (Details: ERROR %: %)', _filter, _taskname, SQLSTATE, SQLERRM;  
+      RAISE EXCEPTION 'Some problem occured during filtering by event filters (%) of the task "%". (Details: ERROR %: %)', _filter, _taskname, SQLSTATE, SQLERRM;
   END;
   $VT_filtered_events$
   LANGUAGE plpgsql CALLED ON NULL INPUT;
@@ -1279,7 +1285,7 @@ CREATE OR REPLACE FUNCTION VT_filtered_events(_table VARCHAR, _column VARCHAR, _
 -- Functions to work with real time
 -------------------------------------
 CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_length DOUBLE PRECISION)
-  RETURNS TSRANGE 
+  RETURNS TSRANGE
   IMMUTABLE AS
   $tsrange$
     SELECT CASE _rt_start
@@ -1288,7 +1294,7 @@ CREATE OR REPLACE FUNCTION tsrange (_rt_start TIMESTAMP WITHOUT TIME ZONE, _sec_
     END;
   $tsrange$
   LANGUAGE SQL;
-  
+
 
 CREATE OR REPLACE FUNCTION daytimenumrange(_rt_start TIME WITHOUT TIME ZONE, _rt_end TIME WITHOUT TIME ZONE)
   RETURNS NUMRANGE
@@ -1327,7 +1333,7 @@ CREATE OR REPLACE FUNCTION trg_interval_provide_seclength_realtime ()
       THEN
         _rtchange := OLD.rt_start <> NEW.rt_start;
       END IF;
-      
+
       IF TG_OP = 'INSERT' OR (TG_OP = 'UPDATE' AND (OLD.t1 <> NEW.t1 OR OLD.t2 <> NEW.t2 OR OLD.sec_length <> NEW.sec_length OR _rtchange))
       THEN
         _tabname := quote_ident(TG_TABLE_SCHEMA) || '.sequences';
