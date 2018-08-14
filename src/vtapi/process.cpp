@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -36,12 +36,12 @@ Process::Process(const Commons& commons, int id)
 {
     if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
-    
+
     if (id != 0)
         _context.process = id;
-    
+
     _select.setOrderBy(def_col_prs_prsid);
-    
+
     if (_context.process != 0) {
         _select.querybuilder().whereInt(def_col_prs_prsid, _context.process);
     }
@@ -56,10 +56,10 @@ Process::Process(const Commons& commons, const vector<int>& ids)
 {
     if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
-    
+
     _select.setOrderBy(def_col_prs_prsid);
     _select.querybuilder().whereIntVector(def_col_prs_prsid, ids);
-    
+
     _context.task.clear();
 }
 
@@ -207,7 +207,7 @@ vector<string> Process::loadAssignedSequencesNames() const {
     while(kv.next()) {
         seqnames.push_back(kv.getString(def_col_prss_seqname));
     }
-    
+
     return seqnames;
 }
 
@@ -285,9 +285,9 @@ bool Process::preUpdate()
 bool Process::updateState(const ProcessState& state)
 {
     bool ret = true;
-    
+
     ret &= updateProcessStatus(def_col_prs_pstate_status, state.status);
-    
+
     switch (state.status)
     {
     case ProcessState::STATUS_CREATED:
@@ -302,7 +302,9 @@ bool Process::updateState(const ProcessState& state)
     case ProcessState::STATUS_FINISHED:
         break;
     case ProcessState::STATUS_ERROR:
-        ret &= updateString(def_col_prs_pstate_errmsg, state.last_error);
+        if (getFloat8(def_col_prs_pstate_progress) < state.progress) {
+            ret &= updateFloat8(def_col_prs_pstate_progress, state.progress);
+        }
         break;
     }
 
