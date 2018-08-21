@@ -183,8 +183,8 @@ public:
             PGint4 version = 0;
             PGbytea data = { 0 };
             if (!PQgetf(val, 0, "%int4 %bytea",
-                        0, &version, 1, edfdesc.data))
-                throw RuntimeException("Failed to get value: unexpected value in edfdescriptor header");
+                        0, &version, 1, &data))
+                throw RuntimeException("Failed to get value: unexpected value in edfdescriptor header (" + std::string(PQgeterror()) + ")");
 
             edfdesc.version = static_cast<int>(version);
 
