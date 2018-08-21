@@ -264,7 +264,7 @@ void PGConnection::getTypeCategoryFlags(char c, const std::string &name,
             flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
         else if (name == "eyedea_edfdescriptor") {
-            category = DatabaseTypes::CATEGORY_UD_EVENT;
+            category = DatabaseTypes::CATEGORY_UD_EDFDESCRIPTOR;
             flags |= DatabaseTypes::FLAG_USERDEFINED;
         }
         break;
