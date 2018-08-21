@@ -52,7 +52,7 @@ public:
      * @param commons     shared Commons object
      * @param selection   specific name of a selection table
      */
-    Interval(const Commons& commons, const std::string& selection);
+    Interval(const Commons& commons, const std::string& selection, const bool forceAll = false);
 
     /**
      * Destructor
@@ -175,6 +175,8 @@ public:
      */
     bool filterByEvent(const std::string& eventkey, const std::string& taskname,
                        const std::vector<std::string>& seqnames, const EventFilter & filter);
+
+    bool filterNotNullEdfDescriptor(const std::string &key);
 
 protected:
     virtual bool preUpdate() override;

@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -68,7 +68,7 @@ public:
      * @return success on task existing
      */
     bool next() override;
-    
+
     //////////////////////////////////////////////////
     // getters - associated objects
     //////////////////////////////////////////////////
@@ -123,6 +123,12 @@ public:
     Interval *loadOutputData() const;
 
     /**
+     * Gets output intervals of specific output data table
+     * @return output intervals for iteration
+     */
+    Interval *loadOutputData(std::string outputDataTable) const;
+
+    /**
      * Loads method's processes for iteration
      * @param id   process ID (0 = all processes)
      * @return process object for iteration
@@ -138,7 +144,7 @@ public:
      * @return task name
      */
     std::string getName() const;
-    
+
     /**
      * Gets object containing task parameters
      * @return task parameters map
@@ -150,7 +156,7 @@ public:
      * @return timestamp
      */
     std::chrono::system_clock::time_point getCreatedTime() const;
-    
+
     //////////////////////////////////////////////////
     // create - INSERT
     //////////////////////////////////////////////////
@@ -216,7 +222,7 @@ public:
 
 protected:
     bool preUpdate() override;
-    
+
 private:
     Task() = delete;
     Task& operator=(const Task&) = delete;

@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -29,7 +29,7 @@ Interval::Interval(const Interval &copy)
     : Interval(dynamic_cast<const Commons&>(copy), _context.selection)
 {}
 
-Interval::Interval(const Commons& commons, const string& selection)
+Interval::Interval(const Commons& commons, const string& selection, const bool forceAll)
     : KeyValues(commons, selection)
 {
     if (_context.dataset.empty())
@@ -37,10 +37,12 @@ Interval::Interval(const Commons& commons, const string& selection)
 
     _select.setOrderBy(def_col_int_id);
 
-    if (!_context.sequence.empty())
-        _select.querybuilder().whereString(def_col_int_seqname, _context.sequence);
-    if (!_context.task.empty())
-        _select.querybuilder().whereString(def_col_int_taskname, _context.task);
+    if (! forceAll) {
+        if (!_context.sequence.empty())
+            _select.querybuilder().whereString(def_col_int_seqname, _context.sequence);
+        if (!_context.task.empty())
+            _select.querybuilder().whereString(def_col_int_taskname, _context.task);
+    }
 }
 
 Interval::~Interval()
@@ -220,6 +222,10 @@ bool Interval::filterByEvent(const string& eventkey, const string& taskname,
                              const vector<string>& seqnames, const EventFilter & filter)
 {
     return _select.querybuilder().whereEvent(eventkey, taskname, seqnames, filter);
+}
+
+bool Interval::filterNotNullEdfDescriptor(const string &key) {
+    return _select.querybuilder().whereKeyNull(key, false);
 }
 
 

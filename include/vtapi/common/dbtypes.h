@@ -35,6 +35,7 @@ public:
         CATEGORY_UD_CVMAT,        // user defined - OpenCV matrix
         CATEGORY_UD_EVENT,        // user defined - VT event
         CATEGORY_UD_PSTATE,       // user defined - process state
+        CATEGORY_UD_EDFDESCRIPTOR,// user defined - EdfDescriptor
         CATEGORY_REF_TYPE,        // database type
         CATEGORY_REF_CLASS        // database class (column ...)
     };

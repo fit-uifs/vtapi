@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -35,10 +35,10 @@ Task::Task(const Commons& commons, const string& name)
 {
     if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
-    
+
     if (!name.empty())
         _context.task = name;
-    
+
     // normally SELECT selects all columns implicitly
     // but we can't handle regclass => specify explicitly
     _select.from(def_tab_tasks, def_col_task_name);
@@ -48,7 +48,7 @@ Task::Task(const Commons& commons, const string& name)
     _select.from(def_tab_tasks, def_col_task_created);
 
     _select.setOrderBy(def_col_task_name);
-    
+
     if (!_context.task.empty()) {
         _select.querybuilder().whereString(def_col_task_name, _context.task);
     }
@@ -63,7 +63,7 @@ Task::Task(const Commons& commons, const vector<string>& names)
 {
     if (_context.dataset.empty())
         throw BadConfigurationException("dataset not specified");
-    
+
     // normally SELECT selects all columns implicitly
     // but we can't handle regclass => specify explicitly
     _select.from(def_tab_tasks, def_col_task_name);
@@ -74,7 +74,7 @@ Task::Task(const Commons& commons, const vector<string>& names)
 
     _select.setOrderBy(def_col_task_name);
     _select.querybuilder().whereStringVector(def_col_task_name, names);
-    
+
     _context.method.clear();
 }
 
@@ -159,6 +159,15 @@ TaskProgress *Task::loadTaskProgress(const vector<string>& seqnames) const
 Interval *Task::loadOutputData() const
 {
     return new Interval(*this, this->getOutputDataTable());
+}
+
+Interval *Task::loadOutputData(std::string outputDataTable) const
+{
+    if (outputDataTable == std::string()) {
+        throw RuntimeException("Trying to load empty outputDataTable");
+    }
+
+    return new Interval(*this, std::string(this->getParentDataset()->getName() + "." + outputDataTable), true);
 }
 
 Process* Task::loadProcesses(int id) const

@@ -198,6 +198,13 @@ public:
     IntervalEvent getIntervalEvent(int col) const override;
 
     /**
+     * Get EdfDescriptor by column index
+     * @param col column index
+     * @return EdfDescriptor class
+     */
+    EyedeaEdfDescriptor getEdfDescriptor(int col) const override;
+
+    /**
      * Gets process state by an index of a column
      * @param col   index of the column
      * @return process state class

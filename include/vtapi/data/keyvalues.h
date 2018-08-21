@@ -377,6 +377,24 @@ public:
     inline IntervalEvent getIntervalEvent(int col) const
     { return _select._presultset->getIntervalEvent(col); }
 
+
+    /**
+     * Gets EdfDescriptor by a column key
+     * @param key   column key
+     * @return interval EdfDescriptor
+     */
+    inline EyedeaEdfDescriptor getEdfDescriptor(const std::string& key) const
+    { return _select._presultset->getEdfDescriptor(key); }
+
+    /**
+     * Gets EdfDescriptor by an index of a column
+     * @param col   index of the column
+     * @return interval EdfDescriptor
+     */
+    inline EyedeaEdfDescriptor getEdfDescriptor(int col) const
+    { return _select._presultset->getEdfDescriptor(col); }
+
+
     /**
      * Gets process state by a column key
      * @param key   column key

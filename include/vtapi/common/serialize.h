@@ -4,9 +4,9 @@
  *
  * @author   Vojtech Froml, xfroml00 (at) stud.fit.vutbr.cz
  * @author   Tomas Volf, ivolf (at) fit.vutbr.cz
- * 
+ *
  * @licence   @ref licence "BUT OPEN SOURCE LICENCE (Version 1)"
- * 
+ *
  * @copyright   &copy; 2011 &ndash; 2015, Brno University of Technology
  */
 
@@ -15,6 +15,7 @@
 #include "../data/intervalevent.h"
 #include "../data/processstate.h"
 #include "../data/eventfilter.h"
+#include "../data/eyedea_edfdescriptor.h"
 #include <chrono>
 #include <string>
 #include <sstream>
@@ -23,7 +24,7 @@
 #include <opencv2/opencv.hpp>
 
 namespace vtapi {
-    
+
 
 /**
  * @brief A generic function to convert any numeric type to string
@@ -36,7 +37,7 @@ inline std::string toString(const T& value)
 {
     std::ostringstream ostr;
     ostr << value;
-    
+
     return ostr.str();
 }
 
@@ -186,6 +187,20 @@ inline std::string toString <IntervalEvent>(const IntervalEvent& value)
     return ostr.str();
 }
 
+
+template <>
+inline std::string toString <EyedeaEdfDescriptor>(const EyedeaEdfDescriptor &value)
+{
+    std::ostringstream ostr;
+    ostr << '(' <<
+            value.version << ',' <<
+            value.data.size() << ',' <<
+            std::string(value.data.begin(), value.data.end()) << ')';
+
+    return ostr.str();
+}
+
+
 template <>
 inline std::string toString <ProcessState>(const ProcessState& value)
 {
@@ -243,11 +258,11 @@ template <typename T>
 inline std::string toStringCvMat(const cv::Mat_<T>& value)
 {
     std::ostringstream ostr;
-    
+
     int *dims = new int[value.dims];
     if (dims) {
         memset(dims, 0, value.dims * sizeof(int));
-        
+
         ostr << '[';
         int cur = 0;
         for (cv::MatConstIterator_<T> it = value.begin(); it != value.end(); it++) {
@@ -257,7 +272,7 @@ inline std::string toStringCvMat(const cv::Mat_<T>& value)
             }
 
             ostr << (*it);
-            
+
             while (++(dims[cur]) == value.size[cur]) {
                 dims[cur--] = 0;
                 if (cur < 0) break;
@@ -267,10 +282,10 @@ inline std::string toStringCvMat(const cv::Mat_<T>& value)
             ostr << ',';
         }
         ostr << ']';
-        
+
         delete[] dims;
     }
-    
+
     return ostr.str();
 }
 

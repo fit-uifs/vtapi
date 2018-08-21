@@ -185,6 +185,12 @@ IntervalEvent SLResultSet::getIntervalEvent(int col) const
     return IntervalEvent();
 }
 
+EyedeaEdfDescriptor SLResultSet::getEdfDescriptor(int col) const
+{
+    throw RuntimeException("unimplemented");
+    return EyedeaEdfDescriptor();
+}
+
 ProcessState SLResultSet::getProcessState(int col) const
 {
     throw RuntimeException("unimplemented");

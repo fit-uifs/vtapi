@@ -252,6 +252,11 @@ IntervalEvent PGResultSet::getIntervalEvent(int col) const
     return GetterSingle<PGresult*,IntervalEvent>::get(static_cast<const PGresult *>(_res), _pos, col, "%public.vtevent");
 }
 
+EyedeaEdfDescriptor PGResultSet::getEdfDescriptor(int col) const
+{
+    return GetterSingle<PGresult*,EyedeaEdfDescriptor>::get(static_cast<const PGresult *>(_res), _pos, col, "%public.eyedea_edfdescriptor");
+}
+
 ProcessState PGResultSet::getProcessState(int col) const
 {
     return GetterSingle<PGresult*,ProcessState>::get(static_cast<const PGresult *>(_res), _pos, col, "%public.pstate");
@@ -371,6 +376,11 @@ string PGResultSet::getValue(int col) const
     case DatabaseTypes::CATEGORY_UD_EVENT:
     {
         ret = toString(getIntervalEvent(col));
+        break;
+    }
+    case DatabaseTypes::CATEGORY_UD_EDFDESCRIPTOR:
+    {
+        ret = toString(getEdfDescriptor(col));
         break;
     }
     case DatabaseTypes::CATEGORY_UD_PSTATE:

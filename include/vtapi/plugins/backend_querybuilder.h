@@ -490,6 +490,17 @@ public:
     // ////////////////////////////////////////////////////////////////////////
 
     /**
+     * This is a WHERE statement construction class for NULL or NOT NULL values
+     * It can be called several times.
+     * @param key key to compare with the value
+     * @param isnull specify IS NOT NULL (false) / IS NULL (true) behavior
+     * @param from table where the key is situated
+     */
+    virtual bool whereKeyNull(const std::string &key,
+                            bool isnull = false,
+                            const std::string &from = std::string()) = 0;
+
+    /**
      * This is a WHERE statement construction class for bools
      * It can be called several times.
      * @param key key to compare with the value
@@ -789,6 +800,22 @@ public:
                             const std::vector<std::string>& seqnames,
                             const EventFilter & filter,
                             const std::string& from = std::string()) = 0;
+
+    /**
+     * WHERE statement part for EdfDescriptor
+     * It can be called several times.
+     * @param key key to compare with the value
+     * @param value requested value for key
+     * @param oper comparision operator between key and value
+     * @param from table where the key is situated
+     * @return success
+     */
+    virtual bool whereEdfDescriptor(const std::string &key,
+                            const EyedeaEdfDescriptor &edfdesc,
+                            const std::string &oper = std::string("="),
+                            const std::string &from = std::string()) = 0;
+
+
 
     // ////////////////////////////////////////////////////////////////////////
     // IMPLEMENTED METHODS

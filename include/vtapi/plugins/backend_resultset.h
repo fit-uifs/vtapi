@@ -4,6 +4,7 @@
 #include "../common/tkey.h"
 #include "../data/intervalevent.h"
 #include "../data/processstate.h"
+#include "../data/eyedea_edfdescriptor.h"
 #include <string>
 #include <vector>
 #include <chrono>
@@ -207,6 +208,13 @@ public:
     virtual IntervalEvent getIntervalEvent(int col) const = 0;
 
     /**
+     * Get EdfDescriptor by column index
+     * @param col column index
+     * @return EdfDescriptor class
+     */
+    virtual EyedeaEdfDescriptor getEdfDescriptor(int col) const = 0;
+
+    /**
      * Gets process state by an index of a column
      * @param col   index of the column
      * @return process state class
@@ -400,6 +408,14 @@ public:
      */
     inline IntervalEvent getIntervalEvent(const std::string &key) const
     { return this->getIntervalEvent(this->getKeyIndex(key)); }
+
+    /**
+     * Get EdfDescriptor by column key
+     * @param key column key
+     * @return EdfDescriptor class
+     */
+    inline EyedeaEdfDescriptor getEdfDescriptor(const std::string &key) const
+    { return this->getEdfDescriptor(this->getKeyIndex(key)); }
 
     /**
      * Gets process state by an key of a column

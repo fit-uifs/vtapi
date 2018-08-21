@@ -277,6 +277,13 @@ bool SLQueryBuilder::keyInouttype(const string &key, const string &value, const 
     return false;
 }
 
+
+bool SLQueryBuilder::whereKeyNull(const string &key, bool isnull, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
 bool SLQueryBuilder::whereBool(const string &key, bool value, const string &oper, const string &from)
 {
     throw RuntimeException("unimplemented");
@@ -410,6 +417,12 @@ bool SLQueryBuilder::whereInouttype(const string &key, const string &value, cons
 }
 
 bool SLQueryBuilder::whereEvent(const string &key, const string &taskname, const vector<string> &seqnames, const EventFilter &filter, const string &from)
+{
+    throw RuntimeException("unimplemented");
+    return false;
+}
+
+bool SLQueryBuilder::whereEdfDescriptor(const string &key, const EyedeaEdfDescriptor &value, const string &oper, const string &from)
 {
     throw RuntimeException("unimplemented");
     return false;

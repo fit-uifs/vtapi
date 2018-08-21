@@ -645,6 +645,18 @@ string PGQueryBuilder::serializeVector(const vector<T>& values)
     return listval;
 }
 
+
+bool PGQueryBuilder::whereKeyNull(const string &key, bool isnull, const string &from)
+{
+    if (key.empty()) {
+        return false;
+    }
+
+    _listWhere.push_back(WhereItem(key, from, isnull ? "IS NULL" : "IS NOT NULL"));
+
+    return true;
+}
+
 bool PGQueryBuilder::whereBool(const string &key, bool value, const string &oper, const string &from)
 {
     return whereSingleValue(key, value, "%bool", oper, from);
@@ -800,6 +812,18 @@ bool PGQueryBuilder::whereEvent(const string &key, const string &taskname, const
             "\'" + toString<EventFilter>(filter) + "\'))";
     return whereExpression("(" + key + ").group_id", val, "=");
 }
+
+bool PGQueryBuilder::whereEdfDescriptor(const string& key, const EyedeaEdfDescriptor& value, const string& oper, const string& from)
+{
+    if (value.data.size()) {
+        PGbytea data = { (int) value.data.size(), (char*) value.data.data() };
+        return whereSingleValue(key, &data, "%public.eyedea_edfdescriptor", oper, from);
+    }
+    else {
+        return whereKeyNull(key, false, from);
+    }
+}
+
 
 
 template<typename T>
@@ -977,18 +1001,25 @@ string PGQueryBuilder::constructWhereClause() const
         for (const WhereItem & item : _listWhere) {
 
             if (!where.empty()) where += "\nAND\n";
+            std::string oper;
+            std::transform(item._oper.begin(), item._oper.end(), oper.begin(), ::toupper);
+            bool nullCondition = (oper == "IS NULL" || oper == "IS NOT NULL");
 
             // bind key to PGparam value
             if (item._id_param > 0) {
                 where += constructColumn(item._key, item._table);
                 where += ' ' + item._oper + ' ';
-                where += '$' + toString<unsigned int>(item._id_param);
+                if (! nullCondition) {
+                    where += '$' + toString<unsigned int>(item._id_param);
+                }
             }
             // use key as custom expression
             else {
                 where += item._key;
                 where += ' ' + item._oper + ' ';
-                where += item._value;
+                if (! nullCondition) {
+                    where += item._value;
+                }
             }
         }
 
