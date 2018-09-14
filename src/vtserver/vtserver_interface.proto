@@ -328,6 +328,7 @@ message Region {
   optional double x2 = 4;
   optional double y1 = 5;
   optional double y2 = 6;
+  optional int64 has_descriptor = 7;
 }
 
 message eventInfo {

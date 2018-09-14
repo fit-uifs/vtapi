@@ -1304,6 +1304,10 @@ void WorkerJob<const vti::getEventListRequest, ::rpcz::reply<vti::getEventListRe
                         reg->set_x2(ev.region.low.x);
                         reg->set_y1(ev.region.high.y);
                         reg->set_y2(ev.region.low.y);
+                        EyedeaEdfDescriptor edfdesc = outdata->getEdfDesc();
+                        if (edfdesc.data.size()) {
+                            reg->set_has_descriptor(outdata->getId());
+                        }
                     }
                 }
             }
