@@ -17,7 +17,9 @@ class VTServerClient(object):
         self.app = rpcz.Application()
         self.srv = vtserver_interface_rpcz.VTServerInterface_Stub(self.app.create_rpc_channel(self.conn_str))
 
-    def call(self, service, req, deadline_ms = self.deadline_ms):
+    def call(self, service, req, deadline_ms = None):
+        if deadline_ms is None:
+            deadline_ms = self.deadline_ms
 
         try:
             request = getattr(vtserver_interface_pb2, service + "Request")()
