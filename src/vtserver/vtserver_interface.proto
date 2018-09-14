@@ -337,7 +337,7 @@ message eventInfo {
   optional double t1_sec = 4; // (seconds)
   optional double t2_sec = 5; // (seconds)
   optional double length = 6; // (seconds)
-  optional int64 group_id = 7;
+  optional int64 group_id = 7; 
   optional int64 class_id = 8;
   optional double score = 9;
   repeated Region regions = 10; // list of bounding boxes - trajectory
@@ -364,6 +364,19 @@ message eventFilter {
   optional Timestamp begin_daywindow = 5;
   optional Timestamp end_daywindow = 6;
   optional Region region = 7;
+}
+
+// getEventDescriptor (string #datasetID, string #taskID, int #event_id) → (int desc_version, int desc_data[])
+message getEventDescriptorRequest {
+  required string dataset_id = 1;
+  required string task_id = 2;
+  required int64 event_id = 3;
+}
+
+message getEventDescriptorResponse {
+  optional requestResult res = 1;
+  optional int64 desc_version = 2;
+  repeated int64 desc_data = 3;
 }
 
 // getEventList (string #datasetID, string #sequenceIDs[], string #taskID, event_filter filter) → event_info_list events_list[]
@@ -442,6 +455,7 @@ service VTServerInterface {
   rpc getProcessInfo(getProcessInfoRequest) returns(getProcessInfoResponse);
   rpc runProcess(runProcessRequest) returns(runProcessResponse);
   rpc stopProcess(stopProcessRequest) returns(stopProcessResponse);
+  rpc getEventDescriptor(getEventDescriptorRequest) returns(getEventDescriptorResponse);
   rpc getEventList(getEventListRequest) returns(getEventListResponse);
   rpc getEventsStats(getEventsStatsRequest) returns(getEventsStatsResponse);
   rpc getProcessingMetadata(getProcessingMetadataRequest) returns(getProcessingMetadataResponse);

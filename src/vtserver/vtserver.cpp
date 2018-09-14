@@ -202,6 +202,11 @@ void VTServer::stopProcess(const vti::stopProcessRequest &request, ::rpcz::reply
     processRequest(request, response);
 }
 
+void VTServer::getEventDescriptor(const vti::getEventDescriptorRequest &request, ::rpcz::reply<vti::getEventDescriptorResponse> response)
+{
+    processRequest(request, response);
+}
+
 void VTServer::getEventList(const vti::getEventListRequest &request, ::rpcz::reply<vti::getEventListResponse> response)
 {
     processRequest(request, response);

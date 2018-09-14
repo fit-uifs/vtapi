@@ -18,6 +18,7 @@
 #include "task.h"
 #include "eventfilter.h"
 #include "intervalevent.h"
+#include "eyedea_edfdescriptor.h"
 
 namespace vtapi {
 
@@ -106,6 +107,12 @@ public:
      * @return end time
      */
     unsigned int getEndTime() const;
+   
+    /**
+     * Gets an EdfDescriptor of the current interval
+     * @return EdfDescriptor
+     */
+    EyedeaEdfDescriptor getEdfDesc() const;
 
     /**
      * Gets real start time of the current interval
