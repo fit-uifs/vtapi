@@ -139,6 +139,11 @@ unsigned int Interval::getEndTime() const
     return this->getInt(def_col_int_t2);
 }
 
+EyedeaEdfDescriptor Interval::getEdfDesc() const
+{
+    return this->getEdfDescriptor(def_col_int_edfdesc);
+}
+
 chrono::system_clock::time_point Interval::calculateRealStartTime()
 {
     if (!_pparent_vid) {
