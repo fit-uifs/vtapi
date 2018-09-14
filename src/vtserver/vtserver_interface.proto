@@ -331,16 +331,17 @@ message Region {
 }
 
 message eventInfo {
-  optional int64 t1 = 1; // (frames)
-  optional int64 t2 = 2; // (frames)
-  optional double t1_sec = 3; // (seconds)
-  optional double t2_sec = 4; // (seconds)
-  optional double length = 5; // (seconds)
-  optional int64 group_id = 6; 
-  optional int64 class_id = 7;
-  optional double score = 8;
-  repeated Region regions = 9; // list of bounding boxes - trajectory
-  optional bytes user_data = 10;
+  required int64 event_id = 1;
+  optional int64 t1 = 2; // (frames)
+  optional int64 t2 = 3; // (frames)
+  optional double t1_sec = 4; // (seconds)
+  optional double t2_sec = 5; // (seconds)
+  optional double length = 6; // (seconds)
+  optional int64 group_id = 7;
+  optional int64 class_id = 8;
+  optional double score = 9;
+  repeated Region regions = 10; // list of bounding boxes - trajectory
+  optional bytes user_data = 11;
 }
 
 message eventInfoList {
