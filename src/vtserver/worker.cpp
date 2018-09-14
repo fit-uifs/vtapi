@@ -1229,6 +1229,7 @@ void WorkerJob<const vti::getEventListRequest, ::rpcz::reply<vti::getEventListRe
                     if (trajectories.find(ev.group_id) == trajectories.end()) {
                         vti::eventInfo *traj = info->add_events();
                         trajectories.insert(std::make_pair(ev.group_id, traj));
+                        traj->set_event_id(outdata->getId());
                         traj->set_group_id(ev.group_id);
                         traj->set_class_id(ev.class_id);
                         traj->set_score(ev.score);
