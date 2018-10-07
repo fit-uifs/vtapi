@@ -36,11 +36,13 @@ const std::string def_col_ds_description = "description";
 
 const std::string def_col_mt_name = "mtname";
 const std::string def_col_mt_description = "description";
+const std::string def_col_mt_progress_behavior = "seq_based_progress";
 
 const std::string def_col_task_name = "taskname";
 const std::string def_col_task_mtname = "mtname";
 const std::string def_col_task_params = "params";
 const std::string def_col_task_outputs = "outputs";
+const std::string def_col_task_prsid = "prsid";
 const std::string def_col_task_created = "created";
 
 const std::string def_col_tprq_taskname = "taskname";

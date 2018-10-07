@@ -98,6 +98,20 @@ public:
     std::string getOutputDataTable() const;
 
     /**
+     * @brief Gets current task's process ID (only for methods where progress is not based on sequences)
+     * @note only for methods where progress is not based on sequences
+     * @return process ID
+     */
+    int getProcessId() const;
+
+    /**
+     * @brief Gets current task's process object (only for methods where progress is not based on sequences)
+     * @note only for methods where progress is not based on sequences
+     * @return process object
+     */
+    Process *getProcess() const;
+
+    /**
      * @brief Gets information on task's progress for all sequences
      * @return progress object for iteration
      */

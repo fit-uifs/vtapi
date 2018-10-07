@@ -212,6 +212,7 @@ CREATE TABLE datasets (
 CREATE TABLE methods (
     mtname name NOT NULL,
     usert   BOOLEAN   DEFAULT FALSE,
+    seq_based_progress   BOOLEAN   DEFAULT TRUE,
     friendly_name VARCHAR,
     description TEXT,
     created TIMESTAMP WITHOUT TIME ZONE DEFAULT (now() at time zone 'utc'),
@@ -540,6 +541,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
       mtname     NAME      NOT NULL,
       params     VARCHAR   DEFAULT NULL,
       outputs    REGCLASS,
+      prsid      INT       DEFAULT NULL,
       created    TIMESTAMP WITHOUT TIME ZONE   DEFAULT (now() at time zone 'utc'),
       CONSTRAINT tasks_pk PRIMARY KEY (taskname),
       CONSTRAINT mtname_fk FOREIGN KEY (mtname)
@@ -618,7 +620,7 @@ CREATE OR REPLACE FUNCTION VT_dataset_support_create (_dsname VARCHAR)
 --   * Successful addition of a method => returns TRUE
 --   * Method with the same name is already available => returns FALSE
 --   * Some error in statement => INTERRUPTED with statement ERROR/EXCEPTION
-CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[], _mparams METHODPARAMTYPE[], _usert BOOLEAN, _mfriendly_name VARCHAR, _description TEXT)
+CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[], _mparams METHODPARAMTYPE[], _usert BOOLEAN, _seq_based_progress BOOLEAN, _mfriendly_name VARCHAR, _description TEXT)
   RETURNS BOOLEAN AS
   $VT_method_add$
   DECLARE
@@ -636,6 +638,11 @@ CREATE OR REPLACE FUNCTION VT_method_add (_mtname VARCHAR, _mkeys METHODKEYTYPE[
     IF _usert = TRUE THEN
       _inscols := ', usert';
       _insvals := ', TRUE';
+    END IF;
+
+    IF _seq_based_progress = FALSE THEN
+      _inscols := ', seq_based_progress';
+      _insvals := ', FALSE';
     END IF;
 
     IF _description IS NOT NULL THEN
