@@ -93,6 +93,12 @@ public:
     std::string getPluginPath() const;
 
     /**
+     * @brief Determine if progress is based on sequence length normalization or the process progress value only (all sequences together)
+     * @return sequence length normalization (=TRUE) or process progress value only (=FALSE)
+     */
+    bool isProgressBasedOnSeq() const;
+
+    /**
      * Sets method's description
      * @param description new description
      * @return success

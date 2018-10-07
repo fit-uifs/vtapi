@@ -77,6 +77,10 @@ string Method::getPluginPath() const
             Poco::SharedLibrary::suffix();
 }
 
+bool Method::isProgressBasedOnSeq() const {
+    return this->getBool(def_col_mt_progress_behavior);
+}
+
 bool Method::updateDescription(const string& description)
 {
     return this->updateString(def_col_mt_description, description);

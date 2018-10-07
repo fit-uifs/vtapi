@@ -45,6 +45,7 @@ Task::Task(const Commons& commons, const string& name)
     _select.from(def_tab_tasks, def_col_task_mtname);
     _select.from(def_tab_tasks, def_col_task_params);
     _select.from(def_tab_tasks, def_col_task_outputs + "::text");
+    _select.from(def_tab_tasks, def_col_task_prsid);
     _select.from(def_tab_tasks, def_col_task_created);
 
     _select.setOrderBy(def_col_task_name);
@@ -70,6 +71,7 @@ Task::Task(const Commons& commons, const vector<string>& names)
     _select.from(def_tab_tasks, def_col_task_mtname);
     _select.from(def_tab_tasks, def_col_task_params);
     _select.from(def_tab_tasks, def_col_task_outputs + "::text");
+    _select.from(def_tab_tasks, def_col_task_prsid);
     _select.from(def_tab_tasks, def_col_task_created);
 
     _select.setOrderBy(def_col_task_name);
@@ -190,6 +192,19 @@ chrono::system_clock::time_point Task::getCreatedTime() const
     return this->getTimestamp(def_col_task_created);
 }
 
+
+int Task::getProcessId() const
+{
+    return this->getInt(def_col_task_prsid);
+}
+
+
+Process* Task::getProcess() const
+{
+    return new Process(*this, this->getProcessId());
+}
+
+
 Process* Task::createProcess(const vector<string>& seqnames) const
 {
     Process *p = NULL;
@@ -206,16 +221,27 @@ Process* Task::createProcess(const vector<string>& seqnames) const
             QueryLastInsertedId q(*this);
             if (retval = q.execute()) {
                 prsid = q.getLastId();
-                for (auto & item : seqnames) {
-                    Insert insert2(*this, def_tab_processes_seq);
-                    retval &= insert2.querybuilder().keyInt(def_col_prss_prsid, prsid);
-                    retval &= insert2.querybuilder().keyString(def_col_prss_seqname, item);
-                    if (retval && (retval = insert2.execute())) {
-                    }
-                    else {
-                        break;
+                Method *mt = this->getParentMethod();
+                if (mt && ! mt->isProgressBasedOnSeq()) {
+                    Update update(*this, def_tab_tasks);
+                    retval &= update.querybuilder().keyInt(def_col_task_prsid, prsid);
+                    retval &= update.querybuilder().whereString(def_col_task_name, this->getName());
+                    retval &= update.execute();
+                }
+                else {
+                    for (auto & item : seqnames) {
+                        Insert insert2(*this, def_tab_processes_seq);
+                        retval &= insert2.querybuilder().keyInt(def_col_prss_prsid, prsid);
+                        retval &= insert2.querybuilder().keyString(def_col_prss_seqname, item);
+                        if (retval && (retval = insert2.execute())) {
+                        }
+                        else {
+                            break;
+                        }
                     }
                 }
+
+                delete mt;
             }
         }
     }

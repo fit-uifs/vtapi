@@ -48,11 +48,13 @@ extern const std::string def_col_ds_description;
 
 extern const std::string def_col_mt_name;
 extern const std::string def_col_mt_description;
+extern const std::string def_col_mt_progress_behavior;
 
 extern const std::string def_col_task_name;
 extern const std::string def_col_task_mtname;
 extern const std::string def_col_task_params;
 extern const std::string def_col_task_outputs;
+extern const std::string def_col_task_prsid;
 extern const std::string def_col_task_created;
 
 extern const std::string def_col_tprq_taskname;

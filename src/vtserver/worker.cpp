@@ -851,67 +851,80 @@ void WorkerJob<const vti::getTaskProgressRequest, ::rpcz::reply<vti::getTaskProg
             vti::taskProgress *tp = new vti::taskProgress();
             reply.set_allocated_task_progress(tp);
 
-            // load progress info for all or specified sequences
-            TaskProgress *tprog;
-            if (seqnames.size() > 0)
-                tprog = ts->loadTaskProgress(seqnames);
-            else
-                tprog = ts->loadTaskProgress();
+            Method *mt = ts->getParentMethod();
+            if (mt && ! mt->isProgressBasedOnSeq()) {
+                Process *prs = ts->getProcess();
+                prs->next();
+                ProcessState state = prs->getState();
+                tp->set_progress(state.progress);
 
-            // iterate over progress info
-            while (tprog->next()) {
-                string seqname = tprog->getSequenceName();
-                if (tprog->getIsDone()) {
-                    const auto it = seqs_lengths_map.find(seqname);
-                    if (it != seqs_lengths_map.end())
-                        seqs_done_length += it->second;
-
-                    tp->add_done_sequence_ids(seqname);
-                }
-                else {
-                    tp->add_inprogress_sequence_ids(seqname);
-                    processes_vids_map[tprog->getProcessId()] = seqname;
-                }
-            }
-
-            // calculate partial progress for sequences in progress
-            if (!processes_vids_map.empty() > 0) {
-                vector<int> prsids(processes_vids_map.size());
-                int idx = 0;
-                for (auto &it : processes_vids_map)
-                    prsids[idx++] = it.first;
-
-                Process *prs = ds->loadProcesses(prsids);
-                while (prs->next()) {
-                    // get length of processed sequence
-                    unsigned long long seq_length = 0;
-                    auto prsvid = processes_vids_map.find(prs->getId());
-                    if (prsvid != processes_vids_map.end()) {
-                        auto seqlen = seqs_lengths_map.find(prsvid->second);
-                        if (seqlen != seqs_lengths_map.end())
-                            seq_length = seqlen->second;
-                    }
-
-                    // get process state and partial progress
-                    if (seq_length > 0) {
-                        ProcessState state = prs->getState();
-                        if (state.status == ProcessState::STATUS_RUNNING)
-                            vids_partial_length += static_cast<unsigned long long>(state.progress * seq_length);
-                        else if (state.status == ProcessState::STATUS_FINISHED)
-                            vids_partial_length += seq_length;
-                    }
-                }
                 delete prs;
             }
+            else {
+                // load progress info for all or specified sequences
+                TaskProgress *tprog;
+                if (seqnames.size() > 0)
+                    tprog = ts->loadTaskProgress(seqnames);
+                else
+                    tprog = ts->loadTaskProgress();
 
-            if (seqs_total_length > 0)
-                tp->set_progress(static_cast<double>(seqs_done_length + vids_partial_length) / seqs_total_length);
-            else
-                tp->set_progress(0);
+                // iterate over progress info
+                while (tprog->next()) {
+                    string seqname = tprog->getSequenceName();
+                    if (tprog->getIsDone()) {
+                        const auto it = seqs_lengths_map.find(seqname);
+                        if (it != seqs_lengths_map.end())
+                            seqs_done_length += it->second;
 
-            // TODO: estimated time?
+                        tp->add_done_sequence_ids(seqname);
+                    }
+                    else {
+                        tp->add_inprogress_sequence_ids(seqname);
+                        processes_vids_map[tprog->getProcessId()] = seqname;
+                    }
+                }
 
-            delete tprog;
+                // calculate partial progress for sequences in progress
+                if (!processes_vids_map.empty() > 0) {
+                    vector<int> prsids(processes_vids_map.size());
+                    int idx = 0;
+                    for (auto &it : processes_vids_map)
+                        prsids[idx++] = it.first;
+
+                    Process *prs = ds->loadProcesses(prsids);
+                    while (prs->next()) {
+                        // get length of processed sequence
+                        unsigned long long seq_length = 0;
+                        auto prsvid = processes_vids_map.find(prs->getId());
+                        if (prsvid != processes_vids_map.end()) {
+                            auto seqlen = seqs_lengths_map.find(prsvid->second);
+                            if (seqlen != seqs_lengths_map.end())
+                                seq_length = seqlen->second;
+                        }
+
+                        // get process state and partial progress
+                        if (seq_length > 0) {
+                            ProcessState state = prs->getState();
+                            if (state.status == ProcessState::STATUS_RUNNING)
+                                vids_partial_length += static_cast<unsigned long long>(state.progress * seq_length);
+                            else if (state.status == ProcessState::STATUS_FINISHED)
+                                vids_partial_length += seq_length;
+                        }
+                    }
+                    delete prs;
+                }
+
+                if (seqs_total_length > 0)
+                    tp->set_progress(static_cast<double>(seqs_done_length + vids_partial_length) / seqs_total_length);
+                else
+                    tp->set_progress(0);
+
+                // TODO: estimated time?
+
+                delete tprog;
+            }
+
+            delete mt;
         }
         else {
             res->set_success(false);
