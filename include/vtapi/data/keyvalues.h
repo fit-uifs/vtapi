@@ -384,7 +384,14 @@ public:
      * @return interval EdfDescriptor
      */
     inline EyedeaEdfDescriptor getEdfDescriptor(const std::string& key) const
-    { return _select._presultset->getEdfDescriptor(key); }
+    {
+        EyedeaEdfDescriptor data;
+        try {
+            data = _select._presultset->getEdfDescriptor(key);
+        }
+        catch (vtapi::RuntimeException & e) {}
+        return data;
+    }
 
     /**
      * Gets EdfDescriptor by an index of a column
@@ -392,7 +399,14 @@ public:
      * @return interval EdfDescriptor
      */
     inline EyedeaEdfDescriptor getEdfDescriptor(int col) const
-    { return _select._presultset->getEdfDescriptor(col); }
+    {
+        EyedeaEdfDescriptor data;
+        try {
+            data = _select._presultset->getEdfDescriptor(col);
+        }
+        catch (vtapi::RuntimeException & e) {}
+        return data;
+    }
 
 
     /**
