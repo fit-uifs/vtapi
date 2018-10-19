@@ -1,4 +1,3 @@
-
 #include <exception>
 #include <vtapi/common/global.h>
 #include <vtapi/common/exception.h>
@@ -53,6 +52,10 @@ bool IntervalOutput::newInterval(int t1, int t2)
     }
 
     return ret;
+}
+
+Query *IntervalOutput::createCustomQuery(std::string sql) {
+    return new Query(*this, sql);
 }
 
 Insert & IntervalOutput::last_insert()

@@ -73,13 +73,22 @@ Dataset *Interval::getParentDataset() const
     }
 }
 
-Task *Interval::getParentTask() const
-{
+std::string Interval::getSourceTable() const {
+    return _context.selection;
+}
+
+std::string Interval::getParentTaskName() const {
     string taskname;
     if (!_context.task.empty())
         taskname = _context.task;
     else
         taskname = this->getString(def_col_int_taskname);
+    return taskname;
+}
+
+Task *Interval::getParentTask() const
+{
+    string taskname = getParentTaskName();
 
     if (!taskname.empty()) {
         Task *t = new Task(*this, taskname);
@@ -127,6 +136,10 @@ Sequence *Interval::getParentSequence() const
 int Interval::getId() const
 {
     return this->getInt(def_col_int_id);
+}
+
+std::string Interval::getTaskName() const {
+    return this->getString(def_col_int_taskname);
 }
 
 unsigned int Interval::getStartTime() const

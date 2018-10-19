@@ -1,8 +1,8 @@
-
 #pragma once
 
 #include "../data/commons.h"
 #include "../queries/insert.h"
+#include "../queries/query.h"
 #include <list>
 #include <memory>
 #include <opencv2/opencv.hpp>
@@ -32,6 +32,12 @@ public:
      * @return success
      */
     bool newInterval(int t1, int t2);
+
+    /**
+     * @brief Create custom query
+     * @return query object
+     **/
+    Query *createCustomQuery(std::string sql);
 
     /**
      * @brief Commits all cached intervals added with newInterval()

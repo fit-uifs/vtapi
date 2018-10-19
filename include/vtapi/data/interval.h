@@ -73,6 +73,18 @@ public:
     Dataset *getParentDataset() const;
 
     /**
+     * @brief Gets source data table name
+     * @return name of source data table
+     */
+    std::string getSourceTable() const;
+
+    /**
+     * @brief Gets parent task name
+     * @return task name
+     */
+    std::string getParentTaskName() const;
+
+    /**
      * @brief Gets parent task object
      * @return task object (initialized)
      */
@@ -91,10 +103,16 @@ public:
     Sequence *getParentSequence() const;
 
     /**
-     * Gets interval ID
+     * Gets current interval ID
      * @return interval ID
      */
     int getId() const;
+
+    /**
+     * @brief Gets taskname of the current interval
+     * @return interval taskname
+     */
+    std::string getTaskName() const;
 
     /**
      * Gets a start frame of the current interval
@@ -107,7 +125,7 @@ public:
      * @return end time
      */
     unsigned int getEndTime() const;
-   
+
     /**
      * Gets an EdfDescriptor of the current interval
      * @return EdfDescriptor

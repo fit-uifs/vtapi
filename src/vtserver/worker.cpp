@@ -1223,7 +1223,7 @@ void WorkerJob<const vti::getEventDescriptorRequest, ::rpcz::reply<vti::getEvent
         res->set_msg("Cannot find dataset");
     }
     delete ds;
-    
+
     reply.set_allocated_res(res);
     _response.send(reply);
 
@@ -1256,8 +1256,9 @@ void WorkerJob<const vti::getEventListRequest, ::rpcz::reply<vti::getEventListRe
             vector<string> seqnames;
             if (_request.sequence_ids_size() > 0) {
                 seqnames.resize(_request.sequence_ids_size());
-                for (int i = 0; i < _request.sequence_ids_size(); i++)
+                for (int i = 0; i < _request.sequence_ids_size(); i++) {
                     seqnames[i] = _request.sequence_ids(i);
+                }
                 outdata->filterBySequences(seqnames);
             }
 
