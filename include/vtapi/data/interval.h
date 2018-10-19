@@ -114,6 +114,7 @@ public:
      */
     std::string getTaskName() const;
 
+
     /**
      * Gets a start frame of the current interval
      * @return start time

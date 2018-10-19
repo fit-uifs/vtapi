@@ -368,6 +368,18 @@ message eventFilter {
   optional Region region = 7;
 }
 
+// getEventImage (string #datasetID, string #taskID, int #event_id) → bytes event_img
+message getEventImageRequest {
+  required string dataset_id = 1;
+  required string task_id = 2;
+  required int64 event_id = 3;
+}
+
+message getEventImageResponse {
+  optional requestResult res = 1;
+  optional bytes event_img = 2;
+}
+
 // getEventDescriptor (string #datasetID, string #taskID, int #event_id) → (int desc_version, int desc_data[])
 message getEventDescriptorRequest {
   required string dataset_id = 1;
@@ -457,6 +469,7 @@ service VTServerInterface {
   rpc getProcessInfo(getProcessInfoRequest) returns(getProcessInfoResponse);
   rpc runProcess(runProcessRequest) returns(runProcessResponse);
   rpc stopProcess(stopProcessRequest) returns(stopProcessResponse);
+  rpc getEventImage(getEventImageRequest) returns(getEventImageResponse);
   rpc getEventDescriptor(getEventDescriptorRequest) returns(getEventDescriptorResponse);
   rpc getEventList(getEventListRequest) returns(getEventListResponse);
   rpc getEventsStats(getEventsStatsRequest) returns(getEventsStatsResponse);

@@ -40,6 +40,12 @@ public:
     Query *createCustomQuery(std::string sql);
 
     /**
+     * @brief Create custom query
+     * @return query object
+     **/
+    Query *createCustomQuery(std::string sql);
+
+    /**
      * @brief Commits all cached intervals added with newInterval()
      * @return success
      */

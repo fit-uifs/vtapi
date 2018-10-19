@@ -1181,6 +1181,54 @@ void WorkerJob<const vti::stopProcessRequest, ::rpcz::reply<vti::stopProcessResp
 
 
 template<>
+void WorkerJob<const vti::getEventImageRequest, ::rpcz::reply<vti::getEventImageResponse> >
+::process(Args & args)
+{
+    VTSERVER_DEBUG_REQUEST;
+
+    vti::getEventImageResponse reply;
+    vti::requestResult *res = new vti::requestResult();
+
+    Dataset *ds = args._vtapi.loadDatasets(_request.dataset_id());
+    if (ds->next()) {
+        Task *ts =  ds->loadTasks(_request.task_id());
+        if (ts->next()) {
+            res->set_success(true);
+            Interval *outdata = ts->loadOutputData();
+            if (outdata) {
+                outdata->filterById(_request.event_id());
+                if (outdata->next()) {
+                    res->set_success(true);
+                    std::vector<char> blob = outdata->getBlob("eventimg");
+                    reply.set_event_img(std::string(blob.begin(), blob.end()));
+                }
+                else {
+                    res->set_success(false);
+                    res->set_msg("Cannot find event created by given task and dataset");
+                }
+            }
+            delete outdata;
+        }
+        else {
+            res->set_success(false);
+            res->set_msg("Cannot find task");
+        }
+        delete ts;
+    }
+    else {
+        res->set_success(false);
+        res->set_msg("Cannot find dataset");
+    }
+    delete ds;
+
+    reply.set_allocated_res(res);
+    _response.send(reply);
+
+    VTSERVER_DEBUG_REPLY;
+}
+
+
+template<>
 void WorkerJob<const vti::getEventDescriptorRequest, ::rpcz::reply<vti::getEventDescriptorResponse> >
 ::process(Args & args)
 {
